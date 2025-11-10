@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+* {
+  font-family: "Prompt", sans-serif !important;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --default: var(--default);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.ant-btn.hover-primary-text:hover {
+  background-color: white !important;
+  color: #040c5c !important;
+}

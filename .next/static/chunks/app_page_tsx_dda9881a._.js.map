@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/app/page.tsx"],"sourcesContent":["\"use client\";\n\nimport type { FC } from \"react\";\n\nconst Page: FC = () => {\n  return (\n    <div>\n      <h1>Hello World!</h1>\n    </div>\n  );\n};\n\nexport default Page;\n"],"names":[],"mappings":";;;;;AAAA;;AAIA,MAAM,OAAW;IACf,qBACE,6LAAC;kBACC,cAAA,6LAAC;sBAAG;;;;;;;;;;;AAGV;KANM;uCAQS","debugId":null}}]
+}
