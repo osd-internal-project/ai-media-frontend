@@ -1,6 +1,1 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/app/page.tsx"],"sourcesContent":["\"use client\";\n\nimport type { FC } from \"react\";\n\nconst Page: FC = () => {\n  return (\n    <div>\n      <h1>Hello World!</h1>\n    </div>\n  );\n};\n\nexport default Page;\n"],"names":[],"mappings":";;;;;AAAA;;AAIA,MAAM,OAAW;IACf,qBACE,8OAAC;kBACC,cAAA,8OAAC;sBAAG;;;;;;;;;;;AAGV;uCAEe","debugId":null}}]
-}
+{"version":3,"sources":["turbopack:///[project]/app/page.tsx"],"sourcesContent":["\"use client\";\n\nimport type { FC } from \"react\";\n\nconst Page: FC = () => {\n  return (\n    <div>\n      <h1>Hello World!</h1>\n    </div>\n  );\n};\n\nexport default Page;\n"],"names":[],"mappings":"qFAIiB,IAEb,CAAA,EAAA,EAAA,GAAA,EAAC,MAAA,UACC,CAAA,AAKS,EALT,EAAA,GAAA,EAAC,KAAA,UAAG"}

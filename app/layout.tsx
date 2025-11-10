@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "E-Portal",
-  description: "E-Portal Application",
+  title: "Criaive",
+  description: "AI-Media Application",
 };
 
 export default function RootLayout({
