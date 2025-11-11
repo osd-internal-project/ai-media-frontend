@@ -1,13 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import type { FC } from "react";
-
-const Page: FC = () => {
-  return (
-    <div>
-      <h1>Hello World!</h1>
-    </div>
-  );
+const Page = () => {
+  return redirect("/public/home");
 };
 
 export default Page;

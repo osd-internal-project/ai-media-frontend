@@ -10,7 +10,6 @@ export default function ClientContent({ children, user }: ClientLayoutProps) {
     return (
       <Content
         style={{
-          padding: 20,
           margin: 0,
         }}>
         {children}

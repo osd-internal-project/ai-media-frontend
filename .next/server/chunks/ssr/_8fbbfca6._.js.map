@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/app/page.tsx"],"sourcesContent":["\"use client\";\nimport { Button, Divider, Image } from \"antd\";\nimport type { FC } from \"react\";\n\nconst Page: FC = () => {\n  return <div className=\"px-80 py-20 flex flex-col items-center justify-center space-y-4 text-center\"></div>;\n};\n\nexport default Page;\n"],"names":[],"mappings":";;;;;AAAA;;AAIA,MAAM,OAAW;IACf,qBAAO,8OAAC;QAAI,WAAU;;;;;;AACxB;uCAEe","debugId":null}},
+    {"offset": {"line": 25, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/node_modules/next/src/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-ssr']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0],"debugId":null}}]
+}

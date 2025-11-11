@@ -4,6 +4,7 @@ import { Button, Layout, Space } from "antd";
 import { LoginOutlined, UserAddOutlined } from "@ant-design/icons";
 import Link from "antd/es/typography/Link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const { Header } = Layout;
 
@@ -11,15 +12,18 @@ interface Props {
   user?: { name: string };
 }
 const NavbarUser: React.FC<Props> = ({ user }) => {
+  const navigate = useRouter();
   return (
     <Header
       style={{
-        background: "rgba(255, 255, 255, 255)",
+        paddingTop: 40,
+        background: "transparent", // <-- remove background color
         height: "auto",
         lineHeight: "normal",
         padding: 0,
+        boxShadow: "none", // optional: remove any shadow
       }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
             <a href="#" className="flex items-center space-x-2">
@@ -27,21 +31,27 @@ const NavbarUser: React.FC<Props> = ({ user }) => {
             </a>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#" className={`transition-colors hover:scale-105 transform !text-black`}>
-              Product Catalog
+            <Link
+              onClick={() => navigate.push(`/public/package`)}
+              className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
+              Price
             </Link>
-            <Link href="#" className={`transition-colors hover:scale-105 transform !text-black`}>
-              Your Project Workspaces
+            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
+              Explore Documentation
             </Link>
-            <Link href="#" className={`transition-colors hover:scale-105 transform !text-black`}>
-              Contract & Package
+            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
+              case studies
             </Link>
-            <Link href="#" className={`transition-colors hover:scale-105 transform !text-black`}>
-              Support Center
-            </Link>
+            <Button
+              onClick={() => navigate.push("/login")}
+              type="default"
+              icon={<LoginOutlined />}
+              className="!bg-transparent !text-white !border-white hover:!bg-gray-800 hover:!text-gray-300 hover:!border-gray-300 transition-all">
+              Get Started
+            </Button>
           </nav>
 
-          <Space>
+          {/* <Space>
             {user ? (
               <p className="!text-bold !text-black">{user ? user?.name : "username"}</p>
             ) : (
@@ -58,7 +68,7 @@ const NavbarUser: React.FC<Props> = ({ user }) => {
                 </Button>
               </>
             )}
-          </Space>
+          </Space> */}
         </div>
       </div>
     </Header>

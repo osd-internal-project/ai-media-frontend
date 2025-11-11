@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
+    {"offset": {"line": 15, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/app/page.tsx"],"sourcesContent":["import { redirect } from \"next/navigation\";\n\nconst Page = () => {\n  return redirect(\"/public/home\");\n};\n\nexport default Page;\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEA,MAAM,OAAO;IACX,OAAO,IAAA,iMAAQ,EAAC;AAClB;uCAEe","debugId":null}}]
+}
