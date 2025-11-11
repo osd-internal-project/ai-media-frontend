@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import "../globals.css";
 import "antd/dist/reset.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import ClientLayout from "@/app/components/ClientLayout";
-import PrivateContent from "../components/PrivateContent";
 import PrivateLayout from "../components/PrivateLayout";
 
 // const geistSans = Geist({
