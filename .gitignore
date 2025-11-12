@@ -35,6 +35,10 @@ TestResults.xml
 # Node modules
 node_modules/
 
+# Next.js build output
+next/
+
+
 # Optional: common Node.js build artifacts
 dist/
 build/
