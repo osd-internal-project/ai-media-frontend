@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac-wasmee/Documents/Project/ai-media-project/ai-media-frontend/app/components/PrivateContent.tsx"],"sourcesContent":["\"use client\";\nimport { Layout } from \"antd\";\nconst { Content } = Layout;\n\ninterface ClientLayoutProps {\n  children: React.ReactNode;\n  user?: { name: string };\n}\n\nexport default function PrivateContent({ children, user }: ClientLayoutProps) {\n  if (user) {\n    return (\n      <Content\n        style={{\n          margin: 0,\n        }}>\n        {children}\n      </Content>\n    );\n  }\n\n  return <Content>{children}</Content>;\n}\n"],"names":[],"mappings":";;;;;AACA;AADA;;;AAEA,MAAM,EAAE,OAAO,EAAE,GAAG,4LAAM;AAOX,SAAS,eAAe,EAAE,QAAQ,EAAE,IAAI,EAAqB;IAC1E,IAAI,MAAM;QACR,qBACE,8OAAC;YACC,OAAO;gBACL,QAAQ;YACV;sBACC;;;;;;IAGP;IAEA,qBAAO,8OAAC;kBAAS;;;;;;AACnB","debugId":null}}]
-}

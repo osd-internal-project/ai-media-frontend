@@ -16,7 +16,7 @@ import ClientLayout from "@/app/components/ClientLayout";
 // });
 
 export const metadata: Metadata = {
-  title: "Criaive",
+  title: "AI CAVE",
   description: "AI-Media Application",
 };
 

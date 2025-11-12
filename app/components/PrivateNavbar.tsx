@@ -24,12 +24,15 @@ const NavbarUser: React.FC<Props> = ({ user }) => {
         boxShadow: "none",
       }}>
       <div className=" mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-end h-16">
           {user ? (
-            // <p className="!text-bold !text-black">{user ? user?.name : "username"}</p>
-            <Avatar />
+            <div className="flex items-center  gap-4">
+              <p className="flex justify-center items-center !text-bold !text-white">{"username"}</p>
+              <Avatar />
+            </div>
           ) : (
             <>
+              <p className="!text-bold !text-white">{"username"}</p>
               <Avatar />
             </>
           )}

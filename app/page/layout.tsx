@@ -16,7 +16,7 @@ import PrivateLayout from "../components/PrivateLayout";
 // });
 
 export const metadata: Metadata = {
-  title: "Criaive",
+  title: "AI CAVE",
   description: "AI-Media Application",
 };
 

@@ -1,38 +1,38 @@
 import React from "react";
 import { MenuProps, Tooltip } from "antd";
 import Link from "next/link";
-import { FieldTimeOutlined, HomeOutlined } from "@ant-design/icons";
+import { FileImageOutlined, PieChartOutlined, VideoCameraOutlined, UserSwitchOutlined, SettingOutlined } from "@ant-design/icons";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
 export const MenuSider: MenuItem[] = [
   {
-    key: "home",
+    key: "dashboard",
     label: "Dashboard",
     // rule: ["user", "admin"],
-    icon: <HomeOutlined />,
+    icon: <PieChartOutlined />,
   },
   {
     key: `generate-image`,
-    icon: <FieldTimeOutlined />,
+    icon: <FileImageOutlined />,
     label: `Generate Image`,
     // rule: ["user", "admin", "hr"],
   },
   {
     key: `generate-vdo`,
-    icon: <FieldTimeOutlined />,
+    icon: <VideoCameraOutlined />,
     label: `Generate VDO`,
     // rule: ["user", "admin", "hr"],
   },
   {
     key: `users-management`,
-    // icon: gridIcon,
+    icon: <UserSwitchOutlined />,
     label: `User Management`,
     // rule: ["admin", "hr", "user"],
   },
   {
     key: `setting`,
-    // icon: <Icon icon="uil:setting" width="15" height="15" />,
+    icon: <SettingOutlined />,
     label: `Setting`,
     // rule: ["admin", "hr", "ma-user"],
     children: [],

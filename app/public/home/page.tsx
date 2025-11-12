@@ -9,7 +9,7 @@ const Page: FC = () => {
   const navigate = useRouter();
   return (
     <div className="px-80 py-20 flex flex-col items-center justify-center space-y-4 text-center">
-      <span className="text-5xl font-bold">{`CriAIve AI Media`}</span>
+      <span className="text-5xl font-bold">{`AI CAVE AI Media`}</span>
       <span className="text-lg text-gray-400">{`The fastest path from prompt to production by OSD`}</span>
       <div className="h-[500px] w-full rounded-3xl mt-5">
         <ReactPlayer
@@ -73,7 +73,7 @@ const Page: FC = () => {
         </div>
       </div>
       <Divider style={{ borderColor: "#6b7280" }} />
-      <span className="text-5xl font-bold">{`CriAIve AI Media`}</span>
+      <span className="text-5xl font-bold">{`AI CAVE AI Media`}</span>
       <span className="text-lg text-gray-400">{`Start exploring and building`}</span>
       <Button
         type="default"
