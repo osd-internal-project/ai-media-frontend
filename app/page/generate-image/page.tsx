@@ -6,11 +6,44 @@ import PromptGenerateImage from "./components/prompt-generate-image";
 import { HomeOutlined } from "@ant-design/icons";
 import type { ITFromGenerate } from "@/app/common";
 import type { RcFile, UploadProps } from "antd/es/upload";
+import GenerateImageServices from "@/app/services/generate-image.service";
+import { axiosCore } from "@/app/lib/axios/axios";
 
 const GenerateImagePage: FC = () => {
   const [formcreateImage] = Form.useForm();
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const onFinish = (values: ITFromGenerate) => {};
+  const [loading, setLoading] = useState<boolean>(false);
+  const [getdata, setData] = useState<any>([]);
+
+  const onFinish = async (values: ITFromGenerate) => {
+    console.log(values);
+
+    let base: ITFromGenerate = values;
+    setLoading(true);
+    if (files.length > 0) {
+      const formData: any = new FormData();
+      formData.append("type", "create-attend");
+      formData.append("files", files[0].originFileObj);
+      const upload = await GenerateImageServices(axiosCore).upload(formData);
+      base = { ...values, image: upload.fileName };
+    }
+    try {
+      const response = await GenerateImageServices(axiosCore).create(base);
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setData(response);
+        message.success("สร้างคำขอสำเร็จ");
+        formcreateImage.resetFields();
+        setFiles([]);
+      } else {
+        message.error("ไม่มีข้อมูลที่ได้กลับมา");
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      message.error("เกิดข้อผิดพลาด");
+      setLoading(false);
+    }
+  };
 
   const beforeUploadFiles = (file: RcFile) => {
     if (files.find((oneFile) => oneFile.name === file.name)) {
@@ -57,6 +90,9 @@ const GenerateImagePage: FC = () => {
             handleChangeFiles={handleChangeFiles}
             beforeUploadFiles={beforeUploadFiles}
             files={files}
+            loading={loading}
+            getdata={getdata}
+            setData={setData}
           />
         </>
       </div>

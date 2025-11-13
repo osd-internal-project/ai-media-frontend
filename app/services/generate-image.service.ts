@@ -3,7 +3,6 @@ import type { ITFromGenerate } from "../common";
 
 const GenerateImageServices = (axiosInstance: AxiosInstance) => {
     const baseUrl = "/generate-image";
-
     return {
         findAll: async () => {
             return await axiosInstance

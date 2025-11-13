@@ -1,10 +1,6 @@
 "use client";
-import { Breadcrumb, ConfigProvider, Layout, Menu, Image } from "antd";
-import { HomeOutlined } from "@ant-design/icons";
+import { ConfigProvider, Layout, Menu, Image } from "antd";
 import { useState } from "react";
-const { Content } = Layout;
-import { theme } from "antd";
-import Link from "antd/es/typography/Link";
 import PrivateContent from "./PrivateContent";
 import PrivateNavigation from "./PrivateNavigation";
 import { usePathname } from "next/navigation";
@@ -17,7 +13,6 @@ interface ClientLayoutProps {
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
   const [user, setUser] = useState<{ name: string }>({ name: "" });
 
   const pathname = usePathname();
@@ -59,9 +54,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       <Layout className=" min-h-screen  overflow-auto ">
         <Sider width={200} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-3  ">
           <div className="w-full flex justify-center">
-            <Image width={"100px"} src="/images/osd-logo-blue.png" alt="OSD Logo" preview={false} className="mb-2" />
+            <Image width={"100px"} src="/images/Logo.png" alt="OSD Logo" preview={false} className="mb-2" />
           </div>
-
           <Menu
             mode="inline"
             selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}

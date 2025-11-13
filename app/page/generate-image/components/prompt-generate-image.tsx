@@ -1,8 +1,8 @@
 import type { ITFromGenerate } from "@/app/common";
-import { Button, Form, Input, Upload, type FormInstance, type UploadProps } from "antd";
+import { Button, Form, Input, Spin, Upload, type FormInstance, type UploadProps } from "antd";
 import React, { type FC, type ReactElement } from "react";
 
-import { HomeOutlined, PlusOutlined, SendOutlined } from "@ant-design/icons";
+import { DownloadOutlined, HomeOutlined, PictureOutlined, PlusOutlined, SendOutlined } from "@ant-design/icons";
 
 export interface props {
   formcreateImage: FormInstance;
@@ -10,9 +10,21 @@ export interface props {
   handleChangeFiles: UploadProps["onChange"];
   beforeUploadFiles: UploadProps["beforeUpload"];
   files: any;
+  loading: boolean;
+  getdata: any;
+  setData: any;
 }
 
-const PromptGenerateImage: FC<props> = ({ formcreateImage, onFinish, handleChangeFiles, beforeUploadFiles, files }): ReactElement => {
+const PromptGenerateImage: FC<props> = ({
+  formcreateImage,
+  onFinish,
+  handleChangeFiles,
+  beforeUploadFiles,
+  files,
+  loading,
+  getdata,
+  setData,
+}): ReactElement => {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -40,7 +52,6 @@ const PromptGenerateImage: FC<props> = ({ formcreateImage, onFinish, handleChang
               <Form.Item name="type" hidden>
                 <Input />
               </Form.Item>
-
               {/* Prompt Input */}
               <Form.Item
                 name="text"
@@ -80,6 +91,74 @@ const PromptGenerateImage: FC<props> = ({ formcreateImage, onFinish, handleChang
                 </Button>
               </Form.Item>
             </Form>
+            <div className="mt-8">
+              {loading ? (
+                <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-12">
+                  <div className="flex flex-col justify-center items-center space-y-4">
+                    <div className="relative">
+                      <Spin size="large" />
+                      <div className="absolute inset-0 animate-ping bg-purple-500/20 rounded-full"></div>
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-xl font-semibold text-white mb-2">กำลังสร้างรูปภาพ AI</h3>
+                      <p className="text-gray-400">โปรดรอสักครู่ เรากำลังประมวลผล Prompt ของคุณ...</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {Array.isArray(getdata?.data) && getdata.data.length > 0 && getdata.data[0]?.url && (
+                    <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden">
+                      {/* Image Header */}
+                      <div className="bg-gradient-to-r from-purple-600/20 to-cyan-600/20 p-6 border-b border-gray-700/50">
+                        <div className="flex items-center gap-3">
+                          <PictureOutlined className="text-2xl text-purple-400" />
+                          <h3 className="text-xl font-semibold text-white">รูปภาพที่สร้างเสร็จแล้ว</h3>
+                          <div className="ml-auto px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium">สำเร็จ</div>
+                        </div>
+                      </div>
+                      {/* Image Content */}
+                      <div className="p-8">
+                        <div className="flex flex-col items-center space-y-6">
+                          <div className="relative group">
+                            <img
+                              src={getdata.data[0].url}
+                              width="600"
+                              className="rounded-xl shadow-2xl border border-gray-600/50 group-hover:shadow-purple-500/20 transition-all duration-300 max-w-full h-auto"
+                              alt="AI Generated Image"
+                            />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl -z-10 group-hover:from-purple-500/40 group-hover:to-cyan-500/40 transition-all duration-300"></div>
+                          </div>
+                          {/* Download Section */}
+                          <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/50 w-full max-w-md">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                                  <DownloadOutlined className="text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-white">พร้อมดาวน์โหลด</h4>
+                                  <p className="text-gray-400 text-sm">คลิกเพื่อบันทึกรูปภาพ</p>
+                                </div>
+                              </div>
+                              <Button
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 border-none hover:from-green-600 hover:to-emerald-600 px-6 py-2 h-auto rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                                onClick={() => {
+                                  window.open(getdata.data[0].url, "_blank");
+                                  setData({});
+                                }}>
+                                <DownloadOutlined className="mr-2" />
+                                ดาวน์โหลด
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="order-1 lg:order-2 space-y-6">

@@ -24,6 +24,10 @@
   }
 }
 
+.font-clash {
+  font-family: "Clash Display", sans-serif;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -31,4 +35,17 @@ html {
 .ant-btn.hover-primary-text:hover {
   background-color: white !important;
   color: #040c5c !important;
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 15s linear infinite; /* ยิ่งนานยิ่ง smooth */
 }
