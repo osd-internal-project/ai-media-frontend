@@ -4,6 +4,7 @@ import "../globals.css";
 import "antd/dist/reset.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import PrivateLayout from "../components/PrivateLayout";
+import FuturisticBackground from "./components/background";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       {/* <body className={`app-theme-dark ${geistSans.variable} ${geistMono.variable} antialiased `}> */}
       <body className={`app-theme-dark  antialiased `}>
+        <FuturisticBackground />
         <AntdRegistry>
           <PrivateLayout>{children}</PrivateLayout>
         </AntdRegistry>

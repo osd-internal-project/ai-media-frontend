@@ -17,58 +17,38 @@ const NavbarUser: React.FC<Props> = ({ user }) => {
     <Header
       style={{
         paddingTop: 40,
-        background: "transparent", // <-- remove background color
+        background: "transparent",
         height: "auto",
         lineHeight: "normal",
         padding: 0,
-        boxShadow: "none", // optional: remove any shadow
+        boxShadow: "none",
       }}>
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-16 pt-6">
+        <div className="flex items-center justify-between h-18 ">
           <div className="flex-shrink-0">
             <a href="#" className="flex items-center space-x-2">
-              <Image src="/images/osd-logo-blue.png" alt="OSD Logo" width={80} height={80} />
+              <Image src="/images/Logo.png" alt="OSD Logo" width={160} height={100} />
             </a>
           </div>
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-10">
             <Link
-              onClick={() => navigate.push(`/public/package`)}
-              className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
-              Price
+              // onClick={() => navigate.push(`/public/package`)}
+              className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform !text-lg">
+              {`About`}
             </Link>
-            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
-              Explore Documentation
+            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform !text-lg">
+              {`Features`}
             </Link>
-            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform">
-              case studies
+            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform !text-lg">
+              {`Resources`}
             </Link>
-            <Button
-              onClick={() => navigate.push("/login")}
-              type="default"
-              icon={<LoginOutlined />}
-              className="!bg-transparent !text-white !border-white hover:!bg-gray-800 hover:!text-gray-300 hover:!border-gray-300 transition-all">
-              Get Started
+            <Link href="#" className="!text-white transition-colors hover:scale-105 hover:text-gray-400 transform !text-lg">
+              {`Support`}
+            </Link>
+            <Button type="primary" className="!bg-[#6366F1] !text-black  transition-all !rounded-4xl w-[150px] !h-[50px] !text-xl">
+              {`Purchase`}
             </Button>
           </nav>
-
-          {/* <Space>
-            {user ? (
-              <p className="!text-bold !text-black">{user ? user?.name : "username"}</p>
-            ) : (
-              <>
-                <Button
-                  type="text"
-                  shape="round"
-                  icon={<LoginOutlined />}
-                  className="!border-1 !border-amber-50 transition-all hover:scale-105 hover-primary-text">
-                  Login
-                </Button>
-                <Button type="primary" shape="round" icon={<UserAddOutlined />} className={`transition-all hover:scale-105 border-0 `}>
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </Space> */}
         </div>
       </div>
     </Header>

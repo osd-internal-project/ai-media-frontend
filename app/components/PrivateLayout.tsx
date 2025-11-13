@@ -33,10 +33,31 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           colorBgElevated: "#1a1a1a",
           colorTextBase: "#f0f0f0",
         },
+        components: {
+          Menu: {
+            itemHoverBg: "#f3e8ff", // light purple background on hover
+            itemHoverColor: "#7c3aed", // purple text on hover
+            itemSelectedBg: "#ede9fe", // background when selected
+            itemSelectedColor: "#7c3aed", // text color when selected
+            itemBg: "transparent", // default background
+          },
+          Layout: {
+            siderBg: "transparent",
+          },
+          Segmented: {
+            itemActiveBg: "#f3e8ff",
+            itemColor: "rgba(168, 85, 247, 1)",
+            itemHoverBg: "#f3e8ff",
+            itemHoverColor: "#7c3aed",
+            itemSelectedBg: "#ede9fe",
+            itemSelectedColor: "#7c3aed",
+            trackBg: "rgba(168, 85, 247, 0.4)",
+          },
+        },
       }}>
       {/* 👇 Parent layout wraps sidebar + main content */}
       <Layout className=" min-h-screen  overflow-auto ">
-        <Sider width={200} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-3 !bg-black ">
+        <Sider width={200} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-3  ">
           <div className="w-full flex justify-center">
             <Image width={"100px"} src="/images/osd-logo-blue.png" alt="OSD Logo" preview={false} className="mb-2" />
           </div>

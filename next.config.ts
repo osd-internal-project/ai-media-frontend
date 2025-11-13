@@ -4,6 +4,7 @@ const nextConfig = {
     VERSION: "2.0.0",
     // dev
     BACKEND_URL: "http://localhost:4001/api",
+    BACKEND_CORE_URL: "http://localhost:4002/api",
     NEXTAUTH_URL: "http://localhost:3000",
   },
   webpack: (config: any) => {

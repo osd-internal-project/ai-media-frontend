@@ -256,7 +256,7 @@ const Page: FC = () => {
               </div>
               <div className="flex gap-3">
                 <CheckCircleOutlined className="text-purple-300 text-lg mt-1 flex-shrink-0" />
-                <span className="text-white">Access to Google's most advanced models</span>
+                <span className="text-white">Access to Googles most advanced models</span>
               </div>
               <div className="flex gap-3">
                 <CheckCircleOutlined className="text-purple-300 text-lg mt-1 flex-shrink-0" />

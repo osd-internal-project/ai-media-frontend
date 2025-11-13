@@ -9,6 +9,16 @@ const config: Config = {
         prompt: ["Prompt", "sans-serif"],
       },
     },
+    keyframes: {
+      'dark-gradient-shift': {
+        '0%': { backgroundPosition: '0% 50%' },
+        '50%': { backgroundPosition: '100% 50%' },
+        '100%': { backgroundPosition: '0% 50%' },
+      },
+    },
+    animation: {
+      'dark-gradient': 'dark-gradient-shift 20s ease infinite', // ช้าๆ นุ่มนวล
+    },
     colors: {
       transparent: "transparent",
       primary: {

@@ -1,7 +1,7 @@
 import React from "react";
 import { MenuProps, Tooltip } from "antd";
 import Link from "next/link";
-import { FileImageOutlined, PieChartOutlined, VideoCameraOutlined, UserSwitchOutlined, SettingOutlined } from "@ant-design/icons";
+import { FileImageOutlined, PieChartOutlined, VideoCameraOutlined, UserSwitchOutlined, SettingOutlined, FileExcelOutlined } from "@ant-design/icons";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -22,6 +22,12 @@ export const MenuSider: MenuItem[] = [
     key: `generate-vdo`,
     icon: <VideoCameraOutlined />,
     label: `Generate VDO`,
+    // rule: ["user", "admin", "hr"],
+  },
+  {
+    key: `report`,
+    icon: <FileExcelOutlined />,
+    label: `Report`,
     // rule: ["user", "admin", "hr"],
   },
   {
