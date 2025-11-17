@@ -97,21 +97,28 @@ const Page: FC = () => {
             <h1 className="text-3xl font-bold text-white mb-2">{isLogin ? "Welcome Back" : "Create Account"}</h1>
             <p className="text-purple-300">{isLogin ? "Sign in to continue to AI Cave" : "Join the AI Cave"}</p>
           </div>
-
+          <Button
+            onClick={async () => {
+              await signIn("keycloak", { callbackUrl: "/page/home" });
+            }}
+          >
+            Sing In
+          </Button>
           {/* Toggle Buttons */}
           <div className="flex mb-8 bg-black/50 rounded-lg p-1">
             <button
-              onClick={async () => {
-                await signIn("keycloak", { callbackUrl: "/page/generate-image" });
-              }}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
-                }`}>
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${
+                isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
+              }`}
+            >
               LOGIN
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${!isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
-                }`}>
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${
+                !isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
+              }`}
+            >
               SIGN UP
             </button>
           </div>
@@ -134,7 +141,8 @@ const Page: FC = () => {
               rules={[
                 { required: true, message: "Please input your email!" },
                 { type: "email", message: "Please enter a valid email!" },
-              ]}>
+              ]}
+            >
               <Input
                 prefix={<MailOutlined className="text-purple-400" />}
                 placeholder="Email"
@@ -166,7 +174,8 @@ const Page: FC = () => {
                       return Promise.reject(new Error("Passwords do not match!"));
                     },
                   }),
-                ]}>
+                ]}
+              >
                 <Input.Password
                   prefix={<LockOutlined className="text-purple-400" />}
                   placeholder="Confirm Password"
@@ -192,7 +201,8 @@ const Page: FC = () => {
                 type="primary"
                 htmlType="submit"
                 size="large"
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 border-0 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300">
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 border-0 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+              >
                 {isLogin ? "LOGIN" : "SIGN UP"}
               </Button>
             </Form.Item>

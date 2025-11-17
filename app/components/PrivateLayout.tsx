@@ -1,23 +1,26 @@
 "use client";
 import { ConfigProvider, Layout, Menu, Image, Avatar, Badge, Button } from "antd";
 import { useState } from "react";
-import PrivateContent from "./PrivateContent";
 import { usePathname } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
-import { signIn } from "next-auth/react";
 import PrivateNavigation from "./PrivateNavigation";
+import PrivateContent from "./PrivateContent";
+import { useSession } from "next-auth/react";
+import { PlusCircleOutlined } from "@ant-design/icons";
+
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState<{ name: string }>({ name: "" });
+  const { data: session, status } = useSession();
 
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
   const currentPathSub = pathname.split("/")[3];
+
   return (
     <ConfigProvider
       theme={{
@@ -41,44 +44,55 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             siderBg: "#0f0f0f",
           },
           Select: {
-            selectorBg: "#151515", // พื้นหลังตอนยังไม่เลือก
-            colorBgContainer: "#151515", // พื้นหลังตอนเลือกแล้ว
-            colorText: "white", // สีตัวอักษรตอนเลือกแล้ว
-            colorTextPlaceholder: "#777", // สี placeholder ตอนยังไม่เลือก
-            colorBorder: "#333", // เส้น border
-            colorBgElevated: "#1e1e1e", // พื้นหลัง dropdown
-            optionActiveBg: "#333", // hover
-            optionSelectedBg: "#444", // ตอนเลือก item
+            selectorBg: "#151515",
+            colorBgContainer: "#151515",
+            colorText: "white",
+            colorTextPlaceholder: "#777",
+            colorBorder: "#333",
+            colorBgElevated: "#1e1e1e",
+            optionActiveBg: "#333",
+            optionSelectedBg: "#444",
           },
         },
       }}
     >
-      <Layout className=" min-h-screen  overflow-auto ">
-        <Sider width={250} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-3 relative ">
-          <div className="bg-black rounded-2xl !pb-5 h-full">
-            <div className="w-full flex justify-center items-center py-5">
+      <Layout className="h-screen overflow-hidden">
+        <Sider width={250} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-2 h-screen">
+          <div className="bg-black rounded-2xl h-full flex flex-col">
+            <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
               <Image width={"150px"} src="/images/Logo.png" alt="OSD Logo" preview={false} className="mb-2" />
             </div>
-            <Menu
-              mode="inline"
-              selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-              defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-              items={renderMenuItems(MenuSider)}
-            />
-          </div>
-          {/* <div className="bg-black rounded-2xl p-4 flex items-center gap-5 absolute bottom-10 left-3 right-3">
-            <Badge dot color="green">
-              <Avatar />
-            </Badge>
-            <div className="grid grid-cols-1">
-              <span className="text-white text-sm">User Guest</span>
-              <span className="text-[#6366F1]">{`Premium`}</span>
+
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+              <Menu
+                mode="inline"
+                selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
+                defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
+                items={renderMenuItems(MenuSider)}
+              />
+              <div className=" !text-gray-400 px-4 mt-2">
+                {`PROJECT`}{" "}
+                <div className="mt-3 w-full">
+                  <Button icon={<PlusCircleOutlined />} className="w-full">{`Add new project`}</Button>
+                </div>
+              </div>
             </div>
-          </div> */}
+            <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+              <Badge dot color="green">
+                <Avatar />
+              </Badge>
+              <div className="grid grid-cols-1">
+                <span className="text-white text-sm">{`${session?.user?.name}`}</span>
+                <span className="text-[#6366F1]">Premium</span>
+              </div>
+            </div>
+          </div>
         </Sider>
-        <Layout className="!min-h-screen !p-0">
-          <PrivateNavigation user={user} />
-          <PrivateContent user={user}>{children}</PrivateContent>
+        <Layout className="!p-0 h-screen flex flex-col">
+          <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} />
+          <div className="flex-1 ">
+            <PrivateContent user={session?.user ? { fullname: session.user.name ?? "" } : undefined}>{children}</PrivateContent>
+          </div>
         </Layout>
       </Layout>
     </ConfigProvider>

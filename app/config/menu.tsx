@@ -96,29 +96,48 @@ import { LockKeyholeOpen } from "lucide-react";
 
 export const MenuSider = [
   {
-    key: `generate-image`,
-    icon: <FileImageOutlined />,
-    label: `Image Generation`,
+    key: `general`,
+    label: `GENERAL`,
+    disabled: true,
+    header: true,
+    children: [
+      {
+        key: `home`,
+        icon: <FileImageOutlined />,
+        label: `Home`,
+      },
+      {
+        key: `dashboard`,
+        icon: <FileImageOutlined />,
+        label: `Dashboard`,
+      },
+      {
+        key: `group-permission`,
+        icon: <LockKeyholeOpen size={16} />,
+        label: `Groups & Permission`,
+      },
+      {
+        key: `users-management`,
+        icon: <UserSwitchOutlined />,
+        label: `User Managament`,
+      },
+    ],
   },
-  {
-    key: `generate-vdo`,
-    icon: <VideoCameraOutlined />,
-    label: `Video Generation`,
-  },
-  {
-    key: `group-permission`,
-    icon: <LockKeyholeOpen size={16} />,
-    label: `Groups & Permission`,
-  },
-  {
-    key: `users-management`,
-    icon: <UserSwitchOutlined />,
-    label: `User Managament`,
-  },
+  // {
+  //   key: `generate-image`,
+  //   icon: <FileImageOutlined />,
+  //   label: `Image Generation`,
+  // },
+  // {
+  //   key: `generate-vdo`,
+  //   icon: <VideoCameraOutlined />,
+  //   label: `Video Generation`,
+  // },
   {
     key: `settings`,
-    label: `Settings`,
+    label: `SETTING`,
     disabled: true,
+    header: false,
     children: [
       {
         key: `roles`,
@@ -141,7 +160,12 @@ export const renderMenuItems = (menuList: any[]) => {
         children: menu.children.map((child: any) => ({
           key: child.key,
           icon: child.icon,
-          label: <Link href={`/page/${menu.key}/${child.key}`}>{child.label}</Link>,
+          label:
+            menu.disabled && menu.header ? (
+              <Link href={`/page/${child.key}`}>{child.label}</Link>
+            ) : (
+              <Link href={`/page/${menu.key}/${child.key}`}>{child.label}</Link>
+            ),
         })),
       });
     } else {

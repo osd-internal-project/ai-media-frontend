@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./PrivateNavbar";
 import { findMenuLabel, MenuSider } from "../config/menu";
 interface NavigationProps {
-  user: { name: string };
+  user?: { fullname: string };
 }
 
 const PrivateNavigation: React.FC<NavigationProps> = ({ user }) => {

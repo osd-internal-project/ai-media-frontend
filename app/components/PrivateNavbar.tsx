@@ -9,14 +9,13 @@ import { useRouter } from "next/navigation";
 const { Header } = Layout;
 
 interface Props {
-  user?: { name: string };
+  user?: { fullname: string };
   pageTitle: string;
 }
 const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
   return (
     <Header
       style={{
-        paddingTop: 40,
         background: "transparent",
         height: "auto",
         lineHeight: "normal",
@@ -30,7 +29,7 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
           <div className="flex items-center gap-4">
             <Avatar size={48} />
             <div className="grid grid-cols-1 items-center gap-2">
-              <span className="font-bold text-white">username</span>
+              <span className="font-bold text-white">{user.fullname}</span>
               <span>{`tier subscribe`}</span>
             </div>
           </div>

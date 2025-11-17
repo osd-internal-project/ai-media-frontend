@@ -16,9 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <AntdRegistry>
-        <PrivateLayout>{children}</PrivateLayout>
-      </AntdRegistry>
+      <PrivateLayout>{children}</PrivateLayout>
     </html>
   );
 }

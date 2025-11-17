@@ -3,7 +3,7 @@ const { Content } = Layout;
 
 interface ClientLayoutProps {
   children: React.ReactNode;
-  user?: { name: string };
+  user?: { fullname: string };
 }
 
 export default function PrivateContent({ children, user }: ClientLayoutProps) {
@@ -13,7 +13,8 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
         className="!pt-3 !pr-3 !pb-3 bg-[#0f0f0f]"
         style={{
           margin: 0,
-        }}>
+        }}
+      >
         {children}
       </Content>
     );

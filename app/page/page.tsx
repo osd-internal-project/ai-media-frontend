@@ -9,14 +9,13 @@ const Page = () => {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/signin");
+      router.push("/login");
     }
   }, [status, router]);
 
   if (session) {
-    redirect("/page");
+    redirect("/page/home");
   }
-
   return redirect("/login");
 };
 
