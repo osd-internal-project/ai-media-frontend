@@ -155,7 +155,6 @@
 
 // export default Page;
 
-
 "use client";
 import React, { type FC } from "react";
 import { CheckCircleOutlined, HomeOutlined } from "@ant-design/icons";
@@ -311,34 +310,6 @@ const Page: FC = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(20px, -50px) scale(1.1); }
-          50% { transform: translate(-20px, 20px) scale(0.9); }
-          75% { transform: translate(50px, 10px) scale(1.05); }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-
-        .bg-grid-pattern {
-          background-image: 
-            linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-      `}</style>
     </div>
   );
 };

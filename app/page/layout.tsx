@@ -1,20 +1,8 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import "antd/dist/reset.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import PrivateLayout from "../components/PrivateLayout";
-import FuturisticBackground from "./components/background";
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
 
 export const metadata: Metadata = {
   title: "AI CAVE",
@@ -28,13 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* <body className={`app-theme-dark ${geistSans.variable} ${geistMono.variable} antialiased `}> */}
-      <body className={`app-theme-dark  antialiased `}>
-        <FuturisticBackground />
-        <AntdRegistry>
-          <PrivateLayout>{children}</PrivateLayout>
-        </AntdRegistry>
-      </body>
+      <AntdRegistry>
+        <PrivateLayout>{children}</PrivateLayout>
+      </AntdRegistry>
     </html>
   );
 }

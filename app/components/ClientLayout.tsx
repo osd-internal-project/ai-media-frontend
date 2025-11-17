@@ -1,15 +1,10 @@
 "use client";
 
 import { Breadcrumb, ConfigProvider, Layout } from "antd";
-import { HomeOutlined } from "@ant-design/icons";
 import Navigation from "./Navigation";
 import { useState } from "react";
 import OSDFooter from "./Footer";
-import colors from "../config/colors.config";
-const { Content } = Layout;
-import { theme } from "antd";
 import ClientContent from "./ClientContent";
-import Link from "antd/es/typography/Link";
 interface ClientLayoutProps {
   children: React.ReactNode;
 }

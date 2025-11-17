@@ -2,6 +2,7 @@
 import React, { useState, type FC } from "react";
 import { Form, Input, Button, Checkbox } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined, GoogleOutlined, FacebookOutlined } from "@ant-design/icons";
+import { signIn } from "next-auth/react";
 
 const Page: FC = () => {
   const [isLogin, setIsLogin] = useState<boolean>(true);
@@ -11,7 +12,6 @@ const Page: FC = () => {
     console.log("Form values:", values);
     alert(`${isLogin ? "Login" : "Sign Up"} successful!`);
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
       {/* Animated Background Elements */}
@@ -101,17 +101,17 @@ const Page: FC = () => {
           {/* Toggle Buttons */}
           <div className="flex mb-8 bg-black/50 rounded-lg p-1">
             <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${
-                isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
-              }`}>
+              onClick={async () => {
+                await signIn("keycloak", { callbackUrl: "/page/generate-image" });
+              }}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
+                }`}>
               LOGIN
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${
-                !isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
-              }`}>
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-300 ${!isLogin ? "bg-gradient-to-r from-purple-600 to-indigo-600 !text-white shadow-lg" : "text-purple-300 hover:!text-white"
+                }`}>
               SIGN UP
             </button>
           </div>
@@ -222,81 +222,6 @@ const Page: FC = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(20px, -50px) scale(1.1); }
-          50% { transform: translate(-20px, 20px) scale(0.9); }
-          75% { transform: translate(50px, 10px) scale(1.05); }
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-
-        .bg-grid-pattern {
-          background-image: 
-            linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-
-        .ant-input, .ant-input-password, .ant-input-password input {
-          background: rgba(0, 0, 0, 0.5) !important;
-          border-color: rgba(168, 85, 247, 0.3) !important;
-          color: white !important;
-        }
-
-        .ant-input::placeholder, .ant-input-password::placeholder, .ant-input-password input::placeholder {
-          color: rgba(168, 85, 247, 0.5) !important;
-        }
-
-        .ant-input:hover, .ant-input-password:hover, .ant-input:focus, .ant-input-password:focus {
-          border-color: rgba(168, 85, 247, 1) !important;
-          box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1) !important;
-        }
-
-        .ant-input-affix-wrapper {
-          background: rgba(0, 0, 0, 0.5) !important;
-          border-color: rgba(168, 85, 247, 0.3) !important;
-        }
-
-        .ant-input-affix-wrapper:hover, .ant-input-affix-wrapper:focus {
-          border-color: rgba(168, 85, 247, 1) !important;
-        }
-
-        .ant-checkbox-wrapper {
-          color: rgba(216, 180, 254, 1) !important;
-        }
-
-        .ant-checkbox-inner {
-          background-color: rgba(0, 0, 0, 0.5) !important;
-          border-color: rgba(168, 85, 247, 0.5) !important;
-        }
-
-        .ant-checkbox-checked .ant-checkbox-inner {
-          background-color: rgba(147, 51, 234, 1) !important;
-          border-color: rgba(147, 51, 234, 1) !important;
-        }
-      `}</style>
     </div>
   );
 };

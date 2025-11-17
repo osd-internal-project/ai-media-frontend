@@ -10,9 +10,9 @@ const { Header } = Layout;
 
 interface Props {
   user?: { name: string };
+  pageTitle: string;
 }
-const NavbarUser: React.FC<Props> = ({ user }) => {
-  const navigate = useRouter();
+const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
   return (
     <Header
       style={{
@@ -22,21 +22,24 @@ const NavbarUser: React.FC<Props> = ({ user }) => {
         lineHeight: "normal",
         padding: 0,
         boxShadow: "none",
-      }}>
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-end h-16">
-          {user ? (
-            <div className="flex items-center  gap-4">
-              <p className="flex justify-center items-center !text-bold !text-white">{"username"}</p>
-              <Avatar />
+      }}
+    >
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
+        <div className="text-2xl">{pageTitle}</div>
+        {user ? (
+          <div className="flex items-center gap-4">
+            <Avatar size={48} />
+            <div className="grid grid-cols-1 items-center gap-2">
+              <span className="font-bold text-white">username</span>
+              <span>{`tier subscribe`}</span>
             </div>
-          ) : (
-            <>
-              <p className="!text-bold !text-white">{"username"}</p>
-              <Avatar />
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <p className="!text-bold !text-white">{"Guest"}</p>
+            <Avatar />
+          </>
+        )}
       </div>
     </Header>
   );

@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
@@ -27,12 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`app-theme-dark ${geistSans.variable} ${geistMono.variable} antialiased `}>
-        {/* <body className={`app-theme-dark  antialiased `}> */}
-        <AntdRegistry>
-          <ClientLayout>{children}</ClientLayout>
-        </AntdRegistry>
-      </body>
+      <AntdRegistry>
+        <ClientLayout>{children}</ClientLayout>
+      </AntdRegistry>
     </html>
   );
 }

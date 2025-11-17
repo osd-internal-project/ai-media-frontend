@@ -6,3 +6,4 @@ export interface ITFromGenerate {
     image?: any;
     ratio: string;
 }
+

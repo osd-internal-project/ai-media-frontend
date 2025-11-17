@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 const Page = () => {
-  return redirect("/public/home");
+  return redirect("/page/generate-image");
 };
 
 export default Page;

@@ -4,26 +4,11 @@
   font-family: "Prompt", sans-serif !important;
 }
 
-:root {
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
   --default: var(--default);
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 .font-clash {
   font-family: "Clash Display", sans-serif;
 }
@@ -48,4 +33,17 @@ html {
 .animate-marquee {
   display: inline-flex;
   animation: marquee 15s linear infinite; /* ยิ่งนานยิ่ง smooth */
+/* } */
+
+.ant-select-selector {
+  background-color: black !important;
+  color: #fff !important;
+  border: none !important;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover background */
+.ant-select:hover .ant-select-selector {
+  background-color: transparent !important;
+  /* your hover color */
 }

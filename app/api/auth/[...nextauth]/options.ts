@@ -1,113 +1,119 @@
-import CredentialsProvider from "next-auth/providers/credentials";
-import jwt from "jsonwebtoken";
-import { axiosUser } from "@/app/lib/axios/axios";
+import KeycloakProvider from "next-auth/providers/keycloak";
+import { JWT } from "next-auth/jwt";
+
+async function refreshAccessToken(token: JWT): Promise<JWT> {
+    try {
+        const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                client_id: process.env.KEYCLOAK_CLIENT_ID!,
+                client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+                grant_type: "refresh_token",
+                refresh_token: String(token.refreshToken),
+            }),
+        });
+
+        const refreshedTokens = await response.json();
+
+        if (!response.ok) {
+            throw refreshedTokens;
+        }
+
+        return {
+            ...token,
+            accessToken: refreshedTokens.access_token,
+            expiresAt: Date.now() + refreshedTokens.expires_in * 1000,
+            refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+        };
+    } catch (error) {
+        console.error("Error refreshing access token", error);
+        return {
+            ...token,
+            error: "RefreshAccessTokenError",
+        };
+    }
+}
+
 export const authOptions = {
     providers: [
-        CredentialsProvider({
-            id: "username-login",
-            name: "Login",
-            credentials: {
-                username: { label: "Username", type: "text" },
-                password: { label: "Password", type: "password" },
-                type: { label: "Type", type: "text" },
-            },
-            async authorize(credentials) {
-                if (!credentials?.username || !credentials?.password) {
-                    return null;
-                }
-                try {
-                    const response = await axiosUser
-                        .post(`${process.env.AUTH_BACKEND_URL}/auth/login`, {
-                            username: credentials?.username,
-                            password: credentials?.password,
-                            type: credentials?.type,
-                        })
-                        .catch(() => {
-                            // console.log(e);
-                            return null;
-                        });
-                    // console.log("login response");
-                    if (!response) {
-                        return null;
-                    }
-                    const token = response.data;
-                    const accessTokenExpires = Date.now() + 60 * 1000;
-                    return { ...token, accessTokenExpires: accessTokenExpires };
-                } catch (error) {
-                    return error;
-                }
+        KeycloakProvider({
+            clientId: process.env.KEYCLOAK_CLIENT_ID!,
+            clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
+            issuer: process.env.KEYCLOAK_ISSUER,
+            authorization: {
+                params: {
+                    scope: "openid email profile roles",
+                },
             },
         }),
     ],
-    session: {
-        jwt: true,
-        maxAge: 60 * 60,
-    },
     callbacks: {
-        async jwt({ token, user }: { token: any; user: any }) {
-            return { ...token, ...user };
-        },
-        async session({ session, token }: { session: any; token: any }) {
-            // const authToken = await refreshAccessToken(session, token);
-            const profile = jwt.decode(token.accessToken) as jwt.JwtPayload;
-            session.accessToken = token.accessToken;
-            session.refreshToken = token.refreshToken;
-            session.user = { ...profile };
-            const permission = await axiosUser
-                .get(`${process.env.AUTH_BACKEND_URL}/auth/permission/${profile.userId}`)
-                .then((res: any) => {
-                    return res.data;
-                })
-                .catch(() => {
-                    // console.log(" error permission");
-                    return null;
-                });
+        async jwt({ token, account, profile }: any) {
+            // Initial sign in
+            if (account && profile) {
+                token.accessToken = account.access_token;
+                token.refreshToken = account.refresh_token;
+                token.idToken = account.id_token;
+                token.expiresAt = account.expires_at! * 1000;
 
-            if (permission) {
-                session.grouplist = permission.grouplist;
-                session.rulelist = permission.rulelist;
+                // Extract roles from Keycloak token
+                const decodedToken = JSON.parse(Buffer.from(account.access_token!.split(".")[1], "base64").toString());
+
+                // Get realm roles
+                token.roles = decodedToken.realm_access?.roles || [];
+
+                // Get groups (if configured in Keycloak)
+                token.groups = decodedToken.groups || [];
+
+                return token;
             }
+
+            // Return previous token if not expired
+            if (Date.now() < (token.expiresAt as number)) {
+                return token;
+            }
+
+            // Access token has expired, try to refresh it
+            return refreshAccessToken(token);
+        },
+        async session({ session, token }: any) {
+            // Send properties to the client
+            session.accessToken = token.accessToken;
             session.error = token.error;
+            session.user.roles = token.roles;
+            session.user.groups = token.groups;
+            session.user.id = token.sub!;
+
             return session;
         },
     },
-    secret: `${process.env.NEXT_AUTH_SECRET_KEY}`,
+    events: {
+        async signOut({ token }: any) {
+            if (token.idToken) {
+                const issuerUrl = process.env.KEYCLOAK_ISSUER;
+                const logOutUrl = `${issuerUrl}/protocol/openid-connect/logout`;
+                const params = new URLSearchParams({
+                    id_token_hint: token.idToken as string,
+                    post_logout_redirect_uri: process.env.NEXTAUTH_URL!,
+                });
+                try {
+                    await fetch(`${logOutUrl}?${params.toString()}`);
+                } catch (err) {
+                    console.error("Error during Keycloak logout:", err);
+                }
+            }
+        },
+    },
     pages: {
         signIn: "/signin",
+        error: "/error",
+    },
+    session: {
+        strategy: "jwt",
     },
 };
 
-// async function refreshAccessToken(session: any, token: any) {
-//   try {
-//     if (!session.refreshToken) {
-//       const response = await axios.post(`${process.env.BACKEND_USER_URL}/auth/refresh`, {
-//         refreshToken: token.refreshToken,
-//       });
-//       token.accessToken = response.data.accessToken;
-//       token.refreshToken = response.data.refreshToken;
-//       // const refreshedTokens = await response.json();
-
-//       return {
-//         ...token,
-//         accessTokenExpires: Date.now() + 1 * 60 * 1000,
-//       };
-//     } else {
-//       const response = await axios.post(`${process.env.BACKEND_USER_URL}/auth/refresh`, {
-//         refreshToken: session.refreshToken,
-//       });
-//       token.accessToken = response.data.accessToken;
-//       token.refreshToken = response.data.refreshToken;
-//       // const refreshedTokens = await response.json();
-
-//       return {
-//         ...token,
-//         accessTokenExpires: Date.now() + 1 * 60 * 1000,
-//       };
-//     }
-//   } catch (error) {
-//     return {
-//       ...token,
-//       error: "RefreshAccessTokenError",
-//     };
-//   }
-// }
