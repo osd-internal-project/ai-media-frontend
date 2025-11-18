@@ -30,14 +30,17 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
             <Avatar size={48} />
             <div className="grid grid-cols-1 items-center gap-2">
               <span className="font-bold text-white">{user.fullname}</span>
-              <span>{`tier subscribe`}</span>
+              <span className="text-[#6366F1]">Premium</span>
             </div>
           </div>
         ) : (
-          <>
-            <p className="!text-bold !text-white">{"Guest"}</p>
-            <Avatar />
-          </>
+          <div className="flex items-center gap-4">
+            <Avatar size={48} />
+            <div className="grid grid-cols-1 items-center gap-2">
+              <span className="font-bold text-white">{`Geust`}</span>
+              <span className="text-[#6366F1]">Normal</span>
+            </div>
+          </div>
         )}
       </div>
     </Header>

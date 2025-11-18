@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import type { TGroup } from "../common/groups.type";
+import type { IProject } from "../common/project.type";
 
 const ProjectService = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/project";
@@ -15,7 +15,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    create: async (value: TGroup) => {
+    create: async (value: IProject) => {
       return await axiosInstance
         .post(`${baseUrl}`, { body: value })
         .then((res) => {

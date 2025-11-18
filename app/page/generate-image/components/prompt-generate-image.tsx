@@ -119,7 +119,8 @@ const PromptGenerateImage: FC<props> = ({
                 {["Landscape", "Creatures", "Character Design", "Props & Items"].map((item) => (
                   <button
                     key={item}
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors">
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                  >
                     <span>{item}</span>
                     <span>→</span>
                   </button>
@@ -137,7 +138,8 @@ const PromptGenerateImage: FC<props> = ({
                 {["Art Styles", "Lighting & Mood", "Color Palettes", "Composition"].map((item) => (
                   <button
                     key={item}
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors">
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                  >
                     <span>{item}</span>
                     <span>→</span>
                   </button>
@@ -155,7 +157,8 @@ const PromptGenerateImage: FC<props> = ({
                 {["Product Showcase", "Social Media Visuals", "Campaign Moodboards", "Social media posts"].map((item) => (
                   <button
                     key={item}
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors">
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                  >
                     <span>{item}</span>
                     <span>→</span>
                   </button>
@@ -182,7 +185,7 @@ const PromptGenerateImage: FC<props> = ({
                       <div className="relative w-fit">
                         <img
                           src={message.image}
-                          width="250"
+                          width="50"
                           className="rounded-xl shadow-2xl border border-gray-600/50 group-hover:shadow-purple-500/20 transition-all duration-300 max-w-full h-auto block"
                           alt="AI Generated Image"
                         />
@@ -197,7 +200,8 @@ const PromptGenerateImage: FC<props> = ({
                           className="absolute bottom-0 right-[-50px] p-2  hover:bg-white rounded-lg shadow-lg border"
                           onClick={() => {
                             window.open(message.image, "_blank");
-                          }}>
+                          }}
+                        >
                           <Download className="w-5 h-5" />
                         </button>
                       </div>
@@ -236,7 +240,8 @@ const PromptGenerateImage: FC<props> = ({
             autoComplete="off"
             layout="vertical"
             onFinish={handleSubmit}
-            initialValues={{ type: "image" }}>
+            initialValues={{ type: "image" }}
+          >
             <Form.Item name="type" hidden>
               <Input />
             </Form.Item>
@@ -263,7 +268,8 @@ const PromptGenerateImage: FC<props> = ({
                     beforeUpload={beforeUploadFiles}
                     multiple={false}
                     maxCount={1}
-                    showUploadList={false}>
+                    showUploadList={false}
+                  >
                     <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
                       <PaperClipOutlined className="text-lg" />
                     </div>
@@ -272,7 +278,8 @@ const PromptGenerateImage: FC<props> = ({
                 <Button
                   htmlType="submit"
                   size="large"
-                  className=" rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
+                  className=" rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer"
+                >
                   <SendOutlined className="text-lg" />
                 </Button>
               </div>
