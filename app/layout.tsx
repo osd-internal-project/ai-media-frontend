@@ -1,7 +1,6 @@
-'use client'
+"use client";
 import SessionProvider from "./components/SessionProvider";
 import "./globals.css";
-// import "antd/dist/reset.css";
 
 export default function RootLayout({
   children,
@@ -10,7 +9,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={``}>
+      <body>
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

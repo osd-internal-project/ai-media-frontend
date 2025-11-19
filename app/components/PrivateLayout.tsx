@@ -145,7 +145,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 </div>
                 {getProject.map((e) => {
                   return (
-                    <div className="w-full flex justify-center mt-2 gap-4">
+                    <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
                       <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
                         {e.name}
                       </Button>

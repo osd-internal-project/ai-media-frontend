@@ -12,16 +12,24 @@ import HeaderGenerateImagePage from "./components/header-generate-image";
 import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
+import PromptGenerateVdo from "./components/prompt-generate-vdo";
 
 const GenerateImagePage: FC = () => {
   const params = useParams();
   const [formcreateImage] = Form.useForm();
+  const [formcreateVdo] = Form.useForm();
   const projectService = ProjectService(axiosCore);
-  const [getProject, setProject] = useState<IProject>({});
+  const [getProject, setProject] = useState<IProject>();
   const [files, setFiles] = useState<UploadFile[]>([]);
+  const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [getdata, setData] = useState<any>([]);
+  const [getdatavdo, setDataVdo] = useState<any>([]);
+
   const [clicksubmit, setClickSubmit] = useState<boolean>(false);
+  const [clicksubmitVdo, setClickVdo] = useState<boolean>(false);
+
   const [loadingData, setLoadingData] = useState<boolean>(true);
 
   useEffect(() => {
@@ -31,10 +39,22 @@ const GenerateImagePage: FC = () => {
   }, [loadingData]);
 
   const fecthdata = async () => {
-    const response = await projectService.findById(params.id);
-    console.log(response);
-    setProject(response);
-    setLoadingData(false);
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
+    if (!id) {
+      console.warn("No project id provided in route params");
+      setLoadingData(false);
+      return;
+    }
+
+    try {
+      const response = await projectService.findById(id);
+      console.log(response);
+      setProject(response);
+    } catch (err) {
+      console.error("Failed to fetch project:", err);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const onFinish = async (values: ITFromGenerate) => {
@@ -66,8 +86,93 @@ const GenerateImagePage: FC = () => {
     }
   };
 
+  const onFinishVDO = async (values: ITFromGenerate) => {
+    let base: ITFromGenerate = values;
+    setClickVdo(true);
+    setLoading(true);
+    if (filesvdo.length > 0) {
+      const formData: any = new FormData();
+      formData.append("type", "create-attend");
+      formData.append("files", filesvdo[0].originFileObj);
+      const upload = await GenerateImageServices(axiosCore).upload(formData);
+      base = { ...values, image: upload.fileName };
+    }
+    try {
+      // ปรับปรุงเงื่อนไขการเช็คสถานะ
+      const response = await GenerateImageServices(axiosCore).create(base);
+
+      // เช็คว่ามี response และมี id หรือไม่
+      if (!response?.id) {
+        message.error("สร้างคำขอล้มเหลว");
+        setLoading(false);
+        return;
+      }
+
+      // ฟังก์ชันเช็คสถานะแบบ polling
+      const checkStatus = async () => {
+        try {
+          const task = await GenerateImageServices(axiosCore).findById(response.id);
+          console.log(task);
+
+          // กรณีสำเร็จ
+          if (task?.status === "succeeded") {
+            // เช็คว่ามีข้อมูลรูปภาพหรือไม่
+            if (task && task.content) {
+              setDataVdo(task);
+              message.success("สร้างรูปภาพสำเร็จ");
+              formcreateImage.resetFields();
+              setFilesVdo([]);
+              setLoading(false);
+              return;
+            } else {
+              message.error("ไม่มีข้อมูลรูปภาพที่ได้รับกลับมา");
+              setLoading(false);
+              return;
+            }
+          }
+
+          // กรณีล้มเหลว
+          if (task?.status === "failed") {
+            message.error("การสร้างรูปภาพล้มเหลว");
+            setLoading(false);
+            return;
+          }
+
+          // กรณียังประมวลผลอยู่ (processing, pending, etc.)
+          if (task?.status === "processing" || task?.status === "pending") {
+            // เช็คสถานะอีกครั้งหลังจาก 3 วินาที
+            setTimeout(checkStatus, 3000);
+            return;
+          }
+
+          // กรณีสถานะอื่นๆ ที่ไม่รู้จัก
+          console.warn("Unknown status:", task?.status);
+          setTimeout(checkStatus, 3000);
+        } catch (err) {
+          console.error("Error checking status:", err);
+          message.error("เกิดข้อผิดพลาดระหว่างตรวจสอบสถานะ");
+          setLoading(false);
+        }
+      };
+
+      // เริ่มเช็คสถานะ
+      checkStatus();
+    } catch (err) {
+      console.error(err);
+      message.error("เกิดข้อผิดพลาด");
+      setLoading(false);
+    }
+  };
+
   const beforeUploadFiles = (file: RcFile) => {
     if (files.find((oneFile) => oneFile.name === file.name)) {
+      message.warning(`ชื่อไฟล์ ${file.name} ซ้ำ`);
+      return false;
+    }
+    return false;
+  };
+  const beforeUploadFilesVDO = (file: RcFile) => {
+    if (filesvdo.find((oneFile) => oneFile.name === file.name)) {
       message.warning(`ชื่อไฟล์ ${file.name} ซ้ำ`);
       return false;
     }
@@ -76,6 +181,10 @@ const GenerateImagePage: FC = () => {
 
   const handleChangeFiles: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
     return setFiles(newFileList);
+  };
+
+  const handleChangeVDO: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
+    return setFilesVdo(newFileList);
   };
 
   const onChange = (key: string) => {
@@ -106,7 +215,7 @@ const GenerateImagePage: FC = () => {
                 onFinish={onFinish}
                 handleChangeFiles={handleChangeFiles}
                 beforeUploadFiles={beforeUploadFiles}
-                files={files}
+                files={filesvdo}
                 loading={loading}
                 getdata={getdata}
                 setData={setData}
@@ -121,6 +230,19 @@ const GenerateImagePage: FC = () => {
                 <AppstoreOutlined />
                 VDO Gen.
               </span>
+            ),
+            children: (
+              <PromptGenerateVdo
+                formcreateVdo={formcreateVdo}
+                onFinish={onFinishVDO}
+                handleChangeFiles={handleChangeVDO}
+                beforeUploadFiles={beforeUploadFilesVDO}
+                files={files}
+                loading={loading}
+                getdata={getdatavdo}
+                setData={setDataVdo}
+                clicksubmit={clicksubmitVdo}
+              />
             ),
           },
           {

@@ -16,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <PrivateLayout>{children}</PrivateLayout>
+      <body>
+        <PrivateLayout>{children}</PrivateLayout>
+      </body>
     </html>
   );
 }

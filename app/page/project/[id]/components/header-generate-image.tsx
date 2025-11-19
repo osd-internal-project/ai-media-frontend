@@ -5,7 +5,7 @@ import { LightbulbIcon } from "lucide-react";
 import type { IProject } from "@/app/common/project.type";
 
 export interface props {
-  getProject: IProject;
+  getProject?: IProject;
 }
 
 const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
@@ -22,14 +22,20 @@ const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
   return (
     <div className="grid grid-cols-2 bg-black w-full p-5 rounded-t-2xl">
       <div className="flex col-span-1 flex-col">
-        <span className="text-2xl font-bold">{`${getProject.name}`}</span>
+        <span className="text-2xl font-bold">{`${getProject?.name}`}</span>
         <span className="text-md text-[#9B9C9E]">{`Shake up your creativity with image generation`}</span>
       </div>
       <div className="flex col-span-1 justify-end">
         <Select
+          styles={{
+            popup: {
+              root: {
+                backgroundColor: "red",
+              },
+            },
+          }}
           placeholder={`Model Version`}
           rootClassName="!text-white !bg-transparent "
-          dropdownStyle={{ backgroundColor: "#686B6E" }}
           options={[
             { value: "4", label: "Seedream 4.0" },
             { value: "3", label: "Seedream 3.0" },
