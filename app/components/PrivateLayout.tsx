@@ -1,26 +1,13 @@
 "use client";
-import {
-  ConfigProvider,
-  Layout,
-  Menu,
-  Image,
-  Avatar,
-  Badge,
-  Button,
-  Form,
-  Modal,
-  Input,
-  Select,
-  theme,
-} from "antd";
+import { ConfigProvider, Layout, Menu, Image, Avatar, Badge, Button, Form, Modal, Input, Select, theme, Popover } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
-import { useSession } from "next-auth/react";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { signOut, useSession } from "next-auth/react";
+import { PlusCircleOutlined, SettingOutlined } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
@@ -79,6 +66,15 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
   };
 
+  const content = (
+    <div className="flex flex-col gap-2">
+      <p style={{ marginBottom: 8 }}></p>
+      <Button type="default" block size="small" onClick={() => signOut({ callbackUrl: "/login" })}>
+        Sign Out
+      </Button>
+    </div>
+  );
+
   return (
     <ConfigProvider
       theme={{
@@ -121,25 +117,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       }}
     >
       {open ? (
-        <Modal
-          title="Create Project"
-          open={open}
-          onCancel={handleClose}
-          footer={false}
-          okText="Create"
-          width={500}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            name="create_project_form"
-            onFinish={onFinish}
-          >
-            <Form.Item
-              label="Project Name"
-              name="name"
-              rules={[{ required: true, message: "Please enter project name" }]}
-            >
+        <Modal title="Create Project" open={open} onCancel={handleClose} footer={false} okText="Create" width={500}>
+          <Form form={form} layout="vertical" name="create_project_form" onFinish={onFinish}>
+            <Form.Item label="Project Name" name="name" rules={[{ required: true, message: "Please enter project name" }]}>
               <Input placeholder="Enter project name" />
             </Form.Item>
             <Form.Item label="Description" name="description">
@@ -161,52 +141,27 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         </Modal>
       ) : null}
       <Layout className="h-screen overflow-hidden">
-        <Sider
-          width={250}
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          className="hidden md:block p-2 h-screen"
-        >
+        <Sider width={250} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-2 h-screen">
           <div className="bg-black rounded-2xl h-full flex flex-col">
             <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
-              <Image
-                width={"150px"}
-                src="/images/Logo.png"
-                alt="OSD Logo"
-                preview={false}
-                className="mb-2"
-              />
+              <Image width={"150px"} src="/images/Logo.png" alt="OSD Logo" preview={false} className="mb-2" />
             </div>
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
               <Menu
                 mode="inline"
                 selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-                defaultSelectedKeys={[
-                  currentPath,
-                  `${currentPath}/${currentPathSub}`,
-                ]}
+                defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
                 items={renderMenuItems(MenuSider)}
               />
               <div className=" !text-gray-400 px-4 mt-2">
                 {`PROJECT`}
                 <div className="mt-3 w-full">
-                  <Button
-                    icon={<PlusCircleOutlined />}
-                    className="w-full"
-                    onClick={handleOpen}
-                  >{`Add new project`}</Button>
+                  <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>{`Add new project`}</Button>
                 </div>
                 {getProject.map((e) => {
                   return (
-                    <div
-                      key={e.id}
-                      className="w-full flex justify-center mt-2 gap-4"
-                    >
-                      <Button
-                        className="w-full !bg-gray-800"
-                        onClick={() => router.push(`/page/project/${e.id}`)}
-                      >
+                    <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
+                      <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
                         {e.name}
                       </Button>
                     </div>
@@ -222,25 +177,18 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <span className="text-white text-sm">{`${session?.user?.name}`}</span>
                 <span className="text-[#6366F1]">Premium</span>
               </div>
+              <>
+                <Popover content={content} trigger="click" placement="bottomRight" title={false}>
+                  <Button type="default" size="small" icon={<SettingOutlined />} />
+                </Popover>
+              </>
             </div>
           </div>
         </Sider>
         <Layout className="flex-1 w-full h-full overflow-auto">
-          <PrivateNavigation
-            user={
-              session?.user ? { fullname: session.user.name ?? "" } : undefined
-            }
-          />
+          <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} />
           <div className="w-full h-full">
-            <PrivateContent
-              user={
-                session?.user
-                  ? { fullname: session.user.name ?? "" }
-                  : undefined
-              }
-            >
-              {children}
-            </PrivateContent>
+            <PrivateContent user={session?.user ? { fullname: session.user.name ?? "" } : undefined}>{children}</PrivateContent>
           </div>
         </Layout>
       </Layout>
