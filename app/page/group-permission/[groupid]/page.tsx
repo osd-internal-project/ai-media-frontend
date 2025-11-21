@@ -106,9 +106,9 @@ const UpdateGroupPage = () => {
       formmanage.setFieldsValue(response);
 
       if (response?.roles) {
-        console.log(response?.roles);
+        // console.log(response?.roles);
         const roleIds = response?.roles.map((r) => r.role.roleId);
-        console.log(roleIds);
+        // console.log(roleIds);
         formrole.setFieldValue("roleIds", roleIds);
       }
       setGroupDetail(response);
@@ -335,7 +335,7 @@ const UpdateGroupPage = () => {
           </div>
         </div>
         <Card className=" w-full">
-          <Form form={formrole} onFinish={(val) => console.log(val)}>
+          <Form form={formrole} >
             <Form.Item name="roleIds" initialValue={[]}>
               <Checkbox.Group className="w-full">
                 <Row gutter={[16, 16]}>
