@@ -102,11 +102,6 @@ export const MenuSider = [
     header: true,
     children: [
       {
-        key: `home`,
-        icon: <FileImageOutlined />,
-        label: `Home`,
-      },
-      {
         key: `dashboard`,
         icon: <FileImageOutlined />,
         label: `Dashboard`,

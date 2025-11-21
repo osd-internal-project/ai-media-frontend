@@ -1,10 +1,8 @@
 "use client";
 
-import { Avatar, Button, Layout, Space } from "antd";
-import { LoginOutlined, UserAddOutlined } from "@ant-design/icons";
-import Link from "antd/es/typography/Link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { Avatar, Button, Layout, Popover, Space } from "antd";
+import { signOut } from "next-auth/react";
+import { ExclamationCircleOutlined, SettingOutlined } from "@ant-design/icons";
 
 const { Header } = Layout;
 
@@ -13,6 +11,14 @@ interface Props {
   pageTitle: string;
 }
 const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
+  const content = (
+    <div className="flex flex-col gap-2">
+      <p style={{ marginBottom: 8 }}></p>
+      <Button type="default" block size="small" onClick={() => signOut({ callbackUrl: "/login" })}>
+        Sign Out
+      </Button>
+    </div>
+  );
   return (
     <Header
       style={{
@@ -32,6 +38,11 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
               <span className="font-bold text-white">{user.fullname}</span>
               <span className="text-[#6366F1]">Premium</span>
             </div>
+            <>
+              <Popover content={content} trigger="click" placement="bottomRight" title={false}>
+                <Button type="default" size="small" icon={<SettingOutlined />} />
+              </Popover>
+            </>
           </div>
         ) : (
           <div className="flex items-center gap-4">

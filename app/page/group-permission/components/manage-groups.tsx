@@ -150,7 +150,6 @@ const ManageGroups: FC<props> = ({ setOpen, open, formmanage, onFinish, dataGrou
               .dark-form .ant-form-item-explain-error {
                 color: #ef4444;
               }
-           
             `}</style>
           </Modal>
         </>

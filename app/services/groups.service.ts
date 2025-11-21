@@ -1,9 +1,5 @@
 import { AxiosInstance } from "axios";
-import type {
-  TGroup,
-  TGroupForm,
-  TGroupWithUsersAndRoles,
-} from "../common/groups.type";
+import type { TGroup, TGroupForm, TGroupWithUsersAndRoles } from "../common/groups.type";
 
 const GroupsServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/groups";
@@ -19,9 +15,7 @@ const GroupsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findUsersAndRolesByGroup: async (
-      groupId: string
-    ): Promise<TGroupWithUsersAndRoles> => {
+    findUsersAndRolesByGroup: async (groupId: string): Promise<TGroupWithUsersAndRoles> => {
       return await axiosInstance
         .get(`${baseUrl}/relation-by-group/${groupId}`)
         .then((res) => {
