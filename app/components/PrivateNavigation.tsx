@@ -9,9 +9,9 @@ interface NavigationProps {
 
 const PrivateNavigation: React.FC<NavigationProps> = ({ user }) => {
   const pathname = usePathname(); // /page/roles
-  const key = pathname.split("/").pop(); // roles
+  const key = pathname.split("/"); // roles
 
-  const pageTitle = findMenuLabel(MenuSider, String(key)) || "Dashboard";
+  const pageTitle = findMenuLabel(MenuSider, key[2]) || "Dashboard";
   return <Navbar user={user} pageTitle={pageTitle} />;
 };
 
