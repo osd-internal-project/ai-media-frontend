@@ -16,3 +16,13 @@
   background-color: transparent !important;
   /* your hover color */
 }
+
+.card-gradient {
+  border: 2px solid;
+  border-image-source: linear-gradient(180deg, #87ddde 0%, #6366f1 100%);
+  border-image-slice: 1;
+  /* border-radius: 24px; */
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 4px 4px hsla(239, 59%, 95%, 0.24);
+}

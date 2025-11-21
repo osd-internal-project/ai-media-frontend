@@ -8,19 +8,28 @@ import { Button, Form, message, Popconfirm, Space, Table, Tag } from "antd";
 import type { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { TGroup } from "@/app/common/groups.type";
 
 const UserManagementPage = () => {
   const userServices = UserServices(axiosUser);
   const [formmanage] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(true);
-  const [getSummary, setSummary] = useState<{ total: number; active: number; unabled: number; userGroup: number }>({
+  const [getSummary, setSummary] = useState<{
+    total: number;
+    active: number;
+    unabled: number;
+    userGroup: number;
+  }>({
     total: 0,
     active: 0,
     unabled: 0,
     userGroup: 0,
   });
   const [getdata, setData] = useState<TUser[]>([]);
-  const [open, setOpen] = useState<{ status: boolean; type: string }>({ status: false, type: "create" });
+  const [open, setOpen] = useState<{ status: boolean; type: string }>({
+    status: false,
+    type: "create",
+  });
 
   useEffect(() => {
     FecthSummaryData();
@@ -59,7 +68,10 @@ const UserManagementPage = () => {
   const onFinish = async (type: string, values: TUser) => {
     let response;
     if (type === "create") {
-      response = await userServices.create({ ...values, status: values.status ? "active" : "unabled" });
+      response = await userServices.create({
+        ...values,
+        status: values.status ? "active" : "unabled",
+      });
     } else {
       const { userId, ...rest } = values;
       response = await userServices.update(formmanage.getFieldValue("userId"), {
@@ -92,7 +104,9 @@ const UserManagementPage = () => {
       render: (text, record) => (
         <div className="flex items-center">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mr-3 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">{text.substring(0, 2).toUpperCase()}</span>
+            <span className="text-white text-sm font-bold">
+              {text.substring(0, 2).toUpperCase()}
+            </span>
           </div>
           <div>
             <div className="text-white font-medium">{text}</div>
@@ -113,9 +127,20 @@ const UserManagementPage = () => {
     },
     {
       title: "User group",
-      dataIndex: "userGroup",
-      key: "userGroup",
-      render: (group) => <Tag className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3">{group}</Tag>,
+      dataIndex: ["groups"],
+      key: "groups",
+      render: (group: { group: TGroup }[]) => (
+        <div>
+          {group?.map((g) => (
+            <Tag
+              key={g.group.groupId}
+              className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3"
+            >
+              {g.group.name}
+            </Tag>
+          )) || "-"}
+        </div>
+      ),
     },
     {
       title: "Create time",
@@ -132,7 +157,10 @@ const UserManagementPage = () => {
         { text: "Disabled", value: "inactive" },
       ],
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+        <Tag
+          color={status === "active" ? "green" : "red"}
+          className="rounded-full px-3"
+        >
           {status === "active" ? "Enabled" : "Unabled"}
         </Tag>
       ),
@@ -205,7 +233,7 @@ const UserManagementPage = () => {
       <Table
         columns={columns}
         dataSource={getdata}
-        rowKey="roleId"
+        rowKey="userId"
         pagination={{
           pageSize: 10,
           showSizeChanger: false,

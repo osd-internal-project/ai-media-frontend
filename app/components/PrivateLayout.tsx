@@ -115,7 +115,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             colorBorder: "#333",
             colorBgElevated: "#1e1e1e",
             optionActiveBg: "#333",
-            optionSelectedBg: "#444",
+            optionSelectedBg: "#gg",
           },
         },
       }}
