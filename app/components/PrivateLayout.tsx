@@ -1,5 +1,18 @@
 "use client";
-import { ConfigProvider, Layout, Menu, Image, Avatar, Badge, Button, Form, Modal, Input, Select } from "antd";
+import {
+  ConfigProvider,
+  Layout,
+  Menu,
+  Image,
+  Avatar,
+  Badge,
+  Button,
+  Form,
+  Modal,
+  Input,
+  Select,
+  theme,
+} from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../config/menu";
@@ -69,6 +82,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   return (
     <ConfigProvider
       theme={{
+        algorithm: theme.darkAlgorithm,
         token: {
           colorBgBase: "#000000",
           colorBgContainer: "#000000",
@@ -76,6 +90,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           colorTextBase: "#f0f0f0",
         },
         components: {
+          Button: {
+            boxShadow: "none",
+            defaultShadow: "none",
+            primaryShadow: "none",
+          },
           Menu: {
             itemBg: "transparent",
             itemColor: "white",
@@ -102,9 +121,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       }}
     >
       {open ? (
-        <Modal title="Create Project" open={open} onCancel={handleClose} footer={false} okText="Create" width={500}>
-          <Form form={form} layout="vertical" name="create_project_form" onFinish={onFinish}>
-            <Form.Item label="Project Name" name="name" rules={[{ required: true, message: "Please enter project name" }]}>
+        <Modal
+          title="Create Project"
+          open={open}
+          onCancel={handleClose}
+          footer={false}
+          okText="Create"
+          width={500}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            name="create_project_form"
+            onFinish={onFinish}
+          >
+            <Form.Item
+              label="Project Name"
+              name="name"
+              rules={[{ required: true, message: "Please enter project name" }]}
+            >
               <Input placeholder="Enter project name" />
             </Form.Item>
             <Form.Item label="Description" name="description">
@@ -126,27 +161,52 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         </Modal>
       ) : null}
       <Layout className="h-screen overflow-hidden">
-        <Sider width={250} trigger={null} collapsible collapsed={collapsed} className="hidden md:block p-2 h-screen">
+        <Sider
+          width={250}
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          className="hidden md:block p-2 h-screen"
+        >
           <div className="bg-black rounded-2xl h-full flex flex-col">
             <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
-              <Image width={"150px"} src="/images/Logo.png" alt="OSD Logo" preview={false} className="mb-2" />
+              <Image
+                width={"150px"}
+                src="/images/Logo.png"
+                alt="OSD Logo"
+                preview={false}
+                className="mb-2"
+              />
             </div>
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
               <Menu
                 mode="inline"
                 selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-                defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
+                defaultSelectedKeys={[
+                  currentPath,
+                  `${currentPath}/${currentPathSub}`,
+                ]}
                 items={renderMenuItems(MenuSider)}
               />
               <div className=" !text-gray-400 px-4 mt-2">
                 {`PROJECT`}
                 <div className="mt-3 w-full">
-                  <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>{`Add new project`}</Button>
+                  <Button
+                    icon={<PlusCircleOutlined />}
+                    className="w-full"
+                    onClick={handleOpen}
+                  >{`Add new project`}</Button>
                 </div>
                 {getProject.map((e) => {
                   return (
-                    <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
-                      <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
+                    <div
+                      key={e.id}
+                      className="w-full flex justify-center mt-2 gap-4"
+                    >
+                      <Button
+                        className="w-full !bg-gray-800"
+                        onClick={() => router.push(`/page/project/${e.id}`)}
+                      >
                         {e.name}
                       </Button>
                     </div>
@@ -166,9 +226,21 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </div>
         </Sider>
         <Layout className="flex-1 w-full h-full overflow-auto">
-          <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} />
+          <PrivateNavigation
+            user={
+              session?.user ? { fullname: session.user.name ?? "" } : undefined
+            }
+          />
           <div className="w-full h-full">
-            <PrivateContent user={session?.user ? { fullname: session.user.name ?? "" } : undefined}>{children}</PrivateContent>
+            <PrivateContent
+              user={
+                session?.user
+                  ? { fullname: session.user.name ?? "" }
+                  : undefined
+              }
+            >
+              {children}
+            </PrivateContent>
           </div>
         </Layout>
       </Layout>

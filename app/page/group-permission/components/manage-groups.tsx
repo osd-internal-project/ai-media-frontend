@@ -94,7 +94,7 @@ const ManageGroups: FC<props> = ({ setOpen, open, formmanage, onFinish, dataGrou
               </Form.Item>
               <div className="text-xs text-gray-500 -mt-4 mb-4 flex items-center gap-1">
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-[10px]">i</span>
-                Support letters, numbers, and the following special characters: ".", "_", "-", up to 64 characters
+                {`Support letters, numbers, and the following special characters: ".", "_", "-", up to 64 characters`}
               </div>
 
               <Form.Item label={<span className="text-gray-300">Display name</span>} name={"displayName"}>
@@ -150,6 +150,7 @@ const ManageGroups: FC<props> = ({ setOpen, open, formmanage, onFinish, dataGrou
               .dark-form .ant-form-item-explain-error {
                 color: #ef4444;
               }
+           
             `}</style>
           </Modal>
         </>

@@ -1,5 +1,9 @@
 import { AxiosInstance } from "axios";
-import type { TGroup } from "../common/groups.type";
+import type {
+  TGroup,
+  TGroupForm,
+  TGroupWithUsersAndRoles,
+} from "../common/groups.type";
 
 const GroupsServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/groups";
@@ -7,6 +11,30 @@ const GroupsServices = (axiosInstance: AxiosInstance) => {
     findAll: async () => {
       return await axiosInstance
         .get(`${baseUrl}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findUsersAndRolesByGroup: async (
+      groupId: string
+    ): Promise<TGroupWithUsersAndRoles> => {
+      return await axiosInstance
+        .get(`${baseUrl}/relation-by-group/${groupId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findById: async (id: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${id}`)
         .then((res) => {
           return res.data;
         })
@@ -26,10 +54,9 @@ const GroupsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-
-    findById: async (id: string) => {
+    update: async (groupId: string, value: Partial<TGroupForm>) => {
       return await axiosInstance
-        .get(`${baseUrl}/${id}`)
+        .patch(`${baseUrl}/${groupId}`, { body: value })
         .then((res) => {
           return res.data;
         })
