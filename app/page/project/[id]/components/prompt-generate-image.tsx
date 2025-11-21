@@ -29,7 +29,7 @@ export interface props {
 interface Message {
   type: "user" | "ai";
   content: string;
-  images?: string[]; // เปลี่ยนเป็น array
+  images?: string[];
   timestamp: Date;
 }
 
@@ -55,18 +55,14 @@ const PromptGenerateImage: FC<props> = ({
     scrollToBottom();
   }, [messages, loading]);
 
-  // เมื่อได้ข้อมูลรูปภาพจาก API - รองรับหลายรูป
   useEffect(() => {
     if (getdata?.data && Array.isArray(getdata.data) && getdata.data.length > 0) {
-      // แปลง array ของ objects เป็น array ของ URLs
       const imageUrls = getdata.data.map((item: any) => item?.url || item).filter(Boolean);
-
       if (imageUrls.length > 0) {
         setMessages((prev) => {
           // ตรวจสอบว่ามีรูปภาพเหล่านี้อยู่แล้วหรือไม่
           const lastMessage = prev[prev.length - 1];
           const hasImages = lastMessage?.images && JSON.stringify(lastMessage.images) === JSON.stringify(imageUrls);
-
           if (!hasImages) {
             return [
               ...prev,
@@ -85,7 +81,6 @@ const PromptGenerateImage: FC<props> = ({
   }, [getdata]);
 
   const handleSubmit = (values: ITFromGenerate) => {
-    // เพิ่มข้อความของ user ลงในแชท
     setMessages((prev) => [
       ...prev,
       {
@@ -100,7 +95,7 @@ const PromptGenerateImage: FC<props> = ({
   };
 
   const content = (
-    <div className="grid grid-col-1 items-center max-w-20">
+    <div className="grid grid-col-1 items-center gap-2">
       <Button block className="!flex !justify-between !items-center">
         <TikTokOutlined /> <span>Tiktok</span>
       </Button>
@@ -134,10 +129,12 @@ const PromptGenerateImage: FC<props> = ({
               block
             />
           </Form.Item>
+          <Form.Item name="ratio" label={`Ratio`} initialValue={"1:1"}>
+            <Segmented options={["1:1", "3:4", "4:3", "9:16", "16:9", "2:3", "3:2", "21:9"]} className="segmented-grid w-full" block />
+          </Form.Item>
           <div className="!my-3">
             <span>Image Size</span>
           </div>
-
           <div className="grid grid-cols-2 gap-2">
             <Form.Item name="width" valuePropName="value" initialValue={2048}>
               <Input
@@ -171,8 +168,45 @@ const PromptGenerateImage: FC<props> = ({
     { key: "2", label: "Prompt Guide", children: <div>Content 2</div> },
   ];
 
+  const RES_MAP = {
+    "2k": 2048,
+    "4k": 4096,
+  } as any;
+
+  const RATIO_MAP = {
+    "1:1": 1 / 1,
+    "3:4": 3 / 4,
+    "4:3": 4 / 3,
+    "9:16": 9 / 16,
+    "16:9": 16 / 9,
+    "2:3": 2 / 3,
+    "3:2": 3 / 2,
+    "21:9": 21 / 9,
+  } as any;
+
+  const handleValuesChange = (changed: any, all: any) => {
+    if (changed.resolution || changed.ratio) {
+      const base = RES_MAP[all.resolution];
+      const ratio = RATIO_MAP[all.ratio];
+      let width = base;
+      let height = Math.round(base / ratio);
+      formcreateImage.setFieldsValue({
+        width,
+        height,
+      });
+    }
+  };
+
   return (
-    <Form form={formcreateImage} name="form-generate" autoComplete="off" layout="vertical" onFinish={handleSubmit} initialValues={{ type: "image" }}>
+    <Form
+      form={formcreateImage}
+      name="form-generate"
+      autoComplete="off"
+      layout="vertical"
+      onFinish={handleSubmit}
+      initialValues={{ type: "image" }}
+      onValuesChange={handleValuesChange}
+    >
       <div className="w-full grid grid-cols-5 !gap-2">
         <div className="w-full col col-span-4 ">
           {!clicksubmit ? (
@@ -421,10 +455,8 @@ const PromptGenerateImage: FC<props> = ({
           </div>
         </div>
         <div className="flex flex-col h-screen">
-          <div className=" text-[24px] font-bold">Configure</div>
-          <div className="flex flex-col h-screen ">
-            <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1" items={items} />
-          </div>
+          <div className="text-[24px] font-bold p-4">Configure</div>
+          <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1 flex flex-col" items={items} tabBarStyle={{ marginTop: "auto" }} />
         </div>
       </div>
 
