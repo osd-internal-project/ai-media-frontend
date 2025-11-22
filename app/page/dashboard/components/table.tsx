@@ -8,13 +8,14 @@ interface props {
 
 const TableComponent: FC<props> = ({ data }): ReactElement => {
   const columns = [
-    { title: "Owner", key: "owner", dataIndex: "owner" },
-    { title: "Product", key: "product", dataIndex: "product" },
-    { title: "Usage", key: "usage", dataIndex: "usage" },
+    { title: "Owner", key: "owner", dataIndex: "owner", width: "200px" },
+    { title: "Product", key: "product", dataIndex: "product", width: "200px" },
+    { title: "Usage", key: "usage", dataIndex: "usage", width: "200px" },
     {
       title: "Post-tax amount (payment currency)",
       key: "amount",
       dataIndex: "amount",
+      width: "200px",
     },
   ];
   return (
@@ -23,6 +24,7 @@ const TableComponent: FC<props> = ({ data }): ReactElement => {
         size="small"
         dataSource={data}
         columns={columns}
+        rowClassName="bg-black"
         // style={{ backgroundColor: "#000" ,}}
       />
     </div>

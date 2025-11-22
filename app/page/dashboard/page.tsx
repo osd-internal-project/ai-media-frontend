@@ -31,7 +31,7 @@ const DashboardPage: FC = () => {
         components: {
           Card: {
             colorBorderSecondary: "none",
-            colorBgContainer: "#0D0F10",
+            colorBgContainer: "#000",
           },
         },
       }}
