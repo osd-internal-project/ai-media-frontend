@@ -1,0 +1,116 @@
+import React, { type FC, type ReactElement } from "react";
+import { Table, Button, Tag, Input, Select, Space, Modal, Form, InputNumber, Switch, type FormInstance } from "antd";
+import { SearchOutlined, ReloadOutlined, DownloadOutlined, SettingOutlined, PlusOutlined } from "@ant-design/icons";
+import type { TUser } from "@/app/common/user.type";
+
+const { Option } = Select;
+
+export interface props {
+  onSearch: (value: any) => void;
+  onRefresh: () => void;
+  handleManage: (type: string) => void;
+  formmanage: FormInstance;
+  open: { status: boolean; type: string };
+  onFinish: (type: string, values: TUser) => void;
+}
+
+const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formmanage, open, onFinish }): ReactElement => {
+  return (
+    <div className=" p-4 rounded-lg mb-4">
+      <div className="flex items-center justify-between gap-2">
+        <Input
+          placeholder="Search"
+          prefix={<SearchOutlined className="text-gray-500" />}
+          className="w-10  text-white "
+          style={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "white" }}
+        />
+        <Space>
+          <Button icon={<ReloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" onClick={onRefresh} />
+          <Button icon={<DownloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-7000" />
+          <Button icon={<SettingOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" />
+          <Button type="primary" icon={<PlusOutlined />} className="!bg-indigo-600 hover:!bg-indigo-700" onClick={() => handleManage("create")}>
+            Create New User
+          </Button>
+        </Space>
+      </div>
+      {open.status === true ? (
+        <Modal
+          title={open.type === "create" ? "Create New User" : "Edit User"}
+          open={open.status}
+          onCancel={() => handleManage("close")}
+          footer={false}
+          width={1000}
+          okText={open.type === "create" ? "Create" : "Update"}
+        >
+          <Form
+            form={formmanage}
+            layout="vertical"
+            onFinish={(e) => {
+              onFinish(open.type, e);
+            }}
+            autoComplete="off"
+          >
+            <Form.Item label="userId" name="userId" hidden>
+              <Input placeholder="Enter username" />
+            </Form.Item>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item label="Username" name="username" rules={[{ required: true, message: "Please input username!" }]}>
+                <Input placeholder="Enter username" />
+              </Form.Item>
+
+              <Form.Item label="Full Name" name="fullname" rules={[{ required: true, message: "Please input full name!" }]}>
+                <Input placeholder="Enter full name" />
+              </Form.Item>
+
+              <Form.Item label="Email" name="email" rules={[{ required: true, message: "Please input full name!" }]}>
+                <Input type="email" placeholder="Enter email" />
+              </Form.Item>
+
+              <Form.Item label="Phone" name="phoneNumber" rules={[{ required: true, message: "Please input phone number!" }]}>
+                <Input placeholder="Enter Phone" />
+              </Form.Item>
+            </div>
+
+            <Form.Item label="Description" name="description">
+              <Input.TextArea rows={3} placeholder="Enter description" />
+            </Form.Item>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item label="Tier" name="tier" rules={[{ required: true, message: "Please select user Tier!" }]}>
+                <Select placeholder="Select User Tier" allowClear showSearch optionFilterProp="label">
+                  <Option value="normal">Normal</Option>
+                  <Option value="gold">Gold</Option>
+                  <Option value="platinum">Platinum</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="API Keys" name="apiKeys">
+                <Input placeholder="Enter API Keys" />
+              </Form.Item>
+
+              <Form.Item label="Max Token" name="maxToken" rules={[{ required: true, message: "Please input max token!" }]}>
+                <InputNumber className="!w-full" min={0} />
+              </Form.Item>
+
+              <Form.Item label="Max Images" name="maxImages" rules={[{ required: true, message: "Please input max images!" }]}>
+                <InputNumber className="!w-full" min={0} />
+              </Form.Item>
+
+              <Form.Item label="Status" name="status" valuePropName="checked">
+                <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button type="primary" htmlType="submit">
+                {open.type === "create" ? "Create" : "Update"}
+              </Button>
+            </div>
+          </Form>
+        </Modal>
+      ) : null}
+    </div>
+  );
+};
+
+export default UserFiltersPage;

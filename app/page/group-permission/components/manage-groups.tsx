@@ -15,9 +15,9 @@ const ManageGroups: FC<props> = ({ setOpen, open, formmanage, onFinish, dataGrou
   const navigate = useRouter();
   return (
     <div className="grid grid-cols-4 gap-5">
-      {dataGroups.length > 0 ? (
+      {dataGroups?.length > 0 ? (
         <>
-          {dataGroups.map((e) => {
+          {dataGroups?.map((e) => {
             return (
               <>
                 <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
