@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, type FC } from "react";
-import { Form, message, Spin, Tabs, type UploadFile } from "antd";
+import { Form, message, Tabs, type UploadFile } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { AppstoreOutlined, PictureOutlined } from "@ant-design/icons";
 import type { ITFromGenerate } from "@/app/common";
@@ -13,28 +13,25 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
-import { libraryDatas, activityData } from "./test";
+import { libraryDatas } from "./test";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
+import { useSession } from "next-auth/react";
 const GenerateImagePage: FC = () => {
+  const { data: session } = useSession();
   const params = useParams();
-  const [formcreateImage] = Form.useForm();
-  const [formcreateVdo] = Form.useForm();
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
-  const [files, setFiles] = useState<UploadFile[]>([]);
-  const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [getdata, setData] = useState<any>([]);
-  const [getdatavdo, setDataVdo] = useState<any>([]);
-
-  const [clicksubmit, setClickSubmit] = useState<boolean>(false);
-  const [clicksubmitVdo, setClickVdo] = useState<boolean>(false);
-
   const [loadingData, setLoadingData] = useState<boolean>(true);
+
+  const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
+  const [formcreateVdo] = Form.useForm();
+  const [getdatavdo, setDataVdo] = useState<any>([]);
+  const [clicksubmitVdo, setClickVdo] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [libraries, setLibraries] = useState<any[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
+  const { id } = params as { id: string };
+
   useEffect(() => {
     if (loadingData) {
       fecthdata();
@@ -44,14 +41,11 @@ const GenerateImagePage: FC = () => {
   const fecthdata = async () => {
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
     if (!id) {
-      console.warn("No project id provided in route params");
       setLoadingData(false);
       return;
     }
-
     try {
       const response = await projectService.findById(id);
-      console.log(response);
       setProject(response);
     } catch (err) {
       console.error("Failed to fetch project:", err);
@@ -62,39 +56,6 @@ const GenerateImagePage: FC = () => {
   function fecthDataLibrary() {
     setLibraries(libraryDatas || []);
   }
-
-  function fecthDataActivity() {
-    setActivities(activityData || []);
-  }
-
-  const onFinish = async (values: ITFromGenerate) => {
-    let base: ITFromGenerate = values;
-    setClickSubmit(true);
-    setLoading(true);
-    if (files.length > 0) {
-      const formData: any = new FormData();
-      formData.append("type", "create-attend");
-      formData.append("files", files[0].originFileObj);
-      const upload = await GenerateImageServices(axiosCore).upload(formData);
-      base = { ...values, image: upload.fileName };
-    }
-    try {
-      const response = await GenerateImageServices(axiosCore).create(base);
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        setData(response);
-        message.success("สร้างคำขอสำเร็จ");
-        formcreateImage.resetFields();
-        setFiles([]);
-      } else {
-        message.error("ไม่มีข้อมูลที่ได้กลับมา");
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      message.error("เกิดข้อผิดพลาด");
-      setLoading(false);
-    }
-  };
 
   const onFinishVDO = async (values: ITFromGenerate) => {
     let base: ITFromGenerate = values;
@@ -108,31 +69,24 @@ const GenerateImagePage: FC = () => {
       base = { ...values, image: upload.fileName };
     }
     try {
-      // ปรับปรุงเงื่อนไขการเช็คสถานะ
-      const response = await GenerateImageServices(axiosCore).create(base);
-
-      // เช็คว่ามี response และมี id หรือไม่
+      const id = Array.isArray(params.id) ? params.id[0] : params.id;
+      const response = await GenerateImageServices(axiosCore).create({ ...base, projectId: id, userId: session?.user?.id });
       if (!response?.id) {
         message.error("สร้างคำขอล้มเหลว");
         setLoading(false);
         return;
       }
-
-      // ฟังก์ชันเช็คสถานะแบบ polling
       const checkStatus = async () => {
         try {
-          const task = await GenerateImageServices(axiosCore).findById(
-            response.id
-          );
+          const task = await GenerateImageServices(axiosCore).findById(response.id);
           console.log(task);
-
           // กรณีสำเร็จ
           if (task?.status === "succeeded") {
             // เช็คว่ามีข้อมูลรูปภาพหรือไม่
             if (task && task.content) {
               setDataVdo(task);
               message.success("สร้างรูปภาพสำเร็จ");
-              formcreateImage.resetFields();
+              formcreateVdo.resetFields();
               setFilesVdo([]);
               setLoading(false);
               return;
@@ -166,7 +120,6 @@ const GenerateImagePage: FC = () => {
           setLoading(false);
         }
       };
-
       // เริ่มเช็คสถานะ
       checkStatus();
     } catch (err) {
@@ -176,13 +129,6 @@ const GenerateImagePage: FC = () => {
     }
   };
 
-  const beforeUploadFiles = (file: RcFile) => {
-    if (files.find((oneFile) => oneFile.name === file.name)) {
-      message.warning(`ชื่อไฟล์ ${file.name} ซ้ำ`);
-      return false;
-    }
-    return false;
-  };
   const beforeUploadFilesVDO = (file: RcFile) => {
     if (filesvdo.find((oneFile) => oneFile.name === file.name)) {
       message.warning(`ชื่อไฟล์ ${file.name} ซ้ำ`);
@@ -191,24 +137,13 @@ const GenerateImagePage: FC = () => {
     return false;
   };
 
-  const handleChangeFiles: UploadProps["onChange"] = async ({
-    fileList: newFileList,
-  }) => {
-    return setFiles(newFileList);
-  };
-
-  const handleChangeVDO: UploadProps["onChange"] = async ({
-    fileList: newFileList,
-  }) => {
+  const handleChangeVDO: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
     return setFilesVdo(newFileList);
   };
 
   const onChangeTab = (key: string) => {
-    console.log(key);
     if (key === "4") {
       fecthDataLibrary();
-    } else if (key === "5") {
-      fecthDataActivity();
     }
   };
 
@@ -230,19 +165,7 @@ const GenerateImagePage: FC = () => {
                 Image Gen.
               </span>
             ),
-            children: (
-              <PromptGenerateImage
-                formcreateImage={formcreateImage}
-                onFinish={onFinish}
-                handleChangeFiles={handleChangeFiles}
-                beforeUploadFiles={beforeUploadFiles}
-                files={filesvdo}
-                loading={loading}
-                getdata={getdata}
-                setData={setData}
-                clicksubmit={clicksubmit}
-              />
-            ),
+            children: <PromptGenerateImage projectId={id} userId={session?.user?.id} />,
           },
           {
             key: "2",
@@ -258,7 +181,7 @@ const GenerateImagePage: FC = () => {
                 onFinish={onFinishVDO}
                 handleChangeFiles={handleChangeVDO}
                 beforeUploadFiles={beforeUploadFilesVDO}
-                files={files}
+                files={filesvdo}
                 loading={loading}
                 getdata={getdatavdo}
                 setData={setDataVdo}
@@ -284,16 +207,16 @@ const GenerateImagePage: FC = () => {
                 All Activity.
               </span>
             ),
-            children: <PromptActivity activities={activities} />,
+            children: <PromptActivity />,
           },
         ]}
         onChange={onChangeTab}
       />
+
       <style>{`
         .custom-tabs .ant-tabs-nav {
           margin-bottom: 0;
         }
-
         .custom-tabs .ant-tabs-nav::before {
           border-bottom: none;
         }
