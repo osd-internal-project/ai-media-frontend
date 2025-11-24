@@ -23,13 +23,6 @@ const GenerateImagePage: FC = () => {
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-
-  const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
-  const [formcreateVdo] = Form.useForm();
-  const [getdatavdo, setDataVdo] = useState<any>([]);
-  const [clicksubmitVdo, setClickVdo] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [libraries, setLibraries] = useState<any[]>([]);
   const { id } = params as { id: string };
 
   useEffect(() => {
@@ -53,99 +46,7 @@ const GenerateImagePage: FC = () => {
       setLoadingData(false);
     }
   };
-  function fecthDataLibrary() {
-    setLibraries(libraryDatas || []);
-  }
-
-  const onFinishVDO = async (values: ITFromGenerate) => {
-    let base: ITFromGenerate = values;
-    setClickVdo(true);
-    setLoading(true);
-    if (filesvdo.length > 0) {
-      const formData: any = new FormData();
-      formData.append("type", "create-attend");
-      formData.append("files", filesvdo[0].originFileObj);
-      const upload = await GenerateImageServices(axiosCore).upload(formData);
-      base = { ...values, image: upload.fileName };
-    }
-    try {
-      const id = Array.isArray(params.id) ? params.id[0] : params.id;
-      const response = await GenerateImageServices(axiosCore).create({ ...base, projectId: id, userId: session?.user?.id });
-      if (!response?.id) {
-        message.error("สร้างคำขอล้มเหลว");
-        setLoading(false);
-        return;
-      }
-      const checkStatus = async () => {
-        try {
-          const task = await GenerateImageServices(axiosCore).findById(response.id);
-          console.log(task);
-          // กรณีสำเร็จ
-          if (task?.status === "succeeded") {
-            // เช็คว่ามีข้อมูลรูปภาพหรือไม่
-            if (task && task.content) {
-              setDataVdo(task);
-              message.success("สร้างรูปภาพสำเร็จ");
-              formcreateVdo.resetFields();
-              setFilesVdo([]);
-              setLoading(false);
-              return;
-            } else {
-              message.error("ไม่มีข้อมูลรูปภาพที่ได้รับกลับมา");
-              setLoading(false);
-              return;
-            }
-          }
-
-          // กรณีล้มเหลว
-          if (task?.status === "failed") {
-            message.error("การสร้างรูปภาพล้มเหลว");
-            setLoading(false);
-            return;
-          }
-
-          // กรณียังประมวลผลอยู่ (processing, pending, etc.)
-          if (task?.status === "processing" || task?.status === "pending") {
-            // เช็คสถานะอีกครั้งหลังจาก 3 วินาที
-            setTimeout(checkStatus, 3000);
-            return;
-          }
-
-          // กรณีสถานะอื่นๆ ที่ไม่รู้จัก
-          console.warn("Unknown status:", task?.status);
-          setTimeout(checkStatus, 3000);
-        } catch (err) {
-          console.error("Error checking status:", err);
-          message.error("เกิดข้อผิดพลาดระหว่างตรวจสอบสถานะ");
-          setLoading(false);
-        }
-      };
-      // เริ่มเช็คสถานะ
-      checkStatus();
-    } catch (err) {
-      console.error(err);
-      message.error("เกิดข้อผิดพลาด");
-      setLoading(false);
-    }
-  };
-
-  const beforeUploadFilesVDO = (file: RcFile) => {
-    if (filesvdo.find((oneFile) => oneFile.name === file.name)) {
-      message.warning(`ชื่อไฟล์ ${file.name} ซ้ำ`);
-      return false;
-    }
-    return false;
-  };
-
-  const handleChangeVDO: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
-    return setFilesVdo(newFileList);
-  };
-
-  const onChangeTab = (key: string) => {
-    if (key === "4") {
-      fecthDataLibrary();
-    }
-  };
+  const onChangeTab = (key: string) => {};
 
   return (
     <div className="min-h-screen  relative overflow-hidden">
@@ -175,19 +76,7 @@ const GenerateImagePage: FC = () => {
                 VDO Gen.
               </span>
             ),
-            children: (
-              <PromptGenerateVdo
-                formcreateVdo={formcreateVdo}
-                onFinish={onFinishVDO}
-                handleChangeFiles={handleChangeVDO}
-                beforeUploadFiles={beforeUploadFilesVDO}
-                files={filesvdo}
-                loading={loading}
-                getdata={getdatavdo}
-                setData={setDataVdo}
-                clicksubmit={clicksubmitVdo}
-              />
-            ),
+            children: <PromptGenerateVdo projectId={id} userId={session?.user?.id} />,
           },
           {
             key: "4",
@@ -197,7 +86,7 @@ const GenerateImagePage: FC = () => {
                 Library.
               </span>
             ),
-            children: <PromptLibrary libraries={libraries} />,
+            children: <PromptLibrary />,
           },
           {
             key: "5",

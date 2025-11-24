@@ -62,7 +62,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
         // AI message
         messages.push({
           type: "ai",
-          content: "AI Generated Images",
+          content: "AICave Generated Vdo",
           images: item.imageUrls,
           username: "AICave",
           time: item.createdAt,
@@ -243,7 +243,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
     >
       <div className="w-full grid grid-cols-5 !gap-2">
         <div className="w-full col col-span-4 ">
-          {gethistory.length === 0 ? (
+          {gethistory.length === 0 && !submitting ? (
             <div className="text-white mt-10">
               <h1 className="text-4xl font-light text-center mb-4">AI Cave : Seedream 4.0</h1>
               <p className="text-gray-400 text-center mb-12">

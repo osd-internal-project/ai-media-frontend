@@ -6,11 +6,7 @@ import { useParams } from "next/navigation";
 import GalleryServices from "@/app/services/gellory.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 
-interface props {
-  libraries: any[];
-}
-
-const PromptLibrary: FC<props> = ({ libraries }): ReactElement => {
+const PromptLibrary: FC = ({}): ReactElement => {
   const params = useParams();
   const galleryservices = GalleryServices(axiosCore);
   const [total, setTotal] = useState<number>(0);
@@ -46,13 +42,19 @@ const PromptLibrary: FC<props> = ({ libraries }): ReactElement => {
                   className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
-                  <Image
-                    height={"100%"}
-                    fallback={fallbackImage}
-                    src={image.imageUrl}
-                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    alt={`AI Generated Image ${imgIndex + 1}`}
-                  />
+                  {image.typeGenerate === "vdo" ? (
+                    <video src={image.imageUrl} controls className="w-full h-auto object-cover" preload="metadata">
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <Image
+                      height={"100%"}
+                      fallback={fallbackImage}
+                      src={image.imageUrl}
+                      className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
+                      alt={`AI Generated Image ${imgIndex + 1}`}
+                    />
+                  )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 

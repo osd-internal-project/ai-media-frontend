@@ -26,6 +26,28 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findVdo: async (projectId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/find-vdo/${projectId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findByTaskId: async (taskId: string, value: any) => {
+      return await axiosInstance
+        .get(`${baseUrl}/generate-vdo-logs/${taskId}`, { params: value })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
   };
 };
 

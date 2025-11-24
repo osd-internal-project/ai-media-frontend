@@ -39,19 +39,27 @@ const PromptActivity: FC = ({}): ReactElement => {
       <div className="grid sm:grid-cols-2 md:grid-cols-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
           {getData.data.map((image, imgIndex) => {
+            console.log(image);
+
             return (
               <div key={imgIndex} className="relative group w-full h-[200px] text-center ">
                 <div
                   className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
-                  <Image
-                    height={"100%"}
-                    fallback={fallbackImage}
-                    src={image.imageUrl}
-                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    alt={`AI Generated Image ${imgIndex + 1}`}
-                  />
+                  {image.typeGenerate === "vdo" ? (
+                    <video src={image.imageUrl} controls className="w-full h-auto object-cover" preload="metadata">
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <Image
+                      height={"100%"}
+                      fallback={fallbackImage}
+                      src={image.imageUrl}
+                      className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
+                      alt={`AI Generated Image ${imgIndex + 1}`}
+                    />
+                  )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
