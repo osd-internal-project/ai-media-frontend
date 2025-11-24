@@ -13,7 +13,9 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
-
+import { libraryDatas, activityData } from "./test";
+import PromptLibrary from "./components/prompt-library";
+import PromptActivity from "./components/prompt-activity";
 const GenerateImagePage: FC = () => {
   const params = useParams();
   const [formcreateImage] = Form.useForm();
@@ -31,7 +33,8 @@ const GenerateImagePage: FC = () => {
   const [clicksubmitVdo, setClickVdo] = useState<boolean>(false);
 
   const [loadingData, setLoadingData] = useState<boolean>(true);
-
+  const [libraries, setLibraries] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   useEffect(() => {
     if (loadingData) {
       fecthdata();
@@ -56,6 +59,13 @@ const GenerateImagePage: FC = () => {
       setLoadingData(false);
     }
   };
+  function fecthDataLibrary() {
+    setLibraries(libraryDatas || []);
+  }
+
+  function fecthDataActivity() {
+    setActivities(activityData || []);
+  }
 
   const onFinish = async (values: ITFromGenerate) => {
     let base: ITFromGenerate = values;
@@ -111,7 +121,9 @@ const GenerateImagePage: FC = () => {
       // ฟังก์ชันเช็คสถานะแบบ polling
       const checkStatus = async () => {
         try {
-          const task = await GenerateImageServices(axiosCore).findById(response.id);
+          const task = await GenerateImageServices(axiosCore).findById(
+            response.id
+          );
           console.log(task);
 
           // กรณีสำเร็จ
@@ -179,16 +191,25 @@ const GenerateImagePage: FC = () => {
     return false;
   };
 
-  const handleChangeFiles: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
+  const handleChangeFiles: UploadProps["onChange"] = async ({
+    fileList: newFileList,
+  }) => {
     return setFiles(newFileList);
   };
 
-  const handleChangeVDO: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
+  const handleChangeVDO: UploadProps["onChange"] = async ({
+    fileList: newFileList,
+  }) => {
     return setFilesVdo(newFileList);
   };
 
-  const onChange = (key: string) => {
+  const onChangeTab = (key: string) => {
     console.log(key);
+    if (key === "4") {
+      fecthDataLibrary();
+    } else if (key === "5") {
+      fecthDataActivity();
+    }
   };
 
   return (
@@ -253,6 +274,7 @@ const GenerateImagePage: FC = () => {
                 Library.
               </span>
             ),
+            children: <PromptLibrary libraries={libraries} />,
           },
           {
             key: "5",
@@ -262,9 +284,10 @@ const GenerateImagePage: FC = () => {
                 All Activity.
               </span>
             ),
+            children: <PromptActivity activities={activities} />,
           },
         ]}
-        onChange={onChange}
+        onChange={onChangeTab}
       />
       <style>{`
         .custom-tabs .ant-tabs-nav {
