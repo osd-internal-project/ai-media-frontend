@@ -139,7 +139,6 @@ const PromptActivity: FC<props> = ({ activities }): ReactElement => {
                         <div>Create by:</div>
                         <div>{selected?.createdBy || "-"}</div>
                       </div>
-                      ‰
                       <div className=" flex justify-between">
                         <div>Create Date:</div>{" "}
                         <div>{selected?.createdDate || "-"}</div>

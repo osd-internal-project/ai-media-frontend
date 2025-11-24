@@ -139,7 +139,7 @@ const PromptLibrary: FC<props> = ({ libraries }): ReactElement => {
                       <div className=" flex justify-between">
                         <div>Create by:</div>
                         <div>{selected?.createdBy || "-"}</div>
-                      </div>‰
+                      </div>
                       <div className=" flex justify-between">
                         <div>Create Date:</div>{" "}
                         <div>{selected?.createdDate || "-"}</div>
