@@ -14,7 +14,7 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
   const content = (
     <div className="flex flex-col gap-2">
       <p style={{ marginBottom: 8 }}></p>
-      <Button type="default" block size="small" onClick={() => signOut({ callbackUrl: "/login" })}>
+      <Button type="default" block size="small" onClick={() => signOut({ callbackUrl: "/" })}>
         Sign Out
       </Button>
     </div>

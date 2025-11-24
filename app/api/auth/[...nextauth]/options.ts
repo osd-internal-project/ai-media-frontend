@@ -39,6 +39,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 }
 
 export const authOptions = {
+  trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     KeycloakProvider({
       clientId: process.env.KEYCLOAK_CLIENT_ID!,
@@ -46,7 +48,7 @@ export const authOptions = {
       issuer: process.env.KEYCLOAK_ISSUER,
       authorization: {
         params: {
-          scope: "openid email profile roles",
+          scope: "openid email profile roles offline_access",
         },
       },
     }),
@@ -98,7 +100,7 @@ export const authOptions = {
         const logOutUrl = `${issuerUrl}/protocol/openid-connect/logout`;
         const params = new URLSearchParams({
           id_token_hint: token.idToken as string,
-          post_logout_redirect_uri: process.env.NEXTAUTH_URL!,
+          post_logout_redirect_uri: `${process.env.NEXTAUTH_URL}/`,
         });
         try {
           await fetch(`${logOutUrl}?${params.toString()}`);
@@ -109,11 +111,9 @@ export const authOptions = {
     },
   },
   pages: {
-    signIn: "/signin",
     error: "/error",
   },
   session: {
     strategy: "jwt",
   },
-  secret: process.env.AUTH_SECRET_KEY,
 };

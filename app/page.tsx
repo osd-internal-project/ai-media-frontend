@@ -1,7 +1,14 @@
+import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { authOptions } from "./api/auth/[...nextauth]/options";
 
-const Page = () => {
-  return redirect("/login");
-};
+export default async function Page() {
+  const session = await getServerSession(authOptions as any);
 
-export default Page;
+  if (!session) {
+    signIn();
+    return null;
+  }
+  redirect("/page/dashboard");
+}
