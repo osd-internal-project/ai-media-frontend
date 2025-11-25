@@ -7,7 +7,7 @@ const UserServices = (axiosInstance: AxiosInstance) => {
   const baseUserGroupUrl = "/user-groups";
 
   return {
-    findAll: async () :Promise<TUser[]>=> {
+    findAll: async (): Promise<TUser[]> => {
       return await axiosInstance
         .get(`${baseUsersUrl}`)
         .then((res) => {

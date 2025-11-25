@@ -1,19 +1,15 @@
 "use client";
 
 import React, { useEffect, useState, type FC } from "react";
-import { Form, message, Tabs, type UploadFile } from "antd";
+import { Tabs } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { AppstoreOutlined, PictureOutlined } from "@ant-design/icons";
-import type { ITFromGenerate } from "@/app/common";
-import type { RcFile, UploadProps } from "antd/es/upload";
-import GenerateImageServices from "@/app/services/generate-image.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
 import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
-import { libraryDatas } from "./test";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import { useSession } from "next-auth/react";

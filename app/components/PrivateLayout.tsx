@@ -2,7 +2,7 @@
 import { ConfigProvider, Layout, Menu, Image, Avatar, Badge, Button, Form, Modal, Input, Select, theme, Popover } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { renderMenuItems, MenuSider } from "../config/menu";
+import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
@@ -32,18 +32,31 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const projectService = ProjectService(axiosCore);
   const [getdata, setData] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
+  const [groupName, setGroupName] = useState<string>("");
+  const [roles, setRoles] = useState<string[]>([]);
+  const filteredMenu = filterMenuByRole(MenuSider, roles);
 
   useEffect(() => {
-    fecthMasterData();
-    if (loading) {
-      fecthdata();
+    if (session?.user?.id) {
+      fecthMasterData();
+      getdatauser();
+      if (loading) {
+        fecthdata();
+      }
     }
-  }, [loading]);
+  }, [loading, session]);
 
   const fecthdata = async () => {
-    const response = await projectService.findAll();
+    const response = await projectService.findAll(session?.user?.id as string);
     setProject(response);
     setLoading(false);
+  };
+
+  const getdatauser = async () => {
+    const response = await userServices.findById(session?.user?.id as string);
+    const userRoles = response.roles.map((r: any) => r.role.name);
+    setRoles(userRoles);
+    setGroupName(response.name);
   };
 
   const fecthMasterData = async () => {
@@ -150,42 +163,50 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 mode="inline"
                 selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
                 defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-                items={renderMenuItems(MenuSider)}
+                items={renderMenuItems(filteredMenu)}
               />
               <div className=" !text-gray-400 px-4 mt-2">
                 {`PROJECT`}
-                <div className="mt-3 w-full">
-                  <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>{`Add new project`}</Button>
+                {roles.includes("p-c") ? (
+                  <div className="mt-3 w-full">
+                    <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>{`Add new project`}</Button>
+                  </div>
+                ) : null}
+                {roles.includes("p-v") ? (
+                  <>
+                    {getProject?.map((e) => {
+                      return (
+                        <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
+                          <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
+                            {e.name}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : null}
+              </div>
+            </div>
+            {groupName !== "admin-user" ? (
+              <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+                <Badge dot color="green">
+                  <Avatar />
+                </Badge>
+                <div className="grid grid-cols-1">
+                  <span className="text-white text-sm">{`${session?.user?.name}`}</span>
+                  <span className="text-[#6366F1]">Premium</span>
                 </div>
-                {getProject?.map((e) => {
-                  return (
-                    <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
-                      <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
-                        {e.name}
-                      </Button>
-                    </div>
-                  );
-                })}
+                <>
+                  <Popover content={content} trigger="click" placement="bottomRight" title={false}>
+                    <Button type="default" size="small" icon={<SettingOutlined />} />
+                  </Popover>
+                </>
               </div>
-            </div>
-            <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
-              <Badge dot color="green">
-                <Avatar />
-              </Badge>
-              <div className="grid grid-cols-1">
-                <span className="text-white text-sm">{`${session?.user?.name}`}</span>
-                <span className="text-[#6366F1]">Premium</span>
-              </div>
-              <>
-                <Popover content={content} trigger="click" placement="bottomRight" title={false}>
-                  <Button type="default" size="small" icon={<SettingOutlined />} />
-                </Popover>
-              </>
-            </div>
+            ) : null}
           </div>
         </Sider>
         <Layout className="flex-1 w-full h-full overflow-auto">
-          <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} />
+          {groupName === "admin-user" ? <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} /> : null}
           <div className="w-full h-full">
             <PrivateContent user={session?.user ? { fullname: session.user.name ?? "" } : undefined}>{children}</PrivateContent>
           </div>

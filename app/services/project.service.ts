@@ -4,9 +4,9 @@ import type { IProject } from "../common/project.type";
 const ProjectService = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/project";
   return {
-    findAll: async () => {
+    findAll: async (token: string) => {
       return await axiosInstance
-        .get(`${baseUrl}`)
+        .get(`${baseUrl}/${token}`)
         .then((res) => {
           return res.data;
         })
@@ -29,7 +29,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
 
     findById: async (id: string) => {
       return await axiosInstance
-        .get(`${baseUrl}/${id}`)
+        .get(`${baseUrl}/manage/${id}`)
         .then((res) => {
           return res.data;
         })
@@ -38,6 +38,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+
     upload: async (formData: any) => {
       return await axiosInstance
         .post(`${baseUrl}/upload-images`, formData, {

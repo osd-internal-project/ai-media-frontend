@@ -1,141 +1,47 @@
 "use client";
 import React from "react";
-// import { MenuProps, Tooltip } from "antd";
 import Link from "next/link";
-import { FileImageOutlined, PieChartOutlined, VideoCameraOutlined, UserSwitchOutlined, SettingOutlined, FileExcelOutlined } from "@ant-design/icons";
+import { FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import { LockKeyholeOpen } from "lucide-react";
-// type MenuItem = Required<MenuProps>["items"][number];
-
-// export const MenuSider: MenuItem[] = [
-//   {
-//     key: `general`,
-//     label: `General`,
-//     disabled: true,
-//     // rule: ["user", "admin", "hr"],
-//     children: [
-//       {
-//         key: `generate-image`,
-//         icon: <FileImageOutlined />,
-//         label: `Generate Image`,
-//       },
-//       {
-//         key: `generate-vdo`,
-//         icon: <VideoCameraOutlined />,
-//         label: `Generate VDO`,
-//         // rule: ["user", "admin", "hr"],
-//       },
-//     ],
-//   },
-
-//   {
-//     key: `report`,
-//     icon: <FileExcelOutlined />,
-//     label: `Report`,
-//     // rule: ["user", "admin", "hr"],
-//   },
-//   {
-//     key: `users-management`,
-//     icon: <UserSwitchOutlined />,
-//     label: `User Management`,
-//     // rule: ["admin", "hr", "user"],
-//   },
-//   {
-//     key: `setting`,
-//     icon: <SettingOutlined />,
-//     label: `Setting`,
-//     // rule: ["admin", "hr", "ma-user"],
-//     children: [],
-//   },
-// ].map((item) => {
-//   return {
-//     ...item,
-//     label: <>{item.label}</>,
-//   };
-// });
-
-// export const MenuSiderWithModule = (modules: string[]) => {
-//   //   if (modules) {
-//   const menuFilterChildren = MenuSider.map((menu: any) => ({
-//     ...menu,
-//     children: menu?.children
-//       ? menu.children
-//           // .filter((item: any) => {
-//           //   const rule = item.rule;
-//           //   // return !item.rule || modules.includes(item.rule);
-//           //   if (Array.isArray(rule)) {
-//           //     return rule.some((r) => modules.includes(r));
-//           //   }
-//           //   return modules.includes(rule);
-//           // })
-//           .map((item: any) => {
-//             return {
-//               ...item,
-//               label: (
-//                 <div style={{ width: 140 }}>
-//                   <Link href={`/page/${item.key}`}>{item.label}</Link>
-//                 </div>
-//               ),
-//             };
-//           })
-//       : null,
-//   }));
-//   return menuFilterChildren;
-//   //   .filter((item: any) => {
-//   //     const rule = item.rule;
-//   //     if (Array.isArray(rule)) {
-//   //       return rule.some((r) => modules.includes(r));
-//   //     }
-//   //     return modules.includes(rule);
-//   //   });
-
-//   // return menu;
-//   //   } else {
-//   //     return [];
-//   //   }
-// };
 
 export const MenuSider = [
   {
     key: `general`,
     label: `GENERAL`,
+    role: "",
     disabled: true,
     header: true,
     children: [
       {
         key: `dashboard`,
+        role: "d-v",
         icon: <FileImageOutlined />,
         label: `Dashboard`,
       },
       {
         key: `group-permission`,
+        role: "g-v",
         icon: <LockKeyholeOpen size={16} />,
         label: `Groups & Permission`,
       },
       {
         key: `users-management`,
+        role: "u-v",
         icon: <UserSwitchOutlined />,
         label: `User Managament`,
       },
     ],
   },
-  // {
-  //   key: `generate-image`,
-  //   icon: <FileImageOutlined />,
-  //   label: `Image Generation`,
-  // },
-  // {
-  //   key: `generate-vdo`,
-  //   icon: <VideoCameraOutlined />,
-  //   label: `Video Generation`,
-  // },
   {
     key: `settings`,
     label: `SETTING`,
     disabled: true,
+    role: "s-v",
     header: false,
     children: [
       {
         key: `roles`,
+        role: "r-v",
         icon: <FileImageOutlined />,
         label: `Roles`,
       },
@@ -184,4 +90,29 @@ export const findMenuLabel = (menuList: any[], key: string): string | null => {
     }
   }
   return null;
+};
+
+export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
+  const hasAccess = (role: string) => {
+    if (!role || role === "") return true; // public
+    return userRoles.includes(role);
+  };
+
+  return menuList
+    .map((menu) => {
+      // filter children ตาม role
+      const children = menu.children ? menu.children.filter((child: any) => hasAccess(child.role)) : null;
+
+      // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
+      const canAccessMenu = hasAccess(menu.role);
+
+      // ถ้าเมนูหลักไม่มีสิทธิ์ และไม่มี child เลย → ไม่ให้ผ่าน
+      if (!canAccessMenu && (!children || children.length === 0)) return null;
+
+      return {
+        ...menu,
+        children: children || menu.children,
+      };
+    })
+    .filter(Boolean); // ลบ null ออก
 };
