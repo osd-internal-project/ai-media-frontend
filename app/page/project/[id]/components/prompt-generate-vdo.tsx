@@ -14,7 +14,7 @@ import {
   type UploadFile,
   type UploadProps,
 } from "antd";
-import React, { type FC, type ReactElement, useEffect, useRef, useState } from "react";
+import React, { type FC, type ReactElement, useEffect, useState } from "react";
 
 import {
   PaperClipOutlined,
@@ -39,27 +39,29 @@ import GalleryServices from "@/app/services/gellory.service";
 export interface props {
   projectId?: string;
   userId?: string;
+  shouldRefetch?: boolean;
 }
 
-const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
+const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): ReactElement => {
+  const [messageApi, contextHolder] = message.useMessage();
   const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
   const [formcreateVdo] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [gethistory, setHistory] = useState<any[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
     if (loading) {
       fecthdata();
     }
   }, [loading, submitting]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    if (shouldRefetch) {
+      fecthdata();
+    }
+  }, [shouldRefetch]);
 
   const fecthdata = async () => {
     try {
@@ -114,12 +116,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
 
     try {
       const response = await GenerateImageServices(axiosCore).create({ ...base, projectId, userId });
-      if (!response?.id) {
-        message.error("สร้างคำขอล้มเหลว");
+      if (response.status === 400) {
+        messageApi.open({
+          type: "error",
+          content: `${response.data}`,
+        });
         setSubmitting(false);
-        return;
+        return true;
       }
-
       const checkStatus = async () => {
         try {
           const task = await GenerateImageServices(axiosCore).findById(response.id);
@@ -168,24 +172,12 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
           setSubmitting(false);
         }
       };
-
-      // เริ่มเช็คสถานะ
       checkStatus();
     } catch (err) {
       console.error(err);
       message.error("เกิดข้อผิดพลาด");
       setSubmitting(false);
     }
-  };
-
-  const handleDownload = (url: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = url.split("/").pop() || "download"; // ชื่อไฟล์
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const beforeUploadFilesVDO = (file: RcFile) => {
@@ -202,16 +194,16 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
 
   const content = (
     <div className="grid grid-cols-1 gap-2 min-w-[120px]">
-      <Button block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
+      <Button htmlType="button" block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
         <TikTokOutlined /> <span>Tiktok</span>
       </Button>
-      <Button block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
+      <Button htmlType="button" block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
         <FacebookOutlined /> <span>Facebook</span>
       </Button>
-      <Button block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
+      <Button htmlType="button" block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
         <InstagramOutlined /> <span>Instagram</span>
       </Button>
-      <Button block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
+      <Button htmlType="button" block className="!flex !justify-start !items-center gap-2 hover:bg-gray-700">
         <WechatWorkOutlined /> <span>Line</span>
       </Button>
     </div>
@@ -290,6 +282,9 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
     },
     { key: "2", label: "Prompt Guide", children: <div>Content 2</div> },
   ];
+  const handleOpenImage = async (url: string) => {
+    await window.open(url, "_blank");
+  };
 
   return (
     <Form
@@ -300,6 +295,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
       onFinish={onFinishVDO}
       initialValues={{ type: "vdo", resolution: "1080p", ratio: "16:9", duration: "5" }}
     >
+      {contextHolder}
       <div className="w-full grid grid-cols-5 !gap-2">
         <div className="w-full col col-span-4 ">
           {gethistory.length === 0 && !submitting ? (
@@ -318,13 +314,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
                   <h3 className="text-xl font-semibold text-center mb-6">Product Showcase</h3>
                   <div className="!space-y-3">
                     {["Credit Card Close-up Shots", "Animated Card Reveal", "Transaction Flow Visuals", "Luxury & Premium Experience"].map((item) => (
-                      <button
+                      <Button
+                        htmlType="button"
                         key={item}
                         className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
                       >
                         <span>{item}</span>
                         <span>→</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -337,13 +334,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
                   <h3 className="text-xl font-semibold text-center mb-6">Branding & Visuals</h3>
                   <div className="!space-y-3">
                     {["Customer Journey Scenes", "Travel & Freedom", "Future Tech & Innovation", "Everyday Convenience"].map((item) => (
-                      <button
+                      <Button
+                        htmlType="button"
                         key={item}
                         className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
                       >
                         <span>{item}</span>
                         <span>→</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -413,23 +411,29 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
                                   {/* --- ACTION BUTTONS (บนขวา) --- */}
                                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     <Popover placement="topRight" content={content}>
-                                      <button className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110">
+                                      <Button
+                                        htmlType="button"
+                                        className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
+                                      >
                                         <Share2 className="w-4 h-4 text-gray-800" />
-                                      </button>
+                                      </Button>
                                     </Popover>
 
-                                    <button
+                                    <Button
+                                      htmlType="button"
                                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                      onClick={() => handleDownload(videoUrl)}
+                                      // onClick={() => handleDownload(videoUrl)}
+                                      onClick={() => handleOpenImage(videoUrl)}
                                     >
-                                      <Download className="w-4 h-4 text-gray-800" />
-                                    </button>
-                                    <button
+                                      <Download className="w-4 h-4 !text-gray-800" />
+                                    </Button>
+                                    <Button
+                                      htmlType="button"
                                       onClick={() => updateShareOptions(message.taskId, videoUrl, message.status)}
                                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
                                     >
                                       <LikeOutlined className={`text-base ${message.status ? "!text-red-600" : "!text-gray-800"}`} />
-                                    </button>
+                                    </Button>
                                   </div>
 
                                   {/* --- VIDEO NUMBER (ซ้ายล่าง) --- */}
@@ -532,8 +536,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
                     </div>
                   </div>
                 )}
-
-                <div ref={messagesEndRef} />
               </div>
             </div>
           )}
@@ -544,7 +546,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
                 <Input />
               </Form.Item>
               <div className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden shadow-xl">
-                <Form.Item name="text" className="mb-0" rules={[{ required: true, message: "กรุณากรอก prompt!" }]}>
+                <Form.Item name="text" className="mb-0">
                   <Input.TextArea
                     placeholder="อธิบายวีดีโอที่คุณต้องการสร้าง เช่น 'แมวตัวน้อยกำลังเล่นในสวน ด้วยแสงแดดยามเช้า...'"
                     className="bg-transparent border-none text-zinc-300 placeholder:text-zinc-600 resize-none"

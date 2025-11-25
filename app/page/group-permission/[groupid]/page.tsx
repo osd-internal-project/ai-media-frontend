@@ -2,22 +2,7 @@
 import type { TGroup, TGroupWithUsersAndRoles } from "@/app/common/groups.type";
 import GroupsServices from "@/app/services/groups.service";
 import { axiosUser } from "@/app/lib/axios/axios";
-import {
-  Button,
-  Card,
-  Checkbox,
-  Col,
-  ConfigProvider,
-  Form,
-  Input,
-  message,
-  Row,
-  Select,
-  Space,
-  Spin,
-  Table,
-  Tag,
-} from "antd";
+import { Button, Card, Checkbox, Col, ConfigProvider, Form, Input, message, Row, Select, Space, Spin, Table, Tag } from "antd";
 import { FileOutlined, FolderOutlined, UserOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -39,9 +24,7 @@ const UpdateGroupPage = () => {
   const [formuser] = Form.useForm();
   const [formrole] = Form.useForm();
   const [loadGroup, setLoadingGroup] = useState<boolean>(false);
-  const [groupDetail, setGroupDetail] = useState<
-    TGroupWithUsersAndRoles | undefined
-  >(undefined);
+  const [groupDetail, setGroupDetail] = useState<TGroupWithUsersAndRoles | undefined>(undefined);
   const [userList, setUserList] = useState<TUser[]>([]);
   const [userOptionList, setUserOptionList] = useState<TUser[]>([]);
   const [selectedUserList, setSelectedUserList] = useState<TUser[]>([]);
@@ -98,9 +81,7 @@ const UpdateGroupPage = () => {
     }
   };
   const fecthdataGroup = async () => {
-    const response = await groupsServices.findUsersAndRolesByGroup(
-      String(groupid)
-    );
+    const response = await groupsServices.findUsersAndRolesByGroup(String(groupid));
 
     if (response) {
       formmanage.setFieldsValue(response);
@@ -146,7 +127,8 @@ const UpdateGroupPage = () => {
         content: "Updat Success",
       });
       reloadPage();
-    } else { messageApi.open({
+    } else {
+      messageApi.open({
         type: "success",
         content: "Update Fail ,Please try again.",
       });
@@ -154,22 +136,16 @@ const UpdateGroupPage = () => {
     }
   };
   function onAddSelectedUsers(values: { newUserIds: string[] }): void {
-    const newSelectedUsers = userOptionList.filter((u) =>
-      values.newUserIds.includes(u.userId)
-    );
+    const newSelectedUsers = userOptionList.filter((u) => values.newUserIds.includes(u.userId));
     setSelectedUserList([...selectedUserList, ...newSelectedUsers]);
-    const newOptionUser = userOptionList.filter(
-      (u) => !values.newUserIds.includes(u.userId)
-    );
+    const newOptionUser = userOptionList.filter((u) => !values.newUserIds.includes(u.userId));
     setUserOptionList(newOptionUser);
     formuser.resetFields();
   }
   function onDeleteSelectedUser(userId: string): void {
     const newOptionUsers = selectedUserList.filter((u) => u.userId === userId);
     setUserOptionList([...userOptionList, ...newOptionUsers]);
-    const newSelectedUsers = selectedUserList.filter(
-      (u) => u.userId !== userId
-    );
+    const newSelectedUsers = selectedUserList.filter((u) => u.userId !== userId);
     setSelectedUserList(newSelectedUsers);
 
     formuser.resetFields();
@@ -194,12 +170,8 @@ const UpdateGroupPage = () => {
             <div className=" flex justify-between">
               <div>
                 <div className=" text-[14px] inline">{groupDetail?.name}</div>{" "}
-                <div className=" text-[18px] font-bold inline">
-                  {groupDetail?.displayName}
-                </div>
-                <div className=" text-[12px] text-gray-400">
-                  {groupDetail?.description}
-                </div>
+                <div className=" text-[18px] font-bold inline">{groupDetail?.displayName}</div>
+                <div className=" text-[12px] text-gray-400">{groupDetail?.description}</div>
               </div>
               <Space>
                 <div className=" ">
@@ -211,11 +183,7 @@ const UpdateGroupPage = () => {
                   <div>{groupDetail?.roles?.length || 0}</div>
                 </div>
                 <div className=" ">
-                  <Button
-                    type="primary"
-                    size="large"
-                    onClick={onSubmitEditGroup}
-                  >
+                  <Button type="primary" size="large" onClick={onSubmitEditGroup}>
                     Save Change
                   </Button>
                 </div>
@@ -225,14 +193,7 @@ const UpdateGroupPage = () => {
         </div>
         <div className="grid grid-cols-2 w-full gap-3">
           <div>
-            <Form<TGroup>
-              name={`manage-group`}
-              form={formmanage}
-              layout="vertical"
-              autoComplete="off"
-              className="dark-form"
-              onFinish={onFinish}
-            >
+            <Form<TGroup> name={`manage-group`} form={formmanage} layout="vertical" autoComplete="off" className="dark-form" onFinish={onFinish}>
               <Card className="col col-span-1 !bg-transparent !border-gray-800">
                 <div className="text-xl mb-2">{`Edit group details`}</div>
                 <Form.Item
@@ -251,32 +212,22 @@ const UpdateGroupPage = () => {
                   />
                 </Form.Item>
                 <div className="text-xs text-gray-500 -mt-4 mb-4 flex items-center gap-1">
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-[10px]">
-                    i
-                  </span>
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-[10px]">i</span>
                   {`Support letters, numbers, and the following special characters: ".", "_", "-", up to 64 characters`}
                 </div>
 
-                <Form.Item
-                  label={<span className="text-gray-300">Display name</span>}
-                  name={"displayName"}
-                >
+                <Form.Item label={<span className="text-gray-300">Display name</span>} name={"displayName"}>
                   <Input
                     placeholder="Text"
                     className="!bg-[#2a2a2a] !border-[#3a3a3a] !text-white placeholder:!text-gray-500 hover:!border-[#4a4a4a] focus:!border-[#6366F1]"
                   />
                 </Form.Item>
                 <div className="text-xs text-gray-500 -mt-4 mb-4 flex items-center gap-1">
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-[10px]">
-                    i
-                  </span>
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-[10px]">i</span>
                   up to 64 characters
                 </div>
 
-                <Form.Item
-                  label={<span className="text-gray-300">Description</span>}
-                  name={"description"}
-                >
+                <Form.Item label={<span className="text-gray-300">Description</span>} name={"description"}>
                   <Input.TextArea
                     placeholder="up to 128 characters"
                     rows={4}
@@ -288,14 +239,10 @@ const UpdateGroupPage = () => {
           </div>
 
           <div>
-            <ConfigProvider
-              theme={{ components: { Form: { itemMarginBottom: 0 } } }}
-            >
+            <ConfigProvider theme={{ components: { Form: { itemMarginBottom: 0 } } }}>
               <Card className="col col-span-1 !bg-transparent !border-gray-800">
                 <div className="text-xl mb-2">{`Add User`}</div>
-                <div className="text-gray-400">
-                  Total {groupDetail?.users?.length || 0} users
-                </div>
+                <div className="text-gray-400">Total {groupDetail?.users?.length || 0} users</div>
                 <Form form={formuser} onFinish={onAddSelectedUsers}>
                   <div className="flex gap-2">
                     <Form.Item className="flex-1" name={"newUserIds"}>
@@ -315,27 +262,18 @@ const UpdateGroupPage = () => {
                         }))}
                       />
                     </Form.Item>
-                    <Button
-                      htmlType="submit"
-                      icon={<PlusCircleIcon size={"16px"} />}
-                      type="primary"
-                    >
+                    <Button htmlType="submit" icon={<PlusCircleIcon size={"16px"} />} type="primary">
                       Add
                     </Button>
                   </div>
                 </Form>
-                <Table
-                  rowKey={"userId"}
-                  showHeader={false}
-                  columns={userColumns}
-                  dataSource={selectedUserList}
-                />
+                <Table rowKey={"userId"} showHeader={false} columns={userColumns} dataSource={selectedUserList} />
               </Card>
             </ConfigProvider>
           </div>
         </div>
         <Card className=" w-full">
-          <Form form={formrole} >
+          <Form form={formrole}>
             <Form.Item name="roleIds" initialValue={[]}>
               <Checkbox.Group className="w-full">
                 <Row gutter={[16, 16]}>
@@ -347,9 +285,7 @@ const UpdateGroupPage = () => {
                     <div>
                       {roles?.content?.map((role) => (
                         <div key={role.roleId}>
-                          <Checkbox value={role.roleId}>
-                            {role.description}
-                          </Checkbox>
+                          <Checkbox value={role.roleId}>{role.description}</Checkbox>
                         </div>
                       ))}
                     </div>
@@ -363,9 +299,7 @@ const UpdateGroupPage = () => {
                     <div>
                       {roles?.user?.map((role) => (
                         <div key={role.roleId}>
-                          <Checkbox value={role.roleId}>
-                            {role.description}
-                          </Checkbox>
+                          <Checkbox value={role.roleId}>{role.description}</Checkbox>
                         </div>
                       ))}
                     </div>
@@ -379,9 +313,7 @@ const UpdateGroupPage = () => {
                     <div>
                       {roles?.resources?.map((role) => (
                         <div key={role.roleId}>
-                          <Checkbox value={role.roleId}>
-                            {role.description}
-                          </Checkbox>
+                          <Checkbox value={role.roleId}>{role.description}</Checkbox>
                         </div>
                       ))}
                     </div>

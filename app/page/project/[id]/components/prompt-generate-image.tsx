@@ -1,6 +1,6 @@
 import type { ITFromGenerate } from "@/app/common";
 import { Avatar, Button, Form, Input, message, Popover, Segmented, Slider, Tabs, Upload, UploadFile, UploadProps } from "antd";
-import React, { type FC, type ReactElement, useEffect, useRef, useState } from "react";
+import React, { type FC, type ReactElement, useEffect, useState } from "react";
 
 import {
   PaperClipOutlined,
@@ -23,27 +23,29 @@ import GalleryServices from "@/app/services/gellory.service";
 export interface props {
   projectId?: string;
   userId?: string;
+  shouldRefetch?: boolean;
 }
 
-const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => {
+const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): ReactElement => {
+  const [messageApi, contextHolder] = message.useMessage();
   const [formcreateImage] = Form.useForm();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [gethistory, setHistory] = useState<any[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
     if (loading) {
       fecthdata();
     }
   }, [loading, submitting]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    if (shouldRefetch) {
+      fecthdata();
+    }
+  }, [shouldRefetch]);
 
   const fecthdata = async () => {
     setLoading(true);
@@ -62,7 +64,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
         // AI message
         messages.push({
           type: "ai",
-          content: "AICave Generated Vdo",
+          content: "AICave Generated Images",
           images: item.imageUrls,
           username: "AICave",
           time: item.createdAt,
@@ -91,21 +93,39 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
       base = { ...values, image: upload.fileName };
     }
     try {
-      const response = await GenerateImageServices(axiosCore).create({ ...base, projectId: projectId, userId: userId });
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        message.success("สร้างคำขอสำเร็จ");
-        formcreateImage.resetFields();
-        setFiles([]);
-        setCurrentPrompt("");
-        // Fetch ข้อมูลใหม่
-        await fecthdata();
-      } else {
-        message.error("ไม่มีข้อมูลที่ได้กลับมา");
+      const response = await GenerateImageServices(axiosCore).create({
+        ...base,
+        projectId,
+        userId,
+      });
+
+      if (response.status === 400) {
+        messageApi.open({
+          type: "error",
+          content: `${response.data}`,
+        });
+        setSubmitting(false);
+        return true;
       }
-      setSubmitting(false);
-    } catch (err) {
-      console.error(err);
-      message.error("เกิดข้อผิดพลาด");
+
+      // ถ้า API สำเร็จ (200)
+      messageApi.open({
+        type: "success",
+        content: "สร้างคำขอสำเร็จ",
+      });
+
+      formcreateImage.resetFields();
+      setFiles([]);
+      setCurrentPrompt("");
+      await fecthdata();
+    } catch (error: any) {
+      // ดึง message จาก response ของ backend
+      const msg = error.response?.data?.message || "เกิดข้อผิดพลาด";
+      messageApi.open({
+        type: "error",
+        content: msg,
+      });
+    } finally {
       setSubmitting(false);
     }
   };
@@ -128,19 +148,20 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
   const handleChangeFiles: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
     return setFiles(newFileList);
   };
+
   const content = (
     <div className="grid grid-col-1 items-center gap-2">
-      <Button block className="!flex !justify-between !items-center">
+      <Button htmlType="button" block className="!flex !justify-between !items-center">
         <TikTokOutlined /> <span>Tiktok</span>
       </Button>
-      <Button block className="!flex !justify-between !items-center">
+      <Button htmlType="button" block className="!flex !justify-between !items-center">
         <FacebookOutlined />
         <span>Facebook</span>
       </Button>
-      <Button block className="!flex !justify-between !items-center">
+      <Button htmlType="button" block className="!flex !justify-between !items-center">
         <InstagramOutlined /> <span>Instagram</span>
       </Button>
-      <Button block className="!flex !justify-between !items-center">
+      <Button htmlType="button" block className="!flex !justify-between !items-center">
         <WechatWorkOutlined /> <span>Line</span>
       </Button>
     </div>
@@ -231,212 +252,244 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
     }
   };
 
-  const handleDownload = (url: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = url.split("/").pop() || "download"; // ชื่อไฟล์
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleOpenImage = async (url: string) => {
+    await window.open(url, "_blank");
   };
 
   return (
-    <Form
-      form={formcreateImage}
-      name="form-generate"
-      autoComplete="off"
-      layout="vertical"
-      onFinish={onFinish}
-      initialValues={{ type: "image" }}
-      onValuesChange={handleValuesChange}
-    >
-      <div className="w-full grid grid-cols-5 !gap-2">
-        <div className="w-full col col-span-4 ">
-          {gethistory.length === 0 && !submitting ? (
-            <div className="text-white mt-10">
-              <h1 className="text-4xl font-light text-center mb-4">AI Cave : Seedream 4.0</h1>
-              <p className="text-gray-400 text-center mb-12">
-                Kickstart your innovation process with our comprehensive selection of predefined prompts.
-              </p>
-              <div className="grid grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <div>
-                  <div className="flex items-center justify-center mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                      <span className="text-2xl">💬</span>
+    <>
+      {contextHolder}
+      <Form
+        form={formcreateImage}
+        name="form-generate"
+        autoComplete="off"
+        layout="vertical"
+        onFinish={onFinish}
+        initialValues={{ type: "image" }}
+        onValuesChange={handleValuesChange}
+      >
+        <div className="w-full grid grid-cols-5 !gap-2">
+          <div className="w-full col col-span-4 ">
+            {gethistory.length === 0 && !submitting ? (
+              <div className="text-white mt-10">
+                <h1 className="text-4xl font-light text-center mb-4">AI Cave : Seedream 4.0</h1>
+                <p className="text-gray-400 text-center mb-12">
+                  Kickstart your innovation process with our comprehensive selection of predefined prompts.
+                </p>
+                <div className="grid grid-cols-3 gap-8 max-w-6xl mx-auto">
+                  <div>
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                        <span className="text-2xl">💬</span>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-center mb-6">Scene & Objects</h3>
+                    <div className="!space-y-3">
+                      {["Landscape", "Creatures", "Character Design", "Props & Items"].map((item) => (
+                        <Button
+                          htmlType="button"
+                          key={item}
+                          className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                        >
+                          <span>{item}</span>
+                          <span>→</span>
+                        </Button>
+                      ))}
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-center mb-6">Scene & Objects</h3>
-                  <div className="!space-y-3">
-                    {["Landscape", "Creatures", "Character Design", "Props & Items"].map((item) => (
-                      <button
-                        key={item}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
-                      >
-                        <span>{item}</span>
-                        <span>→</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                      <span className="text-2xl">✏️</span>
+                  <div>
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                        <span className="text-2xl">✏️</span>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-center mb-6">Art Direction</h3>
+                    <div className="!space-y-3">
+                      {["Art Styles", "Lighting & Mood", "Color Palettes", "Composition"].map((item) => (
+                        <Button
+                          htmlType="button"
+                          key={item}
+                          className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                        >
+                          <span>{item}</span>
+                          <span>→</span>
+                        </Button>
+                      ))}
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-center mb-6">Art Direction</h3>
-                  <div className="!space-y-3">
-                    {["Art Styles", "Lighting & Mood", "Color Palettes", "Composition"].map((item) => (
-                      <button
-                        key={item}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
-                      >
-                        <span>{item}</span>
-                        <span>→</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-center mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                      <span className="text-2xl">💡</span>
+                  <div>
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                        <span className="text-2xl">💡</span>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-center mb-6">Branding & Visuals</h3>
-                  <div className="!space-y-3">
-                    {["Product Showcase", "Social Media Visuals", "Campaign Moodboards", "Social media posts"].map((item) => (
-                      <button
-                        key={item}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
-                      >
-                        <span>{item}</span>
-                        <span>→</span>
-                      </button>
-                    ))}
+                    <h3 className="text-xl font-semibold text-center mb-6">Branding & Visuals</h3>
+                    <div className="!space-y-3">
+                      {["Product Showcase", "Social Media Visuals", "Campaign Moodboards", "Social media posts"].map((item) => (
+                        <Button
+                          htmlType="button"
+                          key={item}
+                          className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                        >
+                          <span>{item}</span>
+                          <span>→</span>
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="mt-8">
-              {/* Chat Messages */}
-              <div className="mb-8 space-y-6">
-                {gethistory.map((message, index) => (
-                  <div key={index} className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                    {/* Avatar AI */}
-                    {message.type === "ai" && (
-                      <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
-                    )}
+            ) : (
+              <div className="mt-8">
+                {/* Chat Messages */}
+                <div className="mb-8 space-y-6">
+                  {gethistory.map((message, index) => (
+                    <div key={index} className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                      {/* Avatar AI */}
+                      {message.type === "ai" && (
+                        <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
+                      )}
 
-                    {/* User message */}
-                    {message.type === "user" ? (
-                      <div className="flex flex-col items-end gap-1 max-w-2xl">
-                        <div className="text-xs text-gray-400">
-                          {message.username} • {new Date(message.time).toLocaleString()}
+                      {/* User message */}
+                      {message.type === "user" ? (
+                        <div className="flex flex-col items-end gap-1 max-w-2xl">
+                          <div className="text-xs text-gray-400">
+                            {message.username} • {new Date(message.time).toLocaleString()}
+                          </div>
+
+                          <div className="flex gap-3 items-start">
+                            <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg">
+                              <p className="text-sm leading-relaxed">{message.content}</p>
+                            </div>
+
+                            <Avatar size={40} icon={<UserOutlined />} className="bg-gray-700 flex-shrink-0" />
+                          </div>
                         </div>
+                      ) : (
+                        // AI message
+                        <div className="flex flex-col items-start space-y-3 flex-1">
+                          <div className="text-xs text-gray-400">
+                            {message.username} • {new Date(message.time).toLocaleString()}
+                          </div>
 
-                        <div className="flex gap-3 items-start">
-                          <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg">
+                          <div className="bg-gray-800/50 text-white rounded-2xl px-5 py-3 max-w-2xl border border-gray-700/50">
                             <p className="text-sm leading-relaxed">{message.content}</p>
                           </div>
 
-                          <Avatar size={40} icon={<UserOutlined />} className="bg-gray-700 flex-shrink-0" />
-                        </div>
-                      </div>
-                    ) : (
-                      // AI message
-                      <div className="flex flex-col items-start space-y-3 flex-1">
-                        <div className="text-xs text-gray-400">
-                          {message.username} • {new Date(message.time).toLocaleString()}
-                        </div>
+                          {/* Images */}
+                          {message.images && message.images.length > 0 && (
+                            <div
+                              className={`grid gap-4 w-full ${
+                                message.images.length === 1
+                                  ? "grid-cols-1 max-w-md"
+                                  : message.images.length === 2
+                                  ? "grid-cols-2 max-w-2xl"
+                                  : message.images.length === 3
+                                  ? "grid-cols-3 max-w-3xl"
+                                  : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
+                              }`}
+                            >
+                              {message.images.map((image: any, imgIndex: number) => (
+                                <div key={imgIndex} className="relative group">
+                                  {/* --- FRAME ของรูป --- */}
+                                  <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl transition-all duration-300">
+                                    <img
+                                      src={image}
+                                      className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
+                                    />
 
-                        <div className="bg-gray-800/50 text-white rounded-2xl px-5 py-3 max-w-2xl border border-gray-700/50">
-                          <p className="text-sm leading-relaxed">{message.content}</p>
-                        </div>
+                                    {/* --- OVERLAY GRADIENT --- */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                        {/* Images */}
-                        {message.images && message.images.length > 0 && (
-                          <div
-                            className={`grid gap-4 w-full ${
-                              message.images.length === 1
-                                ? "grid-cols-1 max-w-md"
-                                : message.images.length === 2
-                                ? "grid-cols-2 max-w-2xl"
-                                : message.images.length === 3
-                                ? "grid-cols-3 max-w-3xl"
-                                : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
-                            }`}
-                          >
-                            {message.images.map((image: any, imgIndex: number) => (
-                              <div key={imgIndex} className="relative group">
-                                {/* --- FRAME ของรูป --- */}
-                                <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl transition-all duration-300">
-                                  <img
-                                    src={image}
-                                    className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                                  />
+                                    {/* --- ACTION BUTTONS (ต่อรูป) --- */}
+                                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                      <Popover placement="topRight" content={content}>
+                                        <Button
+                                          htmlType="button"
+                                          className="p-2 !bg-transparent hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
+                                        >
+                                          <Share2 className="w-4 h-4 !text-gray-800" />
+                                        </Button>
+                                      </Popover>
 
-                                  {/* --- OVERLAY GRADIENT --- */}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                      <Button
+                                        htmlType="button"
+                                        className="p-2 !bg-transparent hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
+                                        onClick={() => handleOpenImage(image)}
+                                      >
+                                        <Download className="w-4 h-4 !text-gray-800" />
+                                      </Button>
+                                      {/* --- LIKE BUTTON --- */}
 
-                                  {/* --- ACTION BUTTONS (ต่อรูป) --- */}
-                                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <Popover placement="topRight" content={content}>
-                                      <button className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110">
-                                        <Share2 className="w-4 h-4 text-gray-800" />
-                                      </button>
-                                    </Popover>
-
-                                    <button
-                                      className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                      onClick={() => handleDownload(image)}
-                                    >
-                                      <Download className="w-4 h-4 !text-gray-800" />
-                                    </button>
-                                  </div>
-
-                                  {/* --- IMAGE NUMBER (optional) --- */}
-                                  {message.images.length > 1 && (
-                                    <div className="absolute bottom-3 left-3 px-3 py-1 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs font-medium">
-                                      {imgIndex + 1} / {message.images.length}
+                                      <Button
+                                        htmlType="button"
+                                        onClick={() => updateShareOptions(message.taskId, image, message.status)}
+                                        className="p-2 !bg-transparent hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
+                                      >
+                                        <LikeOutlined className={`w-4 h-4 ${message.status ? `!text-red-800` : `!text-gray-800`}`} />
+                                      </Button>
                                     </div>
-                                  )}
-                                  {/* --- LIKE BUTTON --- */}
-                                  <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <button
-                                      onClick={() => updateShareOptions(message.taskId, image, message.status)}
-                                      className="p-2 !bg-transparent hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                    >
-                                      <LikeOutlined className={`w-4 h-4 ${message.status ? `!text-red-800` : `!text-gray-800`}`} />
-                                    </button>
+
+                                    {message.images.length > 1 && (
+                                      <div className="absolute bottom-3 left-3 px-3 py-1 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+                                        {imgIndex + 1} / {message.images.length}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {/* Enhanced Loading State */}
+                  {submitting && (
+                    <>
+                      {/* User's prompt message */}
+                      <div className="flex gap-3 justify-end">
+                        <div className="flex flex-col items-end gap-1 max-w-2xl">
+                          <div className="text-xs text-gray-400">You • {new Date().toLocaleString()}</div>
+                          <div className="flex gap-3 items-start">
+                            <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg">
+                              <p className="text-sm leading-relaxed">{currentPrompt}</p>
+                            </div>
+                            <Avatar size={40} icon={<UserOutlined />} className="bg-gray-700 flex-shrink-0" />
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {/* Enhanced Loading State */}
-                {submitting && (
-                  <>
-                    {/* User's prompt message */}
-                    <div className="flex gap-3 justify-end">
-                      <div className="flex flex-col items-end gap-1 max-w-2xl">
-                        <div className="text-xs text-gray-400">You • {new Date().toLocaleString()}</div>
-                        <div className="flex gap-3 items-start">
-                          <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg">
-                            <p className="text-sm leading-relaxed">{currentPrompt}</p>
-                          </div>
-                          <Avatar size={40} icon={<UserOutlined />} className="bg-gray-700 flex-shrink-0" />
                         </div>
                       </div>
-                    </div>
-                    {/* AI generating state */}
+                      {/* AI generating state */}
+                      <div className="flex gap-3 justify-start">
+                        <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
+                        <div className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-8 shadow-2xl flex-1 max-w-2xl">
+                          <div className="flex flex-col justify-center items-center space-y-4">
+                            <div className="relative">
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full animate-ping" />
+                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center animation-delay-150">
+                                <div className="w-20 h-20 border-4 border-blue-500/20 rounded-full animate-ping" />
+                              </div>
+                            </div>
+                            <div className="text-center space-y-1">
+                              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                                กำลังสร้างรูปภาพ AI
+                              </h3>
+                              <p className="text-gray-400 text-sm">โปรดรอสักครู่...</p>
+                              {/* Progress Dots */}
+                              <div className="flex justify-center gap-1.5 pt-2">
+                                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" />
+                                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-150" />
+                                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-300" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {loading && !submitting && (
                     <div className="flex gap-3 justify-start">
                       <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
                       <div className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-8 shadow-2xl flex-1 max-w-2xl">
@@ -464,100 +517,68 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
                         </div>
                       </div>
                     </div>
-                  </>
-                )}
-                {loading && !submitting && (
-                  <div className="flex gap-3 justify-start">
-                    <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
-                    <div className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-8 shadow-2xl flex-1 max-w-2xl">
-                      <div className="flex flex-col justify-center items-center space-y-4">
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full animate-ping" />
-                          </div>
-                          <div className="absolute inset-0 flex items-center justify-center animation-delay-150">
-                            <div className="w-20 h-20 border-4 border-blue-500/20 rounded-full animate-ping" />
-                          </div>
-                        </div>
-                        <div className="text-center space-y-1">
-                          <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                            กำลังสร้างรูปภาพ AI
-                          </h3>
-                          <p className="text-gray-400 text-sm">โปรดรอสักครู่...</p>
-                          {/* Progress Dots */}
-                          <div className="flex justify-center gap-1.5 pt-2">
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" />
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-150" />
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-300" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="flex justify-center">
-            <div className=" w-full max-w-4xl mt-20">
-              <Form.Item name="type" hidden>
-                <Input />
-              </Form.Item>
-              <div className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden ">
-                <Form.Item name="text" className="mb-0" rules={[{ required: true, message: "กรุณากรอก prompt!" }]}>
-                  <Input.TextArea
-                    placeholder="Describe the image you want to generate"
-                    className="bg-transparent border-none text-zinc-300 placeholder:text-zinc-600 resize-none"
-                    style={{
-                      fontSize: "16px",
-                      padding: "20px 24px",
-                      minHeight: "120px",
-                      boxShadow: "none",
-                    }}
-                    autoSize={{ minRows: 1, maxRows: 8 }}
-                    disabled={submitting}
-                  />
+            <div className="flex justify-center">
+              <div className=" w-full max-w-4xl mt-20">
+                <Form.Item name="type" hidden>
+                  <Input />
                 </Form.Item>
-
-                <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
-                  <Form.Item name="image" className="mb-0">
-                    <Upload
-                      fileList={files}
-                      onChange={handleChangeFiles}
-                      beforeUpload={beforeUploadFiles}
-                      multiple={false}
-                      maxCount={1}
-                      showUploadList={false}
+                <div className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden ">
+                  <Form.Item name="text" className="mb-0">
+                    <Input.TextArea
+                      placeholder="Describe the image you want to generate"
+                      className="bg-transparent border-none text-zinc-300 placeholder:text-zinc-600 resize-none"
+                      style={{
+                        fontSize: "16px",
+                        padding: "20px 24px",
+                        minHeight: "120px",
+                        boxShadow: "none",
+                      }}
+                      autoSize={{ minRows: 1, maxRows: 8 }}
                       disabled={submitting}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                        <PaperClipOutlined className="text-lg" />
-                      </div>
-                    </Upload>
+                    />
                   </Form.Item>
-                  <Button
-                    htmlType="submit"
-                    size="large"
-                    disabled={submitting}
-                    className=" rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <SendOutlined className="text-lg" />
-                  </Button>
+
+                  <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
+                    <Form.Item name="image" className="mb-0">
+                      <Upload
+                        fileList={files}
+                        onChange={handleChangeFiles}
+                        beforeUpload={beforeUploadFiles}
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        disabled={submitting}
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
+                          <PaperClipOutlined className="text-lg" />
+                        </div>
+                      </Upload>
+                    </Form.Item>
+                    <Button
+                      htmlType="submit"
+                      size="large"
+                      disabled={submitting}
+                      className=" rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <SendOutlined className="text-lg" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <div className="flex flex-col h-screen">
+            <div className="text-[24px] font-bold p-4">Configure</div>
+            <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1 flex flex-col" items={items} tabBarStyle={{ marginTop: "auto" }} />
+          </div>
         </div>
-        <div className="flex flex-col h-screen">
-          <div className="text-[24px] font-bold p-4">Configure</div>
-          <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1 flex flex-col" items={items} tabBarStyle={{ marginTop: "auto" }} />
-        </div>
-      </div>
 
-      <style>{`
+        <style>{`
         .animation-delay-150 {
           animation-delay: 150ms;
         }
@@ -566,7 +587,8 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
           animation-delay: 300ms;
         }
       `}</style>
-    </Form>
+      </Form>
+    </>
   );
 };
 

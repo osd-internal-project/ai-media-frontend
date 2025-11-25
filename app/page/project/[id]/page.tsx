@@ -13,12 +13,14 @@ import PromptGenerateVdo from "./components/prompt-generate-vdo";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import { useSession } from "next-auth/react";
+
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
+  const [activeKey, setActiveKey] = useState("1");
   const { id } = params as { id: string };
 
   useEffect(() => {
@@ -42,17 +44,20 @@ const GenerateImagePage: FC = () => {
       setLoadingData(false);
     }
   };
-  const onChangeTab = (key: string) => {};
+
+  const onChangeTab = (key: string) => {
+    setActiveKey(key);
+  };
 
   return (
-    <div className="min-h-screen  relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
       <Tabs
         className="custom-tabs"
         type="card"
-        defaultActiveKey="1"
+        activeKey={activeKey}
         items={[
           {
             key: "1",
@@ -62,7 +67,7 @@ const GenerateImagePage: FC = () => {
                 Image Gen.
               </span>
             ),
-            children: <PromptGenerateImage projectId={id} userId={session?.user?.id} />,
+            children: <PromptGenerateImage key={`image-${activeKey}`} projectId={id} userId={session?.user?.id} />,
           },
           {
             key: "2",
@@ -72,7 +77,7 @@ const GenerateImagePage: FC = () => {
                 VDO Gen.
               </span>
             ),
-            children: <PromptGenerateVdo projectId={id} userId={session?.user?.id} />,
+            children: <PromptGenerateVdo key={`vdo-${activeKey}`} projectId={id} userId={session?.user?.id} />,
           },
           {
             key: "4",
@@ -82,7 +87,7 @@ const GenerateImagePage: FC = () => {
                 Library.
               </span>
             ),
-            children: <PromptLibrary />,
+            children: <PromptLibrary key={`library-${activeKey}`} />,
           },
           {
             key: "5",
@@ -92,7 +97,7 @@ const GenerateImagePage: FC = () => {
                 All Activity.
               </span>
             ),
-            children: <PromptActivity />,
+            children: <PromptActivity key={`activity-${activeKey}`} />,
           },
         ]}
         onChange={onChangeTab}
@@ -153,4 +158,5 @@ const GenerateImagePage: FC = () => {
     </div>
   );
 };
+
 export default GenerateImagePage;

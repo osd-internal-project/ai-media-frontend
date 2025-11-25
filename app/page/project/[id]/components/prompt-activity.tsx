@@ -7,7 +7,11 @@ import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
 
-const PromptActivity: FC = ({}): ReactElement => {
+export interface props {
+  shouldRefetch?: boolean;
+}
+
+const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
   const params = useParams();
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
@@ -27,12 +31,22 @@ const PromptActivity: FC = ({}): ReactElement => {
     }
   }, [loading, page]);
 
+  useEffect(() => {
+    if (shouldRefetch) {
+      fectData();
+    }
+  }, [shouldRefetch]);
+
   const fectData = async () => {
     const id = params.id as string;
     const res = await galleryservices.findById(id, page, pageSize);
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);
+  };
+
+  const handleOpenImage = async (url: string) => {
+    await window.open(url, "_blank");
   };
   return (
     <div className="p-4 rounded-lg mb-4">
@@ -46,11 +60,15 @@ const PromptActivity: FC = ({}): ReactElement => {
                   onClick={() => onSelectPrompt(image)}
                 >
                   {image.typeGenerate === "vdo" ? (
-                    <video src={image.imageUrl} controls className="w-full h-auto object-cover" preload="metadata">
-                      Your browser does not support the video tag.
-                    </video>
+                    <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
+                      <video controls className="w-full h-full object-cover" preload="metadata">
+                        <source src={image.imageUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
                   ) : (
                     <Image
+                      preview={false}
                       height={"100%"}
                       fallback={fallbackImage}
                       src={image.imageUrl}
@@ -59,7 +77,7 @@ const PromptActivity: FC = ({}): ReactElement => {
                     />
                   )}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Popover placement="topRight" content={image.prompt}>
@@ -70,7 +88,7 @@ const PromptActivity: FC = ({}): ReactElement => {
 
                     <button
                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                      onClick={() => window.open(image.imageUrl, "_blank")}
+                      onClick={() => handleOpenImage(image.imageUrl)}
                     >
                       <Download className="w-4 h-4 text-gray-800" />
                     </button>
