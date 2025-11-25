@@ -126,7 +126,9 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       }
       const checkStatus = async () => {
         try {
-          const task = await GenerateImageServices(axiosCore).findById(response.id);
+          console.log(response);
+
+          const task = await GenerateImageServices(axiosCore).findById(response.data.id);
           if (task?.status === "succeeded") {
             if (task && task.content) {
               const taskId = task.id;
