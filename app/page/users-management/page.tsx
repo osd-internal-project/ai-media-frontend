@@ -41,7 +41,6 @@ const UserManagementPage = () => {
   const FecthSummaryData = async () => {
     const response = await userServices.summary();
     setSummary(response);
-    console.log(response);
   };
 
   const fecthData = async () => {
@@ -104,9 +103,7 @@ const UserManagementPage = () => {
       render: (text, record) => (
         <div className="flex items-center">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mr-3 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">
-              {text.substring(0, 2).toUpperCase()}
-            </span>
+            <span className="text-white text-sm font-bold">{text.substring(0, 2).toUpperCase()}</span>
           </div>
           <div>
             <div className="text-white font-medium">{text}</div>
@@ -132,10 +129,7 @@ const UserManagementPage = () => {
       render: (group: { group: TGroup }[]) => (
         <div>
           {group?.map((g) => (
-            <Tag
-              key={g.group.groupId}
-              className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3"
-            >
+            <Tag key={g.group.groupId} className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3">
               {g.group.name}
             </Tag>
           )) || "-"}
@@ -157,10 +151,7 @@ const UserManagementPage = () => {
         { text: "Disabled", value: "inactive" },
       ],
       render: (status) => (
-        <Tag
-          color={status === "active" ? "green" : "red"}
-          className="rounded-full px-3"
-        >
+        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
           {status === "active" ? "Enabled" : "Unabled"}
         </Tag>
       ),
@@ -189,7 +180,6 @@ const UserManagementPage = () => {
       title: "Actions",
       key: "actions",
       render: (_, record) => {
-        console.log(record);
         return (
           <Space>
             <Button

@@ -231,6 +231,16 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
     }
   };
 
+  const handleDownload = (url: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = url.split("/").pop() || "download"; // ชื่อไฟล์
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Form
       form={formcreateImage}
@@ -381,7 +391,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId }): ReactElement => 
 
                                     <button
                                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                      onClick={() => window.open(image, "_blank")}
+                                      onClick={() => handleDownload(image)}
                                     >
                                       <Download className="w-4 h-4 !text-gray-800" />
                                     </button>

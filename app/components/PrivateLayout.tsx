@@ -42,7 +42,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const fecthdata = async () => {
     const response = await projectService.findAll();
-    console.log(response);
     setProject(response);
     setLoading(false);
   };

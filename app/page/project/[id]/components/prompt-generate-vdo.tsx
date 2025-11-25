@@ -99,8 +99,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
   };
 
   const onFinishVDO = async (values: ITFromGenerate) => {
-    console.log(values);
-
     // เก็บ prompt ที่พิมพ์
     setCurrentPrompt(values.text);
     setSubmitting(true);
@@ -125,8 +123,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
       const checkStatus = async () => {
         try {
           const task = await GenerateImageServices(axiosCore).findById(response.id);
-          console.log(task);
-
           if (task?.status === "succeeded") {
             if (task && task.content) {
               const taskId = task.id;
@@ -180,6 +176,16 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
       message.error("เกิดข้อผิดพลาด");
       setSubmitting(false);
     }
+  };
+
+  const handleDownload = (url: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = url.split("/").pop() || "download"; // ชื่อไฟล์
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const beforeUploadFilesVDO = (file: RcFile) => {
@@ -414,7 +420,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId }): ReactElement => {
 
                                     <button
                                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                      onClick={() => window.open(videoUrl, "_blank")}
+                                      onClick={() => handleDownload(videoUrl)}
                                     >
                                       <Download className="w-4 h-4 text-gray-800" />
                                     </button>

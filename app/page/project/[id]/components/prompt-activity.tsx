@@ -39,8 +39,6 @@ const PromptActivity: FC = ({}): ReactElement => {
       <div className="grid sm:grid-cols-2 md:grid-cols-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
           {getData.data.map((image, imgIndex) => {
-            console.log(image);
-
             return (
               <div key={imgIndex} className="relative group w-full h-[200px] text-center ">
                 <div
