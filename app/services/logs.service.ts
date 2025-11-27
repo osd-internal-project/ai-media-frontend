@@ -48,6 +48,17 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findByUserId: async (userId: string, skip: number, take: number) => {
+      return await axiosInstance
+        .get(`${baseUrl}/by-userid/${userId}?take=${take}&skip=${skip}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
   };
 };
 

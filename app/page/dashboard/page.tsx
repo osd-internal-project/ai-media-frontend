@@ -3,34 +3,52 @@ import React, { useEffect, useState, type FC } from "react";
 import SummaryFilterComponent from "./components/summary-filter";
 import { useForm } from "antd/es/form/Form";
 import SummaryCardComponent from "./components/summary-card";
-import { Col, ConfigProvider, Row } from "antd";
-import TableFilterComponent from "./components/table-filter";
-import TableComponent from "./components/table";
+import { Col, ConfigProvider, Row, Tabs, type TabsProps } from "antd";
+// import TableFilterComponent from "./components/table-filter";
+import TableOwnerComponent from "./components/table-owner";
 import { axiosCore } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
 import { useSession } from "next-auth/react";
-const dataSource = Array.from({ length: 20 }, (_, i) => ({
-  key: i + 1,
-  owner: `Owner ${i + 1}`,
-  product: `Product ${Math.ceil(Math.random() * 10)}`,
-  usage: `${Math.ceil(Math.random() * 100)} units`,
-  amount: `$${(Math.random() * 1000).toFixed(2)}`,
-}));
+import type { ITDashboard, ITDashboardOwner, ProductSummary } from "@/app/common/dashbaord";
+import TableProductComponent from "./components/table-product";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
   const dashboardServices = DashboardServices(axiosCore);
+  const [getdata, setData] = useState<ITDashboard>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [summaryByOwner, setSummaryByOwner] = useState<ITDashboardOwner[]>([]);
+  const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>([]);
+
   const [searchForm] = useForm();
   const [agentSearchForm] = useForm();
 
   useEffect(() => {
     if (loading) fecthdata();
-  }, [loading]);
+  }, [loading, session]);
 
   const fecthdata = async () => {
-    // const response = await dashboardServices.findAll(session?.user?.id);
-    // console.log(response);
-    setLoading(false);
+    if (session?.user) {
+      const response = await dashboardServices.findDashboardSummary(session?.user.id as string);
+      setData(response);
+      fectdataTableOwner();
+      fectdataTableProduct();
+      setLoading(false);
+    }
+  };
+  const fectdataTableOwner = async () => {
+    if (session?.user) {
+      const response = await dashboardServices.findDashboardSummaryOwner(session?.user.id as string);
+      setSummaryByOwner(response);
+      setLoading(false);
+    }
+  };
+
+  const fectdataTableProduct = async () => {
+    if (session?.user) {
+      const response = await dashboardServices.findDashboardSummaryProduct(session?.user.id as string);
+      setSummaryByProduct(response);
+      setLoading(false);
+    }
   };
 
   function onSearch(value: Date): void {
@@ -40,6 +58,27 @@ const DashboardPage: FC = () => {
   function onSearchAgent(value: any): void {
     throw new Error("Function not implemented.");
   }
+
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "Owner",
+      children: (
+        <>
+          <TableOwnerComponent data={summaryByOwner} />
+        </>
+      ),
+    },
+    {
+      key: "2",
+      label: "Product",
+      children: (
+        <>
+          <TableProductComponent data={summaryByProduct} />
+        </>
+      ),
+    },
+  ];
 
   return (
     <ConfigProvider
@@ -59,12 +98,11 @@ const DashboardPage: FC = () => {
             <SummaryFilterComponent searchForm={searchForm} onSearch={onSearch} />
           </Col>
           <Col span={24}>
-            <SummaryCardComponent data={[]} />
+            <SummaryCardComponent getdata={getdata} session={session} />
           </Col>
-          <Col span={24} className=" mt-5">
-            <TableFilterComponent agentSearchForm={agentSearchForm} onSearchAgent={onSearchAgent} />
+          <Col span={24}>
+            <Tabs defaultActiveKey="1" items={items} />
           </Col>
-          <TableComponent data={dataSource} />
         </Row>
       </div>
     </ConfigProvider>
