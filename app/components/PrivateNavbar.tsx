@@ -22,21 +22,21 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
   return (
     <Header
       style={{
+        height: "80px",
         background: "transparent",
-        height: "auto",
         lineHeight: "normal",
-        padding: 0,
+        padding: 10,
         boxShadow: "none",
+        borderRadius: "30px",
       }}
     >
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
         <div className="text-2xl">{pageTitle}</div>
         {user ? (
           <div className="flex items-center gap-4">
             <Avatar size={48} />
             <div className="grid grid-cols-1 items-center gap-2">
               <span className="font-bold text-white">{user.fullname}</span>
-              <span className="text-[#6366F1]">Premium</span>
             </div>
             <>
               <Popover content={content} trigger="click" placement="bottomRight" title={false}>
@@ -49,7 +49,6 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
             <Avatar size={48} />
             <div className="grid grid-cols-1 items-center gap-2">
               <span className="font-bold text-white">{`Geust`}</span>
-              <span className="text-[#6366F1]">Normal</span>
             </div>
           </div>
         )}

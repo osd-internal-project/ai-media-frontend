@@ -111,7 +111,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       formData.append("type", "create-attend");
       formData.append("files", filesvdo[0].originFileObj);
       const upload = await GenerateImageServices(axiosCore).upload(formData);
-      base = { ...values, image: upload.fileName };
+      base = { ...values, image: upload[0] };
     }
 
     try {
@@ -566,13 +566,25 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                 <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
                   <Form.Item name="image" className="mb-0">
                     <Upload
+                      listType="picture"
                       fileList={filesvdo}
                       onChange={handleChangeVDO}
                       beforeUpload={beforeUploadFilesVDO}
                       multiple={false}
                       maxCount={1}
-                      showUploadList={false}
+                      showUploadList={true}
                       disabled={submitting}
+                      itemRender={(originNode, file, fileList, actions) => {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <img src={file.thumbUrl} alt="" className="w-16 h-16 object-cover rounded" />
+                            {/* ไม่ใส่ชื่อไฟล์ */}
+                            <Button htmlType="button" onClick={actions.remove} className="text-red-500">
+                              ลบ
+                            </Button>
+                          </div>
+                        );
+                      }}
                     >
                       <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
                         <PaperClipOutlined className="text-lg" />

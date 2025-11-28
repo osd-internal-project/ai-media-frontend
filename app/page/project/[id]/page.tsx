@@ -51,7 +51,7 @@ const GenerateImagePage: FC = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <div>
+      <div className="">
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
       <Tabs
@@ -102,7 +102,6 @@ const GenerateImagePage: FC = () => {
         ]}
         onChange={onChangeTab}
       />
-
       <style>{`
         .custom-tabs .ant-tabs-nav {
           margin-bottom: 0;

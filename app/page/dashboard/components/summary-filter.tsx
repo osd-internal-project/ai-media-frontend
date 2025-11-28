@@ -1,17 +1,35 @@
-import { DatePicker, Form, FormInstance } from "antd";
+import { DatePicker, Form, FormInstance, Select } from "antd";
 import { FC, ReactElement } from "react";
 
 interface props {
   searchForm: FormInstance;
-  onSearch: (value: Date) => void;
+  onSearch: (value: any) => void;
+  projectName: { value: string; label: string }[];
 }
 
-const SummaryFilterComponent: FC<props> = ({ searchForm, onSearch }): ReactElement => {
+const SummaryFilterComponent: FC<props> = ({ searchForm, onSearch, projectName }): ReactElement => {
   return (
-    <Form>
-      <Form.Item name={"billingCycle"} label={"Billing Cycle"}>
-        <DatePicker format={"YYYY-MM"} onChange={onSearch} />
-      </Form.Item>
+    <Form className="flex justify-start gap-4" form={searchForm} onFinish={onSearch}>
+      <div className="grid grid-cols-4 gap-5">
+        <div className="col col-span-1">
+          <Form.Item name={"createdAt"} label={"Billing Cycle"}>
+            <DatePicker picker="month" format="YYYY-MM" onChange={() => searchForm.submit()} />
+          </Form.Item>
+        </div>
+        <div className="col col-span-1">
+          <Form.Item name={"projectId"} label={"Project"} className="w-full">
+            <Select
+              options={projectName}
+              placeholder={`Project`}
+              allowClear
+              optionFilterProp="label"
+              showSearch
+              onChange={() => searchForm.submit()}
+              className="w-full"
+            />
+          </Form.Item>
+        </div>
+      </div>
     </Form>
   );
 };

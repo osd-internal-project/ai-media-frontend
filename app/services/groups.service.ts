@@ -3,6 +3,7 @@ import type { TGroup, TGroupForm, TGroupWithUsersAndRoles } from "../common/grou
 
 const GroupsServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/groups";
+
   return {
     findAll: async () => {
       return await axiosInstance
@@ -37,6 +38,18 @@ const GroupsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    // findByUserId: async (userId: string) => {
+    //   console.log(userId);
+    //   return await axiosInstance
+    //     .get(`${baseUrl}/users/${userId}`)
+    //     .then((res) => {
+    //       return res.data;
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //       return;
+    //     });
+    // },
     create: async (value: TGroup) => {
       return await axiosInstance
         .post(`${baseUrl}`, { body: value })

@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.2' -f ./Dockerfile ."
+    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.3' -f ./Dockerfile ."
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",

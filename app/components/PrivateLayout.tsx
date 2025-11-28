@@ -205,7 +205,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             ) : null}
           </div>
         </Sider>
-        <Layout className="flex-1 w-full h-full overflow-auto">
+        <Layout className="flex-1 w-full h-full overflow-auto ">
           {groupName === "admin-user" ? <PrivateNavigation user={session?.user ? { fullname: session.user.name ?? "" } : undefined} /> : null}
           <div className="w-full h-full">
             <PrivateContent user={session?.user ? { fullname: session.user.name ?? "" } : undefined}>{children}</PrivateContent>

@@ -3,9 +3,9 @@ import { AxiosInstance } from "axios";
 const DashboardServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/dashboard";
   return {
-    findDashboardSummary: async (token: string) => {
+    findDashboardSummary: async (token: string, params: any) => {
       return await axiosInstance
-        .get(`${baseUrl}/${token}`)
+        .get(`${baseUrl}/${token}`, { params: params })
         .then((res) => {
           return res.data;
         })
@@ -14,9 +14,9 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findDashboardSummaryOwner: async (token: string) => {
+    findDashboardSummaryOwner: async (token: string, params: any) => {
       return await axiosInstance
-        .get(`${baseUrl}/find-owner/${token}`)
+        .get(`${baseUrl}/find-owner/${token}`, { params: params })
         .then((res) => {
           return res.data;
         })
@@ -25,9 +25,9 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findDashboardSummaryProduct: async (token: string) => {
+    findDashboardSummaryProduct: async (token: string, params: any) => {
       return await axiosInstance
-        .get(`${baseUrl}/find-product/${token}`)
+        .get(`${baseUrl}/find-product/${token}`, { params: params })
         .then((res) => {
           return res.data;
         })

@@ -2,11 +2,16 @@ import config from "@/app/config";
 import axios from "axios";
 
 export const axiosUser = axios.create({
-    baseURL: config.backendUserUrl,
-    headers: { "Content-Type": "application/json" },
+  baseURL: config.backendUserUrl,
+  headers: { "Content-Type": "application/json" },
 });
 
 export const axiosCore = axios.create({
-    baseURL: config.backendCoreUrl,
-    headers: { "Content-Type": "application/json" },
+  baseURL: config.backendCoreUrl,
+  headers: { "Content-Type": "application/json" },
+});
+
+export const axiosReport = axios.create({
+  baseURL: config.backendReportUrl,
+  headers: { "Content-Type": "application/json" },
 });

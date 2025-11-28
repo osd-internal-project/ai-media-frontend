@@ -35,6 +35,7 @@ const nextConfig = {
     NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
     VERSION: "2.0.0",
     AUTH_BACKEND_URL: "http://localhost:4000/api",
+    NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:4001/api",
     NEXT_PUBLIC_API_BASE_URL_CORE: "http://localhost:4002/api",
     NEXTAUTH_URL: "http://localhost:3000",
     KEYCLOAK_CLIENT_ID: "eportal-client-local",

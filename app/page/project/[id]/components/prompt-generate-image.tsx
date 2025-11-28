@@ -88,9 +88,13 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
     if (files.length > 0) {
       const formData: any = new FormData();
       formData.append("type", "create-attend");
-      formData.append("files", files[0].originFileObj);
+      files.forEach((file) => {
+        formData.append("files", file.originFileObj);
+      });
       const upload = await GenerateImageServices(axiosCore).upload(formData);
-      base = { ...values, image: upload.fileName };
+      console.log(upload);
+
+      base = { ...values, image: upload };
     }
     try {
       const response = await GenerateImageServices(axiosCore).create({
@@ -257,7 +261,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
   };
 
   return (
-    <>
+    <div>
       {contextHolder}
       <Form
         form={formcreateImage}
@@ -546,13 +550,25 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                   <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
                     <Form.Item name="image" className="mb-0">
                       <Upload
+                        listType="picture"
                         fileList={files}
                         onChange={handleChangeFiles}
                         beforeUpload={beforeUploadFiles}
-                        multiple={false}
-                        maxCount={1}
-                        showUploadList={false}
+                        multiple={true}
+                        maxCount={4}
+                        showUploadList={true}
                         disabled={submitting}
+                        itemRender={(originNode, file, fileList, actions) => {
+                          return (
+                            <div className="flex items-center gap-2">
+                              <img src={file.thumbUrl} alt="" className="w-16 h-16 object-cover rounded" />
+                              {/* ไม่ใส่ชื่อไฟล์ */}
+                              <Button htmlType="button" onClick={actions.remove} className="text-red-500">
+                                ลบ
+                              </Button>
+                            </div>
+                          );
+                        }}
                       >
                         <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
                           <PaperClipOutlined className="text-lg" />
@@ -588,7 +604,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
         }
       `}</style>
       </Form>
-    </>
+    </div>
   );
 };
 

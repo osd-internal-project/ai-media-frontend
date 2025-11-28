@@ -39,6 +39,18 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
         });
     },
 
+    findOneUserId: async (id: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${id}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+
     upload: async (formData: any) => {
       return await axiosInstance
         .post(`${baseUrl}/upload-images`, formData, {

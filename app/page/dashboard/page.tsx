@@ -3,32 +3,37 @@ import React, { useEffect, useState, type FC } from "react";
 import SummaryFilterComponent from "./components/summary-filter";
 import { useForm } from "antd/es/form/Form";
 import SummaryCardComponent from "./components/summary-card";
-import { Col, ConfigProvider, Row, Tabs, type TabsProps } from "antd";
-// import TableFilterComponent from "./components/table-filter";
+import { Button, Col, ConfigProvider, Row, Tabs, type TabsProps } from "antd";
 import TableOwnerComponent from "./components/table-owner";
-import { axiosCore } from "@/app/lib/axios/axios";
+import { axiosCore, axiosReport } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
 import { useSession } from "next-auth/react";
 import type { ITDashboard, ITDashboardOwner, ProductSummary } from "@/app/common/dashbaord";
 import TableProductComponent from "./components/table-product";
+import ProjectService from "@/app/services/project.service";
+import type { IProject } from "@/app/common/project.type";
+import ReportServices from "@/app/services/report.service";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
   const dashboardServices = DashboardServices(axiosCore);
+  const projectServices = ProjectService(axiosCore);
   const [getdata, setData] = useState<ITDashboard>();
   const [loading, setLoading] = useState<boolean>(true);
   const [summaryByOwner, setSummaryByOwner] = useState<ITDashboardOwner[]>([]);
   const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>([]);
+  const [projectName, setProjectName] = useState<{ value: string; label: string }[]>([]);
+  const [params, setParams] = useState<{ projectId: string; createdAt: Date | string }>({ projectId: "", createdAt: "" });
 
   const [searchForm] = useForm();
   const [agentSearchForm] = useForm();
 
   useEffect(() => {
     if (loading) fecthdata();
-  }, [loading, session]);
+  }, [loading, session, params]);
 
   const fecthdata = async () => {
     if (session?.user) {
-      const response = await dashboardServices.findDashboardSummary(session?.user.id as string);
+      const response = await dashboardServices.findDashboardSummary(session?.user.id as string, params);
       setData(response);
       fectdataTableOwner();
       fectdataTableProduct();
@@ -37,7 +42,7 @@ const DashboardPage: FC = () => {
   };
   const fectdataTableOwner = async () => {
     if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryOwner(session?.user.id as string);
+      const response = await dashboardServices.findDashboardSummaryOwner(session?.user.id as string, params);
       setSummaryByOwner(response);
       setLoading(false);
     }
@@ -45,19 +50,40 @@ const DashboardPage: FC = () => {
 
   const fectdataTableProduct = async () => {
     if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryProduct(session?.user.id as string);
+      const response = await dashboardServices.findDashboardSummaryProduct(session?.user.id as string, params);
       setSummaryByProduct(response);
       setLoading(false);
     }
   };
 
-  function onSearch(value: Date): void {
-    throw new Error("Function not implemented.");
+  useEffect(() => {
+    masterData();
+  }, [session]);
+
+  const masterData = async () => {
+    if (session?.user) {
+      const response = await projectServices.findOneUserId(session?.user.id as string);
+      const mapOptions = await response.map((events: IProject) => {
+        return { value: events.id, label: events.name };
+      });
+      setProjectName(mapOptions);
+    }
+  };
+
+  function onSearch(value: { projectId: ""; createdAt: "" }): void {
+    if (value) {
+      setParams(value);
+      setLoading(true);
+    } else {
+      setParams({ projectId: "", createdAt: "" });
+      setLoading(true);
+    }
   }
 
-  function onSearchAgent(value: any): void {
-    throw new Error("Function not implemented.");
-  }
+  const exportcsv = async () => {
+    const response = await ReportServices(axiosReport).reportcsvDashboard(session?.user.id as string, params);
+    console.log(response);
+  };
 
   const items: TabsProps["items"] = [
     {
@@ -92,16 +118,24 @@ const DashboardPage: FC = () => {
         },
       }}
     >
-      <div className=" w-full">
+      <div className=" w-full pt-6">
         <Row gutter={[8, 8]} className="">
           <Col span={24}>
-            <SummaryFilterComponent searchForm={searchForm} onSearch={onSearch} />
+            <SummaryFilterComponent searchForm={searchForm} onSearch={onSearch} projectName={projectName} />
           </Col>
           <Col span={24}>
             <SummaryCardComponent getdata={getdata} session={session} />
           </Col>
           <Col span={24}>
-            <Tabs defaultActiveKey="1" items={items} />
+            <Tabs
+              defaultActiveKey="1"
+              items={items}
+              tabBarExtraContent={
+                <Button className="!border-[#6366F1] !text-[#6366F1]" onClick={exportcsv}>
+                  Export CSV
+                </Button>
+              }
+            />
           </Col>
         </Row>
       </div>
