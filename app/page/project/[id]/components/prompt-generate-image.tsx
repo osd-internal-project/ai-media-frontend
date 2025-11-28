@@ -353,7 +353,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                 </div>
               </div>
             ) : (
-              <div ref={contentRef} className=" h-[600px] overflow-x-scroll pr-2 mt-8">
+              <div ref={contentRef} className=" h-[500px] overflow-y-scroll pr-2 mt-8">
                 {/* Chat Messages */}
                 <div className="mb-8 space-y-6">
                   {gethistory.map((message, index) => (
@@ -536,11 +536,11 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
             )}
 
             <div className="flex justify-center">
-              <div className=" w-full max-w-4xl mt-20">
+              <div className=" w-full ">
                 <Form.Item name="type" hidden>
                   <Input />
                 </Form.Item>
-                <div className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden ">
+                <div>
                   <Form.Item name="text" className="mb-0">
                     <Input.TextArea
                       placeholder="Describe the image you want to generate"
@@ -555,8 +555,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                       disabled={submitting}
                     />
                   </Form.Item>
-
-                  <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
+                  <div className="flex items-center justify-between ">
                     <Form.Item name="image" className="mb-0">
                       <Upload
                         listType="picture"
@@ -597,7 +596,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
               </div>
             </div>
           </div>
-          <div className="flex flex-col h-screen">
+          <div className="flex flex-col !h-[70vh]">
             <div className="text-[24px] font-bold p-4">Configure</div>
             <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1 flex flex-col" items={items} tabBarStyle={{ marginTop: "auto" }} />
           </div>

@@ -26,21 +26,6 @@ const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
         <span className="text-md text-[#9B9C9E]">{`Shake up your creativity with image generation`}</span>
       </div>
       <div className="flex col-span-1 justify-end">
-        <Select
-          styles={{
-            popup: {
-              root: {
-                backgroundColor: "red",
-              },
-            },
-          }}
-          placeholder={`Model Version`}
-          rootClassName="!text-white !bg-transparent "
-          options={[
-            { value: "4", label: "Seedream 4.0" },
-            { value: "3", label: "Seedream 3.0" },
-          ]}
-        />
         <Button type="link" className="!text-[#686B6E]" icon={<BulbOutlined />} onClick={showDrawer}>{`Prompt Guide`}</Button>
         <Drawer
           title={
