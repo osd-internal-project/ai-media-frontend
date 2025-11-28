@@ -3,7 +3,7 @@ import React, { useEffect, useState, type FC } from "react";
 import SummaryFilterComponent from "./components/summary-filter";
 import { useForm } from "antd/es/form/Form";
 import SummaryCardComponent from "./components/summary-card";
-import { Button, Col, ConfigProvider, Row, Tabs, type TabsProps } from "antd";
+import { Button, Col, ConfigProvider, message, Row, Tabs, type TabsProps } from "antd";
 import TableOwnerComponent from "./components/table-owner";
 import { axiosCore, axiosReport } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
@@ -81,8 +81,26 @@ const DashboardPage: FC = () => {
   }
 
   const exportcsv = async () => {
-    const response = await ReportServices(axiosReport).reportcsvDashboard(session?.user.id as string, params);
-    console.log(response);
+    try {
+      const blob = await ReportServices(axiosReport).reportcsvDashboard(session?.user.id as string, params);
+      if (!blob) {
+        alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date().toISOString();
+      link.download = `report_test_${date}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      console.log("ดาวน์โหลดสำเร็จ!");
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาด:", error);
+      alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
+    }
   };
 
   const items: TabsProps["items"] = [

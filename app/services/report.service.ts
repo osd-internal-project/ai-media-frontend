@@ -5,7 +5,13 @@ const ReportServices = (axiosInstance: AxiosInstance) => {
   return {
     reportcsvDashboard: async (token: string, params: any) => {
       return await axiosInstance
-        .post(`${baseUrl}/download`, { ...params, token })
+        .post(
+          `${baseUrl}/download`,
+          { ...params, token },
+          {
+            responseType: "blob",
+          },
+        )
         .then((res) => {
           return res.data;
         })
