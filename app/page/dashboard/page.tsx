@@ -25,7 +25,6 @@ const DashboardPage: FC = () => {
   const [params, setParams] = useState<{ projectId: string; createdAt: Date | string }>({ projectId: "", createdAt: "" });
 
   const [searchForm] = useForm();
-  const [agentSearchForm] = useForm();
 
   useEffect(() => {
     if (loading) fecthdata();

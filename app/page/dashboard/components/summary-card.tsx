@@ -46,7 +46,6 @@ const SummaryCardComponent: FC<props> = ({ getdata, session }): ReactElement => 
               </div>
             </div>
           </Col>
-
           <Col sm={24} md={24}>
             <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
               <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">

@@ -57,6 +57,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
     setLoading(true);
     try {
       const response = await LogsServices(axiosCore).findById(projectId as string);
+      console.log(response);
       const messages: any[] = [];
       response.forEach((item: any) => {
         messages.push({
@@ -99,7 +100,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
       });
       const upload = await GenerateImageServices(axiosCore).upload(formData);
       console.log(upload);
-
       base = { ...values, image: upload };
     }
     try {
@@ -158,6 +158,16 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
   const handleChangeFiles: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
     return setFiles(newFileList);
   };
+
+  // const getImageUrl = (imageName: string) => {
+  //   try {
+  //     new URL(imageName); // ถ้าเป็น URL จริง
+  //     return imageName;
+  //   } catch {
+  //     // ถ้าเป็นชื่อไฟล์ใน MinIO
+  //     return `http://192.168.31.181:4002/api/public/image-minio/${encodeURIComponent(imageName)}`;
+  //   }
+  // };
 
   const content = (
     <div className="grid grid-col-1 items-center gap-2">
@@ -233,40 +243,39 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
     { key: "2", label: "Prompt Guide", children: <div>Content 2</div> },
   ];
 
-  const RES_MAP = {
-    "2k": 2048,
-    "4k": 4096,
-  } as any;
-
-  const RATIO_MAP = {
-    "1:1": 1 / 1,
-    "3:4": 3 / 4, // Portrait (แนวตั้ง)
-    "4:3": 4 / 3, // Landscape
-    "9:16": 9 / 16, // Portrait (แนวตั้ง)
-    "16:9": 16 / 9, // Landscape
-    "2:3": 2 / 3, // Portrait (แนวตั้ง)
-    "3:2": 3 / 2, // Landscape
-    "21:9": 21 / 9, // Ultra-wide
+  const RATIO_SIZE_MAP = {
+    "1:1": { width: 2048, height: 2048 },
+    "4:3": { width: 2304, height: 1728 },
+    "3:4": { width: 1728, height: 2304 },
+    "16:9": { width: 2560, height: 1440 },
+    "9:16": { width: 1440, height: 2560 },
+    "3:2": { width: 2496, height: 1664 },
+    "2:3": { width: 1664, height: 2496 },
+    "21:9": { width: 3024, height: 1296 },
   } as any;
 
   const handleValuesChange = (changed: any, all: any) => {
     if (changed.resolution || changed.ratio) {
-      const base = RES_MAP[all.resolution];
-      const ratio = RATIO_MAP[all.ratio];
-
-      // แก้ตรงนี้: ถ้า ratio < 1 แสดงว่าเป็นแนวตั้ง (Portrait)
-      const width = ratio >= 1 ? base : Math.round(base * ratio);
-      const height = ratio >= 1 ? Math.round(base / ratio) : base;
-
+      const baseSize = RATIO_SIZE_MAP[all.ratio];
+      if (!baseSize) return;
+      const factor = all.resolution === "4k" ? 2 : 1;
+      const width = baseSize.width * factor;
+      const height = baseSize.height * factor;
       formcreateImage.setFieldsValue({
         width,
         height,
       });
     }
   };
-
-  const handleOpenImage = async (url: string) => {
-    await window.open(url, "_blank");
+  const handleOpenImage = async (taskId: string, imageName: string) => {
+    const res = await GenerateImageServices(axiosCore).downloadImage(imageName);
+    const blob = new Blob([res], { type: "image/jpeg" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = imageName.split("/").pop()!;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -407,10 +416,9 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                                   {/* --- FRAME ของรูป --- */}
                                   <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl transition-all duration-300">
                                     <img
-                                      src={image}
+                                      src={`/api/images/${encodeURIComponent(image)}`}
                                       className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
                                     />
-
                                     {/* --- OVERLAY GRADIENT --- */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
@@ -428,7 +436,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                                       <Button
                                         htmlType="button"
                                         className="p-2 !bg-transparent hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
-                                        onClick={() => handleOpenImage(image)}
+                                        onClick={() => handleOpenImage(message.taskId, image)}
                                       >
                                         <Download className="w-4 h-4 !text-gray-800" />
                                       </Button>

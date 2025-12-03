@@ -82,11 +82,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
           videoUrls: Array.isArray(item.imageUrls) ? item.imageUrls : [item.imageUrls],
           taskId: item.taskId,
           status: item.status || false,
-          videoInfo: {
-            duration: item.duration,
-            resolution: item.resolution,
-            ratio: item.ratio,
-          },
           username: "AICave",
           time: item.createdAt,
         });
@@ -101,10 +96,8 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
   };
 
   const onFinishVDO = async (values: ITFromGenerate) => {
-    // เก็บ prompt ที่พิมพ์
     setCurrentPrompt(values.text);
     setSubmitting(true);
-
     let base: ITFromGenerate = values;
     if (filesvdo.length > 0) {
       const formData: any = new FormData();
@@ -113,7 +106,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       const upload = await GenerateImageServices(axiosCore).upload(formData);
       base = { ...values, image: upload[0] };
     }
-
     try {
       const response = await GenerateImageServices(axiosCore).create({ ...base, projectId, userId });
       if (response.status === 400) {
@@ -126,8 +118,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       }
       const checkStatus = async () => {
         try {
-          console.log(response);
-
           const task = await GenerateImageServices(axiosCore).findById(response.data.id);
           if (task?.status === "succeeded") {
             if (task && task.content) {
@@ -143,7 +133,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                 formcreateVdo.resetFields();
                 setFilesVdo([]);
                 setCurrentPrompt("");
-                // Fetch ข้อมูลใหม่
                 await fecthdata();
                 setSubmitting(false);
                 return;
@@ -284,8 +273,15 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
     },
     { key: "2", label: "Prompt Guide", children: <div>Content 2</div> },
   ];
-  const handleOpenImage = async (url: string) => {
-    await window.open(url, "_blank");
+  const handleOpenImage = async (imageName: string) => {
+    const res = await GenerateImageServices(axiosCore).downloadVDO(imageName);
+    const blob = new Blob([res], { type: "image/jpeg" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = imageName.split("/").pop()!;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -403,7 +399,12 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                               <div key={vidIndex} className="relative group">
                                 {/* --- FRAME ของวิดีโอ --- */}
                                 <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl transition-all duration-300">
-                                  <video src={videoUrl} controls className="w-full h-auto object-cover" preload="metadata">
+                                  <video
+                                    src={`/api/vdo/${encodeURIComponent(videoUrl)}`}
+                                    controls
+                                    className="w-full h-auto object-cover"
+                                    preload="metadata"
+                                  >
                                     Your browser does not support the video tag.
                                   </video>
 

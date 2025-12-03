@@ -6,6 +6,7 @@ import { Download, Share2 } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
+import GenerateImageServices from "@/app/services/generate-image.service";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -45,8 +46,15 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
     setLoading(false);
   };
 
-  const handleOpenImage = async (url: string) => {
-    await window.open(url, "_blank");
+  const handleOpenImage = async (imageName: string) => {
+    const res = await GenerateImageServices(axiosCore).downloadVDO(imageName);
+    const blob = new Blob([res], { type: "image/jpeg" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = imageName.split("/").pop()!;
+    link.click();
+    URL.revokeObjectURL(url);
   };
   return (
     <div className="p-4 rounded-lg mb-4">
@@ -62,7 +70,7 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                   {image.typeGenerate === "vdo" ? (
                     <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
                       <video controls className="w-full h-full object-cover" preload="metadata">
-                        <source src={image.imageUrl} type="video/mp4" />
+                        <source src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`} type="video/mp4" />
                         Your browser does not support the video tag.
                       </video>
                     </div>
@@ -71,7 +79,7 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                       preview={false}
                       height={"100%"}
                       fallback={fallbackImage}
-                      src={image.imageUrl}
+                      src={`/api/images/${encodeURIComponent(image.imageUrl)}`}
                       className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
                       alt={`AI Generated Image ${imgIndex + 1}`}
                     />

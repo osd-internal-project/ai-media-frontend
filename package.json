@@ -16,6 +16,7 @@
     "antd": "^5.27.4",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
+    "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
     "keycloak": "^1.2.0",
     "keycloak-js": "^26.2.1",
