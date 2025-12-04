@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
-import { LockKeyholeOpen } from "lucide-react";
+import { CodeOutlined, FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import { LockKeyholeOpen, SquareChevronRight } from "lucide-react";
 
 export const MenuSider = [
   {
@@ -44,6 +44,12 @@ export const MenuSider = [
         role: "r-v",
         icon: <FileImageOutlined />,
         label: `Roles`,
+      },
+      {
+        key: `prompt-guide`,
+        role: "pg-v",
+        icon: <CodeOutlined />,
+        label: `Prompt Guide`,
       },
     ],
   },

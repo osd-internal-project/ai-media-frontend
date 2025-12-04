@@ -16,6 +16,7 @@ import {
 } from "antd";
 import React, { type FC, type ReactElement, useEffect, useState } from "react";
 
+import Avatars from "@/public/images/Avatar.png";
 import {
   PaperClipOutlined,
   SendOutlined,
@@ -24,17 +25,17 @@ import {
   InstagramOutlined,
   WechatWorkOutlined,
   UserOutlined,
-  RobotOutlined,
-  PlayCircleOutlined,
-  DownloadOutlined,
   LikeOutlined,
 } from "@ant-design/icons";
-import { Download, Share2, Sparkles } from "lucide-react";
+import { Download, Share2, Sparkles, Trash } from "lucide-react";
 import GenerateImageServices from "@/app/services/generate-image.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import type { RcFile } from "antd/es/upload";
 import LogsServices from "@/app/services/logs.service";
 import GalleryServices from "@/app/services/gellory.service";
+import type { StaticImageData } from "next/image";
+import PromptGuideServices from "@/app/services/prompt-guide.service";
+import type { TPromptType } from "@/app/common/prompt-guide";
 
 export interface props {
   projectId?: string;
@@ -43,6 +44,8 @@ export interface props {
 }
 
 const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): ReactElement => {
+  const promptguideService = PromptGuideServices(axiosCore);
+  const [masterdataPromptGuide, setMasterdataPromptGuide] = useState<any[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
   const [filesvdo, setFilesVdo] = useState<UploadFile[]>([]);
   const [formcreateVdo] = Form.useForm();
@@ -55,6 +58,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
     if (loading) {
       fecthdata();
     }
+    masterdata();
   }, [loading, submitting]);
 
   useEffect(() => {
@@ -93,6 +97,19 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       setLoading(false);
       console.error("Failed to fetch logs:", err);
     }
+  };
+
+  const masterdata = async () => {
+    const response = await promptguideService.findAll();
+    // จัดกลุ่มตาม typeName
+    const grouped = response.reduce((acc: any, item) => {
+      const key = item.typeName || "Others";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {});
+
+    setMasterdataPromptGuide(grouped);
   };
 
   const onFinishVDO = async (values: ITFromGenerate) => {
@@ -170,6 +187,19 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       setSubmitting(false);
     }
   };
+
+  const sizes = {
+    sm: "w-2 h-2",
+    md: "w-3 h-3",
+    lg: "w-4 h-4",
+  } as any;
+
+  const colors = {
+    blue: "bg-blue-500",
+    white: "bg-white",
+    gray: "bg-gray-500",
+    purple: "bg-purple-500",
+  } as any;
 
   const beforeUploadFilesVDO = (file: RcFile) => {
     if (filesvdo.find((oneFile) => oneFile.name === file.name)) {
@@ -271,7 +301,36 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
         </div>
       ),
     },
-    { key: "2", label: "Prompt Guide", children: <div>Content 2</div> },
+    {
+      key: "2",
+      label: "Prompt Guide",
+      children: (
+        <div className="mt-2">
+          {Object.entries(masterdataPromptGuide).map(([groupName, items]) => (
+            <div key={groupName} className="mb-6">
+              <h3 className="">{groupName}</h3>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {items.map((item: any) => (
+                  <Button
+                    htmlType="button"
+                    key={item.id}
+                    size="large"
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.textPrompt);
+                      alert(`Copied: ${item.title}`);
+                    }}
+                    className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
+                  >
+                    <span className="flex-1 text-left">{item.title}</span>
+                    <span className="ml-auto">→</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ),
+    },
   ];
   const handleOpenImage = async (imageName: string) => {
     const res = await GenerateImageServices(axiosCore).downloadVDO(imageName);
@@ -294,51 +353,51 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       initialValues={{ type: "vdo", resolution: "1080p", ratio: "16:9", duration: "5" }}
     >
       {contextHolder}
-      <div className="w-full grid grid-cols-5 !gap-2">
-        <div className="w-full col col-span-4 ">
+      <div className="w-full grid grid-cols-5 gap-2">
+        <div className="w-full col col-span-4 h-[calc(90vh-62px)] flex flex-col">
           {gethistory.length === 0 && !submitting ? (
-            <div className="text-white mt-10">
-              <h1 className="text-4xl font-light text-center mb-4">AI Cave : Seedance</h1>
-              <p className="text-gray-400 text-center mb-12">
-                Kickstart your innovation process with our comprehensive selection of predefined prompts.
+            <div className="text-white pt-10 px-5 flex-1 overflow-auto">
+              <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedance`}</h1>
+              <p className="text-gray-400 text-center mb-10">
+                {`Kickstart your innovation process with our comprehensive selection of predefined prompts.`}
               </p>
-              <div className="grid grid-cols-2 gap-8 max-w-6xl mx-auto !px-10">
+              <div className="grid grid-cols-2 gap-8 max-w-6xl mx-auto">
                 <div>
-                  <div className="flex items-center justify-center mb-6">
+                  <div className="flex items-center justify-center mb-3">
                     <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
                       <span className="text-2xl">✏️</span>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-center mb-6">Product Showcase</h3>
-                  <div className="!space-y-3">
+                  <h3 className="text-xl font-semibold text-center mb-3">{`Product Showcase`}</h3>
+                  <div className="space-y-3 w-full">
                     {["Credit Card Close-up Shots", "Animated Card Reveal", "Transaction Flow Visuals", "Luxury & Premium Experience"].map((item) => (
                       <Button
                         htmlType="button"
                         key={item}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                        className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                       >
-                        <span>{item}</span>
-                        <span>→</span>
+                        <span className="flex-1 text-left">{item}</span>
+                        <span className="ml-auto">→</span>
                       </Button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <div className="flex items-center justify-center mb-6">
+                  <div className="flex items-center justify-center mb-3">
                     <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
                       <span className="text-2xl">💡</span>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-center mb-6">Branding & Visuals</h3>
-                  <div className="!space-y-3">
+                  <h3 className="text-xl font-semibold text-center mb-3">{`Branding & Visuals`}</h3>
+                  <div className="space-y-3">
                     {["Customer Journey Scenes", "Travel & Freedom", "Future Tech & Innovation", "Everyday Convenience"].map((item) => (
                       <Button
                         htmlType="button"
                         key={item}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-between transition-colors"
+                        className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                       >
-                        <span>{item}</span>
-                        <span>→</span>
+                        <span className="flex-1 text-left">{item}</span>
+                        <span className="ml-auto">→</span>
                       </Button>
                     ))}
                   </div>
@@ -346,15 +405,13 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
               </div>
             </div>
           ) : (
-            <div className="h-[600px] overflow-y-scroll pr-2  mt-8">
+            <div className="h-[500px] overflow-y-scroll pr-2 mt-8">
               {/* Chat Messages */}
-              <div className="mb-8 space-y-6">
+              <div className="mb-8 space-y-6 px-2">
                 {gethistory.map((message, index) => (
                   <div key={index} className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                     {/* Avatar AI */}
-                    {message.type === "ai" && (
-                      <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
-                    )}
+                    {message.type === "ai" && <Avatar size={40} src={(Avatars as StaticImageData).src} />}
 
                     {/* User message */}
                     {message.type === "user" ? (
@@ -407,9 +464,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                                   >
                                     Your browser does not support the video tag.
                                   </video>
-
-                                  {/* --- OVERLAY GRADIENT --- */}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 
                                   {/* --- ACTION BUTTONS (บนขวา) --- */}
                                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -473,33 +527,22 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
 
                     {/* AI generating state */}
                     <div className="flex gap-3 justify-start">
-                      <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
-                      <div className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-8 shadow-2xl flex-1 max-w-2xl">
-                        <div className="flex flex-col justify-center items-center space-y-4">
-                          <div className="relative">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full animate-ping" />
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center animation-delay-150">
-                              <div className="w-20 h-20 border-4 border-blue-500/20 rounded-full animate-ping" />
-                            </div>
-                            {/* Sparkle Icon */}
-                            <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                              <Sparkles className="w-5 h-5 text-purple-400" />
-                            </div>
-                          </div>
-                          <div className="text-center space-y-1">
-                            <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                              กำลังสร้างวิดีโอ AI
-                            </h3>
-                            <p className="text-gray-400 text-sm">โปรดรอสักครู่ อาจใช้เวลา 1-2 นาที...</p>
-                            {/* Progress Dots */}
-                            <div className="flex justify-center gap-1.5 pt-2">
-                              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" />
-                              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-150" />
-                              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-300" />
-                            </div>
-                          </div>
+                      <Avatar size={40} src={(Avatars as StaticImageData).src} />
+                      {/* Typing bubble */}
+                      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl rounded-tl-none px-5 py-4 shadow-lg">
+                        <div className="flex items-center gap-1.5">
+                          <div
+                            className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0s", animationDuration: "1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.15s", animationDuration: "1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.3s", animationDuration: "1s" }}
+                          ></div>
                         </div>
                       </div>
                     </div>
@@ -508,33 +551,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
 
                 {loading && !submitting && gethistory.length > 0 && (
                   <div className="flex gap-3 justify-start">
-                    <Avatar size={40} icon={<RobotOutlined />} className="bg-gradient-to-br from-purple-500 to-blue-500 flex-shrink-0" />
-                    <div className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-blue-900/20 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-8 shadow-2xl flex-1 max-w-2xl">
-                      <div className="flex flex-col justify-center items-center space-y-4">
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full animate-ping" />
-                          </div>
-                          <div className="absolute inset-0 flex items-center justify-center animation-delay-150">
-                            <div className="w-20 h-20 border-4 border-blue-500/20 rounded-full animate-ping" />
-                          </div>
-                          {/* Sparkle Icon */}
-                          <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                            <Sparkles className="w-5 h-5 text-purple-400" />
-                          </div>
-                        </div>
-                        <div className="text-center space-y-1">
-                          <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                            กำลังโหลดข้อมูล
-                          </h3>
-                          <p className="text-gray-400 text-sm">โปรดรอสักครู่...</p>
-                          {/* Progress Dots */}
-                          <div className="flex justify-center gap-1.5 pt-2">
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" />
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-150" />
-                            <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce animation-delay-300" />
-                          </div>
-                        </div>
+                    <Avatar size={40} src={(Avatars as StaticImageData).src} />
+                    {/* Style 4: Bounce (Tailwind) */}
+                    <div className="text-center">
+                      <p className="text-gray-400 mb-4">Bounce</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.3s" }}></div>
+                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.15s" }}></div>
+                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`}></div>
                       </div>
                     </div>
                   </div>
@@ -543,29 +567,29 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
             </div>
           )}
 
-          <div className="flex justify-center">
-            <div className=" w-full max-w-4xl mt-20">
+          <div className="flex justify-center pt-10 px-10">
+            <div className=" w-full ">
               <Form.Item name="type" hidden>
                 <Input />
               </Form.Item>
-              <div className="relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden shadow-xl">
+              <div>
                 <Form.Item name="text" className="mb-0">
                   <Input.TextArea
-                    placeholder="อธิบายวีดีโอที่คุณต้องการสร้าง เช่น 'แมวตัวน้อยกำลังเล่นในสวน ด้วยแสงแดดยามเช้า...'"
+                    placeholder="Describe the image you want to generate"
                     className="bg-transparent border-none text-zinc-300 placeholder:text-zinc-600 resize-none"
                     style={{
-                      fontSize: "16px",
+                      fontSize: "14px",
                       padding: "20px 24px",
-                      minHeight: "120px",
+                      minHeight: "100px",
                       boxShadow: "none",
                     }}
-                    autoSize={{ minRows: 3, maxRows: 8 }}
+                    autoSize={{ minRows: 1, maxRows: 8 }}
                     disabled={submitting}
                   />
                 </Form.Item>
 
                 <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800">
-                  <Form.Item name="image" className="mb-0">
+                  <Form.Item name="image" className="mb-0" style={{ marginBottom: 0, lineHeight: 1 }}>
                     <Upload
                       listType="picture"
                       fileList={filesvdo}
@@ -579,9 +603,8 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                         return (
                           <div className="flex items-center gap-2">
                             <img src={file.thumbUrl} alt="" className="w-16 h-16 object-cover rounded" />
-                            {/* ไม่ใส่ชื่อไฟล์ */}
-                            <Button htmlType="button" onClick={actions.remove} className="text-red-500">
-                              ลบ
+                            <Button size="small" htmlType="button" onClick={actions.remove} type="link" danger>
+                              <Trash width={15} />
                             </Button>
                           </div>
                         );
@@ -592,24 +615,47 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                       </div>
                     </Upload>
                   </Form.Item>
-                  <Button
-                    htmlType="submit"
-                    size="large"
-                    disabled={submitting}
-                    className=" rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <SendOutlined className="text-lg" />
-                  </Button>
+                  <Form.Item className="mb-0" style={{ marginBottom: 0, lineHeight: 1 }}>
+                    <Button
+                      htmlType="submit"
+                      size="large"
+                      disabled={submitting}
+                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                    >
+                      <SendOutlined className="text-lg" />
+                    </Button>
+                  </Form.Item>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="flex flex-col h-screen">
-          <div className=" text-[24px] font-bold p-4">Configure</div>
-          <div className="flex flex-col h-screen ">
-            <Tabs defaultActiveKey="1" tabPosition="bottom" className="flex-1" items={items} />
-          </div>
+        <div className="flex flex-col pr-1">
+          <div className="text-[24px] font-bold">{`Configure`}</div>
+          <Tabs
+            size="large"
+            type="card"
+            defaultActiveKey="1"
+            tabPosition="bottom"
+            className="flex-1 flex flex-col 
+             [&_.ant-tabs-nav]:!w-full 
+             [&_.ant-tabs-nav-list]:!w-full 
+             [&_.ant-tabs-nav-list]:!flex 
+             [&_.ant-tabs-tab]:!flex-1 
+             [&_.ant-tabs-tab]:!justify-center
+             [&_.ant-tabs-tab]:!m-0
+             [&_.ant-tabs-content-holder]:!rounded-t-xl"
+            items={items}
+            tabBarStyle={{
+              marginTop: "auto",
+              margin: 0,
+              marginBottom: -1,
+            }}
+            tabBarGutter={0}
+            style={{
+              padding: 0,
+            }}
+          />
         </div>
       </div>
 

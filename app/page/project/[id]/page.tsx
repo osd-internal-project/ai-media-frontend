@@ -13,6 +13,7 @@ import PromptGenerateVdo from "./components/prompt-generate-vdo";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import { useSession } from "next-auth/react";
+import { Image, Video, Folder, Folders } from "lucide-react";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -50,8 +51,8 @@ const GenerateImagePage: FC = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="">
+    <div>
+      <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
       <Tabs
@@ -62,9 +63,9 @@ const GenerateImagePage: FC = () => {
           {
             key: "1",
             label: (
-              <span>
-                <PictureOutlined />
-                Image Gen.
+              <span className="flex justify-center gap-2">
+                <Image />
+                <div>{`Image Gen`}</div>
               </span>
             ),
             children: <PromptGenerateImage key={`image-${activeKey}`} projectId={id} userId={session?.user?.id} />,
@@ -72,9 +73,9 @@ const GenerateImagePage: FC = () => {
           {
             key: "2",
             label: (
-              <span>
-                <AppstoreOutlined />
-                VDO Gen.
+              <span className="flex justify-center gap-2">
+                <Video />
+                <div>{`VDO Gen`}</div>
               </span>
             ),
             children: <PromptGenerateVdo key={`vdo-${activeKey}`} projectId={id} userId={session?.user?.id} />,
@@ -82,9 +83,9 @@ const GenerateImagePage: FC = () => {
           {
             key: "4",
             label: (
-              <span>
-                <AppstoreOutlined />
-                Library.
+              <span className="flex justify-center gap-2">
+                <Folder />
+                <div>{`Library`}</div>
               </span>
             ),
             children: <PromptLibrary key={`library-${activeKey}`} />,
@@ -92,9 +93,9 @@ const GenerateImagePage: FC = () => {
           {
             key: "5",
             label: (
-              <span>
-                <AppstoreOutlined />
-                All Activity.
+              <span className="flex justify-center gap-2">
+                <Folders />
+                <div>{`All Activity`}</div>
               </span>
             ),
             children: <PromptActivity key={`activity-${activeKey}`} />,
@@ -150,9 +151,6 @@ const GenerateImagePage: FC = () => {
           margin-right: 8px;
         }
 
-        .custom-tabs .ant-tabs-content-holder {
-          padding-top: 40px;
-        }
       `}</style>
     </div>
   );

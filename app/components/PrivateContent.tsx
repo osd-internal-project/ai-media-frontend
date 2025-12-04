@@ -10,8 +10,8 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
   if (user) {
     return (
       <Content
-        className="!p-3 bg-[#0f0f0f]"
         style={{
+          paddingRight: 1,
           margin: 0,
         }}
       >
