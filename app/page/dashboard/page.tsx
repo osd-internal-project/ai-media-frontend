@@ -23,9 +23,7 @@ const DashboardPage: FC = () => {
   const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>([]);
   const [projectName, setProjectName] = useState<{ value: string; label: string }[]>([]);
   const [params, setParams] = useState<{ projectId: string; createdAt: Date | string }>({ projectId: "", createdAt: "" });
-
   const [searchForm] = useForm();
-
   useEffect(() => {
     if (loading) fecthdata();
   }, [loading, session, params]);
@@ -69,7 +67,7 @@ const DashboardPage: FC = () => {
     }
   };
 
-  function onSearch(value: { projectId: ""; createdAt: "" }): void {
+  function onSearch(value: { projectId: string; createdAt: string }): void {
     if (value) {
       setParams(value);
       setLoading(true);
@@ -127,15 +125,9 @@ const DashboardPage: FC = () => {
     <ConfigProvider
       theme={{
         token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
-        components: {
-          Card: {
-            colorBorderSecondary: "none",
-            colorBgContainer: "#000",
-          },
-        },
       }}
     >
-      <div className=" w-full pt-6">
+      <div className="w-full pt-6">
         <Row gutter={[8, 8]} className="">
           <Col span={24}>
             <SummaryFilterComponent searchForm={searchForm} onSearch={onSearch} projectName={projectName} />

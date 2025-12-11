@@ -12,9 +12,24 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
     key: owner.owner,
     products: owner.products,
   }));
-  const ownerColumns = [{ title: "Owner", dataIndex: "owner" }];
+  const ownerColumns: any = [
+    { title: "Owner", dataIndex: "owner" },
+    {
+      title: "Post-tax amount (payment currency)",
+      align: "right",
+      dataIndex: "owner",
+      render(e: string, records: ITDashboardOwner, index: number) {
+        const total = records.products.reduce((sum, p) => {
+          const used = p.type === "image" ? p.totalImageUsed : p.totalTokenUsed / 1000;
+          const cost = used * p.unitPrice;
+          return sum + cost;
+        }, 0);
+        return <div>{`$ ${total.toFixed(2)}`}</div>;
+      },
+    },
+  ];
 
-  const productColumns = [
+  const productColumns: any = [
     {
       title: "Product",
       dataIndex: "type",
@@ -25,17 +40,26 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
     {
       title: "Unit Price",
       dataIndex: "unitPrice",
-      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? `USD/piece` : `USD/Token`}`,
+      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? `USD/piece` : `USD/K Token`}`,
     },
     {
-      title: "Total Image Used",
-      dataIndex: "totalImageUsed",
-      render: (v: number, record: any) => `${v} ${record.type === "image" ? `piece` : `Token`}`,
+      title: "Usage",
+      dataIndex: "totalUsed",
+      render: (_: any, record: any) => {
+        const used = record.type === "image" ? record.totalImageUsed : record.totalTokenUsed;
+        const unit = record.type === "image" ? "piece" : "Token";
+        return `${used.toLocaleString()} ${unit}`;
+      },
     },
     {
-      title: "Total Token Used",
-      dataIndex: "totalTokenUsed",
-      render: (v: number, record: any) => `${v} ${record.type === "image" ? `piece` : `Token`}`,
+      title: "",
+      align: "right",
+      dataIndex: "owner",
+      render(e: string, records: any, index: number) {
+        const used = records.type === "image" ? records.totalImageUsed : records.totalTokenUsed / 1000;
+        const cost = used * records.unitPrice;
+        return <div>{`$ ${cost.toFixed(2)}`}</div>;
+      },
     },
   ];
 
@@ -50,7 +74,7 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
             return <Table columns={productColumns} bordered dataSource={record.products} rowKey="key" pagination={false} size="small" />;
           },
         }}
-        size="large"
+        size="small"
       />
     </div>
   );

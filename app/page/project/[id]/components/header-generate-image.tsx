@@ -20,7 +20,7 @@ const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
   };
 
   return (
-    <div className="grid grid-cols-2 bg-black w-full p-5 rounded-t-2xl">
+    <div className="grid grid-cols-2 bg-black w-full p-4 rounded-t-2xl">
       <div className="flex col-span-1 flex-col">
         <span className="text-2xl font-bold">{`${getProject?.name}`}</span>
         <span className="text-md text-[#9B9C9E]">{`Shake up your creativity with image generation`}</span>

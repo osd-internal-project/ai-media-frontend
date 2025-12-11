@@ -15,21 +15,30 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
     },
   ];
 
-  const ChildColumns = [
+  const ChildColumns: any = [
     {
       title: "Unit Price",
       dataIndex: "unitPrice",
-      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? "USD/piece" : "USD/Token"}`,
+      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? "USD/piece" : "USD/K Token"}`,
     },
     {
-      title: "Total Image Used",
-      dataIndex: "totalImageUsed",
-      render: (v: number, record: any) => `${v} ${record.type === "image" ? "piece" : "Token"}`,
+      title: "Usage",
+      dataIndex: "totalUsed",
+      render: (_: any, record: any) => {
+        const used = record.type === "image" ? record.totalImageUsed : record.totalTokenUsed;
+        const unit = record.type === "image" ? "piece" : "Token";
+        return `${used.toLocaleString()} ${unit}`;
+      },
     },
     {
-      title: "Total Token Used",
-      dataIndex: "totalTokenUsed",
-      render: (v: number, record: any) => `${v} ${record.type === "image" ? "piece" : "Token"}`,
+      title: "Post-tax amount (payment currency)",
+      align: "right",
+      dataIndex: "id",
+      render(e: string, records: any, index: number) {
+        const used = records.type === "image" ? records.totalImageUsed : records.totalTokenUsed / 1000;
+        const cost = used * records.unitPrice;
+        return <div>{`$ ${cost.toFixed(2)}`}</div>;
+      },
     },
   ];
 

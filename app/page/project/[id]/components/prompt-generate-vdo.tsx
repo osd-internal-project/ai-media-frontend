@@ -405,7 +405,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
               </div>
             </div>
           ) : (
-            <div className="h-[500px] overflow-y-scroll pr-2 mt-8">
+            <div className="h-[500px] overflow-y-scroll pr-2 mt-8 hide-scrollbar">
               {/* Chat Messages */}
               <div className="mb-8 space-y-6 px-2">
                 {gethistory.map((message, index) => (

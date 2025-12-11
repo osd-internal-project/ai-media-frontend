@@ -11,7 +11,6 @@ import {
   InstagramOutlined,
   WechatWorkOutlined,
   UserOutlined,
-  RobotOutlined,
   LikeOutlined,
 } from "@ant-design/icons";
 import { Download, Share2, Sparkles, Trash } from "lucide-react";
@@ -409,7 +408,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                 </div>
               </div>
             ) : (
-              <div ref={contentRef} className="h-[500px] overflow-y-scroll pr-2 mt-8">
+              <div ref={contentRef} className="h-[600px] overflow-y-scroll pr-2 mt-2 hide-scrollbar">
                 {/* Chat Messages */}
                 <div className="mb-8 space-y-6 px-2">
                   {gethistory.map((message, index) => (

@@ -115,8 +115,6 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
             />
           </div>
         </div>
-
-        {/* RIGHT: Info sidebar */}
         <div>
           {selected ? (
             <ConfigProvider
