@@ -165,26 +165,29 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 defaultSelectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
                 items={renderMenuItems(filteredMenu)}
               />
-              <div className=" !text-gray-400 px-4 mt-2">
-                {`PROJECT`}
-                {roles.includes("p-c") ? (
+              <div className="!text-gray-400 px-4 mt-2">
+                {/* Header */}
+                <div>{`PROJECT`}</div>
+
+                {roles.includes("p-c") && (
                   <div className="mt-3 w-full">
-                    <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>{`Add new project`}</Button>
+                    <Button icon={<PlusCircleOutlined />} className="w-full" onClick={handleOpen}>
+                      {`Add new project`}
+                    </Button>
                   </div>
-                ) : null}
-                {roles.includes("p-v") ? (
-                  <>
-                    {getProject?.map((e) => {
-                      return (
-                        <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
-                          <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
-                            {e.name}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </>
-                ) : null}
+                )}
+
+                {/* ⭐ Scroll section */}
+                <div className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1">
+                  {roles.includes("p-v") &&
+                    getProject?.map((e) => (
+                      <div key={e.id} className="w-full flex justify-center mt-2 gap-4">
+                        <Button className="w-full !bg-gray-800" onClick={() => router.push(`/page/project/${e.id}`)}>
+                          {e.name}
+                        </Button>
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
             {groupName !== "admin-user" ? (

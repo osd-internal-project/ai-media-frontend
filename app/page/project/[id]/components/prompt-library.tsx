@@ -1,7 +1,7 @@
 import React, { useEffect, useState, type FC, type ReactElement } from "react";
-import { Select, Image, Popover, Empty, Segmented, ConfigProvider, Form, Pagination } from "antd";
+import { Image, Empty, ConfigProvider, Form, Pagination, notification, Button } from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
-import { Download, Share2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { useParams } from "next/navigation";
 import GalleryServices from "@/app/services/gellory.service";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -20,6 +20,8 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
   const [getData, setData] = useState<{ data: any[]; total: number }>({ data: [], total: 0 });
   const [loading, setLoading] = useState<boolean>(true);
   const [selected, setSelected] = useState<any>();
+  const [api, contextHolders] = notification.useNotification();
+
   const onSelectPrompt = (value: any) => {
     setSelected(value);
   };
@@ -43,8 +45,11 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
     setLoading(false);
   };
 
-  const handleOpenImage = async (imageName: string) => {
-    const res = await GenerateImageServices(axiosCore).downloadVDO(imageName);
+  const handleOpenImage = async (imageName: string, types: string) => {
+    const res =
+      types === "vdo"
+        ? await GenerateImageServices(axiosCore).downloadVDO(imageName)
+        : await GenerateImageServices(axiosCore).downloadImage(imageName);
     const blob = new Blob([res], { type: "image/jpeg" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -56,6 +61,7 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
 
   return (
     <div className="p-4 rounded-lg mb-4">
+      {contextHolders}
       <div className="grid sm:grid-cols-2 md:grid-cols-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
           {getData.data.map((image, imgIndex) => {
@@ -82,18 +88,16 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
                       alt={`AI Generated Image ${imgIndex + 1}`}
                     />
                   )}
-
                   <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Popover placement="topRight" content={image.prompt}>
+                    {/* <Popover placement="topRight" content={image.prompt}>
                       <button className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer">
                         <Share2 className="w-4 h-4 text-gray-800" />
                       </button>
-                    </Popover>
+                    </Popover> */}
                     <button
                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                      onClick={() => handleOpenImage(image.imageUrl)}
+                      onClick={() => handleOpenImage(image.imageUrl, image.typeGenerate)}
                     >
                       <Download className="w-4 h-4 text-gray-800" />
                     </button>
@@ -131,7 +135,21 @@ const PromptLibrary: FC<props> = ({ shouldRefetch }): ReactElement => {
             >
               <Form layout="vertical">
                 <div>
-                  <div className="text-[24px] font-bold p-4">Info</div>
+                  <div className="text-[24px] font-bold p-4 flex justify-start gap-2 items-center">
+                    Info
+                    <Button
+                      htmlType="button"
+                      size="small"
+                      onClick={() => {
+                        navigator.clipboard.writeText(selected.prompt);
+                        api.success({
+                          message: `Copied`,
+                          description: `${selected.prompt}`,
+                        });
+                      }}
+                      className="!bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
+                    >{`copied`}</Button>
+                  </div>
                   <div className="text-[16px] p-4 space-y-4">
                     <div>
                       <div>Prompt:</div>

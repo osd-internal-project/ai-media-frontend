@@ -1,19 +1,5 @@
 import type { ITFromGenerate } from "@/app/common";
-import {
-  Avatar,
-  Button,
-  Form,
-  Input,
-  message,
-  Popover,
-  Select,
-  Spin,
-  Tabs,
-  Upload,
-  type FormInstance,
-  type UploadFile,
-  type UploadProps,
-} from "antd";
+import { Avatar, Button, Form, Input, message, notification, Popover, Select, Spin, Tabs, Upload, type UploadFile, type UploadProps } from "antd";
 import React, { type FC, type ReactElement, useEffect, useState } from "react";
 
 import Avatars from "@/public/images/Avatar.png";
@@ -27,7 +13,7 @@ import {
   UserOutlined,
   LikeOutlined,
 } from "@ant-design/icons";
-import { Download, Share2, Sparkles, Trash } from "lucide-react";
+import { Download, Share2, Trash } from "lucide-react";
 import GenerateImageServices from "@/app/services/generate-image.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import type { RcFile } from "antd/es/upload";
@@ -35,7 +21,6 @@ import LogsServices from "@/app/services/logs.service";
 import GalleryServices from "@/app/services/gellory.service";
 import type { StaticImageData } from "next/image";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
-import type { TPromptType } from "@/app/common/prompt-guide";
 
 export interface props {
   projectId?: string;
@@ -53,6 +38,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [gethistory, setHistory] = useState<any[]>([]);
+  const [api, contextHolders] = notification.useNotification();
 
   useEffect(() => {
     if (loading) {
@@ -317,7 +303,10 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                     size="large"
                     onClick={() => {
                       navigator.clipboard.writeText(item.textPrompt);
-                      alert(`Copied: ${item.title}`);
+                      api.success({
+                        message: `Copied`,
+                        description: `${item.title}`,
+                      });
                     }}
                     className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                   >
@@ -352,6 +341,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       onFinish={onFinishVDO}
       initialValues={{ type: "vdo", resolution: "1080p", ratio: "16:9", duration: "5" }}
     >
+      {contextHolders}
       {contextHolder}
       <div className="w-full grid grid-cols-5 gap-2">
         <div className="w-full col col-span-4 h-[calc(90vh-62px)] flex flex-col">

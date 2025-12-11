@@ -1,5 +1,5 @@
 import type { ITFromGenerate } from "@/app/common";
-import { Avatar, Button, Form, Input, message, Popover, Segmented, Slider, Tabs, Upload, UploadFile, UploadProps, Image } from "antd";
+import { Avatar, Button, Form, Input, message, Popover, Segmented, Slider, Tabs, Upload, UploadFile, UploadProps, Image, notification } from "antd";
 import React, { type FC, type ReactElement, useEffect, useRef, useState } from "react";
 import Avatars from "@/public/images/Avatar.png";
 
@@ -39,6 +39,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
   const [gethistory, setHistory] = useState<any[]>([]);
+  const [api, contextHolders] = notification.useNotification();
 
   useEffect(() => {
     fecthdata();
@@ -273,7 +274,10 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                     size="large"
                     onClick={() => {
                       navigator.clipboard.writeText(item.textPrompt);
-                      alert(`Copied: ${item.title}`);
+                      api.success({
+                        message: `Copied`,
+                        description: `${item.title}`,
+                      });
                     }}
                     className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                   >
@@ -326,6 +330,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
 
   return (
     <div>
+      {contextHolders}
       {contextHolder}
       <Form
         form={formcreateImage}
