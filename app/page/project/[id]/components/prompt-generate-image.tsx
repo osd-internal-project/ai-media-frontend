@@ -1,7 +1,7 @@
 import type { ITFromGenerate } from "@/app/common";
 import { Avatar, Button, Form, Input, message, Popover, Segmented, Slider, Tabs, Upload, UploadFile, UploadProps, Image, notification } from "antd";
 import React, { type FC, type ReactElement, useEffect, useRef, useState } from "react";
-import Avatars from "@/public/images/Avatar.png";
+import Avatars from "@/public/images/Avatar.jpg";
 
 import {
   PaperClipOutlined,
