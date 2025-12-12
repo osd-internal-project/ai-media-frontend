@@ -1,6 +1,6 @@
 import type { ITFromGenerate } from "@/app/common";
 import { Avatar, Button, Form, Input, message, notification, Popover, Select, Spin, Tabs, Upload, type UploadFile, type UploadProps } from "antd";
-import React, { type FC, type ReactElement, useEffect, useState } from "react";
+import React, { type FC, type ReactElement, useEffect, useRef, useState } from "react";
 
 import Avatars from "@/public/images/Avatar.png";
 import {
@@ -29,6 +29,7 @@ export interface props {
 }
 
 const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): ReactElement => {
+  const contentRef = useRef<HTMLDivElement>(null);
   const promptguideService = PromptGuideServices(axiosCore);
   const [masterdataPromptGuide, setMasterdataPromptGuide] = useState<any[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
@@ -85,6 +86,18 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
     }
   };
 
+  useEffect(() => {
+    if (contentRef.current) {
+      const timer = setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTop = contentRef.current.scrollHeight;
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gethistory, loading]);
+
   const masterdata = async () => {
     const response = await promptguideService.findAll();
     // จัดกลุ่มตาม typeName
@@ -105,9 +118,11 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
     if (filesvdo.length > 0) {
       const formData: any = new FormData();
       formData.append("type", "create-attend");
-      formData.append("files", filesvdo[0].originFileObj);
+      filesvdo.forEach((file) => {
+        formData.append("files", file.originFileObj);
+      });
       const upload = await GenerateImageServices(axiosCore).upload(formData);
-      base = { ...values, image: upload[0] };
+      base = { ...values, image: upload };
     }
     try {
       const response = await GenerateImageServices(axiosCore).create({ ...base, projectId, userId });
@@ -345,7 +360,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       {contextHolder}
       <div className="w-full grid grid-cols-5 gap-2">
         <div className="w-full col col-span-4 h-[calc(90vh-62px)] flex flex-col">
-          {gethistory.length === 0 && !submitting ? (
+          {gethistory.length === 0 && !submitting && !loading ? (
             <div className="text-white pt-10 px-5 flex-1 overflow-auto">
               <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedance`}</h1>
               <p className="text-gray-400 text-center mb-10">
@@ -395,7 +410,7 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
               </div>
             </div>
           ) : (
-            <div className="h-[500px] overflow-y-scroll pr-2 mt-8 hide-scrollbar">
+            <div ref={contentRef} className="h-[500px] overflow-y-scroll pr-2 mt-8 hide-scrollbar scroll-smooth">
               {/* Chat Messages */}
               <div className="mb-8 space-y-6 px-2">
                 {gethistory.map((message, index) => (
@@ -515,10 +530,8 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                       </div>
                     </div>
 
-                    {/* AI generating state */}
                     <div className="flex gap-3 justify-start">
                       <Avatar size={40} src={(Avatars as StaticImageData).src} />
-                      {/* Typing bubble */}
                       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl rounded-tl-none px-5 py-4 shadow-lg">
                         <div className="flex items-center gap-1.5">
                           <div
@@ -537,21 +550,6 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                       </div>
                     </div>
                   </>
-                )}
-
-                {loading && !submitting && gethistory.length > 0 && (
-                  <div className="flex gap-3 justify-start">
-                    <Avatar size={40} src={(Avatars as StaticImageData).src} />
-                    {/* Style 4: Bounce (Tailwind) */}
-                    <div className="text-center">
-                      <p className="text-gray-400 mb-4">Bounce</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.3s" }}></div>
-                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.15s" }}></div>
-                        <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`}></div>
-                      </div>
-                    </div>
-                  </div>
                 )}
               </div>
             </div>
@@ -585,8 +583,8 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                       fileList={filesvdo}
                       onChange={handleChangeVDO}
                       beforeUpload={beforeUploadFilesVDO}
-                      multiple={false}
-                      maxCount={1}
+                      multiple={true}
+                      maxCount={2}
                       showUploadList={true}
                       disabled={submitting}
                       itemRender={(originNode, file, fileList, actions) => {
@@ -628,13 +626,13 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
             defaultActiveKey="1"
             tabPosition="bottom"
             className="flex-1 flex flex-col 
-             [&_.ant-tabs-nav]:!w-full 
-             [&_.ant-tabs-nav-list]:!w-full 
-             [&_.ant-tabs-nav-list]:!flex 
-             [&_.ant-tabs-tab]:!flex-1 
-             [&_.ant-tabs-tab]:!justify-center
-             [&_.ant-tabs-tab]:!m-0
-             [&_.ant-tabs-content-holder]:!rounded-t-xl"
+              [&_.ant-tabs-nav]:!w-full 
+              [&_.ant-tabs-nav-list]:!w-full 
+              [&_.ant-tabs-nav-list]:!flex 
+              [&_.ant-tabs-tab]:!flex-1 
+              [&_.ant-tabs-tab]:!justify-center
+              [&_.ant-tabs-tab]:!m-0
+              [&_.ant-tabs-content-holder]:!rounded-t-xl"
             items={items}
             tabBarStyle={{
               marginTop: "auto",
@@ -650,14 +648,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
       </div>
 
       <style>{`
-        .animation-delay-150 {
-          animation-delay: 150ms;
-        }
-        
-        .animation-delay-300 {
-          animation-delay: 300ms;
-        }
-      `}</style>
+          .animation-delay-150 {
+            animation-delay: 150ms;
+          }
+          
+          .animation-delay-300 {
+            animation-delay: 300ms;
+          }
+        `}</style>
     </Form>
   );
 };

@@ -42,9 +42,28 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
   const [api, contextHolders] = notification.useNotification();
 
   useEffect(() => {
-    fecthdata();
-    masterdata();
+    let timer: NodeJS.Timeout | undefined; // สำหรับใช้ Clear Timeout
+
+    if (projectId && !submitting) {
+      // 🟢 แก้ไข: ใช้ setTimeout หน่วงเวลาเรียก fecthdata
+      timer = setTimeout(() => {
+        // ต้องเรียกใช้ fecthdata() ภายในฟังก์ชัน Callback
+        fecthdata();
+      }, 2000); // หน่วงเวลา 3 วินาที
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [projectId, submitting]);
+
+  useEffect(() => {
+    if (projectId) {
+      fecthdata();
+    }
+    masterdata();
+  }, [projectId]);
 
   useEffect(() => {
     if (shouldRefetch) {
@@ -54,9 +73,16 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
 
   useEffect(() => {
     if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      const timer = setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTop = contentRef.current.scrollHeight;
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
-  }, [gethistory]);
+  }, [gethistory, loading]);
+
   const fecthdata = async () => {
     setLoading(true);
     try {
@@ -93,7 +119,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
 
   const masterdata = async () => {
     const response = await promptguideService.findAll();
-    // จัดกลุ่มตาม typeName
     const grouped = response.reduce((acc: any, item) => {
       const key = item.typeName || "Others";
       if (!acc[key]) acc[key] = [];
@@ -103,7 +128,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
 
     setMasterdataPromptGuide(grouped);
   };
-
   const onFinish = async (values: ITFromGenerate) => {
     setCurrentPrompt(values.text);
     setSubmitting(true);
@@ -133,18 +157,9 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
         return true;
       }
 
-      // ถ้า API สำเร็จ (200)
-      messageApi.open({
-        type: "success",
-        content: "สร้างคำขอสำเร็จ",
-      });
-
       formcreateImage.resetFields();
       setFiles([]);
       setCurrentPrompt("");
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      await fecthdata();
-      setLoading(true);
       setSubmitting(false);
     } catch (error: any) {
       const msg = error.response?.data?.message || "เกิดข้อผิดพลาด";
@@ -152,6 +167,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
         type: "error",
         content: msg,
       });
+      setSubmitting(false);
     }
   };
 
@@ -173,19 +189,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
   const handleChangeFiles: UploadProps["onChange"] = async ({ fileList: newFileList }) => {
     return setFiles(newFileList);
   };
-
-  const sizes = {
-    sm: "w-2 h-2",
-    md: "w-3 h-3",
-    lg: "w-4 h-4",
-  } as any;
-
-  const colors = {
-    blue: "bg-blue-500",
-    white: "bg-white",
-    gray: "bg-gray-500",
-    purple: "bg-purple-500",
-  } as any;
 
   const content = (
     <div className="grid grid-col-1 items-center gap-2">
@@ -343,7 +346,7 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
       >
         <div className="w-full grid grid-cols-5 gap-2">
           <div className="w-full col col-span-4 h-[calc(90vh-62px)] flex flex-col">
-            {gethistory.length === 0 && !submitting ? (
+            {gethistory.length === 0 && !submitting && !loading ? (
               <div className="text-white pt-10 px-5 flex-1 overflow-auto">
                 <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedream 4.5`}</h1>
                 <p className="text-gray-400 text-center mb-10">
@@ -413,21 +416,19 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                 </div>
               </div>
             ) : (
-              <div ref={contentRef} className="h-[600px] overflow-y-scroll pr-2 mt-2 hide-scrollbar">
+              <div ref={contentRef} className="h-[600px] overflow-y-scroll pr-2 mt-2 hide-scrollbar scroll-smooth">
                 {/* Chat Messages */}
                 <div className="mb-8 space-y-6 px-2">
                   {gethistory.map((message, index) => (
                     <div key={index} className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                       {/* Avatar AI */}
                       {message.type === "ai" && <Avatar size={40} src={(Avatars as StaticImageData).src} />}
-
                       {/* User message */}
                       {message.type === "user" ? (
                         <div className="flex flex-col items-end gap-1 max-w-2xl">
                           <div className="text-xs text-gray-400">
                             {message.username} • {new Date(message.time).toLocaleString()}
                           </div>
-
                           <div className="flex gap-3 items-start">
                             <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-2xl px-5 py-3 shadow-lg">
                               <p className="text-sm leading-relaxed">{message.content}</p>
@@ -441,7 +442,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                           <div className="text-xs text-gray-400">
                             {message.username} • {new Date(message.time).toLocaleString()}
                           </div>
-
                           {/* Images */}
                           {message.images && message.images.length > 0 && (
                             <div
@@ -547,20 +547,6 @@ const PromptGenerateImage: FC<props> = ({ projectId, userId, shouldRefetch }): R
                         </div>
                       </div>
                     </>
-                  )}
-                  {loading && !submitting && (
-                    <div className="flex gap-3 justify-start">
-                      <Avatar size={40} src={(Avatars as StaticImageData).src} />
-                      {/* Style 4: Bounce (Tailwind) */}
-                      <div className="text-center">
-                        <p className="text-gray-400 mb-4">Bounce</p>
-                        <div className="flex items-center justify-center gap-2">
-                          <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.3s" }}></div>
-                          <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`} style={{ animationDelay: "-0.15s" }}></div>
-                          <div className={`${sizes["md"]} ${colors["blue"]} rounded-full animate-bounce`}></div>
-                        </div>
-                      </div>
-                    </div>
                   )}
                 </div>
               </div>

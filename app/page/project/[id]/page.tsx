@@ -1,9 +1,7 @@
 "use client";
-
 import React, { useEffect, useState, type FC } from "react";
 import { Tabs } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
-import { AppstoreOutlined, PictureOutlined } from "@ant-design/icons";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
 import type { IProject } from "@/app/common/project.type";
@@ -61,6 +59,7 @@ const GenerateImagePage: FC = () => {
         activeKey={activeKey}
         items={[
           {
+            forceRender: true,
             key: "1",
             label: (
               <span className="flex justify-center gap-2">
@@ -71,6 +70,7 @@ const GenerateImagePage: FC = () => {
             children: <PromptGenerateImage key={`image-${activeKey}`} projectId={id} userId={session?.user?.id} />,
           },
           {
+            forceRender: true,
             key: "2",
             label: (
               <span className="flex justify-center gap-2">
@@ -81,6 +81,7 @@ const GenerateImagePage: FC = () => {
             children: <PromptGenerateVdo key={`vdo-${activeKey}`} projectId={id} userId={session?.user?.id} />,
           },
           {
+            forceRender: true,
             key: "4",
             label: (
               <span className="flex justify-center gap-2">
@@ -91,6 +92,7 @@ const GenerateImagePage: FC = () => {
             children: <PromptLibrary key={`library-${activeKey}`} />,
           },
           {
+            forceRender: true,
             key: "5",
             label: (
               <span className="flex justify-center gap-2">
