@@ -26,7 +26,17 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-
+    update: async (id: number, value: Partial<IProject>) => {
+      return await axiosInstance
+        .patch(`${baseUrl}/${id}`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     findById: async (id: string) => {
       return await axiosInstance
         .get(`${baseUrl}/manage/${id}`)
