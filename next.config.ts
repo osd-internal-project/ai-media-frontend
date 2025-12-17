@@ -25,8 +25,7 @@
 //     return [
 //       {
 //         source: "/api/images/:imageName",
-//         destination:
-//           "http://192.168.31.181:8971/api/public/image-minio/:imageName",
+//         destination: "http://192.168.31.181:8971/api/public/image-minio/:imageName",
 //       },
 //       {
 //         source: "/api/vdo/:vdoName",
@@ -66,9 +65,9 @@ const nextConfig = {
   },
   reactStrictMode: false,
   output: "standalone",
-  images: {
-    unoptimized: true,
-  },
+  // images: {
+  //   unoptimized: true,
+  // },
   async rewrites() {
     return [
       {

@@ -15,9 +15,12 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    findById: async (projectId: string) => {
+    findById: async (projectId: string, skip?: number, take?: number) => {
+      const params: any = {};
+      if (skip !== undefined) params.skip = skip;
+      if (take !== undefined) params.take = take;
       return await axiosInstance
-        .get(`${baseUrl}/${projectId}`)
+        .get(`${baseUrl}/${projectId}`, { params })
         .then((res) => {
           return res.data;
         })

@@ -21,14 +21,17 @@ import LogsServices from "@/app/services/logs.service";
 import GalleryServices from "@/app/services/gellory.service";
 import type { StaticImageData } from "next/image";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
+import type { TPromptGuideType } from "@/app/common/prompt-guide.type";
 
 export interface props {
-  projectId?: string;
+  projectId: string;
+  activeKey: "image" | "vdo" | "omnihuman";
   userId?: string;
   shouldRefetch?: boolean;
+  promptGuideTypes: TPromptGuideType[];
 }
 
-const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): ReactElement => {
+const PromptGenerateVdo: FC<props> = ({ projectId, activeKey, userId, shouldRefetch, promptGuideTypes }): ReactElement => {
   const contentRef = useRef<HTMLDivElement>(null);
   const promptguideService = PromptGuideServices(axiosCore);
   const [masterdataPromptGuide, setMasterdataPromptGuide] = useState<any[]>([]);
@@ -41,18 +44,18 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
   const [gethistory, setHistory] = useState<any[]>([]);
   const [api, contextHolders] = notification.useNotification();
 
-  useEffect(() => {
-    if (loading) {
-      fecthdata();
-    }
-    masterdata();
-  }, [loading, submitting]);
+  // useEffect(() => {
+  //   if (loading) {
+  //     fecthdata();
+  //   }
+  //   masterdata();
+  // }, [loading, submitting]);
 
-  useEffect(() => {
-    if (shouldRefetch) {
-      fecthdata();
-    }
-  }, [shouldRefetch]);
+  // useEffect(() => {
+  //   if (shouldRefetch) {
+  //     fecthdata();
+  //   }
+  // }, [shouldRefetch]);
 
   const fecthdata = async () => {
     try {
@@ -447,15 +450,14 @@ const PromptGenerateVdo: FC<props> = ({ projectId, userId, shouldRefetch }): Rea
                         {/* Videos */}
                         {message.videoUrls && message.videoUrls.length > 0 && (
                           <div
-                            className={`grid gap-4 w-full ${
-                              message.videoUrls.length === 1
-                                ? "grid-cols-1 max-w-md"
-                                : message.videoUrls.length === 2
+                            className={`grid gap-4 w-full ${message.videoUrls.length === 1
+                              ? "grid-cols-1 max-w-md"
+                              : message.videoUrls.length === 2
                                 ? "grid-cols-2 max-w-2xl"
                                 : message.videoUrls.length === 3
-                                ? "grid-cols-3 max-w-3xl"
-                                : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
-                            }`}
+                                  ? "grid-cols-3 max-w-3xl"
+                                  : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
+                              }`}
                           >
                             {message.videoUrls.map((videoUrl: string, vidIndex: number) => (
                               <div key={vidIndex} className="relative group">
