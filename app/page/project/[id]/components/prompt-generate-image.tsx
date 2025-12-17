@@ -752,7 +752,7 @@ const PromptGenerateImage: FC<props> = ({
               </div>
             )}
 
-            <div className="flex justify-center pt-10 px-10">
+            <div className="flex justify-center pt-2 px-5">
               <div className=" w-full ">
                 <Form.Item name="type" hidden>
                   <Input />
