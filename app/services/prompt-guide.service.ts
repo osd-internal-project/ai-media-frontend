@@ -1,10 +1,10 @@
 import { AxiosInstance } from "axios";
-import type { TPromptType } from "../common/prompt-guide";
+import type { TPromptGuide, TPromptType } from "../common/prompt-guide.type";
 
 const PromptGuideServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide";
   return {
-    findAll: async (): Promise<TPromptType[]> => {
+    findAll: async (): Promise<TPromptGuide[]> => {
       return await axiosInstance
         .get(`${baseUrl}`)
         .then((res) => {
@@ -15,7 +15,7 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    create: async (value: TPromptType) => {
+    create: async (value: TPromptGuide) => {
       return await axiosInstance
         .post(`${baseUrl}`, { body: value })
         .then((res) => {

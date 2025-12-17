@@ -1,20 +1,42 @@
 "use client";
-import { TPromptType } from "@/app/common/prompt-guide";
+import { TPromptType } from "@/app/common/prompt-guide.type";
 import { axiosCore } from "@/app/lib/axios/axios";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
-import { Button, Form, Input, message, Modal, Popconfirm, Select, Space, Switch, Table, Tag, Tooltip } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Switch,
+  Table,
+  Tag,
+  Tooltip,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import React, { useEffect, useState, type FC, type ReactElement } from "react";
 
-import { CodeOutlined, DeleteOutlined, EditOutlined, FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import {
+  CodeOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  FileImageOutlined,
+  UserSwitchOutlined,
+} from "@ant-design/icons";
 
-const page: FC = (): ReactElement => {
+const PromptGuidePage: FC = (): ReactElement => {
   const [formcreate] = Form.useForm();
   const promptguideServices = PromptGuideServices(axiosCore);
   const [loading, setLoading] = useState<boolean>(true);
   const [getdata, setData] = useState<TPromptType[]>([]);
-  const [open, setOpen] = useState<{ status: string; type: boolean }>({ status: "create", type: false });
+  const [open, setOpen] = useState<{ status: string; type: boolean }>({
+    status: "create",
+    type: false,
+  });
   useEffect(() => {
     if (loading) {
       fecthData();
@@ -77,7 +99,11 @@ const page: FC = (): ReactElement => {
           video: "purple",
           text: "green",
         };
-        return <Tag color={colorMap[type] || "default"}>{type?.toUpperCase() || "-"}</Tag>;
+        return (
+          <Tag color={colorMap[type] || "default"}>
+            {type?.toUpperCase() || "-"}
+          </Tag>
+        );
       },
     },
     {
@@ -99,7 +125,13 @@ const page: FC = (): ReactElement => {
         { text: "Inactive", value: false },
       ],
       onFilter: (value, record) => record.status === value,
-      render: (status: boolean, record: TPromptType) => <Switch checked={status} checkedChildren="Active" unCheckedChildren="Inactive" />,
+      render: (status: boolean, record: TPromptType) => (
+        <Switch
+          checked={status}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+        />
+      ),
     },
     {
       key: "createdAt",
@@ -189,7 +221,12 @@ const page: FC = (): ReactElement => {
       const { id, ...value } = values;
       response = await promptguideServices.update(id as number, {
         ...value,
-        typeName: values.type === "scene" ? "Scene & Objects" : values.type === "art" ? "Art Direction" : "Branding & Visuals",
+        typeName:
+          values.type === "scene"
+            ? "Scene & Objects"
+            : values.type === "art"
+            ? "Art Direction"
+            : "Branding & Visuals",
       });
     }
     if (response) {
@@ -219,11 +256,21 @@ const page: FC = (): ReactElement => {
         >{`Create`}</Button>
       </div>
       <div>
-        <Table columns={columns} dataSource={getdata} rowKey={"id"} scroll={{ x: "max-content" }} />
+        <Table
+          columns={columns}
+          dataSource={getdata}
+          rowKey={"id"}
+          scroll={{ x: "max-content" }}
+        />
       </div>
       {open.type ? (
         <>
-          <Modal title={`${open.status} `} open={open.type} footer={false} onCancel={() => handleModal("close")}>
+          <Modal
+            title={`${open.status} `}
+            open={open.type}
+            footer={false}
+            onCancel={() => handleModal("close")}
+          >
             <Form<TPromptType>
               name="manage-prompt-guide"
               form={formcreate}
@@ -238,15 +285,29 @@ const page: FC = (): ReactElement => {
                 </Form.Item>
               )}
 
-              <Form.Item label="Title" name="title" rules={[{ required: true, message: "Please input title" }]}>
+              <Form.Item
+                label="Title"
+                name="title"
+                rules={[{ required: true, message: "Please input title" }]}
+              >
                 <Input placeholder="Input title" />
               </Form.Item>
 
-              <Form.Item label="Text Prompt" name="textPrompt" rules={[{ required: true, message: "Please input prompt text" }]}>
+              <Form.Item
+                label="Text Prompt"
+                name="textPrompt"
+                rules={[
+                  { required: true, message: "Please input prompt text" },
+                ]}
+              >
                 <Input.TextArea rows={4} placeholder="Write your prompt" />
               </Form.Item>
 
-              <Form.Item label="Type" name="type" rules={[{ required: true, message: "Please select type" }]}>
+              <Form.Item
+                label="Type"
+                name="type"
+                rules={[{ required: true, message: "Please select type" }]}
+              >
                 <Select
                   allowClear
                   showSearch
@@ -281,4 +342,4 @@ const page: FC = (): ReactElement => {
   );
 };
 
-export default page;
+export default PromptGuidePage;

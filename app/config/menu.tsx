@@ -1,7 +1,11 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { CodeOutlined, FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import {
+  CodeOutlined,
+  FileImageOutlined,
+  UserSwitchOutlined,
+} from "@ant-design/icons";
 import { LockKeyholeOpen, SquareChevronRight } from "lucide-react";
 
 export const MenuSider = [
@@ -45,11 +49,17 @@ export const MenuSider = [
         icon: <FileImageOutlined />,
         label: `Roles`,
       },
+      // {
+      //   key: `prompt-guide`,
+      //   role: "pg-v",
+      //   icon: <CodeOutlined />,
+      //   label: `Prompt Guide`,
+      // },
       {
-        key: `prompt-guide`,
+        key: `template-setting`,
         role: "pg-v",
         icon: <CodeOutlined />,
-        label: `Prompt Guide`,
+        label: `Template Setting`,
       },
     ],
   },
@@ -107,7 +117,9 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
   return menuList
     .map((menu) => {
       // filter children ตาม role
-      const children = menu.children ? menu.children.filter((child: any) => hasAccess(child.role)) : null;
+      const children = menu.children
+        ? menu.children.filter((child: any) => hasAccess(child.role))
+        : null;
 
       // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
       const canAccessMenu = hasAccess(menu.role);
