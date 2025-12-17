@@ -29,6 +29,7 @@ import {
     LoadingOutlined,
     DownOutlined,
     UploadOutlined,
+    CloseOutlined,
 } from "@ant-design/icons";
 import Image from 'next/image'
 import { Download, Share2, Sparkles, Trash } from "lucide-react";
@@ -41,12 +42,14 @@ import GenerateImageServices from "@/app/services/generate-image.service";
 import GalleryServices from "@/app/services/gellory.service";
 import Avatars from "@/public/images/Avatar.jpg";
 import type { ITFromGenerate } from "@/app/common";
-import { TPromptGuideType } from "@/app/common/prompt-guide.type";
+import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
+import PromptGuideServices from "@/app/services/prompt-guide.service";
 
 interface ImageChatProps {
     projectId: string;
     userId?: string;
     activeKey: "image" | "vdo" | "omnihuman";
+    promptGuideTypes?: TPromptGuideType[];
 }
 
 interface ChatMessage {
@@ -60,10 +63,11 @@ interface ChatMessage {
     status?: boolean;
 }
 
-const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
+const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey, promptGuideTypes = [] }) => {
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const notificationApi = notification.useNotification()[0];
+    const promptguideService = PromptGuideServices(axiosCore);
 
     // State
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -72,6 +76,7 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [page, setPage] = useState<number>(0);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const pageSize = 3;
 
     // Refs
@@ -314,7 +319,7 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
         onClick: () => handleRatioChange(ratio),
     }));
 
-    const imageCountOptions = Array.from({ length: 4 }, (_, i) => i + 1).map((count) => ({
+    const imageCountOptions = Array.from({ length: 10 }, (_, i) => i + 1).map((count) => ({
         label: `${count} image${count > 1 ? "s" : ""}`,
         key: String(count),
         onClick: () => {
@@ -323,11 +328,48 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
         },
     }));
 
+    async function onSetPromptText(id: number): Promise<void> {
+        const prompt = await promptguideService.findById(String(id));
+        const text = form.getFieldValue("text");
+        form.setFieldValue(
+            "text",
+            text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt
+        );
+    }
+
     // Initial Form Values - Moved to Form initialValues
+
+    const handleImageClick = (url: string) => {
+        setPreviewImage(url);
+    };
+
+    const closePreview = () => {
+        setPreviewImage(null);
+    };
 
     return (
         <div className="h-[calc(100vh-200px)]">
             {contextHolder}
+            {/* Custom Image Preview Modal */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={closePreview}
+                >
+                    <button
+                        className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+                        onClick={closePreview}
+                    >
+                        <CloseOutlined style={{ fontSize: '24px' }} />
+                    </button>
+                    <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
             <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
 
                 {/* Chat Area */}
@@ -336,6 +378,47 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
                     onScroll={handleScroll}
                     className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6 pb-40"
                 >
+                    {/* Empty State / Prompt Guides */}
+                    {!loading && messages.length === 0 && (
+                        <div className="text-white pt-10 px-5 flex-1 overflow-auto">
+                            <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedream 4.5`}</h1>
+                            <p className="text-gray-400 text-center mb-13">
+                                {`Kickstart your innovation process with our comprehensive selection of predefined prompts.`}
+                            </p>
+                            <div className="grid grid-cols-3 gap-8 max-w-6xl mx-auto">
+                                {promptGuideTypes.map((type) => (
+                                    <div key={type.id}>
+                                        <div className="flex items-center justify-center mb-3">
+                                            {/* <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                          <span className="text-2xl">💬</span>
+                        </div> */}
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-center mb-3">
+                                            {type.title}
+                                        </h3>
+                                        <div className="space-y-3 w-full">
+                                            {type.promptGuide?.map((item: TPromptGuide, index: number) => (
+                                                <Button
+                                                    htmlType="button" // Prevent form submission
+                                                    key={item.id || index}
+                                                    size="large"
+                                                    onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                                                    className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
+                                                >
+                                                    <span className="flex-1 text-left">
+                                                        {item.title}
+                                                    </span>
+                                                    <span className="ml-auto">→</span>
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                            </div>
+                        </div>
+                    )}
+
                     {/* Loading Spinner for Load More */}
                     {loading && hasMore && (
                         <div className="flex justify-center py-2">
@@ -375,7 +458,7 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
                                     <div className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? 'grid-cols-4' : 'grid-cols-4'}`}>
                                         {/* <Image.PreviewGroup> */}
                                         {msg.images.map((img, i) => (
-                                            <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                            <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer" onClick={() => handleImageClick(`/api/images/${encodeURIComponent(img)}`)}>
                                                 <Image
                                                     src={`/api/images/${encodeURIComponent(img)}`}
                                                     // className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
@@ -480,7 +563,9 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey }) => {
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && !e.shiftKey) {
                                                 e.preventDefault();
-                                                form.submit();
+                                                if (!submitting) {
+                                                    form.submit();
+                                                }
                                             }
                                         }}
                                     />

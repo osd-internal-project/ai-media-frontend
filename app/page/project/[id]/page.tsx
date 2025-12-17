@@ -83,7 +83,7 @@ const GenerateImagePage: FC = () => {
                 <div>{`Image Gen`}</div>
               </span>
             ),
-            children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} />,
+            children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />,
           },
           {
             forceRender: true,
