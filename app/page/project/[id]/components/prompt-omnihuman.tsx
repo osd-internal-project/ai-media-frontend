@@ -1,8 +1,11 @@
-import React, { useState, type FC, type ReactElement } from "react";
+import React, { useEffect, useState, type FC, type ReactElement } from "react";
 import {
   Button,
+  Card,
   Form,
   Input,
+  Space,
+  Tag,
   Upload,
   UploadFile,
   UploadProps,
@@ -13,7 +16,10 @@ import { Upload as UploadIcon, Mic, Sparkles } from "lucide-react";
 import type { RcFile } from "antd/es/upload";
 import OmnihumanServices from "@/app/services/omnihuman.service";
 import { axiosCore } from "@/app/lib/axios/axios";
-
+import OmnihumenTaskServices from "@/app/services/omnihumen-task.service";
+import { fetchData } from "next-auth/client/_utils";
+import { TOmnihumenTask } from "@/app/common/omnihumen.type";
+// import * as dayjs from "dayjs";
 export interface props {
   projectId?: string;
   userId?: string;
@@ -26,6 +32,7 @@ const PromptOmnihuman: FC<props> = ({
   shouldRefetch,
 }): ReactElement => {
   const omnihumanServices = OmnihumanServices(axiosCore);
+  const omnihumenTaskServices = OmnihumenTaskServices(axiosCore);
 
   const [api, contextHolders] = notification.useNotification();
 
@@ -35,7 +42,17 @@ const PromptOmnihuman: FC<props> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [avatarName, setAvatarName] = useState<string>("");
   const [promptText, setPromptText] = useState<string>("");
+  const [tasks, setTasks] = useState<TOmnihumenTask[]>([]);
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+  const fetchData = async () => {
+    if (projectId) {
+      const data = await omnihumenTaskServices.findByProjectId(projectId);
+      setTasks(data || []);
+    }
+  };
   const beforeUploadImage = (file: RcFile) => {
     const isImage = file.type.startsWith("image/");
     if (!isImage) {
@@ -305,7 +322,24 @@ const PromptOmnihuman: FC<props> = ({
         `}</style>
           </div>
         </div>
-        <div></div>
+        <div className="ml-2">
+          <div className="text-[24px] font-bold ">{`Task`}</div>
+          <div>
+            {tasks.map((task) => (
+              <Card size="small" key={task.id}>
+                <div>{task?.avatarName || task.uuid}</div>
+                <Space className=" flex justify-between">
+                  <Tag>
+                    {!task.status ? `panding` : `${task?.taskMessage || ""}`}
+                  </Tag>
+                  {/* <div className=" !text-[12px] text-gray-500">
+                    {dayjs(task.createdAt).format("DD/MM/YYYY HH:mm:ss")}
+                  </div> */}
+                </Space>
+              </Card>
+            ))}{" "}
+          </div>
+        </div>
       </div>
     </div>
   );
