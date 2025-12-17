@@ -24,8 +24,8 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { TPromptGuideType } from "@/app/common/prompt-guide.type";
 
 export interface props {
-  projectId?: string;
-  activeKey: "image" | "vdo" | "test";
+  projectId: string;
+  activeKey: "image" | "vdo" | "omnihuman";
   userId?: string;
   shouldRefetch?: boolean;
   promptGuideTypes: TPromptGuideType[];

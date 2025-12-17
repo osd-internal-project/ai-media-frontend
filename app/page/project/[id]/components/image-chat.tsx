@@ -46,7 +46,7 @@ import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 interface ImageChatProps {
     projectId: string;
     userId?: string;
-    activeKey: "image" | "vdo" | "test";
+    activeKey: "image" | "vdo" | "omnihuman";
 }
 
 interface ChatMessage {
