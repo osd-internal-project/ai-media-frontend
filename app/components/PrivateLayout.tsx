@@ -399,7 +399,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             ) : null}
           </div>
         </Sider>
-        <Layout className="flex-1 w-full h-full overflow-auto ">
+        <Layout className="flex-1 w-full h-full overflow-hidden">
           {groupName === "admin-user" ? (
             <PrivateNavigation
               user={

@@ -8,23 +8,29 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
-import PromptLibrary from "./components/prompt-library";
-import PromptActivity from "./components/prompt-activity";
 import { useSession } from "next-auth/react";
 import { Image, Video, Folder, Folders } from "lucide-react";
+import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
+import { TPromptGuideType } from "@/app/common/prompt-guide.type";
+import ImageChat from "./components/image-chat";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
+  const promptguideTypeService = PromptGuideTypeServices(axiosCore);
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState("1");
+  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "test">("image");
+  const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
+    []
+  );
   const { id } = params as { id: string };
 
   useEffect(() => {
     if (loadingData) {
       fecthdata();
+      masterdata();
     }
   }, [loadingData]);
 
@@ -44,7 +50,13 @@ const GenerateImagePage: FC = () => {
     }
   };
 
-  const onChangeTab = (key: string) => {
+  const masterdata = async () => {
+    const res = await promptguideTypeService.findAll();
+    setPromptGuideTypes(res || []);
+  };
+
+
+  const onChangeTab = (key: "image" | "vdo") => {
     setActiveKey(key);
   };
 
@@ -57,53 +69,49 @@ const GenerateImagePage: FC = () => {
         className="custom-tabs"
         type="card"
         activeKey={activeKey}
+        onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
-            forceRender: true,
-            key: "1",
+            key: "image",
             label: (
               <span className="flex justify-center gap-2">
                 <Image />
                 <div>{`Image Gen`}</div>
               </span>
             ),
-            children: <PromptGenerateImage key={`image-${activeKey}`} projectId={id} userId={session?.user?.id} />,
+            children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} />,
           },
           {
-            forceRender: true,
-            key: "2",
+            key: "vdo",
             label: (
               <span className="flex justify-center gap-2">
                 <Video />
                 <div>{`VDO Gen`}</div>
               </span>
             ),
-            children: <PromptGenerateVdo key={`vdo-${activeKey}`} projectId={id} userId={session?.user?.id} />,
-          },
-          {
-            forceRender: true,
-            key: "4",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folder />
-                <div>{`Library`}</div>
-              </span>
-            ),
-            children: <PromptLibrary key={`library-${activeKey}`} />,
-          },
-          {
-            forceRender: true,
-            key: "5",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folders />
-                <div>{`All Activity`}</div>
-              </span>
-            ),
-            children: <PromptActivity key={`activity-${activeKey}`} />,
-          },
+            children: <PromptGenerateVdo key={`vdo`} activeKey={activeKey} promptGuideTypes={promptGuideTypes} projectId={id} userId={session?.user?.id} />,
+          }
+          // {
+          //   key: "4",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folder />
+          //       <div>{`Library`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptLibrary key={`library-${activeKey}`} />,
+          // },
+          // {
+          //   key: "5",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folders />
+          //       <div>{`All Activity`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptActivity key={`activity-${activeKey}`} />,
+          // },
         ]}
-        onChange={onChangeTab}
       />
       <style>{`
         .custom-tabs .ant-tabs-nav {

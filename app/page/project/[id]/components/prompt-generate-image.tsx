@@ -46,23 +46,23 @@ import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 
 export interface props {
-  projectId?: string;
+  key: string;
+  activeKey: "image" | "vdo" | "test";
+  projectId: string;
   userId?: string;
   shouldRefetch?: boolean;
+  promptGuideTypes: TPromptGuideType[];
 }
 
 const PromptGenerateImage: FC<props> = ({
+  key,
   projectId,
+  activeKey,
   userId,
   shouldRefetch,
+  promptGuideTypes
 }): ReactElement => {
   const promptguideService = PromptGuideServices(axiosCore);
-  const promptguideTypeService = PromptGuideTypeServices(axiosCore);
-
-  // const [masterdataPromptGuide, setMasterdataPromptGuide] = useState<any[]>([]);
-  const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
-    []
-  );
   const [messageApi, contextHolder] = message.useMessage();
   const contentRef = useRef<HTMLDivElement>(null);
   const [formcreateImage] = Form.useForm();
@@ -73,54 +73,48 @@ const PromptGenerateImage: FC<props> = ({
   const [gethistory, setHistory] = useState<any[]>([]);
   const [api, contextHolders] = notification.useNotification();
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined; // สำหรับใช้ Clear Timeout
-
-    if (projectId && !submitting) {
-      // 🟢 แก้ไข: ใช้ setTimeout หน่วงเวลาเรียก fecthdata
-      timer = setTimeout(() => {
-        // ต้องเรียกใช้ fecthdata() ภายในฟังก์ชัน Callback
-        fecthdata();
-      }, 2000); // หน่วงเวลา 3 วินาที
-    }
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [projectId, submitting]);
+  // useEffect(() => {
+  //   let timer: NodeJS.Timeout | undefined;
+  //   if (projectId && !submitting) {
+  //     timer = setTimeout(() => {
+  //       fecthdata();
+  //     }, 2000);
+  //   }
+  //   return () => {
+  //     if (timer) {
+  //       clearTimeout(timer);
+  //     }
+  //   };
+  // }, [projectId, submitting]);
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && activeKey === "image") {
       fecthdata();
     }
-    masterdata();
-  }, [projectId]);
+  }, [projectId, activeKey]);
 
-  useEffect(() => {
-    if (shouldRefetch) {
-      fecthdata();
-    }
-  }, [shouldRefetch]);
+  // useEffect(() => {
+  //   if (shouldRefetch) {
+  //     fecthdata();
+  //   }
+  // }, [shouldRefetch]);
 
-  useEffect(() => {
-    if (contentRef.current) {
-      const timer = setTimeout(() => {
-        if (contentRef.current) {
-          contentRef.current.scrollTop = contentRef.current.scrollHeight;
-        }
-      }, 100);
+  // useEffect(() => {
+  //   if (contentRef.current) {
+  //     const timer = setTimeout(() => {
+  //       if (contentRef.current) {
+  //         contentRef.current.scrollTop = contentRef.current.scrollHeight;
+  //       }
+  //     }, 100);
 
-      return () => clearTimeout(timer);
-    }
-  }, [gethistory, loading]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [gethistory, loading]);
 
   const fecthdata = async () => {
     setLoading(true);
     try {
-      const response = await LogsServices(axiosCore).findById(
-        projectId as string
-      );
+      const response = await LogsServices(axiosCore).findById(projectId);
       const messages: any[] = [];
       response.forEach((item: any) => {
         messages.push({
@@ -149,18 +143,6 @@ const PromptGenerateImage: FC<props> = ({
       setLoading(false);
       console.error("Failed to fetch logs:", err);
     }
-  };
-
-  const masterdata = async () => {
-    // const response = await promptguideService.findAll();
-    // const grouped = response.reduce((acc: any, item) => {
-    //   const key = item.typeName || "Others";
-    //   if (!acc[key]) acc[key] = [];
-    //   acc[key].push(item);
-    //   return acc;
-    // }, {});
-    const res = await promptguideTypeService.findAll();
-    setPromptGuideTypes(res || []);
   };
   const onFinish = async (values: ITFromGenerate) => {
     setCurrentPrompt(values.text);
@@ -554,11 +536,10 @@ const PromptGenerateImage: FC<props> = ({
                   {gethistory.map((message, index) => (
                     <div
                       key={index}
-                      className={`flex gap-3 ${
-                        message.type === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
+                      className={`flex gap-3 ${message.type === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                        }`}
                     >
                       {/* Avatar AI */}
                       {message.type === "ai" && (
@@ -597,15 +578,14 @@ const PromptGenerateImage: FC<props> = ({
                           {/* Images */}
                           {message.images && message.images.length > 0 && (
                             <div
-                              className={`grid gap-4 w-full ${
-                                message.images.length === 1
-                                  ? "grid-cols-1 max-w-md"
-                                  : message.images.length === 2
+                              className={`grid gap-4 w-full ${message.images.length === 1
+                                ? "grid-cols-1 max-w-md"
+                                : message.images.length === 2
                                   ? "grid-cols-2 max-w-2xl"
                                   : message.images.length === 3
-                                  ? "grid-cols-3 max-w-3xl"
-                                  : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
-                              }`}
+                                    ? "grid-cols-3 max-w-3xl"
+                                    : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
+                                }`}
                             >
                               <Image.PreviewGroup>
                                 {message.images.map(
@@ -665,11 +645,10 @@ const PromptGenerateImage: FC<props> = ({
                                             className="p-2 !bg-transparent !hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
                                           >
                                             <LikeOutlined
-                                              className={`w-4 h-4 ${
-                                                message.status
-                                                  ? `!text-red-800`
-                                                  : `!text-gray-800`
-                                              }`}
+                                              className={`w-4 h-4 ${message.status
+                                                ? `!text-red-800`
+                                                : `!text-gray-800`
+                                                }`}
                                             />
                                           </Button>
                                         </div>
