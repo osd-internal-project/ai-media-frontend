@@ -16,6 +16,7 @@ import {
   Space,
   Dropdown,
   MenuProps,
+  Tag,
 } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
 import type { IProject } from "../common/project.type";
+import { EllipsisVertical } from "lucide-react";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -51,6 +53,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [openEdit, setOpenEdit] = useState(false);
   const [editForm] = Form.useForm();
   const [form] = Form.useForm();
+  const [modal, contextHolder] = Modal.useModal();
+
   const userServices = UserServices(axiosUser);
   const projectService = ProjectService(axiosCore);
   const [getdata, setData] = useState<TUser[]>([]);
@@ -130,6 +134,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
     if (action === "delete") {
       // router.push(`/page/project/${project.id}`);
+      modal.confirm({
+        title: "Delete Project",
+        content: "Are you sure you want to delete this project?",
+        onOk: () => {
+          projectService.update(project.id, { status: "deleted" });
+          setLoading(true);
+        },
+      });
     }
   };
   const content = (
@@ -187,6 +199,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         },
       }}
     >
+      {contextHolder}
       {open ? (
         <Modal
           title="Create Project"
@@ -333,7 +346,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               router.push(`/page/project/${project.id}`)
                             }
                           >
-                            {project.name}
+                            <Space>
+                              {project.name}{" "}
+                              {project.status === "deleted" && (
+                                <Tag color="red">Deleted</Tag>
+                              )}
+                            </Space>
                           </Button>
                           <Dropdown
                             menu={{
@@ -345,7 +363,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                           >
                             <Button
                               className="!h-auto flex items-center"
-                              icon={<DownOutlined />}
+                              icon={<EllipsisVertical size={16} />}
                             />
                           </Dropdown>
                         </Space.Compact>

@@ -26,7 +26,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    update: async (id: number, value: Partial<IProject>) => {
+    update: async (id: string, value: Partial<IProject>) => {
       return await axiosInstance
         .patch(`${baseUrl}/${id}`, value)
         .then((res) => {
