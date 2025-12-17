@@ -1,5 +1,13 @@
 import React, { useEffect, useState, type FC, type ReactElement } from "react";
-import { Image, ConfigProvider, Empty, Form, Pagination, notification, Button } from "antd";
+import {
+  Image,
+  ConfigProvider,
+  Empty,
+  Form,
+  Pagination,
+  notification,
+  Button,
+} from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
 import { Download } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -18,7 +26,10 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const pageSize = 20;
-  const [getData, setData] = useState<{ data: any[]; total: number }>({ data: [], total: 0 });
+  const [getData, setData] = useState<{ data: any[]; total: number }>({
+    data: [],
+    total: 0,
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [api, contextHolders] = notification.useNotification();
 
@@ -66,15 +77,25 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
           {getData.data.map((image, imgIndex) => {
             return (
-              <div key={imgIndex} className="relative group w-full h-[200px] text-center ">
+              <div
+                key={imgIndex}
+                className="relative group w-full h-[200px] text-center "
+              >
                 <div
                   className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
                   {image.typeGenerate === "vdo" ? (
                     <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
-                      <video controls className="w-full h-full object-cover" preload="metadata">
-                        <source src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`} type="video/mp4" />
+                      <video
+                        controls
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      >
+                        <source
+                          src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`}
+                          type="video/mp4"
+                        />
                         Your browser does not support the video tag.
                       </video>
                     </div>
@@ -100,7 +121,9 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
 
                     <button
                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                      onClick={() => handleOpenImage(image.imageUrl, image.typeGenerate)}
+                      onClick={() =>
+                        handleOpenImage(image.imageUrl, image.typeGenerate)
+                      }
                     >
                       <Download className="w-4 h-4 text-gray-800" />
                     </button>

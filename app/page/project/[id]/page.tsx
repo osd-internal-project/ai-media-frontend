@@ -9,10 +9,13 @@ import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folder, Folders } from "lucide-react";
+import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
+import PromptGenerateAvatar from "./components/prompt-omnihuman";
+import PromptLibrary from "./components/prompt-library";
+import PromptActivity from "./components/prompt-activity";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -21,7 +24,7 @@ const GenerateImagePage: FC = () => {
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "test">("image");
+  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">("image");
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
@@ -73,6 +76,7 @@ const GenerateImagePage: FC = () => {
         items={[
           {
             key: "image",
+            forceRender: true,
             label: (
               <span className="flex justify-center gap-2">
                 <Image />
@@ -82,35 +86,57 @@ const GenerateImagePage: FC = () => {
             children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} />,
           },
           {
-            key: "vdo",
+            forceRender: true,
+            key: "vdo-gen",
             label: (
               <span className="flex justify-center gap-2">
                 <Video />
                 <div>{`VDO Gen`}</div>
               </span>
             ),
-            children: <PromptGenerateVdo key={`vdo`} activeKey={activeKey} promptGuideTypes={promptGuideTypes} projectId={id} userId={session?.user?.id} />,
-          }
-          // {
-          //   key: "4",
-          //   label: (
-          //     <span className="flex justify-center gap-2">
-          //       <Folder />
-          //       <div>{`Library`}</div>
-          //     </span>
-          //   ),
-          //   children: <PromptLibrary key={`library-${activeKey}`} />,
-          // },
-          // {
-          //   key: "5",
-          //   label: (
-          //     <span className="flex justify-center gap-2">
-          //       <Folders />
-          //       <div>{`All Activity`}</div>
-          //     </span>
-          //   ),
-          //   children: <PromptActivity key={`activity-${activeKey}`} />,
-          // },
+            children: (
+              <PromptGenerateVdo key={`vdo-gen`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />
+            ),
+          },
+          {
+            forceRender: true,
+            key: "omnihuman",
+            label: (
+              <span className="flex justify-center gap-2">
+                <ContactRound />
+                <div>{`Omni human`}</div>
+              </span>
+            ),
+            children: (
+              <PromptGenerateAvatar
+                key={`avatar-${activeKey}`}
+                projectId={id}
+                userId={session?.user?.id}
+              />
+            ),
+          },
+          {
+            forceRender: true,
+            key: "library",
+            label: (
+              <span className="flex justify-center gap-2">
+                <Folder />
+                <div>{`Library`}</div>
+              </span>
+            ),
+            children: <PromptLibrary key={`library-${activeKey}`} />,
+          },
+          {
+            forceRender: true,
+            key: "activity",
+            label: (
+              <span className="flex justify-center gap-2">
+                <Folders />
+                <div>{`All Activity`}</div>
+              </span>
+            ),
+            children: <PromptActivity key={`activity-${activeKey}`} />,
+          },
         ]}
       />
       <style>{`
