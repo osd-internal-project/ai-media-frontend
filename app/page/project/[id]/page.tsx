@@ -8,10 +8,11 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
+import PromptGenerateAvatar from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folder, Folders } from "lucide-react";
+import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -19,7 +20,7 @@ const GenerateImagePage: FC = () => {
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState("1");
+  const [activeKey, setActiveKey] = useState("image-gen");
   const { id } = params as { id: string };
 
   useEffect(() => {
@@ -60,29 +61,58 @@ const GenerateImagePage: FC = () => {
         items={[
           {
             forceRender: true,
-            key: "1",
+            key: "image-gen",
             label: (
               <span className="flex justify-center gap-2">
                 <Image />
                 <div>{`Image Gen`}</div>
               </span>
             ),
-            children: <PromptGenerateImage key={`image-${activeKey}`} projectId={id} userId={session?.user?.id} />,
+            children: (
+              <PromptGenerateImage
+                key={`image-${activeKey}`}
+                projectId={id}
+                userId={session?.user?.id}
+              />
+            ),
           },
           {
             forceRender: true,
-            key: "2",
+            key: "vdo-gen",
             label: (
               <span className="flex justify-center gap-2">
                 <Video />
                 <div>{`VDO Gen`}</div>
               </span>
             ),
-            children: <PromptGenerateVdo key={`vdo-${activeKey}`} projectId={id} userId={session?.user?.id} />,
+            children: (
+              <PromptGenerateVdo
+                key={`vdo-${activeKey}`}
+                projectId={id}
+                userId={session?.user?.id}
+              />
+            ),
           },
           {
             forceRender: true,
-            key: "4",
+            key: "omnihuman",
+            label: (
+              <span className="flex justify-center gap-2">
+                <ContactRound />
+                <div>{`Omni human`}</div>
+              </span>
+            ),
+            children: (
+              <PromptGenerateAvatar
+                key={`avatar-${activeKey}`}
+                projectId={id}
+                userId={session?.user?.id}
+              />
+            ),
+          },
+          {
+            forceRender: true,
+            key: "library",
             label: (
               <span className="flex justify-center gap-2">
                 <Folder />
@@ -93,7 +123,7 @@ const GenerateImagePage: FC = () => {
           },
           {
             forceRender: true,
-            key: "5",
+            key: "activity",
             label: (
               <span className="flex justify-center gap-2">
                 <Folders />

@@ -435,16 +435,16 @@ const PromptGenerateImage: FC<props> = ({
             {gethistory.length === 0 && !submitting && !loading ? (
               <div className="text-white pt-10 px-5 flex-1 overflow-auto">
                 <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedream 4.5`}</h1>
-                <p className="text-gray-400 text-center mb-10">
+                <p className="text-gray-400 text-center mb-13">
                   {`Kickstart your innovation process with our comprehensive selection of predefined prompts.`}
                 </p>
                 <div className="grid grid-cols-3 gap-8 max-w-6xl mx-auto">
                   {promptGuideTypes.map((type) => (
                     <div key={type.id}>
                       <div className="flex items-center justify-center mb-3">
-                        <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                        {/* <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
                           <span className="text-2xl">💬</span>
-                        </div>
+                        </div> */}
                       </div>
                       <h3 className="text-xl font-semibold text-center mb-3">
                         {type.title}
