@@ -623,7 +623,7 @@ const VideoChat: FC<VideoChatProps> = ({
                     <Input.TextArea
                       placeholder="Describe the video you want to create"
                       autoSize={{ minRows: 2, maxRows: 5 }}
-                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !px-0 !text-base !resize-none !focus:ring-0"
+                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
