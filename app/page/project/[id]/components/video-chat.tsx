@@ -48,12 +48,58 @@ interface ChatMessage {
     id?: string;
     type: "user" | "ai";
     content?: string;
-    images?: string[]; // We'll store video URLs here for consistency
+    images?: { imageUrl: string; thumbnailUrl: string }[]; // We'll store video URLs here for consistency
     username?: string;
     time: string;
     taskId?: string;
     status?: boolean;
 }
+
+const VideoItem = ({ videoData, onDownloadVideo }: { videoData: { imageUrl: string; thumbnailUrl: string }, onDownloadVideo: (url: string) => void }) => {
+    const [active, setActive] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    return (
+        <div className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50">
+            {videoData && (
+                <>
+                    {!active && (
+                        <img
+                            src={videoData.thumbnailUrl ? `${videoData.thumbnailUrl}` : "http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251217181101-86t2v/thumb-1766047994944.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T085350Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c7bf15d949e530d2f062f26e1ce18bf84920b4ced1644314aec062441cfb893e"}
+                            loading="lazy"
+                            className="w-full h-full object-cover cursor-pointer"
+                            onMouseEnter={() => setActive(true)}
+                            alt="thumbnail"
+                        />
+                    )}
+
+                    {active && (
+                        <video
+                            ref={videoRef}
+                            src={`${videoData.imageUrl}`} // Or /api/vdo/${encodeURIComponent(videoData.imageUrl)}
+                            muted
+                            loop
+                            playsInline
+                            autoPlay
+                            className="w-full h-full object-cover"
+                            onMouseLeave={() => {
+                                setActive(false);
+                            }}
+                        />
+                    )}
+                </>
+            )}
+            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                <Button
+                    size="small"
+                    icon={<Download size={14} />}
+                    className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+                    onClick={() => onDownloadVideo(videoData.imageUrl)}
+                />
+            </div>
+        </div>
+    );
+};
 
 const VideoChat: FC<VideoChatProps> = ({ projectId, userId, activeKey, promptGuideTypes = [] }) => {
     const [form] = Form.useForm();
@@ -117,7 +163,7 @@ const VideoChat: FC<VideoChatProps> = ({ projectId, userId, activeKey, promptGui
                     formattedMessages.push({
                         type: "ai",
                         content: "AICave Generated Video",
-                        images: item.imageUrls, // reusing property for video URLs
+                        images: item.imageUrls,
                         username: "AI Generator",
                         time: item.createdAt,
                         taskId: item.taskId,
@@ -357,30 +403,12 @@ const VideoChat: FC<VideoChatProps> = ({ projectId, userId, activeKey, promptGui
                                 {/* Video Grid */}
                                 {msg.type === 'ai' && msg.images && msg.images.length > 0 && (
                                     <div className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                        {msg.images.map((videoUrl, i) => (
-                                            <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50">
-                                                {/* <VideoPlayer
-                                                    src={`/api/vdo/${encodeURIComponent(videoUrl)}`}
-                                                    className="w-full h-auto object-cover"
-                                                /> */}
-                                                <video src={`http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251216170127-j7557/f03d97d2-7936-4102-bb91-625fc1ecf21c.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T032340Z&X-Amz-Expires=900&X-Amz-SignedHeaders=host&X-Amz-Signature=48373c8ff696c7a600cee2fae426ca67d4a25777ebd6d988e7c1dd82ba2f6320`} />
-                                                {/* <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                    <Button
-                                                        size="small"
-                                                        icon={<Download size={14} />}
-                                                        className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                                                        onClick={() => onDownloadVideo(videoUrl)}
-                                                    />
-                                                </div> */}
-                                                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                                    <Button
-                                                        size="small"
-                                                        icon={<Download size={14} />}
-                                                        className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                                                        onClick={() => onDownloadVideo(videoUrl)}
-                                                    />
-                                                </div>
-                                            </div>
+                                        {msg.images.map((videoData, i) => (
+                                            <VideoItem
+                                                key={i}
+                                                videoData={videoData}
+                                                onDownloadVideo={onDownloadVideo}
+                                            />
                                         ))}
                                     </div>
                                 )}
