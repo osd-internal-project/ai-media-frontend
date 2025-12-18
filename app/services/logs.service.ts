@@ -29,9 +29,12 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findVdo: async (projectId: string) => {
+    findVdo: async (projectId: string, skip?: number, take?: number) => {
+      const params: any = {};
+      if (skip !== undefined) params.skip = skip;
+      if (take !== undefined) params.take = take;
       return await axiosInstance
-        .get(`${baseUrl}/find-vdo/${projectId}`)
+        .get(`${baseUrl}/find-vdo/${projectId}`, { params })
         .then((res) => {
           return res.data;
         })

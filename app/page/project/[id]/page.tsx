@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
-import { Tabs } from "antd";
+import { Button, Tabs } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -16,6 +16,7 @@ import ImageChat from "./components/image-chat";
 import PromptOmnihuman from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
+import VideoChat from "./components/video-chat";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -27,6 +28,9 @@ const GenerateImagePage: FC = () => {
   const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
     "image"
   );
+  const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
+    useState<boolean>(false);
+
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
@@ -73,6 +77,19 @@ const GenerateImagePage: FC = () => {
         className="custom-tabs"
         type="card"
         activeKey={activeKey}
+        tabBarExtraContent={
+          activeKey === "image" || activeKey === "vdo" ? (
+            <Button
+              type={promptGuideOpenStatus ? "primary" : "default"}
+              ghost={promptGuideOpenStatus}
+              onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+            >
+              Prompt Guild
+            </Button>
+          ) : (
+            ""
+          )
+        }
         onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
@@ -86,6 +103,7 @@ const GenerateImagePage: FC = () => {
             ),
             children: (
               <ImageChat
+                promptGuideOpenStatus={promptGuideOpenStatus}
                 key={`image`}
                 activeKey={activeKey}
                 projectId={id}
@@ -96,7 +114,7 @@ const GenerateImagePage: FC = () => {
           },
           {
             forceRender: true,
-            key: "vdo-gen",
+            key: "vdo",
             label: (
               <span className="flex justify-center gap-2">
                 <Video />
@@ -104,12 +122,13 @@ const GenerateImagePage: FC = () => {
               </span>
             ),
             children: (
-              <PromptGenerateVdo
-                key={`vdo-gen`}
+              <VideoChat
+                key={`vdo`}
                 activeKey={activeKey}
                 projectId={id}
                 userId={session?.user?.id}
                 promptGuideTypes={promptGuideTypes}
+                promptGuideOpenStatus={promptGuideOpenStatus}
               />
             ),
           },
@@ -130,28 +149,45 @@ const GenerateImagePage: FC = () => {
               />
             ),
           },
-          {
-            forceRender: true,
-            key: "library",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folder />
-                <div>{`Library`}</div>
-              </span>
-            ),
-            children: <PromptLibrary key={`library-${activeKey}`} />,
-          },
-          {
-            forceRender: true,
-            key: "activity",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folders />
-                <div>{`All Activity`}</div>
-              </span>
-            ),
-            children: <PromptActivity key={`activity-${activeKey}`} />,
-          },
+          // {
+          //   forceRender: true,
+          //   key: "omnihuman",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <ContactRound />
+          //       <div>{`Omni human`}</div>
+          //     </span>
+          //   ),
+          //   children: (
+          //     <PromptGenerateAvatar
+          //       key={`avatar-${activeKey}`}
+          //       projectId={id}
+          //       userId={session?.user?.id}
+          //     />
+          //   ),
+          // },
+          // {
+          //   forceRender: true,
+          //   key: "library",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folder />
+          //       <div>{`Library`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptLibrary key={`library-${activeKey}`} />,
+          // },
+          // {
+          //   forceRender: true,
+          //   key: "activity",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folders />
+          //       <div>{`All Activity`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptActivity key={`activity-${activeKey}`} />,
+          // },
         ]}
       />
       <style>{`
