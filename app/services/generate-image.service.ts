@@ -29,7 +29,7 @@ const GenerateImageServices = (axiosInstance: AxiosInstance) => {
 
     findById: async (id: string) => {
       return await axiosInstance
-        .get(`${baseUrl}/${id}`)
+        .get(`${baseUrl}/new/${id}`)
         .then((res) => {
           return res.data;
         })
