@@ -16,7 +16,6 @@ import type { RcFile } from "antd/es/upload";
 import OmnihumanServices from "@/app/services/omnihuman.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import OmnihumenTaskServices from "@/app/services/omnihumen-task.service";
-import { fetchData } from "next-auth/client/_utils";
 import { TOmnihumenTask } from "@/app/common/omnihumen.type";
 import { fallbackImage } from "@/app/utils/fallback";
 
@@ -50,16 +49,16 @@ const PromptOmnihuman: FC<props> = ({
   useEffect(() => {
     fetchData();
 
-    let interval: NodeJS.Timeout;
-    if (isActive) {
-      interval = setInterval(() => {
-        fetchData();
-      }, 60000);
-    }
+    // let interval: NodeJS.Timeout;
+    // if (isActive) {
+    //   interval = setInterval(() => {
+    //     fetchData();
+    //   }, 60000);
+    // }
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    // return () => {
+    //   if (interval) clearInterval(interval);
+    // };
   }, [isActive]);
   const fetchData = async () => {
     if (projectId) {

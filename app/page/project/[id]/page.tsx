@@ -132,24 +132,24 @@ const GenerateImagePage: FC = () => {
               />
             ),
           },
-          {
-            forceRender: true,
-            key: "omnihuman",
-            label: (
-              <span className="flex justify-center gap-2">
-                <ContactRound />
-                <div>{`Omni human`}</div>
-              </span>
-            ),
-            children: (
-              <PromptOmnihuman
-                key={`avatar-${activeKey}`}
-                projectId={id}
-                token={session?.user?.id}
-                isActive={activeKey === "omnihuman"}
-              />
-            ),
-          },
+          // {
+          //   forceRender: true,
+          //   key: "omnihuman",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <ContactRound />
+          //       <div>{`Omni human`}</div>
+          //     </span>
+          //   ),
+          //   children: (
+          //     <PromptOmnihuman
+          //       key={`avatar-${activeKey}`}
+          //       projectId={id}
+          //       token={session?.user?.id}
+          //       isActive={activeKey === "omnihuman"}
+          //     />
+          //   ),
+          // },
           // {
           //   forceRender: true,
           //   key: "omnihuman",
