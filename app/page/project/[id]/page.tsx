@@ -16,6 +16,7 @@ import ImageChat from "./components/image-chat";
 import PromptGenerateAvatar from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
+import VideoChat from "./components/video-chat";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -87,7 +88,7 @@ const GenerateImagePage: FC = () => {
           },
           {
             forceRender: true,
-            key: "vdo-gen",
+            key: "vdo",
             label: (
               <span className="flex justify-center gap-2">
                 <Video />
@@ -95,48 +96,48 @@ const GenerateImagePage: FC = () => {
               </span>
             ),
             children: (
-              <PromptGenerateVdo key={`vdo-gen`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />
+              <VideoChat key={`vdo`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />
             ),
           },
-          {
-            forceRender: true,
-            key: "omnihuman",
-            label: (
-              <span className="flex justify-center gap-2">
-                <ContactRound />
-                <div>{`Omni human`}</div>
-              </span>
-            ),
-            children: (
-              <PromptGenerateAvatar
-                key={`avatar-${activeKey}`}
-                projectId={id}
-                userId={session?.user?.id}
-              />
-            ),
-          },
-          {
-            forceRender: true,
-            key: "library",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folder />
-                <div>{`Library`}</div>
-              </span>
-            ),
-            children: <PromptLibrary key={`library-${activeKey}`} />,
-          },
-          {
-            forceRender: true,
-            key: "activity",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folders />
-                <div>{`All Activity`}</div>
-              </span>
-            ),
-            children: <PromptActivity key={`activity-${activeKey}`} />,
-          },
+          // {
+          //   forceRender: true,
+          //   key: "omnihuman",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <ContactRound />
+          //       <div>{`Omni human`}</div>
+          //     </span>
+          //   ),
+          //   children: (
+          //     <PromptGenerateAvatar
+          //       key={`avatar-${activeKey}`}
+          //       projectId={id}
+          //       userId={session?.user?.id}
+          //     />
+          //   ),
+          // },
+          // {
+          //   forceRender: true,
+          //   key: "library",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folder />
+          //       <div>{`Library`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptLibrary key={`library-${activeKey}`} />,
+          // },
+          // {
+          //   forceRender: true,
+          //   key: "activity",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folders />
+          //       <div>{`All Activity`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptActivity key={`activity-${activeKey}`} />,
+          // },
         ]}
       />
       <style>{`

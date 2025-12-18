@@ -106,8 +106,8 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey, promptGui
 
                 // Process response into ChatMessage format
                 const formattedMessages: ChatMessage[] = [];
-                // Process Oldest -> Newest (Backend returns ASC)
-                const itemsToProcess = [...response];
+                // Process Oldest -> Newest (Backend returns DESC, so we reverse)
+                const itemsToProcess = [...response].reverse();
 
                 itemsToProcess.forEach((item: any) => {
                     // User Message
@@ -455,7 +455,7 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey, promptGui
 
                                 {/* Images Grid (AI Only) */}
                                 {msg.type === 'ai' && msg.images && msg.images.length > 0 && (
-                                    <div className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? 'grid-cols-4' : 'grid-cols-4'}`}>
+                                    <div className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? 'grid-cols-3' : 'grid-cols-3'}`}>
                                         {/* <Image.PreviewGroup> */}
                                         {msg.images.map((img, i) => (
                                             <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer" onClick={() => handleImageClick(`/api/images/${encodeURIComponent(img)}`)}>
@@ -463,7 +463,7 @@ const ImageChat: FC<ImageChatProps> = ({ projectId, userId, activeKey, promptGui
                                                     src={`/api/images/${encodeURIComponent(img)}`}
                                                     // className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
                                                     alt="Generated"
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    // sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                                     width={500}
                                                     height={500}
                                                     loading="lazy"
