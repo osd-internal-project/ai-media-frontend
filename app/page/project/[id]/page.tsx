@@ -166,17 +166,17 @@ const GenerateImagePage: FC = () => {
           //     />
           //   ),
           // },
-          {
-            forceRender: true,
-            key: "library",
-            label: (
-              <span className="flex justify-center gap-2">
-                <Folder />
-                <div>{`Library`}</div>
-              </span>
-            ),
-            children: <PromptLibrary key={`library-${activeKey}`} />,
-          },
+          // {
+          //   forceRender: true,
+          //   key: "library",
+          //   label: (
+          //     <span className="flex justify-center gap-2">
+          //       <Folder />
+          //       <div>{`Library`}</div>
+          //     </span>
+          //   ),
+          //   children: <PromptLibrary key={`library-${activeKey}`} />,
+          // },
           {
             forceRender: true,
             key: "activity",
