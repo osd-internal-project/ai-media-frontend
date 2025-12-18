@@ -291,7 +291,7 @@ const ImageChat: FC<ImageChatProps> = ({
     setSubmitting(true);
     try {
       let payload = { ...values, projectId, userId };
-
+      console.log(files);
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
@@ -698,7 +698,36 @@ const ImageChat: FC<ImageChatProps> = ({
                       }}
                     />
                   </Form.Item>
-
+                  {/* Upload List Preview (Custom) */}
+                  {files.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {files.map((file: UploadFile) => (
+                        <div
+                          key={file.uid}
+                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
+                        >
+                          <img
+                            src={
+                              file.thumbUrl ||
+                              (file.originFileObj
+                                ? URL.createObjectURL(file.originFileObj)
+                                : "")
+                            }
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <div
+                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                            onClick={() => {
+                              setFiles(files.filter((f) => f.uid !== file.uid));
+                            }}
+                          >
+                            <Trash size={12} className="text-white" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {/* Toolbar */}
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-2">
@@ -711,12 +740,15 @@ const ImageChat: FC<ImageChatProps> = ({
                       >
                         <Upload
                           listType="picture"
-                          fileList={files}
-                          // onChange={handleChangeFiles}
+                          // onChange={handleUploadChange}
                           // beforeUpload={beforeUploadFiles}
+
+                          fileList={files}
+                          onChange={handleUploadChange}
+                          beforeUpload={beforeUpload}
                           multiple={true}
-                          maxCount={4}
-                          showUploadList={true}
+                          maxCount={2}
+                          showUploadList={false}
                           disabled={submitting}
                           itemRender={(
                             _originNode,
@@ -888,37 +920,11 @@ const ImageChat: FC<ImageChatProps> = ({
                       <SendOutlined className="text-lg" />
                     </Button>
                   </div>
-
-                  {/* Upload List Preview (Custom) */}
-                  {files.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {files.map((file) => (
-                        <div
-                          key={file.uid}
-                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
-                        >
-                          <img
-                            src={file.thumbUrl}
-                            className="w-full h-full object-cover"
-                            alt="preview"
-                          />
-                          <div
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={() => {
-                              setFiles(files.filter((f) => f.uid !== file.uid));
-                            }}
-                          >
-                            <Trash size={12} className="text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </Form>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
-              AI can make mistakes. Please check the generated images.
+              AI can make mistakes. Please check the generated images.{" "}
             </div>
           </div>
         </div>

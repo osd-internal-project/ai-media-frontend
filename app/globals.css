@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 * {
-  font-family: "Prompt", sans-serif !important;
+  font-family: 'Prompt', sans-serif !important;
 }
 
 .ant-select-selector {
@@ -49,4 +49,17 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
   /* Chrome/Safari */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
 }

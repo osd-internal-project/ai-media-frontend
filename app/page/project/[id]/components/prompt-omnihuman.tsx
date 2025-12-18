@@ -9,7 +9,6 @@ import {
   Upload,
   UploadFile,
   UploadProps,
-  message,
   notification,
 } from "antd";
 import { Upload as UploadIcon, Mic, Sparkles } from "lucide-react";
@@ -19,22 +18,26 @@ import { axiosCore } from "@/app/lib/axios/axios";
 import OmnihumenTaskServices from "@/app/services/omnihumen-task.service";
 import { fetchData } from "next-auth/client/_utils";
 import { TOmnihumenTask } from "@/app/common/omnihumen.type";
+import { fallbackImage } from "@/app/utils/fallback";
+
 // import * as dayjs from "dayjs";
 export interface props {
   projectId?: string;
   token?: string;
   shouldRefetch?: boolean;
+  isActive?: boolean;
 }
 
 const PromptOmnihuman: FC<props> = ({
   projectId,
   token,
   shouldRefetch,
+  isActive,
 }): ReactElement => {
   const omnihumanServices = OmnihumanServices(axiosCore);
   const omnihumenTaskServices = OmnihumenTaskServices(axiosCore);
-
   const [api, contextHolders] = notification.useNotification();
+  // const [api, contextHolders] = notification.useNotification();
 
   const [formAvatar] = Form.useForm();
   const [imageFile, setImageFile] = useState<UploadFile[]>([]);
@@ -46,7 +49,18 @@ const PromptOmnihuman: FC<props> = ({
 
   useEffect(() => {
     fetchData();
-  }, []);
+
+    let interval: NodeJS.Timeout;
+    if (isActive) {
+      interval = setInterval(() => {
+        fetchData();
+      }, 60000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive]);
   const fetchData = async () => {
     if (projectId) {
       const data = await omnihumenTaskServices.findByProjectId(projectId);
@@ -56,12 +70,12 @@ const PromptOmnihuman: FC<props> = ({
   const beforeUploadImage = (file: RcFile) => {
     const isImage = file.type.startsWith("image/");
     if (!isImage) {
-      message.error("You can only upload image files!");
+      api.error({ message: "You can only upload image files!" });
       return false;
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error("Image must be smaller than 5MB!");
+      api.error({ message: "Image must be smaller than 5MB!" });
       return false;
     }
     return false; // Prevent auto upload
@@ -71,14 +85,14 @@ const PromptOmnihuman: FC<props> = ({
     const isAudio =
       file.type.startsWith("audio/") || file.name.endsWith(".mp3");
     if (!isAudio) {
-      message.error("You can only upload audio files!");
+      api.error({ message: "You can only upload audio files!" });
       return false;
     }
     const isLt35S = file.size / 1024 / 1024 < 10; // Approximate 35 seconds
     if (!isLt35S) {
-      message.error(
-        "Audio must be smaller than 10MB (approximately 35 seconds)!"
-      );
+      api.error({
+        message: "Audio must be smaller than 10MB (approximately 35 seconds)!",
+      });
       return false;
     }
     return false; // Prevent auto upload
@@ -116,21 +130,22 @@ const PromptOmnihuman: FC<props> = ({
       if (audioFile[0]?.originFileObj) {
         formData.append("audio", audioFile[0].originFileObj);
       }
-
-      await omnihumanServices.create(formData);
-
-      message.success("Avatar created successfully!");
-
-      // Reset form
-      // formAvatar.resetFields();
-      // setImageFile([]);
-      // setAudioFile([]);
-      // setAvatarName("");
-      // setPromptText("");
+      const res = await omnihumanServices.create(formData);
+      console.log(res);
+      if (res) {
+        await fetchData();
+        setSubmitting(false);
+        //  Reset form
+        formAvatar.resetFields();
+        setImageFile([]);
+        setAudioFile([]);
+        setAvatarName("");
+        setPromptText("");
+        setSubmitting(false);
+      }
     } catch (error) {
       console.error(error);
-      message.error("Failed to create avatar");
-    } finally {
+      api.error({ message: "Failed to create avatar" });
       setSubmitting(false);
     }
   };
@@ -138,6 +153,7 @@ const PromptOmnihuman: FC<props> = ({
   return (
     <div className="p-4 rounded-lg mb-4">
       {contextHolders}
+
       <div className="grid sm:grid-cols-2 md:grid-cols-5">
         <div className="gap-4 md:col-span-4 sm:col-span-2">
           <div className="w-full">
@@ -323,25 +339,53 @@ const PromptOmnihuman: FC<props> = ({
           </div>
         </div>
         <div className="ml-2">
-          <div className="text-[24px] font-bold ">{`Task`}</div>
-          <div className="h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="text-[24px] font-bold ">{`Task`}</div>{" "}
+          {/* <Button onClick={() => message.success({ message: "success" })}>
+            11
+          </Button> */}
+          <div className="h-[calc(100vh-300px)]  overflow-y-auto">
             {tasks.map((task) => (
-              <Card size="small" key={task.id}>
-                <div>{task?.avatarName || task.uuid}</div>
-                <Space className=" flex justify-between">
-                  <Tag>
-                    {task?.filePath
-                      ? "Completed"
-                      : !task.status
-                      ? `Panding`
-                      : `${task?.taskMessage || ""}`}
-                  </Tag>
-                  {/* <div className=" !text-[12px] text-gray-500">
+              <Card size="small" key={task.id} className=" space-y-2 !mb-2 ">
+                <div className=" flex justify-between">
+                  <div className="  mb-2">{task?.avatarName || task.uuid}</div>
+                  <Space className=" flex justify-between">
+                    <Tag
+                      color={
+                        task?.filePath
+                          ? "green"
+                          : !task.status
+                          ? `blue`
+                          : `${"red"}`
+                      }
+                    >
+                      {task?.filePath
+                        ? "Completed"
+                        : !task.status
+                        ? `Panding`
+                        : `${task?.taskMessage || ""}`}
+                    </Tag>
+                    {/* <div className=" !text-[12px] text-gray-500">
                     {dayjs(task.createdAt).format("DD/MM/YYYY HH:mm:ss")}
                   </div> */}
-                </Space>
+                  </Space>
+                </div>{" "}
+                {task?.filePath && (
+                  <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
+                    <video
+                      controls
+                      className="w-full h-full object-cover"
+                      preload="metadata"
+                    >
+                      <source
+                        src={`/api/vdo/${encodeURIComponent(task?.filePath)}`}
+                        type="video/mp4"
+                      />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                )}
               </Card>
-            ))}{" "}
+            ))}
           </div>
         </div>
       </div>
