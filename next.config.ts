@@ -1,3 +1,42 @@
+const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  env: {
+    NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
+    VERSION: "2.0.0",
+    AUTH_BACKEND_URL: "https://www.aicave.ai/public/api/user",
+    NEXT_PUBLIC_API_BASE_URL_REPORT: "https://www.aicave.ai/public/api/report",
+    NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/core",
+    NEXTAUTH_URL: "https://www.aicave.ai/auth",
+    KEYCLOAK_CLIENT_ID: "eportal-client-id",
+    KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
+    KEYCLOAK_ISSUER: "https://www.aicave.ai/auth/realms/eportal",
+  },
+  webpack: (config: any) => {
+    config.externals = [...config.externals, "jsdom"];
+    config.module.rules.push({
+      test: /\.node/,
+      use: "raw-loader",
+    });
+    return config;
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/images/:imageName",
+        destination: "https://www.aicave.ai/public/api/core/public/image-minio/:imageName",
+      },
+      {
+        source: "/api/vdo/:vdoName",
+        destination: "https://www.aicave.ai/public/api/core/public/vdo-minio/:vdoName",
+      },
+    ];
+  },
+  reactStrictMode: false,
+  output: "standalone",
+};
+
 // const nextConfig = {
 //   eslint: {
 //     ignoreDuringBuilds: true,
@@ -5,12 +44,12 @@
 //   env: {
 //     NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
 //     VERSION: "2.0.0",
-//     AUTH_BACKEND_URL: "http://192.168.31.181:8972/api",
-//     NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:8973/api",
-//     NEXT_PUBLIC_API_BASE_URL_CORE: "http://192.168.31.181:8971/api",
-//     NEXTAUTH_URL: "http://192.168.31.181:9011",
-//     KEYCLOAK_CLIENT_ID: "eportal-client-id",
-//     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
+//     AUTH_BACKEND_URL: "http://localhost:4000/api",
+//     NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:4001/api",
+//     NEXT_PUBLIC_API_BASE_URL_CORE: "http://localhost:4002/api",
+//     NEXTAUTH_URL: "http://localhost:3000",
+//     KEYCLOAK_CLIENT_ID: "eportal-client-local",
+//     KEYCLOAK_CLIENT_SECRET: "l0lFk6yUWMDGfHEb0cnq0PSUJvXPT23s",
 //     KEYCLOAK_ISSUER: "http://192.168.31.181:9000/realms/eportal",
 //   },
 //   webpack: (config: any) => {
@@ -21,64 +60,19 @@
 //     });
 //     return config;
 //   },
+//   reactStrictMode: false,
+//   output: "standalone",
 //   async rewrites() {
 //     return [
 //       {
 //         source: "/api/images/:imageName",
-//         destination: "http://192.168.31.181:8971/api/public/image-minio/:imageName",
+//         destination: "http://localhost:4002/api/public/image-minio/:imageName",
 //       },
 //       {
 //         source: "/api/vdo/:vdoName",
-//         destination: "http://192.168.31.181:8971/api/public/vdo-minio/:vdoName",
+//         destination: "http://localhost:4002/api/public/vdo-minio/:vdoName",
 //       },
 //     ];
 //   },
-//   reactStrictMode: false,
-//   output: "standalone",
-//   images: {
-//     unoptimized: true,
-//   },
 // };
-
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  env: {
-    NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
-    VERSION: "2.0.0",
-    AUTH_BACKEND_URL: "http://localhost:4000/api",
-    NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:4001/api",
-    NEXT_PUBLIC_API_BASE_URL_CORE: "http://localhost:4002/api",
-    NEXTAUTH_URL: "http://localhost:3000",
-    KEYCLOAK_CLIENT_ID: "eportal-client-local",
-    KEYCLOAK_CLIENT_SECRET: "l0lFk6yUWMDGfHEb0cnq0PSUJvXPT23s",
-    KEYCLOAK_ISSUER: "http://192.168.31.181:9000/realms/eportal",
-  },
-  webpack: (config: any) => {
-    config.externals = [...config.externals, "jsdom"];
-    config.module.rules.push({
-      test: /\.node/,
-      use: "raw-loader",
-    });
-    return config;
-  },
-  reactStrictMode: false,
-  output: "standalone",
-  // images: {
-  //   unoptimized: true,
-  // },
-  async rewrites() {
-    return [
-      {
-        source: "/api/images/:imageName",
-        destination: "http://localhost:4002/api/public/image-minio/:imageName",
-      },
-      {
-        source: "/api/vdo/:vdoName",
-        destination: "http://localhost:4002/api/public/vdo-minio/:vdoName",
-      },
-    ];
-  },
-};
 module.exports = nextConfig;
