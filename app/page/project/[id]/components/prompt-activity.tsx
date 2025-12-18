@@ -7,6 +7,7 @@ import {
   Pagination,
   notification,
   Button,
+  message,
 } from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
 import { Download } from "lucide-react";
@@ -14,12 +15,14 @@ import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
 import GenerateImageServices from "@/app/services/generate-image.service";
+import VideoItem from "./video-player";
 
 export interface props {
   shouldRefetch?: boolean;
+  activeKey: string;
 }
 
-const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
+const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement => {
   const params = useParams();
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
@@ -38,13 +41,13 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
   };
 
   useEffect(() => {
-    if (loading) {
+    if (activeKey === "activity" && loading) {
       fectData();
     }
   }, [loading, page]);
 
   useEffect(() => {
-    if (shouldRefetch) {
+    if (activeKey === "activity" && shouldRefetch) {
       fectData();
     }
   }, [shouldRefetch]);
@@ -53,7 +56,6 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
     const id = params.id as string;
     const res = await galleryservices.findById(id, page, pageSize);
     setTotal(res.total);
-    console.log(res.data)
     setData({ data: res.data, total: res.total });
     setLoading(false);
   };
@@ -71,6 +73,23 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  const onDownloadVideo = async (videoName: string) => {
+    try {
+      // Assuming downloadImage works for files generally or we need a similar one for video
+      const res = await GenerateImageServices(axiosCore).downloadImage(videoName);
+      const blob = new Blob([res], { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = videoName.split('/').pop() || 'video.mp4';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      message.error('Download failed');
+    }
+  };
+
   return (
     <div className="p-4 rounded-lg mb-4">
       {contextHolders}
@@ -83,7 +102,7 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                 className="relative group w-full h-[200px] text-center "
               >
                 <div
-                  className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
+                  className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
                   {/* <img
@@ -107,48 +126,49 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                 />
             )} */}
                   {image.typeGenerate === "vdo" ? (
-                    <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
-                      {/* <video
-                        controls
-                        className="w-full h-full object-cover"
-                        preload="metadata"
-                      >
-                        <source
-                          src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`}
-                          type="video/mp4"
-                        />
-                        Your browser does not support the video tag.
-                      </video> */}
-                      <video
-                        // ref={videoRef}
-                        src={image.imageUrl}
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                      // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                      />
-                    </div>
+                    <VideoItem key={imgIndex} videoData={image} onDownloadVideo={onDownloadVideo} />
+                    // <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
+                    //   {/* <video
+                    //     controls
+                    //     className="w-full h-full object-cover"
+                    //     preload="metadata"
+                    //   >
+                    //     <source
+                    //       src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`}
+                    //       type="video/mp4"
+                    //     />
+                    //     Your browser does not support the video tag.
+                    //   </video> */}
+                    //   <video
+                    //     // ref={videoRef}
+                    //     src={image.imageUrl}
+                    //     muted
+                    //     loop
+                    //     playsInline
+                    //     preload="metadata"
+                    //   // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                    //   />
+                    // </div>
                   ) : (
-                    <Image
-                      preview={false}
-                      height={"100%"}
-                      fallback={fallbackImage}
+                    // <Image
+                    //   preview={false}
+                    //   height={"100%"}
+                    //   fallback={fallbackImage}
+                    //   // src={image.imageUrl}
+                    //   src={`/api/images/${encodeURIComponent(image.imageUrl)}`}
+                    //   className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
+                    //   alt={`AI Generated Image ${imgIndex + 1}`}
+                    // />
+                    <img
                       src={image.imageUrl}
-                      className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                      alt={`AI Generated Image ${imgIndex + 1}`}
+                      loading='lazy'
+                      alt='Video thumbnail'
                     />
                   )}
 
                   <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {/* <Popover placement="topRight" content={image.prompt}>
-                      <button className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer">
-                        <Share2 className="w-4 h-4 text-gray-800" />
-                      </button>
-                    </Popover> */}
-
                     <button
                       className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
                       onClick={() =>

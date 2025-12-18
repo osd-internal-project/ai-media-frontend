@@ -59,7 +59,7 @@ interface ChatMessage {
   id?: string;
   type: "user" | "ai";
   content?: string;
-  images?: string[];
+  images?: { imageUrl: string }[];
   username?: string;
   time: string;
   taskId?: string;
@@ -291,7 +291,6 @@ const ImageChat: FC<ImageChatProps> = ({
     setSubmitting(true);
     try {
       let payload = { ...values, projectId, userId };
-      console.log(files);
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
@@ -396,9 +395,8 @@ const ImageChat: FC<ImageChatProps> = ({
       }
     >
       <div
-        className={`h-[calc(100vh-200px)] ${
-          promptGuideOpenStatus ? "col-span-3" : ""
-        }`}
+        className={`h-[calc(100vh-200px)] ${promptGuideOpenStatus ? "col-span-3" : ""
+          }`}
       >
         {contextHolder}
         {/* Custom Image Preview Modal */}
@@ -484,9 +482,8 @@ const ImageChat: FC<ImageChatProps> = ({
             {messages.map((msg, index) => (
               <div
                 key={`${msg.taskId}-${index}`}
-                className={`flex gap-4 ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-4 ${msg.type === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 {/* AI Avatar */}
                 {msg.type === "ai" && (
@@ -498,9 +495,8 @@ const ImageChat: FC<ImageChatProps> = ({
                 )}
 
                 <div
-                  className={`flex flex-col max-w-[80%] ${
-                    msg.type === "user" ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col max-w-[80%] ${msg.type === "user" ? "items-end" : "items-start"
+                    }`}
                 >
                   {/* Header Info */}
                   <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
@@ -518,10 +514,9 @@ const ImageChat: FC<ImageChatProps> = ({
                   {msg.content && (
                     <div
                       className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-md
-                        ${
-                          msg.type === "user"
-                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                        ${msg.type === "user"
+                          ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
+                          : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
                         }`}
                     >
                       {msg.content}
@@ -531,9 +526,8 @@ const ImageChat: FC<ImageChatProps> = ({
                   {/* Images Grid (AI Only) */}
                   {msg.type === "ai" && msg.images && msg.images.length > 0 && (
                     <div
-                      className={`grid gap-3 mt-3 w-full ${
-                        msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
-                      }`}
+                      className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
+                        }`}
                     >
                       {/* <Image.PreviewGroup> */}
                       {msg.images.map((img, i) => (
@@ -541,20 +535,21 @@ const ImageChat: FC<ImageChatProps> = ({
                           key={i}
                           className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
                           onClick={() =>
-                            handleImageClick(
-                              `/api/images/${encodeURIComponent(img)}`
-                            )
+                            handleImageClick(img.imageUrl)
                           }
                         >
-                          <Image
+                          {/* <Image
                             src={`/api/images/${encodeURIComponent(img)}`}
-                            // className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
                             alt="Generated"
-                            // sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             width={500}
                             height={500}
                             loading="lazy"
                             placeholder="empty"
+                          /> */}
+                          <img
+                            src={img.imageUrl}
+                            loading='lazy'
+                            alt='Video thumbnail'
                           />
                           {/* Actions Overlay */}
                           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -562,7 +557,7 @@ const ImageChat: FC<ImageChatProps> = ({
                               size="small"
                               icon={<Download size={14} />}
                               className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                              onClick={() => onDownloadImage(img)}
+                              onClick={() => onDownloadImage(img.imageUrl)}
                             />
                             {/* Simple Share for now - could be enhanced */}
                             <Button
@@ -578,7 +573,7 @@ const ImageChat: FC<ImageChatProps> = ({
                               onClick={() =>
                                 onShareImage(
                                   msg.taskId!,
-                                  img,
+                                  img.imageUrl,
                                   msg.status || false
                                 )
                               }
@@ -930,9 +925,8 @@ const ImageChat: FC<ImageChatProps> = ({
         </div>
       </div>{" "}
       <div
-        className={`${
-          promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
-        }`}
+        className={`${promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
+          }`}
       >
         <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
           <div className="p-4 ">

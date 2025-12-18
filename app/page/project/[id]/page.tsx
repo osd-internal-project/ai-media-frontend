@@ -187,7 +187,7 @@ const GenerateImagePage: FC = () => {
                 <div>{`All Activity`}</div>
               </span>
             ),
-            children: <PromptActivity key={`activity-${activeKey}`} />,
+            children: <PromptActivity activeKey={activeKey} key={`activity-${activeKey}`} />,
           },
         ]}
       />
