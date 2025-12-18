@@ -60,7 +60,7 @@ const PromptGenerateImage: FC<props> = ({
   activeKey,
   userId,
   shouldRefetch,
-  promptGuideTypes
+  promptGuideTypes,
 }): ReactElement => {
   const promptguideService = PromptGuideServices(axiosCore);
   const [messageApi, contextHolder] = message.useMessage();
@@ -536,10 +536,11 @@ const PromptGenerateImage: FC<props> = ({
                   {gethistory.map((message, index) => (
                     <div
                       key={index}
-                      className={`flex gap-3 ${message.type === "user"
-                        ? "justify-end"
-                        : "justify-start"
-                        }`}
+                      className={`flex gap-3 ${
+                        message.type === "user"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
                     >
                       {/* Avatar AI */}
                       {message.type === "ai" && (
@@ -578,14 +579,15 @@ const PromptGenerateImage: FC<props> = ({
                           {/* Images */}
                           {message.images && message.images.length > 0 && (
                             <div
-                              className={`grid gap-4 w-full ${message.images.length === 1
-                                ? "grid-cols-1 max-w-md"
-                                : message.images.length === 2
+                              className={`grid gap-4 w-full ${
+                                message.images.length === 1
+                                  ? "grid-cols-1 max-w-md"
+                                  : message.images.length === 2
                                   ? "grid-cols-2 max-w-2xl"
                                   : message.images.length === 3
-                                    ? "grid-cols-3 max-w-3xl"
-                                    : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
-                                }`}
+                                  ? "grid-cols-3 max-w-3xl"
+                                  : "grid-cols-2 lg:grid-cols-4 max-w-4xl"
+                              }`}
                             >
                               <Image.PreviewGroup>
                                 {message.images.map(
@@ -645,10 +647,11 @@ const PromptGenerateImage: FC<props> = ({
                                             className="p-2 !bg-transparent !hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110"
                                           >
                                             <LikeOutlined
-                                              className={`w-4 h-4 ${message.status
-                                                ? `!text-red-800`
-                                                : `!text-gray-800`
-                                                }`}
+                                              className={`w-4 h-4 ${
+                                                message.status
+                                                  ? `!text-red-800`
+                                                  : `!text-gray-800`
+                                              }`}
                                             />
                                           </Button>
                                         </div>

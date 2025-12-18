@@ -46,6 +46,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         content: "Update prompt guide successfully",
       });
     }
+    fetchPromptGuideTypes();
   };
 
   const tabItems = [

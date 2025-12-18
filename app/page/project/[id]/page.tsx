@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
-import { Tabs } from "antd";
+import { Button, Tabs } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -13,7 +13,7 @@ import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
-import PromptGenerateAvatar from "./components/prompt-omnihuman";
+import PromptOmnihuman from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import VideoChat from "./components/video-chat";
@@ -25,7 +25,12 @@ const GenerateImagePage: FC = () => {
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">("image");
+  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
+    "image"
+  );
+  const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
+    useState<boolean>(false);
+
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
@@ -59,7 +64,6 @@ const GenerateImagePage: FC = () => {
     setPromptGuideTypes(res || []);
   };
 
-
   const onChangeTab = (key: "image" | "vdo") => {
     setActiveKey(key);
   };
@@ -73,6 +77,19 @@ const GenerateImagePage: FC = () => {
         className="custom-tabs"
         type="card"
         activeKey={activeKey}
+        tabBarExtraContent={
+          activeKey === "image" || activeKey === "vdo" ? (
+            <Button
+              type={promptGuideOpenStatus ? "primary" : "default"}
+              ghost={promptGuideOpenStatus}
+              onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+            >
+              Prompt Guild
+            </Button>
+          ) : (
+            ""
+          )
+        }
         onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
@@ -84,7 +101,16 @@ const GenerateImagePage: FC = () => {
                 <div>{`Image Gen`}</div>
               </span>
             ),
-            children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />,
+            children: (
+              <ImageChat
+                promptGuideOpenStatus={promptGuideOpenStatus}
+                key={`image`}
+                activeKey={activeKey}
+                projectId={id}
+                userId={session?.user?.id}
+                promptGuideTypes={promptGuideTypes}
+              />
+            ),
           },
           {
             forceRender: true,
@@ -96,7 +122,31 @@ const GenerateImagePage: FC = () => {
               </span>
             ),
             children: (
-              <VideoChat key={`vdo`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />
+              <VideoChat
+                key={`vdo`}
+                activeKey={activeKey}
+                projectId={id}
+                userId={session?.user?.id}
+                promptGuideTypes={promptGuideTypes}
+                promptGuideOpenStatus={promptGuideOpenStatus}
+              />
+            ),
+          },
+          {
+            forceRender: true,
+            key: "omnihuman",
+            label: (
+              <span className="flex justify-center gap-2">
+                <ContactRound />
+                <div>{`Omni human`}</div>
+              </span>
+            ),
+            children: (
+              <PromptOmnihuman
+                key={`avatar-${activeKey}`}
+                projectId={id}
+                token={session?.user?.id}
+              />
             ),
           },
           // {
