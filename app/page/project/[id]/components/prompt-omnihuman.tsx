@@ -25,12 +25,14 @@ export interface props {
   projectId?: string;
   token?: string;
   shouldRefetch?: boolean;
+  isActive?: boolean;
 }
 
 const PromptOmnihuman: FC<props> = ({
   projectId,
   token,
   shouldRefetch,
+  isActive,
 }): ReactElement => {
   const omnihumanServices = OmnihumanServices(axiosCore);
   const omnihumenTaskServices = OmnihumenTaskServices(axiosCore);
@@ -47,7 +49,18 @@ const PromptOmnihuman: FC<props> = ({
 
   useEffect(() => {
     fetchData();
-  }, []);
+
+    let interval: NodeJS.Timeout;
+    if (isActive) {
+      interval = setInterval(() => {
+        fetchData();
+      }, 60000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive]);
   const fetchData = async () => {
     if (projectId) {
       const data = await omnihumenTaskServices.findByProjectId(projectId);

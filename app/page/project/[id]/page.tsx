@@ -146,6 +146,7 @@ const GenerateImagePage: FC = () => {
                 key={`avatar-${activeKey}`}
                 projectId={id}
                 token={session?.user?.id}
+                isActive={activeKey === "omnihuman"}
               />
             ),
           },
