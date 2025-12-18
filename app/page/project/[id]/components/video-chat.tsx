@@ -254,6 +254,10 @@ const VideoChat: FC<VideoChatProps> = ({
         return;
       }
 
+      // Clear form immediately after successful submission
+      form.resetFields();
+      setFiles([]);
+
       // Poll for task completion
       const checkStatus = async () => {
         try {
