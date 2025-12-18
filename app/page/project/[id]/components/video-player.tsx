@@ -1,107 +1,129 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import React, { useEffect, useRef, useState, memo } from 'react';
+import { Download } from 'lucide-react';
 
-interface VideoPlayerProps {
-    src: string;
-    poster?: string; // Add poster prop
-    className?: string;
+interface VideoItemProps {
+    videoData: {
+        imageUrl: string;
+        thumbnailUrl: string;
+    };
+    onDownloadVideo: (url: string) => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, poster, className }) => {
+const VideoItem = memo(({ videoData, onDownloadVideo }: VideoItemProps) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [videoLoaded, setVideoLoaded] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
+    // Lazy load video only when in viewport
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
+        if (!containerRef.current) return;
+
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && !videoLoaded) {
+                        setVideoLoaded(true);
+                    }
+                });
             },
-            {
-                threshold: 0.1,
-                rootMargin: '50px',
-            }
+            { threshold: 0.1, rootMargin: '50px' }
         );
 
-        if (containerRef.current) {
-            observer.observe(containerRef.current);
-        }
+        observerRef.current.observe(containerRef.current);
 
         return () => {
-            observer.disconnect();
+            observerRef.current?.disconnect();
         };
-    }, []);
+    }, [videoLoaded]);
 
-    const handleLoadStart = () => setIsLoading(true);
-    const handleCanPlay = () => setIsLoading(false);
+    // Handle video playback
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !videoLoaded) return;
 
-    const handleMouseEnter = () => {
-        if (videoRef.current) {
-            videoRef.current.play().catch((error) => {
-                console.warn("Hover autoplay blocked:", error);
-            });
-        }
+        const playVideo = async () => {
+            if (isHovered) {
+                try {
+                    await video.play();
+                } catch (err) {
+                    console.warn('Autoplay prevented:', err);
+                }
+            } else {
+                video.pause();
+                video.currentTime = 0;
+            }
+        };
+
+        playVideo();
+    }, [isHovered, videoLoaded]);
+
+    const handleDownload = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDownloadVideo(videoData.imageUrl);
     };
 
-    const handleMouseLeave = () => {
-        if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0; // Reset to start
-        }
-    };
+    // Fallback thumbnail if none provided
+    const thumbnailSrc = videoData.thumbnailUrl || videoData.imageUrl;
 
     return (
-        <div ref={containerRef} className={`relative bg-black/20 rounded-xl overflow-hidden ${className}`} style={{ minHeight: '200px' }}>
-            {isVisible ? (
-                <>
-                    <video
-                        ref={videoRef}
-                        src={src}
-                        poster={poster} // Use poster prop
-                        controls
-                        preload="metadata"
-                        className={`w-full h-full object-cover ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-                        onLoadStart={handleLoadStart}
-                        onCanPlay={handleCanPlay}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}
-                    />
-                    {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            {poster && (
-                                <img
-                                    src={poster}
-                                    alt="Video Thumbnail"
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                />
-                            )}
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-                                <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: 'white' }} spin />} />
-                            </div>
-                        </div>
-                    )}
-                </>
-            ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                    {poster && (
-                        <img
-                            src={poster}
-                            alt="Video Thumbnail"
-                            className="absolute inset-0 w-full h-full object-cover opacity-50"
-                        />
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Spin indicator={<LoadingOutlined style={{ fontSize: 24, color: 'gray' }} spin />} />
-                    </div>
+        <div
+            ref={containerRef}
+            className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 aspect-video"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Thumbnail - always visible until video plays */}
+            <img
+                src={thumbnailSrc}
+                loading="lazy"
+                alt="Video thumbnail"
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
+                    }`}
+            />
+
+            {/* Video - lazy loaded */}
+            {videoLoaded && (
+                <video
+                    ref={videoRef}
+                    src={videoData.imageUrl}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'
+                        }`}
+                />
+            )}
+
+            {/* Download button */}
+            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                <button
+                    className="p-2 bg-black/60 text-white rounded-md backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    onClick={handleDownload}
+                    aria-label="Download video"
+                >
+                    <Download size={14} />
+                </button>
+            </div>
+
+            {/* Loading indicator (optional) */}
+            {isHovered && !videoLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 </div>
             )}
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison for memo
+    return (
+        prevProps.videoData.imageUrl === nextProps.videoData.imageUrl &&
+        prevProps.videoData.thumbnailUrl === nextProps.videoData.thumbnailUrl
+    );
+});
 
-export default VideoPlayer;
+VideoItem.displayName = 'VideoItem';
+
+export default VideoItem;

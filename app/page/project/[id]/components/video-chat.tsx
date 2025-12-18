@@ -37,6 +37,7 @@ import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { RcFile } from "antd/es/upload";
 import { Download, Trash } from "lucide-react";
+import VideoItem from "./video-player";
 
 interface VideoChatProps {
     projectId: string;
@@ -57,64 +58,77 @@ interface ChatMessage {
     status?: boolean;
 }
 
-const VideoItem = ({
-    videoData,
-    onDownloadVideo,
-}: {
-    videoData: { imageUrl: string; thumbnailUrl: string };
-    onDownloadVideo: (url: string) => void;
-}) => {
-    const [active, setActive] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
+// const VideoItem = ({
+//     videoData,
+//     onDownloadVideo,
+// }: {
+//     videoData: { imageUrl: string; thumbnailUrl: string };
+//     onDownloadVideo: (url: string) => void;
+// }) => {
+//     const [active, setActive] = useState(false);
+//     const [lazySrc, setLazySrc] = useState<string | undefined>(undefined);
+//     const videoRef = useRef<HTMLVideoElement>(null);
 
-    useEffect(() => {
-        if (videoRef.current) {
-            if (active) {
-                videoRef.current.play().catch(err => console.warn("Autoplay prevented:", err));
-            } else {
-                videoRef.current.pause();
-                videoRef.current.currentTime = 0;
-            }
-        }
-    }, [active]);
+//     useEffect(() => {
+//         if (active && !lazySrc) {
+//             setLazySrc(videoData.imageUrl);
+//         }
+//     }, [active, videoData.imageUrl, lazySrc]);
 
-    return (
-        <div
-            className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 aspect-video"
-            onMouseEnter={() => setActive(true)}
-            onMouseLeave={() => setActive(false)}
-        >
-            {videoData && (
-                <>
-                    <img
-                        src={videoData.thumbnailUrl ? `${videoData.thumbnailUrl}` : "http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251217181101-86t2v/thumb-1766047994944.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T085350Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c7bf15d949e530d2f062f26e1ce18bf84920b4ced1644314aec062441cfb893e"}
-                        loading="lazy"
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? 'opacity-0' : 'opacity-100'}`}
-                        alt="thumbnail"
-                    />
+//     useEffect(() => {
+//         if (videoRef.current) {
+//             if (active) {
+//                 videoRef.current.play().catch((err) => console.warn("Autoplay prevented:", err));
+//             } else {
+//                 videoRef.current.pause();
+//                 videoRef.current.currentTime = 0;
+//             }
+//         }
+//     }, [active]);
 
-                    <video
-                        ref={videoRef}
-                        src={`${videoData.imageUrl}`}
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-0'}`}
-                    />
-                </>
-            )}
-            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                <Button
-                    size="small"
-                    icon={<Download size={14} />}
-                    className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                    onClick={() => onDownloadVideo(videoData.imageUrl)}
-                />
-            </div>
-        </div>
-    );
-};
+//     return (
+//         <div
+//             className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 aspect-video"
+//             onMouseEnter={() => setActive(true)}
+//             onMouseLeave={() => setActive(false)}
+//         >
+//             {videoData && (
+//                 <>
+//                     <img
+//                         src={
+//                             videoData.thumbnailUrl
+//                                 ? `${videoData.thumbnailUrl}`
+//                                 : "http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251217181101-86t2v/thumb-1766047994944.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T085350Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c7bf15d949e530d2f062f26e1ce18bf84920b4ced1644314aec062441cfb893e"
+//                         }
+//                         loading="lazy"
+//                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? "opacity-0" : "opacity-100"
+//                             }`}
+//                         alt="thumbnail"
+//                     />
+
+//                     <video
+//                         ref={videoRef}
+//                         src={lazySrc}
+//                         muted
+//                         loop
+//                         playsInline
+//                         preload="metadata"
+//                         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0"
+//                             }`}
+//                     />
+//                 </>
+//             )}
+//             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+//                 <Button
+//                     size="small"
+//                     icon={<Download size={14} />}
+//                     className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+//                     onClick={() => onDownloadVideo(videoData.imageUrl)}
+//                 />
+//             </div>
+//         </div>
+//     );
+// };
 
 const VideoChat: FC<VideoChatProps> = ({
     projectId,
@@ -486,7 +500,7 @@ const VideoChat: FC<VideoChatProps> = ({
                                     />
                                 )}
                                 <div
-                                    className={`flex flex-col max-w-[80%] ${msg.type === "user" ? "items-end" : "items-start"
+                                    className={`flex flex-col ${msg.type === "user" ? "max-w-[80%] items-end" : "max-w-full items-start"
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
@@ -515,7 +529,7 @@ const VideoChat: FC<VideoChatProps> = ({
                                     {/* Video Grid */}
                                     {msg.type === "ai" && msg.images && msg.images.length > 0 && (
                                         <div
-                                            className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                                            className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? "grid-cols-1" : "grid-cols-1"
                                                 }`}
                                         >
                                             {msg.images.map((videoData, i) => (
@@ -569,7 +583,7 @@ const VideoChat: FC<VideoChatProps> = ({
                                     height: 720,
                                     images: 1,
                                     ratio: "16:9",
-                                    resolution: "2k",
+                                    resolution: "1080p",
                                     duration: "10",
                                 }}
                             >
@@ -655,14 +669,92 @@ const VideoChat: FC<VideoChatProps> = ({
                                                     </div>
                                                 </Upload>
                                             </Form.Item>
-
+                                            {/* Resolution Selector */}
+                                            <Form.Item name="resolution" className="w-full m-0" initialValue={"1080p"}
+                                                style={{ marginBottom: 0, lineHeight: 1 }}>
+                                                <Select
+                                                    className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                                                    styles={{
+                                                        popup: {
+                                                            root: {
+                                                                backgroundColor: "#3f3f46",
+                                                                border: "1px solid #52525b",
+                                                                borderRadius: "8px",
+                                                                padding: "4px",
+                                                            },
+                                                        },
+                                                    }}
+                                                    optionFilterProp="label"
+                                                    placeholder="เลือกความละเอียด"
+                                                    options={[
+                                                        { value: "480p", label: "480p - Standard" },
+                                                        { value: "720p", label: "720p - HD" },
+                                                        { value: "1080p", label: "1080p - Full HD" },
+                                                    ]}
+                                                />
+                                            </Form.Item>
                                             {/* Ratio Selector */}
-                                            <Select
-                                                defaultValue="16:9"
-                                                onChange={handleRatioChange}
-                                                variant="borderless"
-                                                popupMatchSelectWidth={false}
-                                                className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                                            <Form.Item<ITFromGenerate>
+                                                className="w-full"
+                                                name={`ratio`}
+                                                rules={[{ required: true, message: "กรุณาเลือกอัตราส่วนของวิดีโอ!" }]}
+                                                style={{ marginBottom: 0, lineHeight: 1 }}
+                                            >
+                                                <Select
+                                                    defaultValue="16:9"
+                                                    onChange={handleRatioChange}
+                                                    variant="borderless"
+                                                    popupMatchSelectWidth={false}
+                                                    className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                                                    styles={{
+                                                        popup: {
+                                                            root: {
+                                                                backgroundColor: "#3f3f46",
+                                                                border: "1px solid #52525b",
+                                                                borderRadius: "8px",
+                                                                padding: "4px",
+                                                            },
+                                                        },
+                                                    }}
+                                                    options={[
+                                                        { value: "16:9", label: "16:9 - Widescreen" },
+                                                        { value: "4:3", label: "4:3 - Standard" },
+                                                        { value: "1:1", label: "1:1 - Square" },
+                                                        { value: "3:4", label: "3:4 - Portrait" },
+                                                        { value: "9:16", label: "9:16 - Vertical" },
+                                                        { value: "21:9", label: "21:9 - Ultrawide" },
+                                                    ]}
+                                                />
+                                            </Form.Item>
+                                            <Form.Item<ITFromGenerate>
+                                                className="w-full"
+                                                name={`duration`}
+                                                rules={[{ required: true, message: "กรุณาเลือกความยาวของวิดีโอ!" }]}
+                                                style={{ marginBottom: 0, lineHeight: 1 }}
+                                            >
+                                                <Select
+                                                    className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                                                    styles={{
+                                                        popup: {
+                                                            root: {
+                                                                backgroundColor: "#3f3f46",
+                                                                border: "1px solid #52525b",
+                                                                borderRadius: "8px",
+                                                                padding: "4px",
+                                                            },
+                                                        },
+                                                    }}
+                                                    optionFilterProp="label"
+                                                    placeholder="เลือกความยาว"
+                                                    allowClear
+                                                    options={[
+                                                        { value: "5", label: "5 วินาที" },
+                                                        { value: "10", label: "10 วินาที" },
+                                                    ]}
+                                                />
+                                            </Form.Item>
+                                            {/* <Select
+                                                defaultValue="480p"
                                                 styles={{
                                                     popup: {
                                                         root: {
@@ -673,11 +765,17 @@ const VideoChat: FC<VideoChatProps> = ({
                                                         },
                                                     },
                                                 }}
-                                                options={Object.keys(RATIO_SIZE_MAP).map((r) => ({
-                                                    value: r,
-                                                    label: r,
-                                                }))}
-                                            />
+                                                variant="borderless"
+                                                popupMatchSelectWidth={false}
+                                                className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                                                optionFilterProp="label"
+                                                allowClear
+                                                options={[
+                                                    { value: "480p", label: "480p - Standard" },
+                                                    { value: "720p", label: "720p - HD" },
+                                                    { value: "1080p", label: "1080p - Full HD" },
+                                                ]}
+                                            /> */}
                                         </div>
                                         <Button
                                             htmlType="submit"
