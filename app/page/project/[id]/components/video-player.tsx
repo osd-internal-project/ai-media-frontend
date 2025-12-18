@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
+import ImagePlay from "@/public/images/1766053669808.jpg";
 import { Download } from 'lucide-react';
+import { StaticImageData } from 'next/image';
 
 interface VideoItemProps {
     videoData: {
         imageUrl: string;
-        thumbnailUrl: string;
+        thumbnailUrl: string | StaticImageData;
     };
     onDownloadVideo: (url: string) => void;
 }
@@ -65,7 +67,7 @@ const VideoItem = memo(({ videoData, onDownloadVideo }: VideoItemProps) => {
     };
 
     // Fallback thumbnail if none provided
-    const thumbnailSrc = videoData.thumbnailUrl || videoData.imageUrl;
+    const thumbnailSrc = videoData.thumbnailUrl ? videoData.thumbnailUrl : ImagePlay;
 
     return (
         <div
@@ -76,7 +78,7 @@ const VideoItem = memo(({ videoData, onDownloadVideo }: VideoItemProps) => {
         >
             {/* Thumbnail - always visible until video plays */}
             <img
-                src={thumbnailSrc}
+                src={typeof thumbnailSrc === 'string' ? thumbnailSrc : thumbnailSrc.src}
                 loading="lazy"
                 alt="Video thumbnail"
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'

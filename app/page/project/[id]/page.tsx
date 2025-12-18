@@ -166,28 +166,28 @@ const GenerateImagePage: FC = () => {
           //     />
           //   ),
           // },
-          // {
-          //   forceRender: true,
-          //   key: "library",
-          //   label: (
-          //     <span className="flex justify-center gap-2">
-          //       <Folder />
-          //       <div>{`Library`}</div>
-          //     </span>
-          //   ),
-          //   children: <PromptLibrary key={`library-${activeKey}`} />,
-          // },
-          // {
-          //   forceRender: true,
-          //   key: "activity",
-          //   label: (
-          //     <span className="flex justify-center gap-2">
-          //       <Folders />
-          //       <div>{`All Activity`}</div>
-          //     </span>
-          //   ),
-          //   children: <PromptActivity key={`activity-${activeKey}`} />,
-          // },
+          {
+            forceRender: true,
+            key: "library",
+            label: (
+              <span className="flex justify-center gap-2">
+                <Folder />
+                <div>{`Library`}</div>
+              </span>
+            ),
+            children: <PromptLibrary key={`library-${activeKey}`} />,
+          },
+          {
+            forceRender: true,
+            key: "activity",
+            label: (
+              <span className="flex justify-center gap-2">
+                <Folders />
+                <div>{`All Activity`}</div>
+              </span>
+            ),
+            children: <PromptActivity key={`activity-${activeKey}`} />,
+          },
         ]}
       />
       <style>{`
