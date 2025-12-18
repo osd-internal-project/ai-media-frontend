@@ -25,7 +25,7 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const pageSize = 20;
+  const pageSize = 8;
   const [getData, setData] = useState<{ data: any[]; total: number }>({
     data: [],
     total: 0,
@@ -53,6 +53,7 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
     const id = params.id as string;
     const res = await galleryservices.findById(id, page, pageSize);
     setTotal(res.total);
+    console.log(res.data)
     setData({ data: res.data, total: res.total });
     setLoading(false);
   };
@@ -85,9 +86,29 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                   className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
+                  {/* <img
+                src={typeof thumbnailSrc === 'string' ? thumbnailSrc : thumbnailSrc.src}
+                loading="lazy"
+                alt="Video thumbnail"
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
+                    }`}
+            />
+
+            {videoLoaded && (
+                <video
+                    ref={videoRef}
+                    src={videoData.imageUrl}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'
+                        }`}
+                />
+            )} */}
                   {image.typeGenerate === "vdo" ? (
                     <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
-                      <video
+                      {/* <video
                         controls
                         className="w-full h-full object-cover"
                         preload="metadata"
@@ -97,14 +118,23 @@ const PromptActivity: FC<props> = ({ shouldRefetch }): ReactElement => {
                           type="video/mp4"
                         />
                         Your browser does not support the video tag.
-                      </video>
+                      </video> */}
+                      <video
+                        // ref={videoRef}
+                        src={image.imageUrl}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                      // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                      />
                     </div>
                   ) : (
                     <Image
                       preview={false}
                       height={"100%"}
                       fallback={fallbackImage}
-                      src={`/api/images/${encodeURIComponent(image.imageUrl)}`}
+                      src={image.imageUrl}
                       className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
                       alt={`AI Generated Image ${imgIndex + 1}`}
                     />
