@@ -13,7 +13,7 @@ import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
-import PromptGenerateAvatar from "./components/prompt-omnihuman";
+import PromptOmnihuman from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 
@@ -24,7 +24,9 @@ const GenerateImagePage: FC = () => {
   const projectService = ProjectService(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">("image");
+  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
+    "image"
+  );
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
@@ -58,7 +60,6 @@ const GenerateImagePage: FC = () => {
     setPromptGuideTypes(res || []);
   };
 
-
   const onChangeTab = (key: "image" | "vdo") => {
     setActiveKey(key);
   };
@@ -83,7 +84,15 @@ const GenerateImagePage: FC = () => {
                 <div>{`Image Gen`}</div>
               </span>
             ),
-            children: <ImageChat key={`image`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />,
+            children: (
+              <ImageChat
+                key={`image`}
+                activeKey={activeKey}
+                projectId={id}
+                userId={session?.user?.id}
+                promptGuideTypes={promptGuideTypes}
+              />
+            ),
           },
           {
             forceRender: true,
@@ -95,7 +104,13 @@ const GenerateImagePage: FC = () => {
               </span>
             ),
             children: (
-              <PromptGenerateVdo key={`vdo-gen`} activeKey={activeKey} projectId={id} userId={session?.user?.id} promptGuideTypes={promptGuideTypes} />
+              <PromptGenerateVdo
+                key={`vdo-gen`}
+                activeKey={activeKey}
+                projectId={id}
+                userId={session?.user?.id}
+                promptGuideTypes={promptGuideTypes}
+              />
             ),
           },
           {
@@ -108,10 +123,10 @@ const GenerateImagePage: FC = () => {
               </span>
             ),
             children: (
-              <PromptGenerateAvatar
+              <PromptOmnihuman
                 key={`avatar-${activeKey}`}
                 projectId={id}
-                userId={session?.user?.id}
+                token={session?.user?.id}
               />
             ),
           },

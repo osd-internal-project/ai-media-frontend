@@ -22,13 +22,13 @@ import { TOmnihumenTask } from "@/app/common/omnihumen.type";
 // import * as dayjs from "dayjs";
 export interface props {
   projectId?: string;
-  userId?: string;
+  token?: string;
   shouldRefetch?: boolean;
 }
 
 const PromptOmnihuman: FC<props> = ({
   projectId,
-  userId,
+  token,
   shouldRefetch,
 }): ReactElement => {
   const omnihumanServices = OmnihumanServices(axiosCore);
@@ -101,12 +101,12 @@ const PromptOmnihuman: FC<props> = ({
         imageFile: imageFile[0]?.originFileObj,
         audioFile: audioFile[0]?.originFileObj,
         projectId,
-        userId,
+        token,
       });
 
       const formData = new FormData();
       if (projectId) formData.append("projectId", projectId);
-      if (userId) formData.append("userId", userId);
+      if (token) formData.append("token", token);
       if (values.avatarName) formData.append("avatarName", values.avatarName);
       if (values.prompt) formData.append("prompt", values.prompt);
 
@@ -145,7 +145,7 @@ const PromptOmnihuman: FC<props> = ({
               form={formAvatar}
               layout="vertical"
               onFinish={onFinish}
-              className="w-full space-y-6"
+              className="w-full space-y-6 h-[calc(100vh-300px)] overflow-y-auto"
             >
               {/* Header */}
               <div className="text-center mb-8">
@@ -324,13 +324,17 @@ const PromptOmnihuman: FC<props> = ({
         </div>
         <div className="ml-2">
           <div className="text-[24px] font-bold ">{`Task`}</div>
-          <div>
+          <div className="h-[calc(100vh-300px)] overflow-y-auto">
             {tasks.map((task) => (
               <Card size="small" key={task.id}>
                 <div>{task?.avatarName || task.uuid}</div>
                 <Space className=" flex justify-between">
                   <Tag>
-                    {!task.status ? `panding` : `${task?.taskMessage || ""}`}
+                    {task?.filePath
+                      ? "Completed"
+                      : !task.status
+                      ? `Panding`
+                      : `${task?.taskMessage || ""}`}
                   </Tag>
                   {/* <div className=" !text-[12px] text-gray-500">
                     {dayjs(task.createdAt).format("DD/MM/YYYY HH:mm:ss")}
