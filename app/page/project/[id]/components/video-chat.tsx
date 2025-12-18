@@ -59,34 +59,41 @@ const VideoItem = ({ videoData, onDownloadVideo }: { videoData: { imageUrl: stri
     const [active, setActive] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    useEffect(() => {
+        if (videoRef.current) {
+            if (active) {
+                videoRef.current.play().catch(err => console.warn("Autoplay prevented:", err));
+            } else {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+        }
+    }, [active]);
+
     return (
-        <div className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50">
+        <div
+            className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 aspect-video"
+            onMouseEnter={() => setActive(true)}
+            onMouseLeave={() => setActive(false)}
+        >
             {videoData && (
                 <>
-                    {!active && (
-                        <img
-                            src={videoData.thumbnailUrl ? `${videoData.thumbnailUrl}` : "http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251217181101-86t2v/thumb-1766047994944.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T085350Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c7bf15d949e530d2f062f26e1ce18bf84920b4ced1644314aec062441cfb893e"}
-                            loading="lazy"
-                            className="w-full h-full object-cover cursor-pointer"
-                            onMouseEnter={() => setActive(true)}
-                            alt="thumbnail"
-                        />
-                    )}
+                    <img
+                        src={videoData.thumbnailUrl ? `${videoData.thumbnailUrl}` : "http://192.168.31.181:9100/ai-media-image-vdo/cgt-20251217181101-86t2v/thumb-1766047994944.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=LB7kAwp1rgI1g4d3h0Wa%2F20251218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251218T085350Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c7bf15d949e530d2f062f26e1ce18bf84920b4ced1644314aec062441cfb893e"}
+                        loading="lazy"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? 'opacity-0' : 'opacity-100'}`}
+                        alt="thumbnail"
+                    />
 
-                    {active && (
-                        <video
-                            ref={videoRef}
-                            src={`${videoData.imageUrl}`} // Or /api/vdo/${encodeURIComponent(videoData.imageUrl)}
-                            muted
-                            loop
-                            playsInline
-                            autoPlay
-                            className="w-full h-full object-cover"
-                            onMouseLeave={() => {
-                                setActive(false);
-                            }}
-                        />
-                    )}
+                    <video
+                        ref={videoRef}
+                        src={`${videoData.imageUrl}`}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-0'}`}
+                    />
                 </>
             )}
             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
