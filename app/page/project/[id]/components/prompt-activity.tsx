@@ -22,7 +22,10 @@ export interface props {
   activeKey: string;
 }
 
-const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement => {
+const PromptActivity: FC<props> = ({
+  shouldRefetch,
+  activeKey,
+}): ReactElement => {
   const params = useParams();
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
@@ -77,16 +80,18 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
   const onDownloadVideo = async (videoName: string) => {
     try {
       // Assuming downloadImage works for files generally or we need a similar one for video
-      const res = await GenerateImageServices(axiosCore).downloadImage(videoName);
-      const blob = new Blob([res], { type: 'video/mp4' });
+      const res = await GenerateImageServices(axiosCore).downloadImage(
+        videoName
+      );
+      const blob = new Blob([res], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = videoName.split('/').pop() || 'video.mp4';
+      link.download = videoName.split("/").pop() || "video.mp4";
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      message.error('Download failed');
+      message.error("Download failed");
     }
   };
 
@@ -126,7 +131,12 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
                 />
             )} */}
                   {image.typeGenerate === "vdo" ? (
-                    <VideoItem key={imgIndex} videoData={image} onDownloadVideo={onDownloadVideo} />
+                    <VideoItem
+                      key={imgIndex}
+                      videoData={image}
+                      onDownloadVideo={onDownloadVideo}
+                    />
+                  ) : (
                     // <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
                     //   {/* <video
                     //     controls
@@ -149,7 +159,6 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
                     //   // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                     //   />
                     // </div>
-                  ) : (
                     // <Image
                     //   preview={false}
                     //   height={"100%"}
@@ -161,8 +170,8 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
                     // />
                     <img
                       src={image.imageUrl}
-                      loading='lazy'
-                      alt='Video thumbnail'
+                      loading="lazy"
+                      alt="Video thumbnail"
                     />
                   )}
 

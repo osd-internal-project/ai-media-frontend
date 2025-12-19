@@ -15,12 +15,18 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    findById: async (projectId: string, page: number, pageSize: number) => {
+    findById: async (
+      projectId: string,
+      page: number,
+      pageSize: number,
+      status?: boolean
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/${projectId}`, {
           params: {
             page,
             pageSize,
+            status,
           },
         })
         .then((res) => {
@@ -31,7 +37,11 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findActivityById: async (projectId: string, page: number, pageSize: number) => {
+    findActivityById: async (
+      projectId: string,
+      page: number,
+      pageSize: number
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/activity/${projectId}`, {
           params: {
@@ -47,7 +57,11 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    updateShareOptions: async (taskId: string, imageUrl: string, status: boolean) => {
+    updateShareOptions: async (
+      taskId: string,
+      imageUrl: string,
+      status: boolean
+    ) => {
       const base = {
         imageUrl,
         status,
