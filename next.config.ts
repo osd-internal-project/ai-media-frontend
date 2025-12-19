@@ -8,10 +8,10 @@ const nextConfig = {
     AUTH_BACKEND_URL: "https://www.aicave.ai/public/api/user",
     NEXT_PUBLIC_API_BASE_URL_REPORT: "https://www.aicave.ai/public/api/report",
     NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/core",
-    NEXTAUTH_URL: "https://www.aicave.ai/auth",
+    NEXTAUTH_URL: "https://www.aicave.ai",
     KEYCLOAK_CLIENT_ID: "eportal-client-id",
     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
-    KEYCLOAK_ISSUER: "https://www.aicave.ai/auth/realms/eportal",
+    KEYCLOAK_ISSUER: "https://id24.aicave.ai/realms/eportal",
   },
   webpack: (config: any) => {
     config.externals = [...config.externals, "jsdom"];
@@ -48,9 +48,9 @@ const nextConfig = {
 //     NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:4001/api",
 //     NEXT_PUBLIC_API_BASE_URL_CORE: "http://localhost:4002/api",
 //     NEXTAUTH_URL: "http://localhost:3000",
-//     KEYCLOAK_CLIENT_ID: "eportal-client-local",
-//     KEYCLOAK_CLIENT_SECRET: "l0lFk6yUWMDGfHEb0cnq0PSUJvXPT23s",
-//     KEYCLOAK_ISSUER: "http://192.168.31.181:9000/realms/eportal",
+//     KEYCLOAK_CLIENT_ID: "eportal-client-id",
+//     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
+//     KEYCLOAK_ISSUER: "https://www.aicave.ai/auth/realms/eportal",
 //   },
 //   webpack: (config: any) => {
 //     config.externals = [...config.externals, "jsdom"];
