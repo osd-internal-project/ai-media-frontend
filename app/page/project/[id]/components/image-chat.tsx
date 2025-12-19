@@ -244,19 +244,27 @@ const ImageChat: FC<ImageChatProps> = ({
     return false;
   };
 
-  const onDownloadImage = async (imageName: string) => {
+  const onDownloadImage = async (imageUrl: string) => {
     try {
-      const res = await GenerateImageServices(axiosCore).downloadImage(
-        imageName
-      );
-      const blob = new Blob([res], { type: "image/jpeg" });
+      // Extract filename from URL (before query parameters)
+      const urlWithoutParams = imageUrl.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop() || 'image.jpg';
+      
+      // Fetch the image directly from the URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = imageName.split("/").pop() || "image.jpg";
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+      
+      message.success('Image downloaded successfully');
     } catch (error) {
+      console.error('Download error:', error);
       message.error("Download failed");
     }
   };

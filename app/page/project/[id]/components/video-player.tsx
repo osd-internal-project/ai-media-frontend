@@ -163,14 +163,20 @@ const VideoItem = memo(
                     <div className='absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10'>
                         <button
                             className='p-2 bg-black/60 text-white rounded-md backdrop-blur-sm hover:bg-black/80 transition-colors'
-                            onClick={handleFullScreen}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleFullScreen(e);
+                            }}
                             aria-label='Full screen'
                         >
                             <Maximize2 size={14} />
                         </button>
                         <button
                             className='p-2 bg-black/60 text-white rounded-md backdrop-blur-sm hover:bg-black/80 transition-colors'
-                            onClick={handleDownload}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownload(e);
+                            }}
                             aria-label='Download video'
                         >
                             <Download size={14} />
