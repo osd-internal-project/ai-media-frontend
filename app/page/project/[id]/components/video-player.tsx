@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
 import ImagePlay from '@/public/images/1766053669808.jpg';
-import { Download, X, Maximize2, Play } from 'lucide-react';
+import { Download, X, Maximize2, Play, Loader2 } from 'lucide-react';
 import { StaticImageData } from 'next/image';
 
 interface VideoItemProps {
@@ -17,6 +17,7 @@ const VideoItem = memo(
         const [videoLoaded, setVideoLoaded] = useState(false);
         const [videoLoading, setVideoLoading] = useState(false);
         const [isFullScreen, setIsFullScreen] = useState(false);
+        const [isDownloading, setIsDownloading] = useState(false);
         const videoRef = useRef<HTMLVideoElement>(null);
         const fullScreenVideoRef = useRef<HTMLVideoElement>(null);
         const observerRef = useRef<IntersectionObserver | null>(null);
@@ -91,9 +92,14 @@ const VideoItem = memo(
             };
         }, [isHovered, videoLoaded]);
 
-        const handleDownload = (e: React.MouseEvent) => {
+        const handleDownload = async (e: React.MouseEvent) => {
             e.stopPropagation();
-            onDownloadVideo(videoData.imageUrl);
+            setIsDownloading(true);
+            try {
+                await onDownloadVideo(videoData.imageUrl);
+            } finally {
+                setIsDownloading(false);
+            }
         };
 
         const handleFullScreen = (e: React.MouseEvent) => {
@@ -172,14 +178,19 @@ const VideoItem = memo(
                             <Maximize2 size={14} />
                         </button>
                         <button
-                            className='p-2 bg-black/60 text-white rounded-md backdrop-blur-sm hover:bg-black/80 transition-colors'
+                            className='p-2 bg-black/60 text-white rounded-md backdrop-blur-sm hover:bg-black/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDownload(e);
                             }}
+                            disabled={isDownloading}
                             aria-label='Download video'
                         >
-                            <Download size={14} />
+                            {isDownloading ? (
+                                <Loader2 size={14} className='animate-spin' />
+                            ) : (
+                                <Download size={14} />
+                            )}
                         </button>
                     </div>
 
@@ -208,14 +219,24 @@ const VideoItem = memo(
                             <X size={24} />
                         </button>
                         <button
-                            className='absolute top-4 right-20 p-3 bg-white/10 text-white rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors z-10'
-                            onClick={(e) => {
+                            className='absolute top-4 right-20 p-3 bg-white/10 text-white rounded-full backdrop-blur-sm hover:bg-white/20 transition-colors z-10 disabled:opacity-50 disabled:cursor-not-allowed'
+                            onClick={async (e) => {
                                 e.stopPropagation();
-                                onDownloadVideo(videoData.imageUrl);
+                                setIsDownloading(true);
+                                try {
+                                    await onDownloadVideo(videoData.imageUrl);
+                                } finally {
+                                    setIsDownloading(false);
+                                }
                             }}
+                            disabled={isDownloading}
                             aria-label='Download video'
                         >
-                            <Download size={24} />
+                            {isDownloading ? (
+                                <Loader2 size={24} className='animate-spin' />
+                            ) : (
+                                <Download size={24} />
+                            )}
                         </button>
                         <div
                             className='relative w-full h-full flex items-center justify-center'
