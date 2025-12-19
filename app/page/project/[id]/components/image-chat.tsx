@@ -31,6 +31,7 @@ import {
   DownOutlined,
   UploadOutlined,
   CloseOutlined,
+  LikeFilled,
 } from "@ant-design/icons";
 import Image from "next/image";
 import { Download, Share2, Sparkles, Trash } from "lucide-react";
@@ -282,7 +283,7 @@ const ImageChat: FC<ImageChatProps> = ({
           })
         );
         // Or simply refetch current view
-        fetchMessages(0);
+        // fetchMessages(0);
       }
     } catch (error) {
       console.error("Share update failed", error);
@@ -585,12 +586,15 @@ const ImageChat: FC<ImageChatProps> = ({
                             alt="Video thumbnail"
                           />
                           {/* Actions Overlay */}
-                          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div
+                            className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-200 `}
+                          >
                             <Button
                               size="small"
                               icon={<Download size={14} />}
                               className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 onDownloadImage(img.imageUrl);
                               }}
@@ -599,14 +603,15 @@ const ImageChat: FC<ImageChatProps> = ({
                             <Button
                               size="small"
                               icon={
-                                <LikeOutlined
-                                  className={
-                                    msg.status ? "text-red-500" : "text-white"
-                                  }
-                                />
+                                msg.status ? (
+                                  <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
+                                ) : (
+                                  <LikeOutlined />
+                                )
                               }
-                              className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+                              className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 onShareImage(
                                   msg.taskId!,
