@@ -15,6 +15,7 @@ const VideoItem = memo(
     ({ videoData, onDownloadVideo }: VideoItemProps) => {
         const [isHovered, setIsHovered] = useState(false);
         const [videoLoaded, setVideoLoaded] = useState(false);
+        const [videoLoading, setVideoLoading] = useState(false);
         const [isFullScreen, setIsFullScreen] = useState(false);
         const videoRef = useRef<HTMLVideoElement>(null);
         const fullScreenVideoRef = useRef<HTMLVideoElement>(null);
@@ -48,20 +49,46 @@ const VideoItem = memo(
             const video = videoRef.current;
             if (!video || !videoLoaded) return;
 
+            const handleLoadedData = () => {
+                setVideoLoading(false);
+            };
+
+            const handleWaiting = () => {
+                setVideoLoading(true);
+            };
+
+            const handleCanPlay = () => {
+                setVideoLoading(false);
+            };
+
+            video.addEventListener('loadeddata', handleLoadedData);
+            video.addEventListener('waiting', handleWaiting);
+            video.addEventListener('canplay', handleCanPlay);
+
             const playVideo = async () => {
                 if (isHovered) {
                     try {
+                        setVideoLoading(true);
                         await video.play();
+                        setVideoLoading(false);
                     } catch (err) {
                         console.warn('Autoplay prevented:', err);
+                        setVideoLoading(false);
                     }
                 } else {
                     video.pause();
                     video.currentTime = 0;
+                    setVideoLoading(false);
                 }
             };
 
             playVideo();
+
+            return () => {
+                video.removeEventListener('loadeddata', handleLoadedData);
+                video.removeEventListener('waiting', handleWaiting);
+                video.removeEventListener('canplay', handleCanPlay);
+            };
         }, [isHovered, videoLoaded]);
 
         const handleDownload = (e: React.MouseEvent) => {
@@ -104,13 +131,13 @@ const VideoItem = memo(
                         src={typeof thumbnailSrc === 'string' ? thumbnailSrc : thumbnailSrc.src}
                         loading='lazy'
                         alt='Video thumbnail'
-                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading ? 'opacity-0' : 'opacity-100'
                             }`}
                     />
 
                     {/* Play icon overlay */}
                     <div
-                        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
+                        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading ? 'opacity-0' : 'opacity-100'
                             }`}
                     >
                         <div className='p-4 bg-black/50 rounded-full backdrop-blur-sm'>
@@ -127,7 +154,7 @@ const VideoItem = memo(
                             loop
                             playsInline
                             preload='metadata'
-                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && !videoLoading ? 'opacity-100' : 'opacity-0'
                                 }`}
                         />
                     )}
@@ -150,10 +177,13 @@ const VideoItem = memo(
                         </button>
                     </div>
 
-                    {/* Loading indicator (optional) */}
-                    {isHovered && !videoLoaded && (
-                        <div className='absolute inset-0 flex items-center justify-center'>
-                            <div className='w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin' />
+                    {/* Loading indicator when hovering and video is loading */}
+                    {isHovered && (videoLoading || !videoLoaded) && (
+                        <div className='absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
+                            <div className='flex flex-col items-center gap-3'>
+                                <div className='w-10 h-10 border-3 border-purple-500/30 border-t-purple-500 rounded-full animate-spin' />
+                                <span className='text-white text-sm font-medium'>กำลังโหลดวิดีโอ...</span>
+                            </div>
                         </div>
                     )}
                 </div>

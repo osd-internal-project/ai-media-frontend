@@ -14,13 +14,15 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
         grant_type: "refresh_token",
         refresh_token: String(token.refreshToken),
-      }),
-    });
+  }),
+});
 
-    const refreshedTokens = await response.json();
-
-    if (!response.ok) {
-      throw refreshedTokens;
+const contentType = response.headers.get("content-type");
+  const refreshedTokens = contentType?.includes("application/json")
+    ? await response.json()
+    : response;
+if (!response.ok) {
+  throw refreshedTokens;
     }
 
     return {
