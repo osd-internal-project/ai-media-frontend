@@ -109,6 +109,7 @@ const GenerateImagePage: FC = () => {
                 projectId={id}
                 userId={session?.user?.id}
                 promptGuideTypes={promptGuideTypes}
+                username={session?.user?.name || ""}
               />
             ),
           },

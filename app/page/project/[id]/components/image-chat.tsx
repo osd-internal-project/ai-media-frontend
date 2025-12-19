@@ -15,7 +15,6 @@ import {
   Upload,
   type UploadFile,
   type UploadProps,
-  // Image,
   notification,
   Popover,
   Spin,
@@ -53,6 +52,7 @@ interface ImageChatProps {
   activeKey: "image" | "vdo" | "omnihuman";
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;
+  username?: string; // Add username prop
 }
 
 interface ChatMessage {
@@ -72,6 +72,7 @@ const ImageChat: FC<ImageChatProps> = ({
   activeKey,
   promptGuideTypes = [],
   promptGuideOpenStatus,
+  username, // Destructure username
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -221,13 +222,14 @@ const ImageChat: FC<ImageChatProps> = ({
   useEffect(() => {
     if (
       !isFirstLoad.current &&
-      page === 0 &&
-      bottomRef.current &&
-      !isLoadingMoreRef.current
+      !isLoadingMoreRef.current &&
+      messages.length > 0
     ) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
-  }, [submitting]);
+  }, [messages.length]);
 
   // Handlers
   const handleUploadChange: UploadProps["onChange"] = ({ fileList }) =>
@@ -289,8 +291,29 @@ const ImageChat: FC<ImageChatProps> = ({
 
   const onFinish = async (values: ITFromGenerate) => {
     setSubmitting(true);
+
+    // Create user message immediately for optimistic UI
+    const userMessage: ChatMessage = {
+      type: "user",
+      content: values.text,
+      username: username, // Use username from props or fallback to "User"
+      time: new Date().toISOString(),
+    };
+
+    // Add user message to chat immediately
+    setMessages((prev) => [...prev, userMessage]);
+
+    // Clear the form immediately
+    form.resetFields();
+    setFiles([]);
+
+    // Scroll to bottom immediately after adding user message
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+
     try {
-      let payload = { ...values, projectId, userId };
+      const payload = { ...values, projectId, userId };
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
@@ -308,16 +331,23 @@ const ImageChat: FC<ImageChatProps> = ({
 
       if (response.status === 400) {
         messageApi.error(`${response.data}`);
+        // Remove the optimistic user message on error
+        setMessages((prev) => prev.slice(0, -1));
       } else {
-        form.resetFields();
-        setFiles([]);
-        // Refetch latest messages
+        // Refetch latest messages to get AI response
         setPage(0);
-        fetchMessages(0);
+        await fetchMessages(0);
+
+        // Scroll to bottom after AI response
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       }
     } catch (error: any) {
       const msg = error.response?.data?.message || "An error occurred";
       messageApi.error(msg);
+      // Remove the optimistic user message on error
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setSubmitting(false);
     }
@@ -560,7 +590,10 @@ const ImageChat: FC<ImageChatProps> = ({
                               size="small"
                               icon={<Download size={14} />}
                               className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                              onClick={() => onDownloadImage(img.imageUrl)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDownloadImage(img.imageUrl);
+                              }}
                             />
                             {/* Simple Share for now - could be enhanced */}
                             <Button
@@ -573,13 +606,14 @@ const ImageChat: FC<ImageChatProps> = ({
                                 />
                               }
                               className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 onShareImage(
                                   msg.taskId!,
                                   img.imageUrl,
                                   msg.status || false
-                                )
-                              }
+                                );
+                              }}
                             />
                           </div>
                         </div>
