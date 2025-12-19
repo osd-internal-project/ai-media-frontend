@@ -669,7 +669,7 @@ const VideoChat: FC<VideoChatProps> = ({
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-2">
                       {/* File Upload (for Image-to-Video if supported) */}
-                      {/* <Form.Item
+                      <Form.Item
                         name="image"
                         className="mb-0"
                         style={{ marginBottom: 0, lineHeight: 1 }}
@@ -687,7 +687,7 @@ const VideoChat: FC<VideoChatProps> = ({
                             <PaperClipOutlined className="text-lg" />
                           </div>
                         </Upload>
-                      </Form.Item> */}
+                      </Form.Item>
                       {/* Resolution Selector */}
                       <Form.Item
                         name="resolution"
