@@ -1,11 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  type FC,
-  type ReactElement,
-} from "react";
+import React, { useEffect, useRef, useState, useCallback, type FC, type ReactElement } from 'react';
 import {
   Avatar,
   Button,
@@ -21,7 +14,7 @@ import {
   Select,
   Row,
   Space,
-} from "antd";
+} from 'antd';
 import {
   UserOutlined,
   PaperClipOutlined,
@@ -32,25 +25,25 @@ import {
   UploadOutlined,
   CloseOutlined,
   LikeFilled,
-} from "@ant-design/icons";
-import Image from "next/image";
-import { Download, Share2, Sparkles, Trash } from "lucide-react";
-import type { RcFile } from "antd/es/upload";
-import type { StaticImageData } from "next/image";
+} from '@ant-design/icons';
+import Image from 'next/image';
+import { Download, Share2, Sparkles, Trash } from 'lucide-react';
+import type { RcFile } from 'antd/es/upload';
+import type { StaticImageData } from 'next/image';
 
-import { axiosCore } from "@/app/lib/axios/axios";
-import LogsServices from "@/app/services/logs.service";
-import GenerateImageServices from "@/app/services/generate-image.service";
-import GalleryServices from "@/app/services/gellory.service";
-import Avatars from "@/public/images/Avatar.jpg";
-import type { ITFromGenerate } from "@/app/common";
-import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
-import PromptGuideServices from "@/app/services/prompt-guide.service";
+import { axiosCore } from '@/app/lib/axios/axios';
+import LogsServices from '@/app/services/logs.service';
+import GenerateImageServices from '@/app/services/generate-image.service';
+import GalleryServices from '@/app/services/gellory.service';
+import Avatars from '@/public/images/Avatar.jpg';
+import type { ITFromGenerate } from '@/app/common';
+import { TPromptGuideType, TPromptGuide } from '@/app/common/prompt-guide.type';
+import PromptGuideServices from '@/app/services/prompt-guide.service';
 
 interface ImageChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "vdo" | "omnihuman";
+  activeKey: 'image' | 'vdo' | 'omnihuman';
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;
   username?: string; // Add username prop
@@ -58,7 +51,7 @@ interface ImageChatProps {
 
 interface ChatMessage {
   id?: string;
-  type: "user" | "ai";
+  type: 'user' | 'ai';
   content?: string;
   images?: { imageUrl: string }[];
   username?: string;
@@ -96,6 +89,7 @@ const ImageChat: FC<ImageChatProps> = ({
   const isFirstLoad = useRef<boolean>(true);
   const scrollHeightRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
+  const shouldAutoScrollRef = useRef<boolean>(false);
 
   // Fetch Data (Pagination)
   const fetchMessages = useCallback(
@@ -109,11 +103,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
       try {
         const skip = currentPage * pageSize;
-        const response = await LogsServices(axiosCore).findById(
-          projectId,
-          skip,
-          pageSize
-        );
+        const response = await LogsServices(axiosCore).findById(projectId, skip, pageSize);
 
         if (Array.isArray(response)) {
           if (response.length < pageSize) {
@@ -128,7 +118,7 @@ const ImageChat: FC<ImageChatProps> = ({
           itemsToProcess.forEach((item: any) => {
             // User Message
             formattedMessages.push({
-              type: "user",
+              type: 'user',
               content: item.prompt,
               username: item.users.fullname,
               time: item.createdAt,
@@ -137,10 +127,10 @@ const ImageChat: FC<ImageChatProps> = ({
             });
             // AI Message
             formattedMessages.push({
-              type: "ai",
-              content: "AICave Generated Images",
+              type: 'ai',
+              content: 'AICave Generated Images',
               images: item.imageUrls,
-              username: "AI Generator",
+              username: 'AI Generator',
               time: item.createdAt,
               taskId: item.taskId,
               status: item.status,
@@ -150,9 +140,7 @@ const ImageChat: FC<ImageChatProps> = ({
           if (isLoadMore) {
             setMessages((prev) => {
               const existingTaskIds = new Set(prev.map((m) => m.taskId));
-              const uniqueNewMessages = formattedMessages.filter(
-                (m) => !existingTaskIds.has(m.taskId)
-              );
+              const uniqueNewMessages = formattedMessages.filter((m) => !existingTaskIds.has(m.taskId));
 
               if (uniqueNewMessages.length === 0) {
                 setHasMore(false);
@@ -164,12 +152,12 @@ const ImageChat: FC<ImageChatProps> = ({
             setMessages(formattedMessages);
             // Force scroll to bottom on initial load
             setTimeout(() => {
-              bottomRef.current?.scrollIntoView({ behavior: "instant" });
+              bottomRef.current?.scrollIntoView({ behavior: 'instant' });
             }, 100);
           }
         }
       } catch (err) {
-        console.error("Failed to fetch logs:", err);
+        console.error('Failed to fetch logs:', err);
       } finally {
         setLoading(false);
         if (!isLoadMore) {
@@ -182,7 +170,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
   // Initial Load
   useEffect(() => {
-    if (activeKey === "image" && projectId) {
+    if (activeKey === 'image' && projectId) {
       // Reset state on project change or explicit reload
       setMessages([]);
       setPage(0);
@@ -221,20 +209,16 @@ const ImageChat: FC<ImageChatProps> = ({
 
   // Scroll to bottom on new message send (not on load more)
   useEffect(() => {
-    if (
-      !isFirstLoad.current &&
-      !isLoadingMoreRef.current &&
-      messages.length > 0
-    ) {
+    if (shouldAutoScrollRef.current && messages.length > 0) {
       setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        shouldAutoScrollRef.current = false;
       }, 100);
     }
   }, [messages.length]);
 
   // Handlers
-  const handleUploadChange: UploadProps["onChange"] = ({ fileList }) =>
-    setFiles(fileList);
+  const handleUploadChange: UploadProps['onChange'] = ({ fileList }) => setFiles(fileList);
 
   const beforeUpload = (file: RcFile) => {
     if (files.find((f) => f.name === file.name)) {
@@ -249,44 +233,35 @@ const ImageChat: FC<ImageChatProps> = ({
       // Extract filename from URL (before query parameters)
       const urlWithoutParams = imageUrl.split('?')[0];
       const filename = urlWithoutParams.split('/').pop() || 'image.jpg';
-      
+
       // Fetch the image directly from the URL
       const response = await fetch(imageUrl);
       if (!response.ok) throw new Error('Download failed');
-      
+
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
-      
+
       message.success('Image downloaded successfully');
     } catch (error) {
       console.error('Download error:', error);
-      message.error("Download failed");
+      message.error('Download failed');
     }
   };
 
-  const onShareImage = async (
-    taskId: string,
-    imageUrl: string,
-    currentStatus: boolean
-  ) => {
+  const onShareImage = async (taskId: string, imageUrl: string, currentStatus: boolean) => {
     try {
-      const success = await GalleryServices(axiosCore).updateShareOptions(
-        taskId,
-        imageUrl,
-        currentStatus
-      );
+      const success = await GalleryServices(axiosCore).updateShareOptions(taskId, imageUrl, currentStatus);
       if (success) {
-        message.success("Share status updated");
+        message.success('Share status updated');
         // Update local state to reflect change without full reload
         setMessages((prev) =>
           prev.map((msg) => {
-            if (msg.taskId === taskId)
-              return { ...msg, status: !currentStatus }; // Toggle status logic might need refinement based on exact API behavior
+            if (msg.taskId === taskId) return { ...msg, status: !currentStatus }; // Toggle status logic might need refinement based on exact API behavior
             return msg;
           })
         );
@@ -294,16 +269,17 @@ const ImageChat: FC<ImageChatProps> = ({
         // fetchMessages(0);
       }
     } catch (error) {
-      console.error("Share update failed", error);
+      console.error('Share update failed', error);
     }
   };
 
   const onFinish = async (values: ITFromGenerate) => {
     setSubmitting(true);
+    shouldAutoScrollRef.current = true; // Set flag to enable auto-scroll
 
     // Create user message immediately for optimistic UI
     const userMessage: ChatMessage = {
-      type: "user",
+      type: 'user',
       content: values.text,
       username: username, // Use username from props or fallback to "User"
       time: new Date().toISOString(),
@@ -318,7 +294,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
     // Scroll to bottom immediately after adding user message
     setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
 
     try {
@@ -326,13 +302,9 @@ const ImageChat: FC<ImageChatProps> = ({
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
-        formData.append("type", "create-attend");
-        files.forEach((file) =>
-          formData.append("files", file.originFileObj as Blob)
-        );
-        const uploadedImages = await GenerateImageServices(axiosCore).upload(
-          formData
-        );
+        formData.append('type', 'create-attend');
+        files.forEach((file) => formData.append('files', file.originFileObj as Blob));
+        const uploadedImages = await GenerateImageServices(axiosCore).upload(formData);
         payload.image = uploadedImages;
       }
 
@@ -342,41 +314,39 @@ const ImageChat: FC<ImageChatProps> = ({
         messageApi.error(`${response.data}`);
         // Remove the optimistic user message on error
         setMessages((prev) => prev.slice(0, -1));
+        shouldAutoScrollRef.current = false; // Cancel auto-scroll on error
       } else {
         // Refetch latest messages to get AI response
         setPage(0);
         await fetchMessages(0);
 
-        // Scroll to bottom after AI response
-        setTimeout(() => {
-          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        // Scroll to bottom after AI response - will be handled by useEffect
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || "An error occurred";
+      const msg = error.response?.data?.message || 'An error occurred';
       messageApi.error(msg);
       // Remove the optimistic user message on error
       setMessages((prev) => prev.slice(0, -1));
+      shouldAutoScrollRef.current = false; // Cancel auto-scroll on error
     } finally {
       setSubmitting(false);
     }
   };
 
   // Options
-  const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
+  const [selectedRatio, setSelectedRatio] = useState<string>('1:1');
   const [selectedImageCount, setSelectedImageCount] = useState<number>(1);
-  const [selectedModel, setSelectedModel] =
-    useState<string>("Seedream 4.5 Model");
+  const [selectedModel, setSelectedModel] = useState<string>('Seedream 4.5 Model');
 
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
-    "1:1": { width: 2048, height: 2048 },
-    "4:3": { width: 2304, height: 1728 },
-    "3:4": { width: 1728, height: 2304 },
-    "16:9": { width: 2560, height: 1440 },
-    "9:16": { width: 1440, height: 2560 },
-    "3:2": { width: 2496, height: 1664 },
-    "2:3": { width: 1664, height: 2496 },
-    "21:9": { width: 3024, height: 1296 },
+    '1:1': { width: 2048, height: 2048 },
+    '4:3': { width: 2304, height: 1728 },
+    '3:4': { width: 1728, height: 2304 },
+    '16:9': { width: 2560, height: 1440 },
+    '9:16': { width: 1440, height: 2560 },
+    '3:2': { width: 2496, height: 1664 },
+    '2:3': { width: 1664, height: 2496 },
+    '21:9': { width: 3024, height: 1296 },
   };
 
   const handleRatioChange = (ratio: string) => {
@@ -397,24 +367,19 @@ const ImageChat: FC<ImageChatProps> = ({
     onClick: () => handleRatioChange(ratio),
   }));
 
-  const imageCountOptions = Array.from({ length: 10 }, (_, i) => i + 1).map(
-    (count) => ({
-      label: `${count} image${count > 1 ? "s" : ""}`,
-      key: String(count),
-      onClick: () => {
-        setSelectedImageCount(count);
-        form.setFieldValue("images", count);
-      },
-    })
-  );
+  const imageCountOptions = Array.from({ length: 10 }, (_, i) => i + 1).map((count) => ({
+    label: `${count} image${count > 1 ? 's' : ''}`,
+    key: String(count),
+    onClick: () => {
+      setSelectedImageCount(count);
+      form.setFieldValue('images', count);
+    },
+  }));
 
   async function onSetPromptText(id: number): Promise<void> {
     const prompt = await promptguideService.findById(String(id));
-    const text = form.getFieldValue("text");
-    form.setFieldValue(
-      "text",
-      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt
-    );
+    const text = form.getFieldValue('text');
+    form.setFieldValue('text', text ? text + '\n\n' + prompt.textPrompt : prompt.textPrompt);
   }
 
   // Initial Form Values - Moved to Form initialValues
@@ -428,81 +393,65 @@ const ImageChat: FC<ImageChatProps> = ({
   };
 
   return (
-    <div
-      className={
-        promptGuideOpenStatus ? "grid md:grid-cols-4 sm:grid-cols-1 gap-2" : ""
-      }
-    >
-      <div
-        className={`h-[calc(100vh-200px)] ${
-          promptGuideOpenStatus ? "col-span-3" : ""
-        }`}
-      >
+    <div className={promptGuideOpenStatus ? 'grid md:grid-cols-4 sm:grid-cols-1 gap-2' : ''}>
+      <div className={`h-[calc(100vh-200px)] ${promptGuideOpenStatus ? 'col-span-3' : ''}`}>
         {contextHolder}
         {/* Custom Image Preview Modal */}
         {previewImage && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200'
             onClick={closePreview}
           >
             <button
-              className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+              className='absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10'
               onClick={closePreview}
             >
-              <CloseOutlined style={{ fontSize: "24px" }} />
+              <CloseOutlined style={{ fontSize: '24px' }} />
             </button>
             <img
               src={previewImage}
-              alt="Preview"
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+              alt='Preview'
+              className='max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300'
               onClick={(e) => e.stopPropagation()}
             />
           </div>
         )}
-        <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
+        <div className='flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10'>
           {/* Chat Area */}
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6 pb-40"
+            className='flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6 pb-40'
           >
             {/* Empty State / Prompt Guides */}
             {!loading && messages.length === 0 && (
-              <div className="text-white pt-10 px-5 flex-1 overflow-auto">
-                <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedream 4.5`}</h1>
-                <p className="text-gray-400 text-center mb-13">
+              <div className='text-white pt-10 px-5 flex-1 overflow-auto'>
+                <h1 className='text-4xl font-light text-center mb-4'>{`AI Cave : Seedream 4.5`}</h1>
+                <p className='text-gray-400 text-center mb-13'>
                   {`Kickstart your innovation process with our comprehensive selection of predefined prompts.`}
                 </p>
-                <div className="grid grid-cols-1 gap-8 max-w-6xl mx-auto">
+                <div className='grid grid-cols-1 gap-8 max-w-6xl mx-auto'>
                   {promptGuideTypes.map((type) => (
                     <div key={type.id}>
-                      <div className="flex items-center justify-center mb-3">
+                      <div className='flex items-center justify-center mb-3'>
                         {/* <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
                           <span className="text-2xl">💬</span>
                         </div> */}
                       </div>
-                      <h3 className="text-xl font-semibold text-center mb-3">
-                        {type.title}
-                      </h3>
-                      <div className="space-y-3 w-full">
-                        {type.promptGuide?.map(
-                          (item: TPromptGuide, index: number) => (
-                            <Button
-                              htmlType="button" // Prevent form submission
-                              key={item.id || index}
-                              size="large"
-                              onClick={() =>
-                                item.id && onSetPromptText(item.id)
-                              } // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
-                              className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
-                            >
-                              <span className="flex-1 text-left">
-                                {item.title}
-                              </span>
-                              <span className="ml-auto">→</span>
-                            </Button>
-                          )
-                        )}
+                      <h3 className='text-xl font-semibold text-center mb-3'>{type.title}</h3>
+                      <div className='space-y-3 w-full'>
+                        {type.promptGuide?.map((item: TPromptGuide, index: number) => (
+                          <Button
+                            htmlType='button' // Prevent form submission
+                            key={item.id || index}
+                            size='large'
+                            onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                            className='w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none'
+                          >
+                            <span className='flex-1 text-left'>{item.title}</span>
+                            <span className='ml-auto'>→</span>
+                          </Button>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -512,42 +461,28 @@ const ImageChat: FC<ImageChatProps> = ({
 
             {/* Loading Spinner for Load More */}
             {loading && hasMore && (
-              <div className="flex justify-center py-2">
-                <Spin
-                  indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}
-                />
+              <div className='flex justify-center py-2'>
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
               </div>
             )}
 
             {messages.map((msg, index) => (
               <div
                 key={`${msg.taskId}-${index}`}
-                className={`flex gap-4 ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-4 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {/* AI Avatar */}
-                {msg.type === "ai" && (
-                  <Avatar
-                    src={Avatars.src}
-                    size={40}
-                    className="border border-white/10"
-                  />
-                )}
+                {msg.type === 'ai' && <Avatar src={Avatars.src} size={40} className='border border-white/10' />}
 
-                <div
-                  className={`flex flex-col max-w-[80%] ${
-                    msg.type === "user" ? "items-end" : "items-start"
-                  }`}
-                >
+                <div className={`flex flex-col max-w-[80%] ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
                   {/* Header Info */}
-                  <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
+                  <div className='flex items-center gap-2 mb-1 text-xs text-gray-400'>
                     <span>{msg.username}</span>
                     <span>•</span>
                     <span>
                       {new Date(msg.time).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
+                        hour: '2-digit',
+                        minute: '2-digit',
                       })}
                     </span>
                   </div>
@@ -557,9 +492,9 @@ const ImageChat: FC<ImageChatProps> = ({
                     <div
                       className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-md
                         ${
-                          msg.type === "user"
-                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                          msg.type === 'user'
+                            ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm'
+                            : 'bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm'
                         }`}
                     >
                       {msg.content}
@@ -567,17 +502,13 @@ const ImageChat: FC<ImageChatProps> = ({
                   )}
 
                   {/* Images Grid (AI Only) */}
-                  {msg.type === "ai" && msg.images && msg.images.length > 0 && (
-                    <div
-                      className={`grid gap-3 mt-3 w-full ${
-                        msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
-                      }`}
-                    >
+                  {msg.type === 'ai' && msg.images && msg.images.length > 0 && (
+                    <div className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? 'grid-cols-3' : 'grid-cols-3'}`}>
                       {/* <Image.PreviewGroup> */}
                       {msg.images.map((img, i) => (
                         <div
                           key={i}
-                          className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
+                          className='relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer'
                           onClick={() => handleImageClick(img.imageUrl)}
                         >
                           {/* <Image
@@ -588,19 +519,13 @@ const ImageChat: FC<ImageChatProps> = ({
                             loading="lazy"
                             placeholder="empty"
                           /> */}
-                          <img
-                            src={img.imageUrl}
-                            loading="lazy"
-                            alt="Video thumbnail"
-                          />
+                          <img src={img.imageUrl} loading='lazy' alt='Video thumbnail' />
                           {/* Actions Overlay */}
-                          <div
-                            className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-200 `}
-                          >
+                          <div className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-200 `}>
                             <Button
-                              size="small"
+                              size='small'
                               icon={<Download size={14} />}
-                              className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+                              className='!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80'
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -609,23 +534,19 @@ const ImageChat: FC<ImageChatProps> = ({
                             />
                             {/* Simple Share for now - could be enhanced */}
                             <Button
-                              size="small"
+                              size='small'
                               icon={
                                 msg.status ? (
-                                  <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
+                                  <LikeFilled className=' !text-yellow-500 opacity-100 !text-yellow-500' />
                                 ) : (
                                   <LikeOutlined />
                                 )
                               }
-                              className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
+                              className='!bg-black/60 !text-white !border-none  hover:!bg-black/80'
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                onShareImage(
-                                  msg.taskId!,
-                                  img.imageUrl,
-                                  msg.status || false
-                                );
+                                onShareImage(msg.taskId!, img.imageUrl, msg.status || false);
                               }}
                             />
                           </div>
@@ -637,11 +558,11 @@ const ImageChat: FC<ImageChatProps> = ({
                 </div>
 
                 {/* User Avatar */}
-                {msg.type === "user" && (
+                {msg.type === 'user' && (
                   <Avatar
                     icon={<UserOutlined />}
                     size={40}
-                    className="bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10"
+                    className='bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10'
                   />
                 )}
               </div>
@@ -649,17 +570,13 @@ const ImageChat: FC<ImageChatProps> = ({
 
             {/* Submitting State (Mock AI Typing) */}
             {submitting && (
-              <div className="flex gap-4 justify-start">
-                <Avatar
-                  src={Avatars.src}
-                  size={40}
-                  className="border border-white/10"
-                />
-                <div className="bg-[#27272a] px-5 py-4 rounded-2xl rounded-tl-sm border border-white/5">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+              <div className='flex gap-4 justify-start'>
+                <Avatar src={Avatars.src} size={40} className='border border-white/10' />
+                <div className='bg-[#27272a] px-5 py-4 rounded-2xl rounded-tl-sm border border-white/5'>
+                  <div className='flex gap-1'>
+                    <div className='w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+                    <div className='w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+                    <div className='w-2 h-2 bg-purple-500 rounded-full animate-bounce'></div>
                   </div>
                 </div>
               </div>
@@ -669,7 +586,7 @@ const ImageChat: FC<ImageChatProps> = ({
           </div>
 
           {/* Input Area */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10">
+          <div className='absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10'>
             {/* Top Tabs */}
             {/* <div className="max-w-8xl mx-auto flex gap-6 mb-2 text-sm font-medium text-gray-400">
                     <button className="text-white border-b-2 border-white pb-1">Text to Image</button>
@@ -686,55 +603,51 @@ const ImageChat: FC<ImageChatProps> = ({
                     </div>
                 </div> */}
 
-            <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
+            <div className='max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl'>
               <Form
                 form={form}
                 onFinish={onFinish}
                 initialValues={{
-                  type: "image",
+                  type: 'image',
                   width: 2048,
                   height: 2048,
                   images: 1,
-                  ratio: "1:1",
-                  resolution: "2k",
-                  duration: "10",
+                  ratio: '1:1',
+                  resolution: '2k',
+                  duration: '10',
                 }}
               >
-                <Form.Item name="type" hidden>
+                <Form.Item name='type' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="width" hidden>
+                <Form.Item name='width' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="height" hidden>
+                <Form.Item name='height' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="ratio" hidden>
+                <Form.Item name='ratio' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="images" hidden>
+                <Form.Item name='images' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="resolution" hidden>
+                <Form.Item name='resolution' hidden>
                   <Input />
                 </Form.Item>
-                <Form.Item name="duration" hidden>
+                <Form.Item name='duration' hidden>
                   <Input />
                 </Form.Item>
 
-                <div className="flex flex-col gap-2">
+                <div className='flex flex-col gap-2'>
                   {/* Text Area */}
-                  <Form.Item
-                    name="text"
-                    rules={[{ required: true, message: "" }]}
-                    style={{ margin: 0 }}
-                  >
+                  <Form.Item name='text' rules={[{ required: true, message: '' }]} style={{ margin: 0 }}>
                     <Input.TextArea
-                      placeholder="Describe the image you want to create, in any language"
+                      placeholder='Describe the image you want to create, in any language'
                       autoSize={{ minRows: 2, maxRows: 5 }}
-                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
+                      className='!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0'
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           if (!submitting) {
                             form.submit();
@@ -745,46 +658,37 @@ const ImageChat: FC<ImageChatProps> = ({
                   </Form.Item>
                   {/* Upload List Preview (Custom) */}
                   {files.length > 0 && (
-                    <div className="flex gap-2 mt-2">
+                    <div className='flex gap-2 mt-2'>
                       {files.map((file: UploadFile) => (
                         <div
                           key={file.uid}
-                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
+                          className='relative w-12 h-12 rounded overflow-hidden border border-white/20'
                         >
                           <img
-                            src={
-                              file.thumbUrl ||
-                              (file.originFileObj
-                                ? URL.createObjectURL(file.originFileObj)
-                                : "")
-                            }
-                            alt="preview"
-                            className="w-full h-full object-cover"
+                            src={file.thumbUrl || (file.originFileObj ? URL.createObjectURL(file.originFileObj) : '')}
+                            alt='preview'
+                            className='w-full h-full object-cover'
                           />
                           <div
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                            className='absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer'
                             onClick={() => {
                               setFiles(files.filter((f) => f.uid !== file.uid));
                             }}
                           >
-                            <Trash size={12} className="text-white" />
+                            <Trash size={12} className='text-white' />
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {/* Toolbar */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
+                  <div className='flex items-center justify-between pt-2'>
+                    <div className='flex items-center gap-2'>
                       {/* Left Side: Layout matches screenshot with Upload Icon first */}
                       {/* Upload Button */}
-                      <Form.Item
-                        name="image"
-                        className="mb-0"
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
+                      <Form.Item name='image' className='mb-0' style={{ marginBottom: 0, lineHeight: 1 }}>
                         <Upload
-                          listType="picture"
+                          listType='picture'
                           // onChange={handleUploadChange}
                           // beforeUpload={beforeUploadFiles}
 
@@ -795,34 +699,19 @@ const ImageChat: FC<ImageChatProps> = ({
                           maxCount={1}
                           showUploadList={false}
                           disabled={submitting}
-                          itemRender={(
-                            _originNode,
-                            file,
-                            fileList,
-                            actions
-                          ) => {
+                          itemRender={(_originNode, file, fileList, actions) => {
                             return (
-                              <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
-                                <img
-                                  src={file.thumbUrl}
-                                  alt=""
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                                <Button
-                                  size="small"
-                                  htmlType="button"
-                                  onClick={actions.remove}
-                                  type="link"
-                                  danger
-                                >
+                              <div className='flex items-center gap-2 bg-zinc-800 rounded-lg p-2'>
+                                <img src={file.thumbUrl} alt='' className='w-12 h-12 object-cover rounded' />
+                                <Button size='small' htmlType='button' onClick={actions.remove} type='link' danger>
                                   <Trash width={15} />
                                 </Button>
                               </div>
                             );
                           }}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                            <PaperClipOutlined className="text-lg" />
+                          <div className='w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer'>
+                            <PaperClipOutlined className='text-lg' />
                           </div>
                         </Upload>
                       </Form.Item>
@@ -867,27 +756,27 @@ const ImageChat: FC<ImageChatProps> = ({
 
                       {/* Resolution Selector */}
                       <Select
-                        value={form.getFieldValue("resolution") || "2k"}
+                        value={form.getFieldValue('resolution') || '2k'}
                         onChange={(val) => {
-                          form.setFieldValue("resolution", val);
+                          form.setFieldValue('resolution', val);
                           // Trigger re-render if needed or just handle form value
                         }}
-                        variant="borderless"
+                        variant='borderless'
                         popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
+                        className='!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center'
                         styles={{
                           popup: {
                             root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                              backgroundColor: '#3f3f46',
+                              border: '1px solid #52525b',
+                              borderRadius: '8px',
+                              padding: '4px',
                             },
                           },
                         }}
                         options={[
-                          { value: "2k", label: "2K" },
-                          { value: "4k", label: "4K" },
+                          { value: '2k', label: '2K' },
+                          { value: '4k', label: '4K' },
                         ]}
                       />
 
@@ -895,24 +784,24 @@ const ImageChat: FC<ImageChatProps> = ({
                       <Select
                         value={selectedRatio}
                         onChange={handleRatioChange}
-                        variant="borderless"
+                        variant='borderless'
                         popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                        className='!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]'
                         styles={{
                           popup: {
                             root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                              backgroundColor: '#3f3f46',
+                              border: '1px solid #52525b',
+                              borderRadius: '8px',
+                              padding: '4px',
                             },
                           },
                         }}
                         options={ratioOptions.map((opt) => ({
                           value: opt.key,
                           label: (
-                            <span className="flex items-center gap-1">
-                              <div className="w-3 h-3 border border-white rounded-[1px]" />
+                            <span className='flex items-center gap-1'>
+                              <div className='w-3 h-3 border border-white rounded-[1px]' />
                               {opt.label}
                             </span>
                           ),
@@ -925,18 +814,18 @@ const ImageChat: FC<ImageChatProps> = ({
                         onChange={(val) => {
                           const count = Number(val);
                           setSelectedImageCount(count);
-                          form.setFieldValue("images", count);
+                          form.setFieldValue('images', count);
                         }}
-                        variant="borderless"
+                        variant='borderless'
                         popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]"
+                        className='!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]'
                         styles={{
                           popup: {
                             root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                              backgroundColor: '#3f3f46',
+                              border: '1px solid #52525b',
+                              borderRadius: '8px',
+                              padding: '4px',
                             },
                           },
                         }}
@@ -957,52 +846,44 @@ const ImageChat: FC<ImageChatProps> = ({
                                     {submitting ? <LoadingOutlined /> : <>Generate for Free <Sparkles size={14} /></>}
                                 </Button> */}
                     <Button
-                      htmlType="submit"
-                      size="large"
+                      htmlType='submit'
+                      size='large'
                       disabled={submitting}
-                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                      className='w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none'
                     >
-                      <SendOutlined className="text-lg" />
+                      <SendOutlined className='text-lg' />
                     </Button>
                   </div>
                 </div>
               </Form>
             </div>
-            <div className="text-center mt-3 text-xs text-zinc-500">
-              AI can make mistakes. Please check the generated images.{" "}
+            <div className='text-center mt-3 text-xs text-zinc-500'>
+              AI can make mistakes. Please check the generated images.{' '}
             </div>
           </div>
         </div>
-      </div>{" "}
-      <div
-        className={`${
-          promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
-        }`}
-      >
-        <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-          <div className="p-4 ">
-            <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
-            <div className="text-sm h-full ">
-              <div className="flex-1 h-[calc(100vh-270px)] overflow-y-auto">
+      </div>{' '}
+      <div className={`${promptGuideOpenStatus ? ' h-[calc(100vh-200px)]  block' : 'hidden'}`}>
+        <div className=' h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10'>
+          <div className='p-4 '>
+            <h2 className='text-lg font-semibold mb-2'>Prompt Guide</h2>
+            <div className='text-sm h-full '>
+              <div className='flex-1 h-[calc(100vh-270px)] overflow-y-auto'>
                 {promptGuideTypes.map((type) => (
                   <div key={type.id}>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
-                      {type.title}
-                    </h3>
-                    <div className="space-y-3 w-full">
-                      {type.promptGuide?.map(
-                        (item: TPromptGuide, index: number) => (
-                          <Button
-                            htmlType="button" // Prevent form submission
-                            key={item.id || index}
-                            size="large"
-                            onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
-                            className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
-                          >
-                            <Space className=" ">{item.title}</Space>
-                          </Button>
-                        )
-                      )}
+                    <h3 className='text-sm font-semibold text-gray-400 mb-3 mt-2'>{type.title}</h3>
+                    <div className='space-y-3 w-full'>
+                      {type.promptGuide?.map((item: TPromptGuide, index: number) => (
+                        <Button
+                          htmlType='button' // Prevent form submission
+                          key={item.id || index}
+                          size='large'
+                          onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                          className='w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none'
+                        >
+                          <Space className=' '>{item.title}</Space>
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 ))}
