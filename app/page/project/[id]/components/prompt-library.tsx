@@ -63,34 +63,60 @@ const PromptLibrary: FC<props> = ({
     setLoading(false);
   };
 
-  const handleOpenImage = async (imageName: string, types: string) => {
-    const res =
-      types === "vdo"
-        ? await GenerateImageServices(axiosCore).downloadVDO(imageName)
-        : await GenerateImageServices(axiosCore).downloadImage(imageName);
-    const blob = new Blob([res], { type: "image/jpeg" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = imageName.split("/").pop()!;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const onDownloadVideo = async (videoName: string) => {
+  const handleOpenImage = async (imageUrl: string, types: string) => {
     try {
-      // Assuming downloadImage works for files generally or we need a similar one for video
-      const res = await GenerateImageServices(axiosCore).downloadImage(
-        videoName
-      );
-      const blob = new Blob([res], { type: "video/mp4" });
+      // Extract filename from URL (before query parameters)
+      const urlWithoutParams = imageUrl.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop() || (types === 'vdo' ? 'video.mp4' : 'image.jpg');
+
+      // Show loading message
+      const hide = message.loading(`Downloading ${types === 'vdo' ? 'video' : 'image'}...`, 0);
+
+      // Fetch the file directly from the URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = videoName.split("/").pop() || "video.mp4";
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+
+      hide();
+      message.success(`${types === 'vdo' ? 'Video' : 'Image'} downloaded successfully`);
     } catch (error) {
+      console.error('Download error:', error);
+      message.error("Download failed");
+    }
+  };
+
+  const onDownloadVideo = async (videoUrl: string) => {
+    try {
+      // Extract filename from URL (before query parameters)
+      const urlWithoutParams = videoUrl.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop() || 'video.mp4';
+
+      // Show loading message for larger files
+      const hide = message.loading('Downloading video...', 0);
+
+      // Fetch the video directly from the URL
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      hide();
+      message.success('Video downloaded successfully');
+    } catch (error) {
+      console.error('Download error:', error);
       message.error("Download failed");
     }
   };
@@ -110,26 +136,6 @@ const PromptLibrary: FC<props> = ({
                   className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                   onClick={() => onSelectPrompt(image)}
                 >
-                  {/* <img
-                src={typeof thumbnailSrc === 'string' ? thumbnailSrc : thumbnailSrc.src}
-                loading="lazy"
-                alt="Video thumbnail"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
-                    }`}
-            />
-
-            {videoLoaded && (
-                <video
-                    ref={videoRef}
-                    src={videoData.imageUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'
-                        }`}
-                />
-            )} */}
                   {image.typeGenerate === "vdo" ? (
                     <VideoItem
                       key={imgIndex}
@@ -137,37 +143,6 @@ const PromptLibrary: FC<props> = ({
                       onDownloadVideo={onDownloadVideo}
                     />
                   ) : (
-                    // <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
-                    //   {/* <video
-                    //     controls
-                    //     className="w-full h-full object-cover"
-                    //     preload="metadata"
-                    //   >
-                    //     <source
-                    //       src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`}
-                    //       type="video/mp4"
-                    //     />
-                    //     Your browser does not support the video tag.
-                    //   </video> */}
-                    //   <video
-                    //     // ref={videoRef}
-                    //     src={image.imageUrl}
-                    //     muted
-                    //     loop
-                    //     playsInline
-                    //     preload="metadata"
-                    //   // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                    //   />
-                    // </div>
-                    // <Image
-                    //   preview={false}
-                    //   height={"100%"}
-                    //   fallback={fallbackImage}
-                    //   // src={image.imageUrl}
-                    //   src={`/api/images/${encodeURIComponent(image.imageUrl)}`}
-                    //   className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    //   alt={`AI Generated Image ${imgIndex + 1}`}
-                    // />
                     <img
                       src={image.imageUrl}
                       loading="lazy"

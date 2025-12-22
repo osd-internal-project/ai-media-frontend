@@ -1,31 +1,19 @@
-import React, { useEffect, useState, type FC, type ReactElement } from "react";
-import {
-  Image,
-  ConfigProvider,
-  Empty,
-  Form,
-  Pagination,
-  notification,
-  Button,
-  message,
-} from "antd";
-import { fallbackImage } from "@/app/utils/fallback";
-import { Download } from "lucide-react";
-import { axiosCore } from "@/app/lib/axios/axios";
-import GalleryServices from "@/app/services/gellory.service";
-import { useParams } from "next/navigation";
-import GenerateImageServices from "@/app/services/generate-image.service";
-import VideoItem from "./video-player";
+import React, { useEffect, useState, type FC, type ReactElement } from 'react';
+import { Image, ConfigProvider, Empty, Form, Pagination, notification, Button, message } from 'antd';
+import { fallbackImage } from '@/app/utils/fallback';
+import { Download } from 'lucide-react';
+import { axiosCore } from '@/app/lib/axios/axios';
+import GalleryServices from '@/app/services/gellory.service';
+import { useParams } from 'next/navigation';
+import GenerateImageServices from '@/app/services/generate-image.service';
+import VideoItem from './video-player';
 
 export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
 }
 
-const PromptActivity: FC<props> = ({
-  shouldRefetch,
-  activeKey,
-}): ReactElement => {
+const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement => {
   const params = useParams();
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
@@ -44,13 +32,13 @@ const PromptActivity: FC<props> = ({
   };
 
   useEffect(() => {
-    if (activeKey === "activity" && loading) {
+    if (activeKey === 'activity' && loading) {
       fectData();
     }
   }, [loading, page]);
 
   useEffect(() => {
-    if (activeKey === "activity" && shouldRefetch) {
+    if (activeKey === 'activity' && shouldRefetch) {
       fectData();
     }
   }, [shouldRefetch]);
@@ -63,51 +51,74 @@ const PromptActivity: FC<props> = ({
     setLoading(false);
   };
 
-  const handleOpenImage = async (imageName: string, types: string) => {
-    const res =
-      types === "vdo"
-        ? await GenerateImageServices(axiosCore).downloadVDO(imageName)
-        : await GenerateImageServices(axiosCore).downloadImage(imageName);
-    const blob = new Blob([res], { type: "image/jpeg" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = imageName.split("/").pop()!;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const onDownloadVideo = async (videoName: string) => {
+  const handleOpenImage = async (imageUrl: string, types: string) => {
     try {
-      // Assuming downloadImage works for files generally or we need a similar one for video
-      const res = await GenerateImageServices(axiosCore).downloadImage(
-        videoName
-      );
-      const blob = new Blob([res], { type: "video/mp4" });
+      // Extract filename from URL (before query parameters)
+      const urlWithoutParams = imageUrl.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop() || (types === 'vdo' ? 'video.mp4' : 'image.jpg');
+
+      // Show loading message
+      const hide = message.loading(`Downloading ${types === 'vdo' ? 'video' : 'image'}...`, 0);
+
+      // Fetch the file directly from the URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
-      link.download = videoName.split("/").pop() || "video.mp4";
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+
+      hide();
+      message.success(`${types === 'vdo' ? 'Video' : 'Image'} downloaded successfully`);
     } catch (error) {
-      message.error("Download failed");
+      console.error('Download error:', error);
+      message.error('Download failed');
+    }
+  };
+
+  const onDownloadVideo = async (videoUrl: string) => {
+    try {
+      // Extract filename from URL (before query parameters)
+      const urlWithoutParams = videoUrl.split('?')[0];
+      const filename = urlWithoutParams.split('/').pop() || 'video.mp4';
+
+      // Show loading message for larger files
+      const hide = message.loading('Downloading video...', 0);
+
+      // Fetch the video directly from the URL
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      hide();
+      message.success('Video downloaded successfully');
+    } catch (error) {
+      console.error('Download error:', error);
+      message.error('Download failed');
     }
   };
 
   return (
-    <div className="p-4 rounded-lg mb-4">
+    <div className='p-4 rounded-lg mb-4'>
       {contextHolders}
-      <div className="grid sm:grid-cols-2 md:grid-cols-5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
+      <div className='grid sm:grid-cols-2 md:grid-cols-5'>
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2'>
           {getData.data.map((image, imgIndex) => {
             return (
-              <div
-                key={imgIndex}
-                className="relative group w-full h-[200px] text-center "
-              >
+              <div key={imgIndex} className='relative group w-full h-[200px] text-center '>
                 <div
-                  className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
+                  className='relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]'
                   onClick={() => onSelectPrompt(image)}
                 >
                   {/* <img
@@ -130,12 +141,8 @@ const PromptActivity: FC<props> = ({
                         }`}
                 />
             )} */}
-                  {image.typeGenerate === "vdo" ? (
-                    <VideoItem
-                      key={imgIndex}
-                      videoData={image}
-                      onDownloadVideo={onDownloadVideo}
-                    />
+                  {image.typeGenerate === 'vdo' ? (
+                    <VideoItem key={imgIndex} videoData={image} onDownloadVideo={onDownloadVideo} />
                   ) : (
                     // <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
                     //   {/* <video
@@ -168,23 +175,17 @@ const PromptActivity: FC<props> = ({
                     //   className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
                     //   alt={`AI Generated Image ${imgIndex + 1}`}
                     // />
-                    <img
-                      src={image.imageUrl}
-                      loading="lazy"
-                      alt="Video thumbnail"
-                    />
+                    <img src={image.imageUrl} loading='lazy' alt='Video thumbnail' />
                   )}
 
-                  <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className='absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none' />
 
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className='absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
                     <button
-                      className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                      onClick={() =>
-                        handleOpenImage(image.imageUrl, image.typeGenerate)
-                      }
+                      className='p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer'
+                      onClick={() => handleOpenImage(image.imageUrl, image.typeGenerate)}
                     >
-                      <Download className="w-4 h-4 text-gray-800" />
+                      <Download className='w-4 h-4 text-gray-800' />
                     </button>
                   </div>
                 </div>
@@ -192,7 +193,7 @@ const PromptActivity: FC<props> = ({
             );
           })}
 
-          <div className="col sm:col-span-2 md:col-span-4 justify-center items-center flex mt-4">
+          <div className='col sm:col-span-2 md:col-span-4 justify-center items-center flex mt-4'>
             <Pagination
               current={page}
               total={total}
@@ -212,21 +213,21 @@ const PromptActivity: FC<props> = ({
               theme={{
                 token: {},
                 components: {
-                  Segmented: { itemSelectedBg: "#363A3D" },
+                  Segmented: { itemSelectedBg: '#363A3D' },
                   Select: {
-                    optionSelectedBg: "#363A3D",
-                    selectorBg: "#fff",
+                    optionSelectedBg: '#363A3D',
+                    selectorBg: '#fff',
                   },
                 },
               }}
             >
-              <Form layout="vertical">
+              <Form layout='vertical'>
                 <div>
-                  <div className="text-[24px] font-bold p-4 flex justify-start gap-2 items-center">
+                  <div className='text-[24px] font-bold p-4 flex justify-start gap-2 items-center'>
                     Info
                     <Button
-                      htmlType="button"
-                      size="small"
+                      htmlType='button'
+                      size='small'
                       onClick={() => {
                         navigator.clipboard.writeText(selected.prompt);
                         api.success({
@@ -234,23 +235,23 @@ const PromptActivity: FC<props> = ({
                           description: `${selected.prompt}`,
                         });
                       }}
-                      className="!bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
+                      className='!bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none'
                     >{`copied`}</Button>
                   </div>
-                  <div className="text-[16px] p-4 space-y-4">
+                  <div className='text-[16px] p-4 space-y-4'>
                     <div>
                       <div>Prompt:</div>
                       <div>{selected.prompt}</div>
                     </div>
 
-                    <div className="flex justify-between">
+                    <div className='flex justify-between'>
                       <div>Create by:</div>
-                      <div>{selected?.users?.fullname || "-"}</div>
+                      <div>{selected?.users?.fullname || '-'}</div>
                     </div>
 
-                    <div className="flex justify-between">
+                    <div className='flex justify-between'>
                       <div>Create Date:</div>
-                      <div>{selected?.createdAt || "-"}</div>
+                      <div>{selected?.createdAt || '-'}</div>
                     </div>
                   </div>
                 </div>
