@@ -432,7 +432,7 @@ const ImageChat: FC<ImageChatProps> = ({
       }
     >
       <div
-        className={`h-[calc(100vh-200px)] ${
+        className={`h-[calc(100vh-160px)] ${
           promptGuideOpenStatus ? "col-span-3" : ""
         }`}
       >
@@ -790,7 +790,7 @@ const ImageChat: FC<ImageChatProps> = ({
                           onChange={handleUploadChange}
                           beforeUpload={beforeUpload}
                           multiple={true}
-                          maxCount={2}
+                          maxCount={10}
                           showUploadList={false}
                           disabled={submitting}
                           itemRender={(
