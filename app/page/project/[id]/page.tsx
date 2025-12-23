@@ -69,7 +69,7 @@ const GenerateImagePage: FC = () => {
   };
 
   return (
-    <div>
+    <div className="">
       <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>

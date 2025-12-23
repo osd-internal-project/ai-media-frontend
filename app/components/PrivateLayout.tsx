@@ -22,7 +22,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
-import PrivateNavigation from "./PrivateNavigation";
+// import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -372,7 +372,30 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 </div>
               </div>
             </div>
-            {groupName !== "admin-user" ? (
+            <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+              <Badge dot color="green">
+                <Avatar />
+              </Badge>
+              <div className="grid grid-cols-1">
+                <span className="text-white text-sm">{`${session?.user?.name}`}</span>
+                <span className="text-[#6366F1]">Premium</span>
+              </div>
+              <>
+                <Popover
+                  content={content}
+                  trigger="click"
+                  placement="bottomRight"
+                  title={false}
+                >
+                  <Button
+                    type="default"
+                    size="small"
+                    icon={<SettingOutlined />}
+                  />
+                </Popover>
+              </>
+            </div>
+            {/* {groupName !== "admin-user" ? (
               <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
                   <Avatar />
@@ -396,11 +419,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   </Popover>
                 </>
               </div>
-            ) : null}
+            ) : null} */}
           </div>
         </Sider>
         <Layout className="flex-1 w-full h-full overflow-hidden">
-          {groupName === "admin-user" ? (
+          {/* {groupName === "admin-user" ? (
             <PrivateNavigation
               user={
                 session?.user
@@ -408,8 +431,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   : undefined
               }
             />
-          ) : null}
-          <div className="w-full h-full px-2">
+          ) : null} */}
+          <div className="w-full h-screen p-2  overflow-y-auto">
             <PrivateContent
               user={
                 session?.user

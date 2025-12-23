@@ -14,7 +14,12 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
   const content = (
     <div className="flex flex-col gap-2">
       <p style={{ marginBottom: 8 }}></p>
-      <Button type="default" block size="small" onClick={() => signOut({ callbackUrl: "/" })}>
+      <Button
+        type="default"
+        block
+        size="small"
+        onClick={() => signOut({ callbackUrl: "/" })}
+      >
         Sign Out
       </Button>
     </div>
@@ -39,8 +44,17 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
               <span className="font-bold text-white">{user.fullname}</span>
             </div>
             <>
-              <Popover content={content} trigger="click" placement="bottomRight" title={false}>
-                <Button type="default" size="small" icon={<SettingOutlined />} />
+              <Popover
+                content={content}
+                trigger="click"
+                placement="bottomRight"
+                title={false}
+              >
+                <Button
+                  type="default"
+                  size="small"
+                  icon={<SettingOutlined />}
+                />
               </Popover>
             </>
           </div>
