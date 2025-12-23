@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import { TGroup } from "@/app/common/groups.type";
 
 const UserManagementPage = () => {
+  const [messageApi, contextHolder] = message.useMessage();
   const userServices = UserServices(axiosUser);
   const [formmanage] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(true);
@@ -50,13 +51,14 @@ const UserManagementPage = () => {
       setOpen({ status: false, type: "create" });
       setLoading(false);
     } catch (err) {
-      message.error(`${err}`);
+      messageApi.error(`${err}`);
     }
   };
 
   const handleManage = (type: string) => {
     if (type === "create") {
       setOpen({ status: true, type: "create" });
+      formmanage.resetFields();
     } else if (type === "edit") {
       setOpen({ status: true, type: "edit" });
     } else {
@@ -66,31 +68,48 @@ const UserManagementPage = () => {
 
   const onFinish = async (type: string, values: TUser) => {
     let response;
-    if (type === "create") {
-      response = await userServices.create({
-        ...values,
-        status: values.status ? "active" : "unabled",
-      });
-    } else {
-      const { userId, ...rest } = values;
-      response = await userServices.update(formmanage.getFieldValue("userId"), {
-        ...values,
-        status: rest.status ? "active" : "unabled",
-      });
-    }
-    if (response) {
-      message.success(`${type} success`);
-      setLoading(true);
-      formmanage.resetFields();
+    try {
+      if (type === "create") {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { confirmPassword, ...otherValues } = values as any;
+        response = await userServices.create({
+          ...otherValues,
+          status: values.status ? "active" : "unabled",
+        });
+      } else {
+        const { userId, ...rest } = values;
+        response = await userServices.update(
+          formmanage.getFieldValue("userId"),
+          {
+            ...values,
+            status: rest.status ? "active" : "unabled",
+          }
+        );
+      }
+
+      if (response) {
+        messageApi.success(`${type} success`);
+        setLoading(true);
+        formmanage.resetFields();
+      }
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        messageApi.error(`${error.response.data.message}`);
+      } else {
+        messageApi.error(`${error.message}`);
+      }
     }
   };
-
   const handleDelete = async (userId: string) => {
     try {
       await userServices.del(userId);
-      message.success("Deleted successfully");
+      messageApi.success("Deleted successfully");
     } catch (error) {
-      message.error("Delete failed");
+      messageApi.error("Delete failed");
     }
     setLoading(true);
   };
@@ -103,7 +122,9 @@ const UserManagementPage = () => {
       render: (text, record) => (
         <div className="flex items-center">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mr-3 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">{text.substring(0, 2).toUpperCase()}</span>
+            <span className="text-white text-sm font-bold">
+              {text.substring(0, 2).toUpperCase()}
+            </span>
           </div>
           <div>
             <div className="text-white font-medium">{text}</div>
@@ -129,7 +150,10 @@ const UserManagementPage = () => {
       render: (group: { group: TGroup }[]) => (
         <div>
           {group?.map((g) => (
-            <Tag key={g.group.groupId} className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3">
+            <Tag
+              key={g.group.groupId}
+              className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3"
+            >
               {g.group.name}
             </Tag>
           )) || "-"}
@@ -151,7 +175,10 @@ const UserManagementPage = () => {
         { text: "Disabled", value: "inactive" },
       ],
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+        <Tag
+          color={status === "active" ? "green" : "red"}
+          className="rounded-full px-3"
+        >
           {status === "active" ? "Enabled" : "Unabled"}
         </Tag>
       ),
@@ -211,6 +238,7 @@ const UserManagementPage = () => {
 
   return (
     <div>
+      {contextHolder}
       <UsersSummaryPage getSummary={getSummary} />
       <UserFiltersPage
         onSearch={(value) => console.log("Search:", value)}

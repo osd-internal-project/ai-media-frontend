@@ -15,4 +15,5 @@ export type TUser = {
   tier: string;
   email: string;
   phoneNumber: string;
+  password?: string;
 };

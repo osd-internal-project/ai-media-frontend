@@ -1,6 +1,24 @@
 import React, { type FC, type ReactElement } from "react";
-import { Table, Button, Tag, Input, Select, Space, Modal, Form, InputNumber, Switch, type FormInstance } from "antd";
-import { SearchOutlined, ReloadOutlined, DownloadOutlined, SettingOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  Table,
+  Button,
+  Tag,
+  Input,
+  Select,
+  Space,
+  Modal,
+  Form,
+  InputNumber,
+  Switch,
+  type FormInstance,
+} from "antd";
+import {
+  SearchOutlined,
+  ReloadOutlined,
+  DownloadOutlined,
+  SettingOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import type { TUser } from "@/app/common/user.type";
 
 const { Option } = Select;
@@ -14,7 +32,14 @@ export interface props {
   onFinish: (type: string, values: TUser) => void;
 }
 
-const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formmanage, open, onFinish }): ReactElement => {
+const UserFiltersPage: FC<props> = ({
+  onSearch,
+  onRefresh,
+  handleManage,
+  formmanage,
+  open,
+  onFinish,
+}): ReactElement => {
   return (
     <div className=" p-4 rounded-lg mb-4">
       <div className="flex items-center justify-between gap-2">
@@ -22,13 +47,32 @@ const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formman
           placeholder="Search"
           prefix={<SearchOutlined className="text-gray-500" />}
           className="w-10  text-white "
-          style={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "white" }}
+          style={{
+            backgroundColor: "#1f2937",
+            borderColor: "#374151",
+            color: "white",
+          }}
         />
         <Space>
-          <Button icon={<ReloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" onClick={onRefresh} />
-          <Button icon={<DownloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-7000" />
-          <Button icon={<SettingOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" />
-          <Button type="primary" icon={<PlusOutlined />} className="!bg-indigo-600 hover:!bg-indigo-700" onClick={() => handleManage("create")}>
+          <Button
+            icon={<ReloadOutlined />}
+            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700"
+            onClick={onRefresh}
+          />
+          <Button
+            icon={<DownloadOutlined />}
+            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-7000"
+          />
+          <Button
+            icon={<SettingOutlined />}
+            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700"
+          />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            className="!bg-indigo-600 hover:!bg-indigo-700"
+            onClick={() => handleManage("create")}
+          >
             Create New User
           </Button>
         </Space>
@@ -55,21 +99,77 @@ const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formman
             </Form.Item>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Form.Item label="Username" name="username" rules={[{ required: true, message: "Please input username!" }]}>
+              <Form.Item
+                label="Username"
+                name="username"
+                rules={[{ required: true, message: "Please input username!" }]}
+              >
                 <Input placeholder="Enter username" />
               </Form.Item>
 
-              <Form.Item label="Full Name" name="fullname" rules={[{ required: true, message: "Please input full name!" }]}>
+              <Form.Item
+                label="Full Name"
+                name="fullname"
+                rules={[{ required: true, message: "Please input full name!" }]}
+              >
                 <Input placeholder="Enter full name" />
               </Form.Item>
 
-              <Form.Item label="Email" name="email" rules={[{ required: true, message: "Please input full name!" }]}>
+              <Form.Item
+                label="Email"
+                name="email"
+                rules={[{ required: true, message: "Please input full name!" }]}
+              >
                 <Input type="email" placeholder="Enter email" />
               </Form.Item>
 
-              <Form.Item label="Phone" name="phoneNumber" rules={[{ required: true, message: "Please input phone number!" }]}>
+              <Form.Item
+                label="Phone"
+                name="phoneNumber"
+                rules={[
+                  { required: true, message: "Please input phone number!" },
+                ]}
+              >
                 <Input placeholder="Enter Phone" />
               </Form.Item>
+              {open.type === "create" ? (
+                <>
+                  <Form.Item
+                    label="Password"
+                    name="password"
+                    rules={[
+                      { required: true, message: "Please input password!" },
+                    ]}
+                  >
+                    <Input.Password placeholder="Enter Password" />
+                  </Form.Item>
+                  <Form.Item
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    dependencies={["password"]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please input confirm password!",
+                      },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue("password") === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error(
+                              "The two passwords that you entered do not match!"
+                            )
+                          );
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password placeholder="Enter Confirm Password" />
+                  </Form.Item>
+                </>
+              ) : null}
             </div>
 
             <Form.Item label="Description" name="description">
@@ -77,8 +177,19 @@ const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formman
             </Form.Item>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Form.Item label="Tier" name="tier" rules={[{ required: true, message: "Please select user Tier!" }]}>
-                <Select placeholder="Select User Tier" allowClear showSearch optionFilterProp="label">
+              <Form.Item
+                label="Tier"
+                name="tier"
+                rules={[
+                  { required: true, message: "Please select user Tier!" },
+                ]}
+              >
+                <Select
+                  placeholder="Select User Tier"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                >
                   <Option value="normal">Normal</Option>
                   <Option value="gold">Gold</Option>
                   <Option value="platinum">Platinum</Option>
@@ -89,11 +200,21 @@ const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formman
                 <Input placeholder="Enter API Keys" />
               </Form.Item>
 
-              <Form.Item label="Max Token" name="maxToken" rules={[{ required: true, message: "Please input max token!" }]}>
+              <Form.Item
+                label="Max Token"
+                name="maxToken"
+                rules={[{ required: true, message: "Please input max token!" }]}
+              >
                 <InputNumber className="!w-full" min={0} />
               </Form.Item>
 
-              <Form.Item label="Max Images" name="maxImages" rules={[{ required: true, message: "Please input max images!" }]}>
+              <Form.Item
+                label="Max Images"
+                name="maxImages"
+                rules={[
+                  { required: true, message: "Please input max images!" },
+                ]}
+              >
                 <InputNumber className="!w-full" min={0} />
               </Form.Item>
 
