@@ -410,7 +410,7 @@ const VideoChat: FC<VideoChatProps> = ({
       }
     >
       <div
-        className={`h-[calc(100vh-200px)] ${
+        className={`h-[calc(100vh-160px)] ${
           promptGuideOpenStatus ? "col-span-3" : ""
         }`}
       >
@@ -810,6 +810,9 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 </div>
               </Form>
+            </div>
+            <div className="text-center mt-3 text-xs text-zinc-500">
+              AI can make mistakes. Please check the generated Video.{" "}
             </div>
           </div>
         </div>

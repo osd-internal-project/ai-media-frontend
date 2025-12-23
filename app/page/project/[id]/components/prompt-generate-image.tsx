@@ -766,7 +766,7 @@ const PromptGenerateImage: FC<props> = ({
                         onChange={handleChangeFiles}
                         beforeUpload={beforeUploadFiles}
                         multiple={true}
-                        maxCount={4}
+                        maxCount={10}
                         showUploadList={true}
                         disabled={submitting}
                         itemRender={(originNode, file, fileList, actions) => {
