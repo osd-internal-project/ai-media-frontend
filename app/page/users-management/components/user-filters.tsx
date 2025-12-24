@@ -19,7 +19,9 @@ import {
   SettingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import type { TUser } from "@/app/common/user.type";
+import type { TUserForm } from "@/app/common/user.type";
+
+import type { TGroup } from "@/app/common/groups.type";
 
 const { Option } = Select;
 
@@ -29,7 +31,9 @@ export interface props {
   handleManage: (type: string) => void;
   formmanage: FormInstance;
   open: { status: boolean; type: string };
-  onFinish: (type: string, values: TUser) => void;
+  onFinish: (type: string, values: TUserForm) => void;
+  groups: TGroup[];
+  search: string;
 }
 
 const UserFiltersPage: FC<props> = ({
@@ -39,6 +43,8 @@ const UserFiltersPage: FC<props> = ({
   formmanage,
   open,
   onFinish,
+  groups,
+  search,
 }): ReactElement => {
   return (
     <div className=" p-4 rounded-lg mb-4">
@@ -52,6 +58,8 @@ const UserFiltersPage: FC<props> = ({
             borderColor: "#374151",
             color: "white",
           }}
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
         />
         <Space>
           <Button
@@ -132,44 +140,49 @@ const UserFiltersPage: FC<props> = ({
               >
                 <Input placeholder="Enter Phone" />
               </Form.Item>
-              {open.type === "create" ? (
-                <>
-                  <Form.Item
-                    label="Password"
-                    name="password"
-                    rules={[
-                      { required: true, message: "Please input password!" },
-                    ]}
-                  >
-                    <Input.Password placeholder="Enter Password" />
-                  </Form.Item>
-                  <Form.Item
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    dependencies={["password"]}
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please input confirm password!",
+              <div className=" col-span-2 font-bold">
+                {open.type === "create" ? "Create Password" : "Change Password"}
+              </div>
+              <>
+                <Form.Item
+                  label="Password"
+                  name="password"
+                  rules={[
+                    {
+                      required: open.type === "create",
+                      message: "Please input password!",
+                    },
+                  ]}
+                >
+                  <Input.Password placeholder="Enter Password" />
+                </Form.Item>
+                <Form.Item
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  dependencies={["password"]}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      required:
+                        open.type === "create" || !!getFieldValue("password"),
+                      message: "Please input confirm password!",
+                    }),
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            "The two passwords that you entered do not match!"
+                          )
+                        );
                       },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue("password") === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(
-                            new Error(
-                              "The two passwords that you entered do not match!"
-                            )
-                          );
-                        },
-                      }),
-                    ]}
-                  >
-                    <Input.Password placeholder="Enter Confirm Password" />
-                  </Form.Item>
-                </>
-              ) : null}
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder="Enter Confirm Password" />
+                </Form.Item>
+              </>
             </div>
 
             <Form.Item label="Description" name="description">
@@ -193,6 +206,22 @@ const UserFiltersPage: FC<props> = ({
                   <Option value="normal">Normal</Option>
                   <Option value="gold">Gold</Option>
                   <Option value="platinum">Platinum</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="Group" name="groups">
+                <Select
+                  mode="multiple"
+                  placeholder="Select User Group"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                >
+                  {groups?.map((g) => (
+                    <Option key={g.id} value={g.groupId}>
+                      {g.name}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
 

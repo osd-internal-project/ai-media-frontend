@@ -18,6 +18,17 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findBySearch: async (search?: string) => {
+      return await axiosInstance
+        .get(`${baseUsersUrl}/search`, { params: { search } })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     summary: async () => {
       return await axiosInstance
         .get(`${baseUsersUrl}/summary`)
@@ -29,7 +40,7 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    create: async (value: TUser) => {
+    create: async (value: any) => {
       return await axiosInstance
         .post(`${baseUsersUrl}`, { body: value })
         .then((res) => {
@@ -39,7 +50,7 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
-    update: async (userId: string, value: TUser) => {
+    update: async (userId: string, value: any) => {
       return await axiosInstance
         .patch(`${baseUsersUrl}/${userId}`, { body: value })
         .then((res) => {

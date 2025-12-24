@@ -91,7 +91,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const getdatauser = async () => {
     const response = await userServices.findById(session?.user?.id as string);
-    const userRoles = response.roles.map((r: any) => r.role.name);
+    const userRoles = response.roles?.map((r: any) => r.role.name) || [];
     setRoles(userRoles);
     setGroupName(response.name);
   };

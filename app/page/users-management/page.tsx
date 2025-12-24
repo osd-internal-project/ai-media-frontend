@@ -4,17 +4,28 @@ import { UsersSummaryPage } from "./components/users-summary";
 import UserServices from "@/app/services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import UserFiltersPage from "./components/user-filters";
-import { Button, Form, message, Popconfirm, Space, Table, Tag } from "antd";
-import type { TUser } from "@/app/common/user.type";
+import {
+  Button,
+  Form,
+  message,
+  Popconfirm,
+  Space,
+  Spin,
+  Table,
+  Tag,
+} from "antd";
+import type { TUser, TUserForm } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { TGroup } from "@/app/common/groups.type";
-
+import GroupsServices from "@/app/services/groups.service";
 const UserManagementPage = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const userServices = UserServices(axiosUser);
+  const groupsService = GroupsServices(axiosUser);
   const [formmanage] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchText, setSearchText] = useState<string | undefined>(undefined);
   const [getSummary, setSummary] = useState<{
     total: number;
     active: number;
@@ -27,14 +38,16 @@ const UserManagementPage = () => {
     userGroup: 0,
   });
   const [getdata, setData] = useState<TUser[]>([]);
+  const [getGroups, setGroups] = useState<TGroup[]>([]);
   const [open, setOpen] = useState<{ status: boolean; type: string }>({
     status: false,
     type: "create",
   });
 
   useEffect(() => {
-    FecthSummaryData();
     if (loading) {
+      FecthSummaryData();
+      FecthGroupsData();
       fecthData();
     }
   }, [loading]);
@@ -44,15 +57,32 @@ const UserManagementPage = () => {
     setSummary(response);
   };
 
-  const fecthData = async () => {
+  const FecthGroupsData = async () => {
     try {
-      const response = await userServices.findAll();
+      const response = await groupsService.findAll();
+      setGroups(response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fecthData = async () => {
+    /* ... existing content ... */
+    try {
+      const response = await userServices.findBySearch(
+        searchText && searchText.trim()
+      );
       setData(response);
       setOpen({ status: false, type: "create" });
       setLoading(false);
     } catch (err) {
       messageApi.error(`${err}`);
     }
+  };
+
+  const onSearch = (value: string) => {
+    setSearchText(value);
+    setLoading(true);
   };
 
   const handleManage = (type: string) => {
@@ -66,8 +96,9 @@ const UserManagementPage = () => {
     }
   };
 
-  const onFinish = async (type: string, values: TUser) => {
+  const onFinish = async (type: string, values: TUserForm) => {
     let response;
+    const groups = values.groups || [];
     try {
       if (type === "create") {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,6 +106,7 @@ const UserManagementPage = () => {
         response = await userServices.create({
           ...otherValues,
           status: values.status ? "active" : "unabled",
+          groups,
         });
       } else {
         const { userId, ...rest } = values;
@@ -83,10 +115,10 @@ const UserManagementPage = () => {
           {
             ...values,
             status: rest.status ? "active" : "unabled",
+            groups,
           }
         );
       }
-
       if (response) {
         messageApi.success(`${type} success`);
         setLoading(true);
@@ -214,7 +246,9 @@ const UserManagementPage = () => {
               className="text-indigo-400 hover:text-indigo-300"
               onClick={() => {
                 handleManage("edit");
-                formmanage.setFieldsValue(record);
+                const groups =
+                  record.groups?.map((g: any) => g.group.groupId) || [];
+                formmanage.setFieldsValue({ ...record, groups });
               }}
             >
               Edit
@@ -237,16 +271,18 @@ const UserManagementPage = () => {
   ];
 
   return (
-    <div>
+    <Spin spinning={loading}>
       {contextHolder}
       <UsersSummaryPage getSummary={getSummary} />
       <UserFiltersPage
-        onSearch={(value) => console.log("Search:", value)}
+        onSearch={onSearch}
         onRefresh={() => setLoading(true)}
         handleManage={handleManage}
         formmanage={formmanage}
         open={open}
         onFinish={onFinish}
+        groups={getGroups}
+        search={searchText}
       />
       <Table
         columns={columns}
@@ -258,7 +294,7 @@ const UserManagementPage = () => {
         }}
         scroll={{ x: "max-content" }}
       />
-    </div>
+    </Spin>
   );
 };
 
