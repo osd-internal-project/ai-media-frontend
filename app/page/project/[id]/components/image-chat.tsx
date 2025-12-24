@@ -46,6 +46,7 @@ import Avatars from "@/public/images/Avatar.jpg";
 import type { ITFromGenerate } from "@/app/common";
 import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
+import { TAIModel } from "@/app/common/ai-model.type";
 
 interface ImageChatProps {
   projectId: string;
@@ -54,6 +55,7 @@ interface ImageChatProps {
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;
   username?: string; // Add username prop
+  selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
 }
 
 interface ChatMessage {
@@ -74,6 +76,7 @@ const ImageChat: FC<ImageChatProps> = ({
   promptGuideTypes = [],
   promptGuideOpenStatus,
   username, // Destructure username
+  selectedAIModel, // Destructure selectedAIModel
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -321,7 +324,12 @@ const ImageChat: FC<ImageChatProps> = ({
     }, 100);
 
     try {
-      const payload = { ...values, projectId, userId };
+      const payload = { 
+        ...values, 
+        projectId, 
+        userId,
+        modelName: selectedAIModel?.name  // Add selected model name
+      };
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();

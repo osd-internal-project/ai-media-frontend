@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, type FC } from "react";
-import { Button, Tabs } from "antd";
+import React, { useEffect, useState, useMemo, type FC } from "react";
+import { Button, Tabs, Select, Tooltip } from "antd";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -17,12 +17,15 @@ import PromptOmnihuman from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import VideoChat from "./components/video-chat";
+import AIModelServices from "@/app/services/ai-model.service";
+import { TAIModel } from "@/app/common/ai-model.type";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
   const promptguideTypeService = PromptGuideTypeServices(axiosCore);
   const projectService = ProjectService(axiosCore);
+  const aiModelService = AIModelServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
@@ -34,6 +37,10 @@ const GenerateImagePage: FC = () => {
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
+  const [aiModels, setAIModels] = useState<TAIModel[]>([]);
+  const [selectedAIModel, setSelectedAIModel] = useState<
+    (TAIModel & { capabilities?: string[] }) | null
+  >(null);
   const { id } = params as { id: string };
 
   useEffect(() => {
@@ -62,10 +69,123 @@ const GenerateImagePage: FC = () => {
   const masterdata = async () => {
     const res = await promptguideTypeService.findAll();
     setPromptGuideTypes(res || []);
+
+    const models = await aiModelService.findAll();
+
+    setAIModels(models || []);
   };
 
   const onChangeTab = (key: "image" | "vdo") => {
     setActiveKey(key);
+
+    if (processedModels.length > 0) {
+      const savedModelId = localStorage.getItem(`selectedAIModel_${key}_${id}`);
+      let modelToSelect = null;
+
+      if (savedModelId) {
+        modelToSelect = processedModels.find(m => 
+          m.id === parseInt(savedModelId) && 
+          (key === "image" ? m.type === "image" : m.type === "vdo")
+        );
+      }
+
+      if (!modelToSelect) {
+        // Try to find default model first
+        modelToSelect = processedModels.find((m) =>
+          m.isDefault && (key === "image" ? m.type === "image" : m.type === "vdo")
+        );
+
+        // Fallback to first available if no default found
+        if (!modelToSelect) {
+          modelToSelect = processedModels.find((m) =>
+            key === "image" ? m.type === "image" : m.type === "vdo"
+          );
+        }
+      }
+
+      if (modelToSelect) {
+        setSelectedAIModel(modelToSelect);
+      }
+    }
+  };
+
+  const processedModels = useMemo(() => {
+    const grouped = aiModels.reduce((acc, model) => {
+      const key = `${model.name}-${model.type}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          ...model,
+          capabilities: [model.mode],
+        };
+      } else {
+        acc[key].capabilities.push(model.mode);
+      }
+
+      return acc;
+    }, {} as Record<string, TAIModel & { capabilities: string[] }>);
+
+    return Object.values(grouped);
+  }, [aiModels]);
+
+  useEffect(() => {
+    if (processedModels.length > 0 && !selectedAIModel) {
+      const savedModelId = localStorage.getItem(`selectedAIModel_${activeKey}_${id}`);
+      let modelToSelect = null;
+
+      if (savedModelId) {
+        modelToSelect = processedModels.find(m => 
+          m.id === parseInt(savedModelId) && 
+          (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+        );
+      }
+
+      if (!modelToSelect) {
+        // Try to find default model first
+        modelToSelect = processedModels.find((m) =>
+          m.isDefault && (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+        );
+
+        // Fallback to first available if no default found
+        if (!modelToSelect) {
+          modelToSelect = processedModels.find((m) =>
+            activeKey === "image" ? m.type === "image" : m.type === "vdo"
+          );
+        }
+      }
+
+      if (modelToSelect) {
+        setSelectedAIModel(modelToSelect);
+      }
+    }
+  }, [processedModels, activeKey, selectedAIModel, id]);
+
+  const filteredAIModels = processedModels.filter((model) =>
+    activeKey === "image" ? model.type === "image" : model.type === "vdo"
+  );
+
+  const getModelDescription = (
+    model: TAIModel & { capabilities: string[] }
+  ) => {
+    const capabilityCount = model.capabilities.length;
+
+    if (model.type === "image") {
+      if (capabilityCount > 1) {
+        return "Versatile image generation model supporting multiple input types";
+      } else if (model.capabilities.includes("text-to-image")) {
+        return "Generate images from text descriptions";
+      } else {
+        return "Transform and enhance existing images";
+      }
+    } else {
+      if (capabilityCount > 1) {
+        return "Advanced video generation model with flexible input options";
+      } else if (model.capabilities.includes("text-to-video")) {
+        return "Generate videos from text descriptions";
+      } else {
+        return "Transform and enhance existing videos";
+      }
+    }
   };
 
   return (
@@ -79,13 +199,170 @@ const GenerateImagePage: FC = () => {
         activeKey={activeKey}
         tabBarExtraContent={
           activeKey === "image" || activeKey === "vdo" ? (
-            <Button
-              type={promptGuideOpenStatus ? "primary" : "default"}
-              ghost={promptGuideOpenStatus}
-              onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
-            >
-              Prompt Guild
-            </Button>
+            <div className="flex gap-4 items-center relative">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+                  AI Model:
+                </span>
+                <Select
+                  size="middle"
+                  style={{ 
+                    minWidth: 280,
+                  }}
+                  className="dark-select"
+                  placeholder="Choose an AI model"
+                  value={selectedAIModel?.id}
+                  onChange={(value) => {
+                    const model = filteredAIModels.find(m => m.id === value);
+                    setSelectedAIModel(model || null);
+                    if (model) {
+                      localStorage.setItem(`selectedAIModel_${activeKey}_${id}`, model.id.toString());
+                    }
+                  }}
+                  optionLabelProp="label"
+                >
+                  {filteredAIModels
+                    .filter(model => model && model.name)
+                    .map(model => (
+                      <Select.Option 
+                        key={model.id} 
+                        value={model.id}
+                        label={model.name}
+                      >
+                        <Tooltip 
+                          title={
+                            <div className="p-4 max-w-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium text-white">{model.name}</div>
+                                {selectedAIModel?.id === model.id && (
+                                  <div className="text-blue-400 text-xs">✓ Selected</div>
+                                )}
+                              </div>
+                              
+                              {model.modelDetails?.description && (
+                                <div className="text-gray-300 text-sm leading-relaxed mb-3">
+                                  {model.modelDetails.description}
+                                </div>
+                              )}
+
+                              {model.modelDetails?.modelId && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">Model ID</div>
+                                  <div className="text-gray-200 text-sm font-mono">{model.modelDetails.modelId}</div>
+                                </div>
+                              )}
+
+                              {model.modelDetails?.pricing && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">Pricing</div>
+                                  <div className="flex gap-4">
+                                    {model.modelDetails.pricing.imageToVideo && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">Image-to-video</div>
+                                        <div className="text-white font-medium">{model.modelDetails.pricing.imageToVideo} {model.modelDetails.pricing.unit || 'USD/M tokens'}</div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing.textToVideo && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">Text-to-video</div>
+                                        <div className="text-white font-medium">{model.modelDetails.pricing.textToVideo} {model.modelDetails.pricing.unit || 'USD/M tokens'}</div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing.imageToImage && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">Image-to-image</div>
+                                        <div className="text-white font-medium">{model.modelDetails.pricing.imageToImage} {model.modelDetails.pricing.unit || 'USD/Piece'}</div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing.textToImage && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">Text-to-image</div>
+                                        <div className="text-white font-medium">{model.modelDetails.pricing.textToImage} {model.modelDetails.pricing.unit || 'USD/Piece'}</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {(model.modelDetails?.limitations?.resolution || 
+                                model.modelDetails?.limitations?.duration || 
+                                model.modelDetails?.limitations?.frameRate || 
+                                model.modelDetails?.limitations?.concurrentTasks || 
+                                model.modelDetails?.limitations?.rpm) && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">Limitations</div>
+                                  <div className="space-y-1">
+                                    {model.modelDetails.limitations?.resolution && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">Resolution:</span> {model.modelDetails.limitations.resolution.join(', ')}
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations?.duration && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">Duration:</span> {model.modelDetails.limitations.duration}
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations?.frameRate && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">Frame rate:</span> {model.modelDetails.limitations.frameRate}
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations?.concurrentTasks && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">Concurrent tasks:</span> {model.modelDetails.limitations.concurrentTasks}
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations?.rpm && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">RPM:</span> {model.modelDetails.limitations.rpm}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {model.modelDetails?.status && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">Status</div>
+                                  <div className={`inline-block px-2 py-1 text-xs rounded ${
+                                    model.modelDetails.status === 'Activated' ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-200'
+                                  }`}>
+                                    {model.modelDetails.status}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {model.capabilities?.map((capability: string) => (
+                                  <span key={capability} className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded">
+                                    {capability.replace('-', ' ')}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          }
+                          placement="right"
+                          overlayStyle={{ maxWidth: 'none' }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{model.name}</span>
+                            {selectedAIModel?.id === model.id && (
+                              <span className="text-blue-400 ml-2">✓</span>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </Select.Option>
+                    ))}
+                </Select>
+              </div>
+              <Button
+                type={promptGuideOpenStatus ? "primary" : "default"}
+                ghost={promptGuideOpenStatus}
+                onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+              >
+                Prompt Guild
+              </Button>
+            </div>
           ) : (
             ""
           )
@@ -110,6 +387,7 @@ const GenerateImagePage: FC = () => {
                 userId={session?.user?.id}
                 promptGuideTypes={promptGuideTypes}
                 username={session?.user?.name || ""}
+                selectedAIModel={selectedAIModel}
               />
             ),
           },
@@ -130,6 +408,7 @@ const GenerateImagePage: FC = () => {
                 userId={session?.user?.id}
                 promptGuideTypes={promptGuideTypes}
                 promptGuideOpenStatus={promptGuideOpenStatus}
+                selectedAIModel={selectedAIModel}
               />
             ),
           },
@@ -248,6 +527,34 @@ const GenerateImagePage: FC = () => {
 
         .custom-tabs .ant-tabs-tab .anticon {
           margin-right: 8px;
+        }
+
+        /* Dark Select Styling */
+        .dark-select .ant-select-selector {
+          background-color: #27272a !important;
+          border: 1px solid #3f3f46 !important;
+          color: #d1d5db !important;
+        }
+
+        .dark-select .ant-select-selection-item {
+          color: #d1d5db !important;
+        }
+
+        .dark-select .ant-select-selection-placeholder {
+          color: #6b7280 !important;
+        }
+
+        .dark-select:hover .ant-select-selector {
+          border-color: #52525b !important;
+        }
+
+        .dark-select.ant-select-focused .ant-select-selector {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .dark-select .ant-select-arrow {
+          color: #9ca3af !important;
         }
 
       `}</style>

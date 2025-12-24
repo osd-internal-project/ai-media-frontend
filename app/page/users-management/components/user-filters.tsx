@@ -112,7 +112,10 @@ const UserFiltersPage: FC<props> = ({
                 name="username"
                 rules={[{ required: true, message: "Please input username!" }]}
               >
-                <Input placeholder="Enter username" />
+                <Input
+                  placeholder="Enter username"
+                  readOnly={open.type === "edit"}
+                />
               </Form.Item>
 
               <Form.Item
@@ -128,7 +131,11 @@ const UserFiltersPage: FC<props> = ({
                 name="email"
                 rules={[{ required: true, message: "Please input full name!" }]}
               >
-                <Input type="email" placeholder="Enter email" />
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  readOnly={open.type === "edit"}
+                />
               </Form.Item>
 
               <Form.Item

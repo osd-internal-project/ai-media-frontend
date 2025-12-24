@@ -38,6 +38,7 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { RcFile } from "antd/es/upload";
 import { Download, Trash } from "lucide-react";
 import VideoItem from "./video-player";
+import { TAIModel } from "@/app/common/ai-model.type";
 
 interface VideoChatProps {
   projectId: string;
@@ -45,6 +46,7 @@ interface VideoChatProps {
   activeKey: "image" | "vdo" | "omnihuman";
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus: boolean;
+  selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
 }
 
 interface ChatMessage {
@@ -64,6 +66,7 @@ const VideoChat: FC<VideoChatProps> = ({
   activeKey,
   promptGuideTypes = [],
   promptGuideOpenStatus,
+  selectedAIModel, // Destructure selectedAIModel
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
