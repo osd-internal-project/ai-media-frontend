@@ -54,8 +54,8 @@ interface ImageChatProps {
   activeKey: "image" | "vdo" | "omnihuman";
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;
-  username?: string; // Add username prop
-  selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
+  username?: string;
+  selectedAIModel?: TAIModel | null;
 }
 
 interface ChatMessage {
@@ -67,7 +67,164 @@ interface ChatMessage {
   time: string;
   taskId?: string;
   status?: boolean;
+  prompt?: string;
+  resolution?: string;
+  ratio?: string;
+  imageCount?: number;
+  firstFrameImage?: string;
+  referenceImages?: string[];
 }
+
+interface ImageConfigurationCardProps {
+  selectedAIModel?: TAIModel | null;
+  firstFrameImage?: string;
+  referenceImages?: string[];
+  resolution: string;
+  ratio: string;
+  imageCount: number;
+  prompt?: string;
+}
+
+const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
+  selectedAIModel,
+  firstFrameImage,
+  referenceImages,
+  resolution,
+  ratio,
+  imageCount,
+}) => {
+  const [showReferencePreview, setShowReferencePreview] = useState<string | null>(null);
+  
+  const getResolutionLabel = (res: string) => {
+    switch (res) {
+      case "2k": return "2K";
+      case "4k": return "4K";
+      case "Unknown": return "?";
+      default: return "?";
+    }
+  };
+
+  return (
+    <>
+      <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <Avatar
+              src={Avatars.src}
+              size={32}
+              className="border border-white/10"
+            />
+          </div>
+          
+          <div className="flex items-center gap-3 flex-1 text-sm">
+            <span className="text-white font-medium">Smart Reference</span>
+            <span className="text-purple-400 font-medium">{getResolutionLabel(resolution)}</span>
+            <span className="text-gray-400">{ratio}</span>
+            {imageCount > 1 && (
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-blue-500 rounded-sm flex items-center justify-center">
+                  <span className="text-xs text-white">📷</span>
+                </div>
+                <span className="text-blue-400 text-xs">{imageCount} images</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+              <span className="text-blue-400 text-xs">
+                {selectedAIModel?.name || 'Seedream-4.5'}
+              </span>
+            </div>
+          </div>
+          
+          {/* Multiple Reference Images Preview */}
+          <div className="flex-shrink-0 flex items-center gap-1">
+            {referenceImages && referenceImages.length > 0 ? (
+              referenceImages.slice(0, 3).map((imageUrl, index) => (
+                <div 
+                  key={index}
+                  className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors"
+                  onClick={() => setShowReferencePreview(imageUrl)}
+                >
+                  <Image
+                    src={imageUrl}
+                    alt={`Reference ${index + 1}`}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                    onError={(e) => {
+                      console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
+                    }}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path 
+                    d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" 
+                    stroke="#9CA3AF" 
+                    strokeWidth="1.5" 
+                    fill="none"
+                  />
+                  <path 
+                    d="M4 15L8 11L12 15L16 11L20 15" 
+                    stroke="#9CA3AF" 
+                    strokeWidth="1.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                  <circle 
+                    cx="8.5" 
+                    cy="8.5" 
+                    r="1.5" 
+                    stroke="#9CA3AF" 
+                    strokeWidth="1.5" 
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            )}
+            {referenceImages && referenceImages.length > 3 && (
+              <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
+                <span className="text-xs text-gray-400">+{referenceImages.length - 3}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {showReferencePreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowReferencePreview(null)}
+        >
+          <button
+            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+            onClick={() => setShowReferencePreview(null)}
+          >
+            <CloseOutlined style={{ fontSize: "24px" }} />
+          </button>
+          <div className="relative">
+            <Image
+              src={showReferencePreview}
+              alt="Reference Preview"
+              width={800}
+              height={600}
+              className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+              onClick={(e) => e.stopPropagation()}
+              unoptimized
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-2 rounded-lg text-sm">
+              Reference Image
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const ImageChat: FC<ImageChatProps> = ({
   projectId,
@@ -75,15 +232,14 @@ const ImageChat: FC<ImageChatProps> = ({
   activeKey,
   promptGuideTypes = [],
   promptGuideOpenStatus,
-  username, // Destructure username
-  selectedAIModel, // Destructure selectedAIModel
+  username,
+  selectedAIModel,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const notificationApi = notification.useNotification()[0];
   const promptguideService = PromptGuideServices(axiosCore);
 
-  // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -93,7 +249,6 @@ const ImageChat: FC<ImageChatProps> = ({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const pageSize = 3;
 
-  // Refs
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
@@ -101,7 +256,6 @@ const ImageChat: FC<ImageChatProps> = ({
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
 
-  // Fetch Data (Pagination)
   const fetchMessages = useCallback(
     async (currentPage: number, isLoadMore = false) => {
       if (!projectId || (isLoadMore && !hasMore) || loading) return;
@@ -118,19 +272,16 @@ const ImageChat: FC<ImageChatProps> = ({
           skip,
           pageSize
         );
-
+        
         if (Array.isArray(response)) {
           if (response.length < pageSize) {
             setHasMore(false);
           }
 
-          // Process response into ChatMessage format
           const formattedMessages: ChatMessage[] = [];
-          // Process Oldest -> Newest (Backend returns DESC, so we reverse)
           const itemsToProcess = [...response].reverse();
-
+          
           itemsToProcess.forEach((item: any) => {
-            // User Message
             formattedMessages.push({
               type: "user",
               content: item.prompt,
@@ -139,7 +290,6 @@ const ImageChat: FC<ImageChatProps> = ({
               taskId: item.taskId,
               status: item.status,
             });
-            // AI Message
             formattedMessages.push({
               type: "ai",
               content: "AICave Generated Images",
@@ -148,6 +298,12 @@ const ImageChat: FC<ImageChatProps> = ({
               time: item.createdAt,
               taskId: item.taskId,
               status: item.status,
+              prompt: item.prompt,
+              resolution: item.resolution || 'Unknown',
+              ratio: item.ratio || 'Unknown',
+              imageCount: item.imageUrls?.length || 1,
+              firstFrameImage: item.referenceImages?.[0] || undefined,
+              referenceImages: item.referenceImages || [],
             });
           });
 
@@ -166,7 +322,6 @@ const ImageChat: FC<ImageChatProps> = ({
             });
           } else {
             setMessages(formattedMessages);
-            // Force scroll to bottom on initial load
             setTimeout(() => {
               bottomRef.current?.scrollIntoView({ behavior: "instant" });
             }, 100);
@@ -196,6 +351,8 @@ const ImageChat: FC<ImageChatProps> = ({
       fetchMessages(0);
     }
   }, [projectId, activeKey]);
+
+  // Reference images are now stored in database - no localStorage cleanup needed
 
   // Scroll Handling for Pagination
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -330,6 +487,7 @@ const ImageChat: FC<ImageChatProps> = ({
         userId,
         modelName: selectedAIModel?.name  // Add selected model name
       };
+      
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
@@ -351,6 +509,8 @@ const ImageChat: FC<ImageChatProps> = ({
         setMessages((prev) => prev.slice(0, -1));
         shouldAutoScrollRef.current = false; // Cancel auto-scroll on error
       } else {
+        // Reference image is now stored automatically in database via backend
+        
         // Refetch latest messages to get AI response
         setPage(0);
         await fetchMessages(0);
@@ -371,8 +531,6 @@ const ImageChat: FC<ImageChatProps> = ({
   // Options
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedImageCount, setSelectedImageCount] = useState<number>(1);
-  const [selectedModel, setSelectedModel] =
-    useState<string>("Seedream 4.5 Model");
 
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
     "1:1": { width: 2048, height: 2048 },
@@ -457,11 +615,14 @@ const ImageChat: FC<ImageChatProps> = ({
             >
               <CloseOutlined style={{ fontSize: "24px" }} />
             </button>
-            <img
+            <Image
               src={previewImage}
               alt="Preview"
+              width={1200}
+              height={800}
               className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
               onClick={(e) => e.stopPropagation()}
+              unoptimized
             />
           </div>
         )}
@@ -571,74 +732,76 @@ const ImageChat: FC<ImageChatProps> = ({
                       {msg.content}
                     </div>
                   )}
-
                   {/* Images Grid (AI Only) */}
                   {msg.type === "ai" && msg.images && msg.images.length > 0 && (
-                    <div
-                      className={`grid gap-3 mt-3 w-full ${
-                        msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
-                      }`}
-                    >
-                      {/* <Image.PreviewGroup> */}
-                      {msg.images.map((img, i) => (
-                        <div
-                          key={i}
-                          className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
-                          onClick={() => handleImageClick(img.imageUrl)}
-                        >
-                          {/* <Image
-                            src={`/api/images/${encodeURIComponent(img)}`}
-                            alt="Generated"
-                            width={500}
-                            height={500}
-                            loading="lazy"
-                            placeholder="empty"
-                          /> */}
-                          <img
-                            src={img.imageUrl}
-                            loading="lazy"
-                            alt="Video thumbnail"
-                          />
-                          {/* Actions Overlay */}
+                    <>
+                      <ImageConfigurationCard
+                        selectedAIModel={selectedAIModel}
+                        firstFrameImage={msg.firstFrameImage}
+                        resolution={msg.resolution || '4k'}
+                        ratio={msg.ratio || '1:1'}
+                        imageCount={msg.imageCount || msg.images.length}
+                        referenceImages={msg.referenceImages}
+                      />
+                      
+                      <div
+                        className={`grid gap-3 mt-3 w-full ${
+                          msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
+                        }`}
+                      >
+                        {msg.images.map((img, i) => (
                           <div
-                            className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-200 `}
+                            key={i}
+                            className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
+                            onClick={() => handleImageClick(img.imageUrl)}
                           >
-                            <Button
-                              size="small"
-                              icon={<Download size={14} />}
-                              className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onDownloadImage(img.imageUrl);
-                              }}
+                            <Image
+                              src={img.imageUrl}
+                              alt="Generated image"
+                              width={500}
+                              height={500}
+                              className="w-full h-auto object-cover"
+                              unoptimized
                             />
-                            {/* Simple Share for now - could be enhanced */}
-                            <Button
-                              size="small"
-                              icon={
-                                msg.status ? (
-                                  <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
-                                ) : (
-                                  <LikeOutlined />
-                                )
-                              }
-                              className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onShareImage(
-                                  msg.taskId!,
-                                  img.imageUrl,
-                                  msg.status || false
-                                );
-                              }}
-                            />
+                            {/* Actions Overlay */}
+                            <div
+                              className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-200 `}
+                            >
+                              <Button
+                                size="small"
+                                icon={<Download size={14} />}
+                                className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onDownloadImage(img.imageUrl);
+                                }}
+                              />
+                              <Button
+                                size="small"
+                                icon={
+                                  msg.status ? (
+                                    <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
+                                  ) : (
+                                    <LikeOutlined />
+                                  )
+                                }
+                                className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  onShareImage(
+                                    msg.taskId!,
+                                    img.imageUrl,
+                                    msg.status || false
+                                  );
+                                }}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                      {/* </Image.PreviewGroup> */}
-                    </div>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -757,7 +920,7 @@ const ImageChat: FC<ImageChatProps> = ({
                           key={file.uid}
                           className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
                         >
-                          <img
+                          <Image
                             src={
                               file.thumbUrl ||
                               (file.originFileObj
@@ -765,7 +928,10 @@ const ImageChat: FC<ImageChatProps> = ({
                                 : "")
                             }
                             alt="preview"
+                            width={48}
+                            height={48}
                             className="w-full h-full object-cover"
+                            unoptimized
                           />
                           <div
                             className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
@@ -804,15 +970,18 @@ const ImageChat: FC<ImageChatProps> = ({
                           itemRender={(
                             _originNode,
                             file,
-                            fileList,
+                            _fileList,
                             actions
                           ) => {
                             return (
                               <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
-                                <img
-                                  src={file.thumbUrl}
+                                <Image
+                                  src={file.thumbUrl || ''}
                                   alt=""
+                                  width={48}
+                                  height={48}
                                   className="w-12 h-12 object-cover rounded"
+                                  unoptimized
                                 />
                                 <Button
                                   size="small"

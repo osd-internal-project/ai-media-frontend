@@ -5,6 +5,7 @@ import React, {
   useCallback,
   type FC,
 } from "react";
+import Image from "next/image";
 import {
   Avatar,
   Button,
@@ -49,6 +50,16 @@ interface VideoChatProps {
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
 }
 
+interface VideoConfigurationCardProps {
+  selectedAIModel?: TAIModel | null;
+  firstFrameImage?: string;
+  resolution: string;
+  ratio: string;
+  duration: string;
+  isMultiImage: boolean;
+  prompt?: string;
+}
+
 interface ChatMessage {
   id?: string;
   type: "user" | "ai";
@@ -58,7 +69,86 @@ interface ChatMessage {
   time: string;
   taskId?: string;
   status?: boolean;
+  prompt?: string;
+  resolution?: string;
+  ratio?: string;
+  duration?: string;
+  firstFrameImage?: string;
 }
+
+const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
+  selectedAIModel,
+  firstFrameImage,
+  resolution,
+  ratio,
+  duration,
+  isMultiImage,
+  prompt,
+}) => {
+  const getResolutionLabel = (res: string) => {
+    switch (res) {
+      case "480p": return "HD";
+      case "720p": return "2K";
+      case "1080p": return "4K";
+      default: return "4K";
+    }
+  };
+
+  return (
+    <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <Avatar
+            src={Avatars.src}
+            size={32}
+            className="border border-white/10"
+          />
+        </div>
+        
+        {/* Configuration Info */}
+        <div className="flex items-center gap-3 flex-1 text-sm">
+          <span className="text-white font-medium">Smart Reference</span>
+          <span className="text-purple-400 font-medium">{getResolutionLabel(resolution)}</span>
+          <span className="text-gray-400">{ratio}</span>
+          {isMultiImage && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-blue-500 rounded-sm flex items-center justify-center">
+                <span className="text-xs text-white">📷</span>
+              </div>
+              <span className="text-blue-400 text-xs">Multi-image</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+            <span className="text-blue-400 text-xs">
+              {selectedAIModel?.name || 'ByteDance-Seeudream-4.5'}
+            </span>
+          </div>
+        </div>
+        
+        {/* First Frame Preview */}
+        {firstFrameImage && (
+          <div className="flex-shrink-0">
+            <div className="relative w-24 h-16 rounded-md overflow-hidden border border-white/20">
+              <Image
+                src={firstFrameImage}
+                alt="First frame"
+                width={96}
+                height={64}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+              <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-xs px-1 py-0.5 rounded text-xs">
+                {duration}s
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const VideoChat: FC<VideoChatProps> = ({
   projectId,
@@ -80,6 +170,7 @@ const VideoChat: FC<VideoChatProps> = ({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [firstFrameImage, setFirstFrameImage] = useState<string>("https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=250&fit=crop&crop=faces");
   const pageSize = 3;
 
   // Refs
@@ -137,6 +228,11 @@ const VideoChat: FC<VideoChatProps> = ({
               time: item.createdAt,
               taskId: item.taskId,
               status: item.status,
+              prompt: item.prompt,
+              resolution: item.resolution || '1080p',
+              ratio: item.ratio || '16:9',
+              duration: item.duration || '10',
+              firstFrameImage: item.firstFrameImage || (item.imageUrls?.[0]?.thumbnailUrl),
             });
           });
 
@@ -265,8 +361,17 @@ const VideoChat: FC<VideoChatProps> = ({
     }
   };
 
-  const handleUploadChange: UploadProps["onChange"] = ({ fileList }) =>
+  const handleUploadChange: UploadProps["onChange"] = ({ fileList }) => {
     setFiles(fileList);
+    
+    // Set first frame image when a file is uploaded
+    if (fileList.length > 0 && fileList[0].originFileObj) {
+      const imageUrl = URL.createObjectURL(fileList[0].originFileObj);
+      setFirstFrameImage(imageUrl);
+    } else if (fileList.length === 0) {
+      setFirstFrameImage("");
+    }
+  };
 
   const beforeUpload = (file: RcFile) => {
     if (files.find((f) => f.name === file.name)) {
@@ -519,23 +624,36 @@ const VideoChat: FC<VideoChatProps> = ({
 
                   {/* Video Grid */}
                   {msg.type === "ai" && msg.images && msg.images.length > 0 && (
-                    <div
-                      className={`grid gap-4 mt-4 w-full max-w-6xl ${
-                        msg.images.length === 1
-                          ? "grid-cols-1"
-                          : msg.images.length === 2
-                          ? "grid-cols-1 md:grid-cols-2"
-                          : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                      }`}
-                    >
-                      {msg.images.map((videoData, i) => (
-                        <VideoItem
-                          key={i}
-                          videoData={videoData}
-                          onDownloadVideo={onDownloadVideo}
-                        />
-                      ))}
-                    </div>
+                    <>
+                      <div
+                        className={`grid gap-4 mt-4 w-full max-w-6xl ${
+                          msg.images.length === 1
+                            ? "grid-cols-1"
+                            : msg.images.length === 2
+                            ? "grid-cols-1 md:grid-cols-2"
+                            : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                        }`}
+                      >
+                        {msg.images.map((videoData, i) => (
+                          <VideoItem
+                            key={i}
+                            videoData={videoData}
+                            onDownloadVideo={onDownloadVideo}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Video Configuration Card */}
+                      <VideoConfigurationCard
+                        selectedAIModel={selectedAIModel}
+                        firstFrameImage={msg.firstFrameImage}
+                        resolution={msg.resolution || '1080p'}
+                        ratio={msg.ratio || '16:9'}
+                        duration={msg.duration || '10'}
+                        isMultiImage={msg.images.length > 1}
+                        prompt={msg.prompt}
+                      />
+                    </>
                   )}
                 </div>
                 {msg.type === "user" && (
@@ -658,7 +776,7 @@ const VideoChat: FC<VideoChatProps> = ({
                           key={file.uid}
                           className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
                         >
-                          <img
+                          <Image
                             src={
                               file.thumbUrl ||
                               (file.originFileObj
@@ -666,7 +784,10 @@ const VideoChat: FC<VideoChatProps> = ({
                                 : "")
                             }
                             alt="preview"
+                            width={48}
+                            height={48}
                             className="w-full h-full object-cover"
+                            unoptimized
                           />
                           <div
                             className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
