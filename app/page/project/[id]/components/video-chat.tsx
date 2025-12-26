@@ -372,7 +372,16 @@ const VideoChat: FC<VideoChatProps> = ({
     if (isLoadingMoreRef.current && chatContainerRef.current) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
       const scrollDiff = newScrollHeight - scrollHeightRef.current;
+      
+      chatContainerRef.current.style.scrollBehavior = 'auto';
       chatContainerRef.current.scrollTop = scrollDiff;
+      
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = 'smooth';
+        }
+      });
+      
       isLoadingMoreRef.current = false;
     }
   }, [messages]);

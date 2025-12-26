@@ -359,12 +359,18 @@ const ImageChat: FC<ImageChatProps> = ({
   // Restore scroll position after loading previous messages
   useEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
-      // Calculate duplicate shift if any, but simply maintaining position relative to bottom is usually enough
-      // New height - Old height = amount of content added to top
       const newScrollHeight = chatContainerRef.current.scrollHeight;
       const scrollDiff = newScrollHeight - scrollHeightRef.current;
-
+      
+      chatContainerRef.current.style.scrollBehavior = 'auto';
       chatContainerRef.current.scrollTop = scrollDiff;
+      
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = 'smooth';
+        }
+      });
+      
       isLoadingMoreRef.current = false;
     }
   }, [messages]);
