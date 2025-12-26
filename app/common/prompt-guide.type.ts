@@ -15,6 +15,7 @@ export type TPromptGuide = {
   type?: string;
   typeName?: string;
   status: boolean;
+  organizationId?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 };

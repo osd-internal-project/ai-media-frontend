@@ -59,6 +59,17 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findByOrganization: async (organizationId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
   };
 };
 
