@@ -443,6 +443,16 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <div className="w-full text-[#F0F0F073] line-height-[16px] px-2 mb-2">
                   ORGANIZATION
                 </div>
+                <div className="mt-3 w-full mb-2">
+                  <Button
+                    size="middle"
+                    onClick={handleOpenCreateOrg}
+                    icon={<PlusCircleOutlined />}
+                    className="w-full"
+                  >
+                    {`Add new organization`}
+                  </Button>
+                </div>
                 <div className="w-full flex items-center space-x-1">
                   <Select
                     size="middle"
@@ -469,9 +479,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       },
                     ]}
                   />
-                  <Button size="middle" onClick={handleOpenCreateOrg}>
-                    +
-                  </Button>
                 </div>
               </div>
               {organizationId && (
