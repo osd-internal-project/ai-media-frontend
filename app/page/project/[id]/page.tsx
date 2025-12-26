@@ -194,57 +194,6 @@ const GenerateImagePage: FC = () => {
         tabBarExtraContent={
           activeKey === "image" || activeKey === "vdo" ? (
             <div className="flex gap-4 items-center relative">
-              {/* Role Indicator */}
-              <div className="flex items-center gap-2">
-                {permissions.loading ? (
-                  <div className="w-4 h-4 rounded-full bg-gray-400 animate-pulse"></div>
-                ) : permissions.role ? (
-                  <Tag 
-                    color={
-                      permissions.role === 'ADMIN' ? 'red' : 
-                      permissions.role === 'USER' ? 'blue' : 'default'
-                    }
-                    className="px-2 py-1 text-xs font-medium"
-                  >
-                    {permissions.role}
-                  </Tag>
-                ) : null}
-              </div>
-
-              {/* Admin-only Project Management */}
-              <ProjectPermissionGuard
-                projectId={id}
-                requiredPermission="canManageProject"
-                fallback={null}
-              >
-                <div className="flex gap-2">
-                  <Tooltip title="Project Settings (Admin Only)">
-                    <Button 
-                      size="small"
-                      type="default"
-                      onClick={() => {
-                        // TODO: Open project settings modal
-                        console.log('Project settings clicked');
-                      }}
-                    >
-                      ⚙️ Settings
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="Manage Members (Admin Only)">
-                    <Button 
-                      size="small"
-                      type="default"
-                      onClick={() => {
-                        // TODO: Open member management modal
-                        console.log('Member management clicked');
-                      }}
-                    >
-                      👥 Members
-                    </Button>
-                  </Tooltip>
-                </div>
-              </ProjectPermissionGuard>
-
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
                   AI Model:
