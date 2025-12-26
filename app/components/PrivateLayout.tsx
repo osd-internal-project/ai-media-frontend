@@ -48,6 +48,7 @@ import { EllipsisVertical } from "lucide-react";
 import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
+import OrganizationMembersServices from "../services/organization-members.service";
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
@@ -69,6 +70,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const userServices = UserServices(axiosUser);
 
   const organizationService = OrganizationService(axiosUser);
+  const organizationMemberService = OrganizationMembersServices(axiosUser);
   const projectService = ProjectService(axiosCore);
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
@@ -80,6 +82,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [selectedRole, setSelectedRole] = useState<'ADMIN' | 'USER' | 'VIEWER'>('USER');
   const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
+  const [projectRole, setProjectRole] = useState<string | undefined>();
+  const [organizationRole, setOrganizationRole] = useState<
+    string | undefined
+  >();
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     []
   );
@@ -122,7 +128,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   };
   async function fecthdataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
-
+    const organizationDetail =
+      await organizationMemberService.findUserMemberByOrganization(
+        organizationId,
+        session?.user?.id as string
+      );
+    setOrganizationRole(organizationDetail?.role);
     const projects = await projectService.findByOrganizationId(
       organizationId,
       session?.user?.id as string
@@ -148,7 +159,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
-      console.log("orgID", userDetail.recentOrganizationId);
       fecthdataByOrganization(userDetail?.recentOrganizationId);
     }
   };
@@ -692,7 +702,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   <div className="!text-gray-400 px-4 mt-2">
                     {/* Header */}
                     <div className="text-[12px]">{`PROJECT`}</div>
-
                     {roles.includes("p-c") && (
                       <div className="mt-3 w-full">
                         <Button
@@ -704,7 +713,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         </Button>
                       </div>
                     )}
-
                     {/* ⭐ Scroll section */}
                     <div
                     // className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1"
@@ -818,7 +826,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     : undefined
                 }
               >
-                <OrganizationProvider value={{ organizationId }}>
+                <OrganizationProvider
+                  value={{ organizationId, projectRole, organizationRole }}
+                >
                   {children}
                 </OrganizationProvider>
               </PrivateContent>

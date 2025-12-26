@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import { IOrganizationMember } from "../common/organization-member.type";
 
 const OrganizationMembersServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/organization-members";
@@ -29,6 +30,22 @@ const OrganizationMembersServices = (axiosInstance: AxiosInstance) => {
     findByOrganization: async (organizationId: string) => {
       return await axiosInstance
         .get(`${baseUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findUserMemberByOrganization: async (
+      organizationId: string,
+      token: string
+    ): Promise<IOrganizationMember> => {
+      return await axiosInstance
+        .get(`${baseUrl}/organization/${organizationId}/user`, {
+          params: { token },
+        })
         .then((res) => {
           return res.data;
         })
