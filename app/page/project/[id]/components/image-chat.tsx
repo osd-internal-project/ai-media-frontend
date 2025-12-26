@@ -21,6 +21,7 @@ import {
   Select,
   Row,
   Space,
+  Tooltip,
 } from "antd";
 import {
   UserOutlined,
@@ -93,7 +94,6 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
   ratio,
   imageCount,
 }) => {
-  const [showReferencePreview, setShowReferencePreview] = useState<string | null>(null);
   
   const getResolutionLabel = (res: string) => {
     switch (res) {
@@ -140,23 +140,39 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
           <div className="flex-shrink-0 flex items-center gap-1">
             {referenceImages && referenceImages.length > 0 ? (
               referenceImages.slice(0, 3).map((imageUrl, index) => (
-                <div 
+                <Tooltip
                   key={index}
-                  className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors"
-                  onClick={() => setShowReferencePreview(imageUrl)}
+                  title={
+                    <div className="p-2">
+                      <Image
+                        src={imageUrl}
+                        alt={`Reference ${index + 1}`}
+                        width={200}
+                        height={200}
+                        className="max-w-[200px] max-h-[200px] object-contain rounded"
+                        unoptimized
+                      />
+                    </div>
+                  }
+                  placement="bottom"
+                  mouseEnterDelay={0.3}
+                  mouseLeaveDelay={0.1}
+                  arrow={false}
                 >
-                  <Image
-                    src={imageUrl}
-                    alt={`Reference ${index + 1}`}
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                    onError={(e) => {
-                      console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
-                    }}
-                  />
-                </div>
+                  <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors">
+                    <Image
+                      src={imageUrl}
+                      alt={`Reference ${index + 1}`}
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                      onError={(e) => {
+                        console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
+                      }}
+                    />
+                  </div>
+                </Tooltip>
               ))
             ) : (
               <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
@@ -195,33 +211,6 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
         </div>
       </div>
 
-      {showReferencePreview && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowReferencePreview(null)}
-        >
-          <button
-            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
-            onClick={() => setShowReferencePreview(null)}
-          >
-            <CloseOutlined style={{ fontSize: "24px" }} />
-          </button>
-          <div className="relative">
-            <Image
-              src={showReferencePreview}
-              alt="Reference Preview"
-              width={800}
-              height={600}
-              className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
-              onClick={(e) => e.stopPropagation()}
-              unoptimized
-            />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-2 rounded-lg text-sm">
-              Reference Image
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

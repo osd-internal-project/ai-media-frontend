@@ -164,30 +164,6 @@ const GenerateImagePage: FC = () => {
     activeKey === "image" ? model.type === "image" : model.type === "vdo"
   );
 
-  const getModelDescription = (
-    model: TAIModel & { capabilities: string[] }
-  ) => {
-    const capabilityCount = model.capabilities.length;
-
-    if (model.type === "image") {
-      if (capabilityCount > 1) {
-        return "Versatile image generation model supporting multiple input types";
-      } else if (model.capabilities.includes("text-to-image")) {
-        return "Generate images from text descriptions";
-      } else {
-        return "Transform and enhance existing images";
-      }
-    } else {
-      if (capabilityCount > 1) {
-        return "Advanced video generation model with flexible input options";
-      } else if (model.capabilities.includes("text-to-video")) {
-        return "Generate videos from text descriptions";
-      } else {
-        return "Transform and enhance existing videos";
-      }
-    }
-  };
-
   return (
     <div>
       <div>
