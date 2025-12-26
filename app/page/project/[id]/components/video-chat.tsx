@@ -5,7 +5,8 @@ import React, {
   useCallback,
   type FC,
 } from "react";
-import { ProjectPermissionGuard } from "../../../../hooks/useProjectPermissions";
+import { PermissionGuard } from "../../../../components/PermissionGuard";
+import { projectPermissions } from "../../../../utils/permissions";
 import Image from "next/image";
 import {
   Avatar,
@@ -48,6 +49,7 @@ interface VideoChatProps {
   projectId: string;
   userId?: string;
   activeKey: "image" | "vdo" | "omnihuman";
+  projectRole?: string | null;
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus: boolean;
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
@@ -214,6 +216,7 @@ const VideoChat: FC<VideoChatProps> = ({
   projectId,
   userId,
   activeKey,
+  projectRole,
   promptGuideTypes = [],
   promptGuideOpenStatus,
   selectedAIModel, // Destructure selectedAIModel
@@ -781,9 +784,9 @@ const VideoChat: FC<VideoChatProps> = ({
           {/* Input Area */}
           <div className="absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10">
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              <ProjectPermissionGuard
-                projectId={projectId}
-                requiredPermission="canUseChat"
+              <PermissionGuard
+                roles={projectPermissions.useChat}
+                userRole={projectRole}
                 fallback={
                   <div className="p-4 text-center text-zinc-400 bg-[#18181b] rounded-3xl border border-white/10">
                     <p className="text-lg font-medium mb-2">🚫 Access Restricted</p>
@@ -1014,7 +1017,7 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 </div>
               </Form>
-              </ProjectPermissionGuard>
+              </PermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
               AI can make mistakes. Please check the generated Video.{" "}
