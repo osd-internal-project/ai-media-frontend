@@ -11,7 +11,7 @@ import { LockKeyholeOpen, SquareChevronRight } from "lucide-react";
 export const MenuSider = [
   {
     key: `general`,
-    label: `GENERAL`,
+    label: <span className=" text-[12px]">GENERAL</span>,
     role: "",
     disabled: true,
     header: true,
@@ -44,7 +44,7 @@ export const MenuSider = [
   },
   {
     key: `settings`,
-    label: `SETTING`,
+    label: <span className=" text-[12px]">SETTING</span>,
     disabled: true,
     role: "s-v",
     header: false,

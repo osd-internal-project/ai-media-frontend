@@ -62,6 +62,19 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findOrganizationUserDetails: async (
+      organizationId: string
+    ): Promise<any> => {
+      return await axiosInstance
+        .get(`${baseUsersUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     create: async (value: any) => {
       return await axiosInstance
         .post(`${baseUsersUrl}`, { body: value })

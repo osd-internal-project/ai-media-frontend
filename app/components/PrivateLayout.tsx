@@ -62,7 +62,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const organizationService = OrganizationService(axiosUser);
   const projectService = ProjectService(axiosCore);
-  const [getdata, setData] = useState<TUser[]>([]);
+  const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
   // const [groupName, setGroupName] = useState<string>("");
   const [roles, setRoles] = useState<string[]>([]);
@@ -111,11 +111,15 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   async function fecthdataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
 
-    const response = await projectService.findByOrganizationId(
+    const projects = await projectService.findByOrganizationId(
       organizationId,
       session?.user?.id as string
     );
-    setProject(response);
+    setProject(projects);
+    const members = await userServices.findOrganizationUserDetails(
+      organizationId
+    );
+    setOrganizationMember(members);
     setLoading(false);
   }
 
@@ -135,11 +139,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       console.log("orgID", userDetail.recentOrganizationId);
       fecthdataByOrganization(userDetail?.recentOrganizationId);
     }
-  };
-
-  const fecthMasterData = async () => {
-    const response = await userServices.findAll();
-    setData(response);
   };
 
   const handleOpen = () => setOpen(true);
@@ -226,11 +225,17 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   async function handleOrganizationChange(
     organizationId: string
   ): Promise<void> {
-    console.log(organizationId);
-    await userServices.updateDetailByToken(session?.user?.id as string, {
-      recentOrganizationId: organizationId,
-    });
+    // console.log(organizationId);
+    const response = await userServices.updateDetailByToken(
+      session?.user?.id as string,
+      {
+        recentOrganizationId: organizationId,
+      }
+    );
     fecthdataByOrganization(organizationId);
+    if (response) {
+      router.push(`/page/dashboard`);
+    }
   }
   if (!session?.user.id) {
     return (
@@ -358,7 +363,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <Select
                   mode="multiple"
                   placeholder="Select users"
-                  options={getdata.map((e) => ({
+                  options={organizationMember.map((e) => ({
                     value: e.userId,
                     label: e.fullname,
                   }))}
@@ -411,7 +416,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <Select
                   mode="multiple"
                   placeholder="Select users"
-                  options={getdata.map((e) => ({
+                  options={organizationMember.map((e) => ({
                     value: e.userId,
                     label: e.fullname,
                   }))}
@@ -432,7 +437,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             <div className="bg-black rounded-2xl h-full flex flex-col">
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
-                  width={"150px"}
+                  width={"120px"}
                   src="/images/Logo.png"
                   alt="OSD Logo"
                   preview={false}
@@ -440,7 +445,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 />
               </div>
               <div className="w-full  justify-center items-center py-5 flex-shrink-0 px-2">
-                <div className="w-full text-[#F0F0F073] line-height-[16px] px-2 mb-2">
+                <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2 mb-2">
                   ORGANIZATION
                 </div>
                 <div className="mt-3 w-full mb-2">
@@ -482,7 +487,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 </div>
               </div>
               {organizationId && (
-                <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
                     mode="inline"
                     selectedKeys={[
@@ -497,7 +502,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   />
                   <div className="!text-gray-400 px-4 mt-2">
                     {/* Header */}
-                    <div>{`PROJECT`}</div>
+                    <div className="text-[12px]">{`PROJECT`}</div>
 
                     {roles.includes("p-c") && (
                       <div className="mt-3 w-full">
@@ -512,7 +517,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     )}
 
                     {/* ⭐ Scroll section */}
-                    <div className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1">
+                    <div
+                    // className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1"
+                    >
                       {roles.includes("p-v") &&
                         getProject?.map((project) => (
                           <div
@@ -630,6 +637,36 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </Layout>
         </Layout>
       </Spin>
+      <style>{`
+        /* Dark Select Styling */
+        .dark-select .ant-select-selector {
+          background-color: #27272a !important;
+          border: 1px solid #3f3f46 !important;
+          color: #d1d5db !important;
+        }
+
+        .dark-select .ant-select-selection-item {
+          color: #d1d5db !important;
+        }
+
+        .dark-select .ant-select-selection-placeholder {
+          color: #6b7280 !important;
+        }
+
+        .dark-select:hover .ant-select-selector {
+          border-color: #52525b !important;
+        }
+
+        .dark-select.ant-select-focused .ant-select-selector {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+        }
+
+        .dark-select .ant-select-arrow {
+          color: #9ca3af !important;
+        }
+
+      `}</style>
     </ConfigProvider>
   );
 }
