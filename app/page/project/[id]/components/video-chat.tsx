@@ -26,6 +26,7 @@ import {
   SendOutlined,
   LikeOutlined,
   LoadingOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { axiosCore } from "@/app/lib/axios/axios";
 import LogsServices from "@/app/services/logs.service";
@@ -53,11 +54,11 @@ interface VideoChatProps {
 interface VideoConfigurationCardProps {
   selectedAIModel?: TAIModel | null;
   firstFrameImage?: string;
+  referenceImages?: string[]; // Reference images used for generation
   resolution: string;
   ratio: string;
   duration: string;
   isMultiImage: boolean;
-  prompt?: string;
 }
 
 interface ChatMessage {
@@ -74,17 +75,19 @@ interface ChatMessage {
   ratio?: string;
   duration?: string;
   firstFrameImage?: string;
+  referenceImages?: string[]; // Array of reference image URLs
 }
 
 const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   selectedAIModel,
-  firstFrameImage,
+  referenceImages,
   resolution,
   ratio,
   duration,
   isMultiImage,
-  prompt,
 }) => {
+  const [showReferencePreview, setShowReferencePreview] = useState<string | null>(null);
+
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "480p": return "HD";
@@ -126,26 +129,93 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
             </span>
           </div>
         </div>
+
         
-        {/* First Frame Preview */}
-        {firstFrameImage && (
-          <div className="flex-shrink-0">
-            <div className="relative w-24 h-16 rounded-md overflow-hidden border border-white/20">
-              <Image
-                src={firstFrameImage}
-                alt="First frame"
-                width={96}
-                height={64}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
-              <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-xs px-1 py-0.5 rounded text-xs">
-                {duration}s
+        {/* Multiple Reference Images Preview - separate from first frame */}
+        <div className="flex-shrink-0 flex items-center gap-1">
+          {referenceImages && referenceImages.length > 0 ? (
+            referenceImages.slice(0, 3).map((imageUrl, index) => (
+              <div 
+                key={index}
+                className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors"
+                onClick={() => setShowReferencePreview(imageUrl)}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={`Reference ${index + 1}`}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                  onError={(e) => {
+                    console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
+                  }}
+                />
               </div>
+            ))
+          ) : (
+            <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path 
+                  d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" 
+                  stroke="#9CA3AF" 
+                  strokeWidth="1.5" 
+                  fill="none"
+                />
+                <path 
+                  d="M4 15L8 11L12 15L16 11L20 15" 
+                  stroke="#9CA3AF" 
+                  strokeWidth="1.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <circle 
+                  cx="8.5" 
+                  cy="8.5" 
+                  r="1.5" 
+                  stroke="#9CA3AF" 
+                  strokeWidth="1.5" 
+                  fill="none"
+                />
+              </svg>
+            </div>
+          )}
+          {referenceImages && referenceImages.length > 3 && (
+            <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
+              <span className="text-xs text-gray-400">+{referenceImages.length - 3}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showReferencePreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowReferencePreview(null)}
+        >
+          <button
+            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+            onClick={() => setShowReferencePreview(null)}
+          >
+            <CloseOutlined style={{ fontSize: "24px" }} />
+          </button>
+          <div className="relative">
+            <Image
+              src={showReferencePreview}
+              alt="Reference Preview"
+              width={800}
+              height={600}
+              className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+              onClick={(e) => e.stopPropagation()}
+              unoptimized
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-3 py-2 rounded-lg text-sm">
+              Reference Image
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -233,6 +303,7 @@ const VideoChat: FC<VideoChatProps> = ({
               ratio: item.ratio || '16:9',
               duration: item.duration || '10',
               firstFrameImage: item.firstFrameImage || (item.imageUrls?.[0]?.thumbnailUrl),
+              referenceImages: item.referenceImages || [],
             });
           });
 
@@ -625,6 +696,16 @@ const VideoChat: FC<VideoChatProps> = ({
                   {/* Video Grid */}
                   {msg.type === "ai" && msg.images && msg.images.length > 0 && (
                     <>
+                      {/* Video Configuration Card */}
+                      <VideoConfigurationCard
+                        selectedAIModel={selectedAIModel}
+                        referenceImages={msg.referenceImages}
+                        resolution={msg.resolution || '1080p'}
+                        ratio={msg.ratio || '16:9'}
+                        duration={msg.duration || '10'}
+                        isMultiImage={msg.images.length > 1}
+                      />
+                      
                       <div
                         className={`grid gap-4 mt-4 w-full max-w-6xl ${
                           msg.images.length === 1
@@ -642,17 +723,6 @@ const VideoChat: FC<VideoChatProps> = ({
                           />
                         ))}
                       </div>
-                      
-                      {/* Video Configuration Card */}
-                      <VideoConfigurationCard
-                        selectedAIModel={selectedAIModel}
-                        firstFrameImage={msg.firstFrameImage}
-                        resolution={msg.resolution || '1080p'}
-                        ratio={msg.ratio || '16:9'}
-                        duration={msg.duration || '10'}
-                        isMultiImage={msg.images.length > 1}
-                        prompt={msg.prompt}
-                      />
                     </>
                   )}
                 </div>
