@@ -36,6 +36,7 @@ export default function OrganizationDetailPage() {
   // Forms
   const [editForm] = Form.useForm();
   const [addMemberForm] = Form.useForm();
+  const [editMemberForm] = Form.useForm();
 
   // Services
   const organizationService = OrganizationService(axiosUser);
@@ -44,6 +45,8 @@ export default function OrganizationDetailPage() {
 
   // Data
   const [availableUsers, setAvailableUsers] = useState<TUser[]>([]);
+  const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
+  const [isEditMemberModalOpen, setIsEditMemberModalOpen] = useState(false);
 
   useEffect(() => {
     if (organizationId) {
@@ -119,6 +122,26 @@ export default function OrganizationDetailPage() {
     }
   };
 
+  // Edit Member
+  const handleEditMember = (member: any) => {
+    setCurrentMemberId(member.id);
+    editMemberForm.setFieldsValue({
+      role: member.role,
+    });
+    setIsEditMemberModalOpen(true);
+  };
+
+  const onEditMemberFinish = async (values: any) => {
+    if (!currentMemberId) return;
+    try {
+      await organizationMemberService.update(currentMemberId, values);
+      setIsEditMemberModalOpen(false);
+      fetchOrganizationData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   // Remove Member
   const handleRemoveMember = async (memberId: number) => {
     try {
@@ -164,14 +187,19 @@ export default function OrganizationDetailPage() {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Popconfirm
-          title="Remove member?"
-          onConfirm={() => handleRemoveMember(record.id)}
-        >
-          <Button type="link" danger>
-            Remove
+        <Space>
+          <Button type="link" onClick={() => handleEditMember(record)}>
+            Edit
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title="Remove member?"
+            onConfirm={() => handleRemoveMember(record.id)}
+          >
+            <Button type="link" danger>
+              Remove
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -221,7 +249,7 @@ export default function OrganizationDetailPage() {
         />
       </Card>
 
-      {/* Edit Modal */}
+      {/* Edit Organization Modal */}
       <Modal
         title="Edit Organization"
         open={isEditModalOpen}
@@ -271,9 +299,33 @@ export default function OrganizationDetailPage() {
             name="role"
             label="Role"
             rules={[{ required: true }]}
-            initialValue="MEMBER"
+            // initialValue="MEMBER"
           >
             <Select>
+              <Select.Option value="OWNER">OWNER</Select.Option>
+              <Select.Option value="ADMIN">ADMIN</Select.Option>
+              <Select.Option value="MEMBER">MEMBER</Select.Option>
+              <Select.Option value="VIEWER">VIEWER</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Edit Member Modal */}
+      <Modal
+        title="Edit Member Role"
+        open={isEditMemberModalOpen}
+        onCancel={() => setIsEditMemberModalOpen(false)}
+        onOk={() => editMemberForm.submit()}
+      >
+        <Form
+          form={editMemberForm}
+          onFinish={onEditMemberFinish}
+          layout="vertical"
+        >
+          <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="OWNER">OWNER</Select.Option>
               <Select.Option value="ADMIN">ADMIN</Select.Option>
               <Select.Option value="MEMBER">MEMBER</Select.Option>
               <Select.Option value="VIEWER">VIEWER</Select.Option>
