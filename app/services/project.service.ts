@@ -15,6 +15,19 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findByOrganizationId: async (organizationId: string, token: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/organization/${organizationId}`, {
+          params: { token },
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     create: async (value: IProject) => {
       return await axiosInstance
         .post(`${baseUrl}`, { body: value })

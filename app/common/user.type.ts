@@ -18,6 +18,7 @@ export type TUser = {
   phoneNumber: string;
   password?: string;
   groups?: { group: TGroup }[];
+  recentOrganizationId?: string;
 };
 export type TUserForm = {
   id: number;

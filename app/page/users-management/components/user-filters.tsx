@@ -33,7 +33,7 @@ export interface props {
   open: { status: boolean; type: string };
   onFinish: (type: string, values: TUserForm) => void;
   groups: TGroup[];
-  search: string;
+  search: string | undefined;
 }
 
 const UserFiltersPage: FC<props> = ({

@@ -7,7 +7,7 @@ interface props {
 }
 
 const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
-  const ownersTableData = data.map((owner) => ({
+  const ownersTableData = data?.map((owner) => ({
     owner: owner.owner,
     key: owner.owner,
     products: owner.products,
@@ -20,7 +20,8 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
       dataIndex: "owner",
       render(e: string, records: ITDashboardOwner, index: number) {
         const total = records.products.reduce((sum, p) => {
-          const used = p.type === "image" ? p.totalImageUsed : p.totalTokenUsed / 1000;
+          const used =
+            p.type === "image" ? p.totalImageUsed : p.totalTokenUsed / 1000;
           const cost = used * p.unitPrice;
           return sum + cost;
         }, 0);
@@ -40,13 +41,17 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
     {
       title: "Unit Price",
       dataIndex: "unitPrice",
-      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? `USD/piece` : `USD/K Token`}`,
+      render: (v: number, record: any) =>
+        `$ ${v} ${record.type === "image" ? `USD/piece` : `USD/K Token`}`,
     },
     {
       title: "Usage",
       dataIndex: "totalUsed",
       render: (_: any, record: any) => {
-        const used = record.type === "image" ? record.totalImageUsed : record.totalTokenUsed;
+        const used =
+          record.type === "image"
+            ? record.totalImageUsed
+            : record.totalTokenUsed;
         const unit = record.type === "image" ? "piece" : "Token";
         return `${used.toLocaleString()} ${unit}`;
       },
@@ -56,7 +61,10 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
       align: "right",
       dataIndex: "owner",
       render(e: string, records: any, index: number) {
-        const used = records.type === "image" ? records.totalImageUsed : records.totalTokenUsed / 1000;
+        const used =
+          records.type === "image"
+            ? records.totalImageUsed
+            : records.totalTokenUsed / 1000;
         const cost = used * records.unitPrice;
         return <div>{`$ ${cost.toFixed(2)}`}</div>;
       },
@@ -71,7 +79,16 @@ const TableOwnerComponent: FC<props> = ({ data }): ReactElement => {
         dataSource={ownersTableData}
         expandable={{
           expandedRowRender: (record) => {
-            return <Table columns={productColumns} bordered dataSource={record.products} rowKey="key" pagination={false} size="small" />;
+            return (
+              <Table
+                columns={productColumns}
+                bordered
+                dataSource={record.products}
+                rowKey="key"
+                pagination={false}
+                size="small"
+              />
+            );
           },
         }}
         size="small"

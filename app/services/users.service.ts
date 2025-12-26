@@ -29,6 +29,28 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findDetailByToken: async (token: string): Promise<any> => {
+      return await axiosInstance
+        .get(`${baseUsersUrl}/detail/${token}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findById: async (userId: string): Promise<any> => {
+      return await axiosInstance
+        .get(`${baseUsersUrl}/${userId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     summary: async () => {
       return await axiosInstance
         .get(`${baseUsersUrl}/summary`)
@@ -61,9 +83,10 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findById: async (userId: string) => {
+
+    updateDetailByToken: async (token: string, value: any) => {
       return await axiosInstance
-        .get(`${baseUsersUrl}/${userId}`)
+        .patch(`${baseUsersUrl}/detail/${token}`, { body: value })
         .then((res) => {
           return res.data;
         })

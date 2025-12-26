@@ -34,6 +34,12 @@ export const MenuSider = [
         icon: <UserSwitchOutlined />,
         label: `User Managament`,
       },
+      {
+        key: `organization`,
+        // role: "o-v",
+        icon: <FileImageOutlined />,
+        label: `Organization`,
+      },
     ],
   },
   {

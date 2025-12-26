@@ -17,6 +17,7 @@ import {
   Dropdown,
   MenuProps,
   Tag,
+  Spin,
 } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,7 +37,9 @@ import { axiosCore, axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
 import type { IProject } from "../common/project.type";
 import { EllipsisVertical } from "lucide-react";
-
+import OrganizationService from "../services/organization.service";
+import { IOrganization } from "../common/organization.type";
+import { OrganizationProvider } from "../context/OrganizationContext";
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
@@ -45,7 +48,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session, status } = useSession();
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
   const currentPathSub = pathname.split("/")[3];
@@ -56,13 +59,21 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [modal, contextHolder] = Modal.useModal();
 
   const userServices = UserServices(axiosUser);
+
+  const organizationService = OrganizationService(axiosUser);
   const projectService = ProjectService(axiosCore);
   const [getdata, setData] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
-  const [groupName, setGroupName] = useState<string>("");
+  // const [groupName, setGroupName] = useState<string>("");
   const [roles, setRoles] = useState<string[]>([]);
   const filteredMenu = filterMenuByRole(MenuSider, roles);
-
+  const [organizationId, setOrganizationId] = useState<string | undefined>();
+  const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
+    []
+  );
+  const [personalOrganizations, setPersonalOrganizations] = useState<
+    IOrganization[]
+  >([]);
   const projectActionItems = [
     {
       key: "edit",
@@ -74,26 +85,56 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     },
   ];
   useEffect(() => {
-    if (session?.user?.id) {
-      fecthMasterData();
-      getdatauser();
-      if (loading) {
-        fecthdata();
-      }
+    if (session?.user?.id) setLoading(true);
+  }, [session?.user?.id]);
+  useEffect(() => {
+    if (loading) {
+      fecthdata();
     }
-  }, [loading, session]);
-
+  }, [loading]);
   const fecthdata = async () => {
-    const response = await projectService.findAll(session?.user?.id as string);
+    const personalOrganizations = await organizationService.findManyByUserId(
+      session?.user?.id as string,
+      { type: "personal" }
+    );
+    setPersonalOrganizations(personalOrganizations);
+    const teamOrganizations = await organizationService.findManyByUserId(
+      session?.user?.id as string,
+      { type: "team" }
+    );
+    setTeamOrganizations(teamOrganizations);
+    await fetchdataUser();
+    setLoading(false);
+    // const response = await projectService.findAll(session?.user?.id as string);
+    // setProject(response);
+  };
+  async function fecthdataByOrganization(organizationId: string) {
+    setOrganizationId(organizationId);
+
+    const response = await projectService.findByOrganizationId(
+      organizationId,
+      session?.user?.id as string
+    );
     setProject(response);
     setLoading(false);
-  };
+  }
 
-  const getdatauser = async () => {
-    const response = await userServices.findById(session?.user?.id as string);
-    const userRoles = response.roles?.map((r: any) => r.role.name) || [];
-    setRoles(userRoles);
-    setGroupName(response.name);
+  const fetchdataUser = async () => {
+    const userDetail = await userServices.findDetailByToken(
+      session?.user?.id as string
+    );
+    const user = await userServices.findById(session?.user?.id as string);
+    console.log(session?.user?.id);
+    console.log(user);
+    const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
+
+    setRoles(userRoles || []);
+
+    // setGroupName(userDetail.name);
+    if (userDetail?.recentOrganizationId) {
+      console.log("orgID", userDetail.recentOrganizationId);
+      fecthdataByOrganization(userDetail?.recentOrganizationId);
+    }
   };
 
   const fecthMasterData = async () => {
@@ -157,7 +198,59 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       </Button>
     </div>
   );
+  /* Create Organization Modal */
+  const [openCreateOrg, setOpenCreateOrg] = useState(false);
+  const [createOrgForm] = Form.useForm();
 
+  const handleOpenCreateOrg = () => setOpenCreateOrg(true);
+  const handleCloseCreateOrg = () => {
+    setOpenCreateOrg(false);
+    createOrgForm.resetFields();
+  };
+
+  const onFinishCreateOrg = async (values: any) => {
+    const payload = {
+      ...values,
+      type: "team",
+      createdById: session?.user?.id,
+      slug: values.name.toLowerCase().replace(/ /g, "-"),
+    };
+    const response = await organizationService.create(payload);
+    if (response) {
+      setOpenCreateOrg(false);
+      createOrgForm.resetFields();
+      setLoading(true); // Trigger data refresh
+    }
+  };
+
+  async function handleOrganizationChange(
+    organizationId: string
+  ): Promise<void> {
+    console.log(organizationId);
+    await userServices.updateDetailByToken(session?.user?.id as string, {
+      recentOrganizationId: organizationId,
+    });
+    fecthdataByOrganization(organizationId);
+  }
+  if (!session?.user.id) {
+    return (
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorBgBase: "#000000",
+            colorBgContainer: "#000000",
+            colorBgElevated: "#1a1a1a",
+            colorTextBase: "#f0f0f0",
+          },
+        }}
+      >
+        <Layout className="h-screen overflow-hidden">
+          <Spin spinning={true}></Spin>
+        </Layout>
+      </ConfigProvider>
+    );
+  }
   return (
     <ConfigProvider
       theme={{
@@ -199,203 +292,285 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         },
       }}
     >
-      {contextHolder}
-      {open ? (
-        <Modal
-          title="Create Project"
-          open={open}
-          onCancel={handleClose}
-          footer={false}
-          okText="Create"
-          width={500}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            name="create_project_form"
-            onFinish={onFinish}
+      <Spin spinning={loading}>
+        {contextHolder}
+        {openCreateOrg ? (
+          <Modal
+            title="Create Organization (Team)"
+            open={openCreateOrg}
+            onCancel={handleCloseCreateOrg}
+            footer={false}
+            width={500}
           >
-            <Form.Item
-              label="Project Name"
-              name="name"
-              rules={[{ required: true, message: "Please enter project name" }]}
+            <Form
+              form={createOrgForm}
+              layout="vertical"
+              name="create_org_form"
+              onFinish={onFinishCreateOrg}
             >
-              <Input placeholder="Enter project name" />
-            </Form.Item>
-            <Form.Item label="Description" name="description">
-              <Input.TextArea rows={3} placeholder="Optional description" />
-            </Form.Item>
-
-            <Form.Item label="Add Members" name="members">
-              <Select
-                mode="multiple"
-                placeholder="Select users"
-                options={getdata.map((e) => ({
-                  value: e.userId,
-                  label: e.fullname,
-                }))}
-              />
-            </Form.Item>
-            <Button type="primary" htmlType="submit">{`Create Project`}</Button>
-          </Form>
-        </Modal>
-      ) : null}
-      {openEdit ? (
-        <Modal
-          title="Edit Project"
-          open={openEdit}
-          onCancel={handleCloseEdit}
-          footer={false}
-          width={500}
-        >
-          <Form
-            form={editForm}
-            layout="vertical"
-            name="create_project_form"
-            onFinish={onFinishEdit}
-          >
-            <Form.Item
-              label="ID"
-              name="id"
-              hidden
-              rules={[{ required: true, message: "Please enter project name" }]}
-            >
-              <Input placeholder="Enter project id" />
-            </Form.Item>
-            <Form.Item
-              label="Project Name"
-              name="name"
-              rules={[{ required: true, message: "Please enter project name" }]}
-            >
-              <Input placeholder="Enter project name" />
-            </Form.Item>
-            <Form.Item label="Description" name="description">
-              <Input.TextArea rows={3} placeholder="Optional description" />
-            </Form.Item>
-            <Form.Item label="Add Members" name="members">
-              <Select
-                mode="multiple"
-                placeholder="Select users"
-                options={getdata.map((e) => ({
-                  value: e.userId,
-                  label: e.fullname,
-                }))}
-              />
-            </Form.Item>
-            <Button type="primary" htmlType="submit">{`Edit Project`}</Button>
-          </Form>
-        </Modal>
-      ) : null}
-      <Layout className="h-screen overflow-hidden">
-        <Sider
-          width={250}
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          className="hidden md:block p-2 h-screen"
-        >
-          <div className="bg-black rounded-2xl h-full flex flex-col">
-            <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
-              <Image
-                width={"150px"}
-                src="/images/Logo.png"
-                alt="OSD Logo"
-                preview={false}
-                className="mb-2"
-              />
-            </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              <Menu
-                mode="inline"
-                selectedKeys={[currentPath, `${currentPath}/${currentPathSub}`]}
-                defaultSelectedKeys={[
-                  currentPath,
-                  `${currentPath}/${currentPathSub}`,
+              <Form.Item
+                label="Organization Name"
+                name="name"
+                rules={[
+                  { required: true, message: "Please enter organization name" },
                 ]}
-                items={renderMenuItems(filteredMenu)}
-              />
-              <div className="!text-gray-400 px-4 mt-2">
-                {/* Header */}
-                <div>{`PROJECT`}</div>
+              >
+                <Input placeholder="Enter organization name" />
+              </Form.Item>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea rows={3} placeholder="Optional description" />
+              </Form.Item>
+              <Button type="primary" htmlType="submit">
+                Create Organization
+              </Button>
+            </Form>
+          </Modal>
+        ) : null}
+        {open ? (
+          <Modal
+            title="Create Project"
+            open={open}
+            onCancel={handleClose}
+            footer={false}
+            okText="Create"
+            width={500}
+          >
+            <Form
+              form={form}
+              layout="vertical"
+              name="create_project_form"
+              onFinish={onFinish}
+            >
+              <Form.Item
+                label="Project Name"
+                name="name"
+                rules={[
+                  { required: true, message: "Please enter project name" },
+                ]}
+              >
+                <Input placeholder="Enter project name" />
+              </Form.Item>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea rows={3} placeholder="Optional description" />
+              </Form.Item>
 
-                {roles.includes("p-c") && (
-                  <div className="mt-3 w-full">
-                    <Button
-                      icon={<PlusCircleOutlined />}
-                      className="w-full"
-                      onClick={handleOpen}
-                    >
-                      {`Add new project`}
-                    </Button>
-                  </div>
-                )}
-
-                {/* ⭐ Scroll section */}
-                <div className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1">
-                  {roles.includes("p-v") &&
-                    getProject?.map((project) => (
-                      <div
-                        key={project.id}
-                        className="w-full  justify-center mt-2 gap-4"
-                      >
-                        <Space.Compact className=" w-full">
-                          <Button
-                            // className="w-full !bg-gray-800"
-                            className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
-                            onClick={() =>
-                              router.push(`/page/project/${project.id}`)
-                            }
-                          >
-                            <Space>
-                              {project.name}{" "}
-                              {project.status === "deleted" && (
-                                <Tag color="red">Deleted</Tag>
-                              )}
-                            </Space>
-                          </Button>
-                          <Dropdown
-                            menu={{
-                              items: projectActionItems,
-                              onClick: (e) =>
-                                onClickProjectAction(e.key, project),
-                            }}
-                            placement="bottomRight"
-                          >
-                            <Button
-                              className="!h-auto flex items-center"
-                              icon={<EllipsisVertical size={16} />}
-                            />
-                          </Dropdown>
-                        </Space.Compact>
-                      </div>
-                    ))}
+              <Form.Item label="Add Members" name="members">
+                <Select
+                  mode="multiple"
+                  placeholder="Select users"
+                  options={getdata.map((e) => ({
+                    value: e.userId,
+                    label: e.fullname,
+                  }))}
+                />
+              </Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+              >{`Create Project`}</Button>
+            </Form>
+          </Modal>
+        ) : null}
+        {openEdit ? (
+          <Modal
+            title="Edit Project"
+            open={openEdit}
+            onCancel={handleCloseEdit}
+            footer={false}
+            width={500}
+          >
+            <Form
+              form={editForm}
+              layout="vertical"
+              name="create_project_form"
+              onFinish={onFinishEdit}
+            >
+              <Form.Item
+                label="ID"
+                name="id"
+                hidden
+                rules={[
+                  { required: true, message: "Please enter project name" },
+                ]}
+              >
+                <Input placeholder="Enter project id" />
+              </Form.Item>
+              <Form.Item
+                label="Project Name"
+                name="name"
+                rules={[
+                  { required: true, message: "Please enter project name" },
+                ]}
+              >
+                <Input placeholder="Enter project name" />
+              </Form.Item>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea rows={3} placeholder="Optional description" />
+              </Form.Item>
+              <Form.Item label="Add Members" name="members">
+                <Select
+                  mode="multiple"
+                  placeholder="Select users"
+                  options={getdata.map((e) => ({
+                    value: e.userId,
+                    label: e.fullname,
+                  }))}
+                />
+              </Form.Item>
+              <Button type="primary" htmlType="submit">{`Edit Project`}</Button>
+            </Form>
+          </Modal>
+        ) : null}
+        <Layout className="h-screen overflow-hidden">
+          <Sider
+            width={250}
+            trigger={null}
+            collapsible
+            collapsed={collapsed}
+            className="hidden md:block p-2 h-screen"
+          >
+            <div className="bg-black rounded-2xl h-full flex flex-col">
+              <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
+                <Image
+                  width={"150px"}
+                  src="/images/Logo.png"
+                  alt="OSD Logo"
+                  preview={false}
+                  className="mb-2"
+                />
+              </div>
+              <div className="w-full  justify-center items-center py-5 flex-shrink-0 px-2">
+                <div className="w-full text-[#F0F0F073] line-height-[16px] px-2 mb-2">
+                  ORGANIZATION
+                </div>
+                <div className="w-full flex items-center space-x-1">
+                  <Select
+                    size="middle"
+                    className="dark-select w-full  "
+                    placeholder="Choose Organization"
+                    onChange={handleOrganizationChange}
+                    value={organizationId}
+                    options={[
+                      {
+                        label: <span>PERSONAL</span>,
+                        title: "personal",
+                        options: personalOrganizations.map((organization) => ({
+                          label: <span>{organization.name}</span>,
+                          value: organization.organizationId,
+                        })),
+                      },
+                      {
+                        label: <span>TEAMS</span>,
+                        title: "teams",
+                        options: teamOrganizations.map((organization) => ({
+                          label: <span>{organization.name}</span>,
+                          value: organization.organizationId,
+                        })),
+                      },
+                    ]}
+                  />
+                  <Button size="middle" onClick={handleOpenCreateOrg}>
+                    +
+                  </Button>
                 </div>
               </div>
-            </div>
-            <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
-              <Badge dot color="green">
-                <Avatar />
-              </Badge>
-              <div className="grid grid-cols-1">
-                <span className="text-white text-sm">{`${session?.user?.name}`}</span>
-                <span className="text-[#6366F1]">Premium</span>
-              </div>
-              <>
-                <Popover
-                  content={content}
-                  trigger="click"
-                  placement="bottomRight"
-                  title={false}
-                >
-                  <Button
-                    type="default"
-                    size="small"
-                    icon={<SettingOutlined />}
+              {organizationId && (
+                <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                  <Menu
+                    mode="inline"
+                    selectedKeys={[
+                      currentPath,
+                      `${currentPath}/${currentPathSub}`,
+                    ]}
+                    defaultSelectedKeys={[
+                      currentPath,
+                      `${currentPath}/${currentPathSub}`,
+                    ]}
+                    items={renderMenuItems(filteredMenu)}
                   />
-                </Popover>
-              </>
-            </div>
-            {/* {groupName !== "admin-user" ? (
+                  <div className="!text-gray-400 px-4 mt-2">
+                    {/* Header */}
+                    <div>{`PROJECT`}</div>
+
+                    {roles.includes("p-c") && (
+                      <div className="mt-3 w-full">
+                        <Button
+                          icon={<PlusCircleOutlined />}
+                          className="w-full"
+                          onClick={handleOpen}
+                        >
+                          {`Add new project`}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* ⭐ Scroll section */}
+                    <div className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1">
+                      {roles.includes("p-v") &&
+                        getProject?.map((project) => (
+                          <div
+                            key={project.id}
+                            className="w-full  justify-center mt-2 gap-4"
+                          >
+                            <Space.Compact className=" w-full">
+                              <Button
+                                // className="w-full !bg-gray-800"
+                                className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
+                                onClick={() =>
+                                  router.push(`/page/project/${project.id}`)
+                                }
+                              >
+                                <Space>
+                                  {project.name}{" "}
+                                  {project.status === "deleted" && (
+                                    <Tag color="red">Deleted</Tag>
+                                  )}
+                                </Space>
+                              </Button>
+                              <Dropdown
+                                menu={{
+                                  items: projectActionItems,
+                                  onClick: (e) =>
+                                    onClickProjectAction(e.key, project),
+                                }}
+                                placement="bottomRight"
+                              >
+                                <Button
+                                  className="!h-auto flex items-center"
+                                  icon={<EllipsisVertical size={16} />}
+                                />
+                              </Dropdown>
+                            </Space.Compact>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+                <Badge dot color="green">
+                  <Avatar />
+                </Badge>
+                <div className="grid grid-cols-1">
+                  <span className="text-white text-sm">{`${session?.user?.name}`}</span>
+                  <span className="text-[#6366F1]">Premium</span>
+                </div>
+                <>
+                  <Popover
+                    content={content}
+                    trigger="click"
+                    placement="bottomRight"
+                    title={false}
+                  >
+                    <Button
+                      type="default"
+                      size="small"
+                      icon={<SettingOutlined />}
+                    />
+                  </Popover>
+                </>
+              </div>
+              {/* {groupName !== "admin-user" ? (
               <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
                   <Avatar />
@@ -420,10 +595,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 </>
               </div>
             ) : null} */}
-          </div>
-        </Sider>
-        <Layout className="flex-1 w-full h-full overflow-hidden">
-          {/* {groupName === "admin-user" ? (
+            </div>
+          </Sider>
+          <Layout className="flex-1 w-full h-full overflow-hidden">
+            {/* {groupName === "admin-user" ? (
             <PrivateNavigation
               user={
                 session?.user
@@ -432,19 +607,22 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               }
             />
           ) : null} */}
-          <div className="w-full h-screen p-2  overflow-y-auto">
-            <PrivateContent
-              user={
-                session?.user
-                  ? { fullname: session.user.name ?? "" }
-                  : undefined
-              }
-            >
-              {children}
-            </PrivateContent>
-          </div>
+            <div className="w-full h-screen p-2  overflow-y-auto">
+              <PrivateContent
+                user={
+                  session?.user
+                    ? { fullname: session.user.name ?? "" }
+                    : undefined
+                }
+              >
+                <OrganizationProvider value={{ organizationId }}>
+                  {children}
+                </OrganizationProvider>
+              </PrivateContent>
+            </div>
+          </Layout>
         </Layout>
-      </Layout>
+      </Spin>
     </ConfigProvider>
   );
 }
