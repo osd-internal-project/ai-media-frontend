@@ -18,6 +18,9 @@ import {
   MenuProps,
   Tag,
   Spin,
+  Table,
+  Card,
+  Divider,
 } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,12 +33,17 @@ import {
   DownOutlined,
   PlusCircleOutlined,
   SettingOutlined,
+  UserOutlined,
+  CloseOutlined,
+  CrownOutlined,
+  EyeOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
-import type { IProject } from "../common/project.type";
+import type { IProject, ProjectMemberInput } from "../common/project.type";
 import { EllipsisVertical } from "lucide-react";
 import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
@@ -68,9 +76,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
   // const [groupName, setGroupName] = useState<string>("");
-  // const [roles, setRoles] = useState<string[]>([]);
-  // const [getProject, setProject] = useState<IProject[]>([]);
-  // const filteredMenu = filterMenuByRole(MenuSider, te);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>([]);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<'ADMIN' | 'USER' | 'VIEWER'>('USER');
+  const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [projectRole, setProjectRole] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
@@ -155,6 +166,21 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const handleClose = () => {
     setOpen(false);
     form.resetFields();
+    setProjectMembers([]);
+    setShowAddMember(false);
+    setSelectedUser('');
+    setSelectedRole('USER');
+  };
+
+
+  const handleRemoveMember = (userId: string) => {
+    setProjectMembers(projectMembers.filter(m => m.userId !== userId));
+  };
+
+  const handleRoleChange = (userId: string, role: 'ADMIN' | 'USER' | 'VIEWER') => {
+    setProjectMembers(projectMembers.map(m => 
+      m.userId === userId ? { ...m, role } : m
+    ));
   };
   const handleCloseEdit = () => {
     setOpenEdit(false);
@@ -162,25 +188,43 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   };
 
   const onFinish = async (values: any) => {
-    const response = await projectService.create(values);
+    const projectData = {
+      ...values,
+      members: projectMembers.filter(m => m.userId), // Only include members with selected users
+      organizationId: organizationId
+    };
+    
+    const response = await projectService.create(projectData);
     if (response) {
       setOpen(false);
       setLoading(true);
+      setProjectMembers([]);
+      form.resetFields();
     }
   };
   const onFinishEdit = async (values: any) => {
-    const response = await projectService.update(values.id, values);
+    const projectData = {
+      ...values,
+      members: projectMembers.filter(m => m.userId), // Only include members with selected users
+    };
+    
+    const response = await projectService.update(values.id, projectData);
     if (response) {
       setOpenEdit(false);
       setLoading(true);
+      setProjectMembers([]);
     }
   };
   const onClickProjectAction = (action: string, project: IProject) => {
     console.log("click", action, project);
     if (action === "edit") {
       setOpenEdit(true);
-      const members = project.members.map((member: any) => member.userId) || [];
-      editForm.setFieldsValue({ ...project, members });
+      const members = project.members.map((member: any) => ({
+        userId: member.userId,
+        role: member.role || 'USER'
+      })) || [];
+      setProjectMembers(members);
+      editForm.setFieldsValue({ ...project });
     }
     if (action === "delete") {
       // router.push(`/page/project/${project.id}`);
@@ -369,15 +413,87 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
 
-              <Form.Item label="Add Members" name="members">
-                <Select
-                  mode="multiple"
-                  placeholder="Select users"
-                  options={organizationMember.map((e) => ({
-                    value: e.userId,
-                    label: e.fullname,
-                  }))}
-                />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 'normal', color: 'rgba(255, 255, 255, 0.85)' }}>Team Members</span>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  icon={<PlusCircleOutlined />}
+                  onClick={() => {
+                    setProjectMembers([...projectMembers, { userId: '', role: 'USER' }]);
+                  }}
+                >
+                  Add Member
+                </Button>
+              </div>
+              
+              <Form.Item>
+                <div>
+                  {/* Selected Members List */}
+                  {projectMembers.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                        Team Members ({projectMembers.filter(m => m.userId).length})
+                      </div>
+                      {projectMembers.map((member, index) => {
+                        return (
+                          <div 
+                            key={index}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              marginBottom: '8px'
+                            }}
+                          >
+                            <Select
+                              placeholder="Select user"
+                              value={member.userId || undefined}
+                              style={{ flex: 1, marginRight: '8px' }}
+                              onChange={(userId: string) => {
+                                if (userId && !projectMembers.find((m, i) => m.userId === userId && i !== index)) {
+                                  const newMembers = [...projectMembers];
+                                  newMembers[index].userId = userId;
+                                  setProjectMembers(newMembers);
+                                }
+                              }}
+                              options={organizationMember
+                                .filter(u => !projectMembers.find((m, i) => m.userId === u.userId && i !== index))
+                                .map((e) => ({
+                                  value: e.userId,
+                                  label: e.fullname,
+                                }))}
+                            />
+                            <Select
+                              value={member.role}
+                              style={{ width: 80, marginRight: '8px' }}
+                              onChange={(role: 'ADMIN' | 'USER' | 'VIEWER') => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].role = role;
+                                setProjectMembers(newMembers);
+                              }}
+                              options={[
+                                { value: 'ADMIN', label: 'Admin' },
+                                { value: 'USER', label: 'User' },
+                                { value: 'VIEWER', label: 'Viewer' }
+                              ]}
+                            />
+                            <Button 
+                              size="small" 
+                              type="text"
+                              danger
+                              onClick={() => {
+                                setProjectMembers(projectMembers.filter((_, i) => i !== index));
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </Form.Item>
               <Button
                 type="primary"
@@ -422,15 +538,87 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <Form.Item label="Description" name="description">
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
-              <Form.Item label="Add Members" name="members">
-                <Select
-                  mode="multiple"
-                  placeholder="Select users"
-                  options={organizationMember.map((e) => ({
-                    value: e.userId,
-                    label: e.fullname,
-                  }))}
-                />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 'normal', color: 'rgba(255, 255, 255, 0.85)' }}>Team Members</span>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  icon={<PlusCircleOutlined />}
+                  onClick={() => {
+                    setProjectMembers([...projectMembers, { userId: '', role: 'USER' }]);
+                  }}
+                >
+                  Add Member
+                </Button>
+              </div>
+              
+              <Form.Item>
+                <div>
+                  {/* Selected Members List */}
+                  {projectMembers.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                        Team Members ({projectMembers.filter(m => m.userId).length})
+                      </div>
+                      {projectMembers.map((member, index) => {
+                        return (
+                          <div 
+                            key={index}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              marginBottom: '8px'
+                            }}
+                          >
+                            <Select
+                              placeholder="Select user"
+                              value={member.userId || undefined}
+                              style={{ flex: 1, marginRight: '8px' }}
+                              onChange={(userId: string) => {
+                                if (userId && !projectMembers.find((m, i) => m.userId === userId && i !== index)) {
+                                  const newMembers = [...projectMembers];
+                                  newMembers[index].userId = userId;
+                                  setProjectMembers(newMembers);
+                                }
+                              }}
+                              options={organizationMember
+                                .filter(u => !projectMembers.find((m, i) => m.userId === u.userId && i !== index))
+                                .map((e) => ({
+                                  value: e.userId,
+                                  label: e.fullname,
+                                }))}
+                            />
+                            <Select
+                              value={member.role}
+                              style={{ width: 80, marginRight: '8px' }}
+                              onChange={(role: 'ADMIN' | 'USER' | 'VIEWER') => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].role = role;
+                                setProjectMembers(newMembers);
+                              }}
+                              options={[
+                                { value: 'ADMIN', label: 'Admin' },
+                                { value: 'USER', label: 'User' },
+                                { value: 'VIEWER', label: 'Viewer' }
+                              ]}
+                            />
+                            <Button 
+                              size="small" 
+                              type="text"
+                              danger
+                              onClick={() => {
+                                setProjectMembers(projectMembers.filter((_, i) => i !== index));
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </Form.Item>
               <Button type="primary" htmlType="submit">{`Edit Project`}</Button>
             </Form>

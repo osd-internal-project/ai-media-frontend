@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
-import { Button, Tabs, Select, Tooltip } from "antd";
+import { Button, Tabs, Select, Tooltip, Tag } from "antd";
+import { useProjectPermissions, ProjectPermissionGuard } from "../../../hooks/useProjectPermissions";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -43,6 +44,9 @@ const GenerateImagePage: FC = () => {
     (TAIModel & { capabilities?: string[] }) | null
   >(null);
   const { id } = params as { id: string };
+  
+  // Get project permissions for current user
+  const permissions = useProjectPermissions(id);
 
   useEffect(() => {
     if (loadingData) {
@@ -178,6 +182,20 @@ const GenerateImagePage: FC = () => {
       <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
+      
+      {/* Viewer Role Notification */}
+      {permissions.canViewOnly && (
+        <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <span className="text-lg">👀</span>
+            <div>
+              <div className="font-medium">Read-Only Access</div>
+              <div className="text-sm">You have VIEWER permissions for this project. You can browse content but cannot use chat features.</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Tabs
         className="custom-tabs"
         type="card"

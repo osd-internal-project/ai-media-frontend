@@ -84,6 +84,49 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
         .then((result) => result.data)
         .catch((err) => err);
     },
+
+    // Role-based permission methods
+    checkUserRole: async (projectId: string, userId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${projectId}/role/${userId}`)
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return null;
+        });
+    },
+
+    isProjectAdmin: async (projectId: string, userId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${projectId}/admin/${userId}`)
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return false;
+        });
+    },
+
+    getProjectMembers: async (projectId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${projectId}/members`)
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
+
+    hasProjectPermission: async (projectId: string, userId: string, requiredRole: string = 'USER') => {
+      return await axiosInstance
+        .get(`${baseUrl}/${projectId}/permission/${userId}`, {
+          params: { requiredRole }
+        })
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return false;
+        });
+    },
   };
 };
 
