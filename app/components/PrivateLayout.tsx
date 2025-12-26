@@ -77,10 +77,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [getProject, setProject] = useState<IProject[]>([]);
   // const [groupName, setGroupName] = useState<string>("");
   const [roles, setRoles] = useState<string[]>([]);
-  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>([]);
+  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
+    []
+  );
   const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<'ADMIN' | 'USER' | 'VIEWER'>('USER');
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
+    "USER"
+  );
   const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [projectRole, setProjectRole] = useState<string | undefined>();
@@ -168,19 +172,21 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     form.resetFields();
     setProjectMembers([]);
     setShowAddMember(false);
-    setSelectedUser('');
-    setSelectedRole('USER');
+    setSelectedUser("");
+    setSelectedRole("USER");
   };
-
 
   const handleRemoveMember = (userId: string) => {
-    setProjectMembers(projectMembers.filter(m => m.userId !== userId));
+    setProjectMembers(projectMembers.filter((m) => m.userId !== userId));
   };
 
-  const handleRoleChange = (userId: string, role: 'ADMIN' | 'USER' | 'VIEWER') => {
-    setProjectMembers(projectMembers.map(m => 
-      m.userId === userId ? { ...m, role } : m
-    ));
+  const handleRoleChange = (
+    userId: string,
+    role: "ADMIN" | "USER" | "VIEWER"
+  ) => {
+    setProjectMembers(
+      projectMembers.map((m) => (m.userId === userId ? { ...m, role } : m))
+    );
   };
   const handleCloseEdit = () => {
     setOpenEdit(false);
@@ -190,10 +196,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const onFinish = async (values: any) => {
     const projectData = {
       ...values,
-      members: projectMembers.filter(m => m.userId), // Only include members with selected users
-      organizationId: organizationId
+      members: projectMembers.filter((m) => m.userId), // Only include members with selected users
+      organizationId: organizationId,
     };
-    
+
     const response = await projectService.create(projectData);
     if (response) {
       setOpen(false);
@@ -205,9 +211,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const onFinishEdit = async (values: any) => {
     const projectData = {
       ...values,
-      members: projectMembers.filter(m => m.userId), // Only include members with selected users
+      members: projectMembers.filter((m) => m.userId), // Only include members with selected users
     };
-    
+
     const response = await projectService.update(values.id, projectData);
     if (response) {
       setOpenEdit(false);
@@ -219,10 +225,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     console.log("click", action, project);
     if (action === "edit") {
       setOpenEdit(true);
-      const members = project.members.map((member: any) => ({
-        userId: member.userId,
-        role: member.role || 'USER'
-      })) || [];
+      const members =
+        project.members.map((member: any) => ({
+          userId: member.userId,
+          role: member.role || "USER",
+        })) || [];
       setProjectMembers(members);
       editForm.setFieldsValue({ ...project });
     }
@@ -413,52 +420,87 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontWeight: 'normal', color: 'rgba(255, 255, 255, 0.85)' }}>Team Members</span>
-                <Button 
-                  type="primary" 
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: "normal",
+                    color: "rgba(255, 255, 255, 0.85)",
+                  }}
+                >
+                  Team Members
+                </span>
+                <Button
+                  type="primary"
                   size="small"
                   icon={<PlusCircleOutlined />}
                   onClick={() => {
-                    setProjectMembers([...projectMembers, { userId: '', role: 'USER' }]);
+                    setProjectMembers([
+                      ...projectMembers,
+                      { userId: "", role: "USER" },
+                    ]);
                   }}
                 >
                   Add Member
                 </Button>
               </div>
-              
+
               <Form.Item>
                 <div>
                   {/* Selected Members List */}
                   {projectMembers.length > 0 && (
                     <div>
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                        Team Members ({projectMembers.filter(m => m.userId).length})
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Team Members (
+                        {projectMembers.filter((m) => m.userId).length})
                       </div>
                       {projectMembers.map((member, index) => {
                         return (
-                          <div 
+                          <div
                             key={index}
-                            style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'space-between',
-                              marginBottom: '8px'
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginBottom: "8px",
                             }}
                           >
                             <Select
                               placeholder="Select user"
                               value={member.userId || undefined}
-                              style={{ flex: 1, marginRight: '8px' }}
+                              style={{ flex: 1, marginRight: "8px" }}
                               onChange={(userId: string) => {
-                                if (userId && !projectMembers.find((m, i) => m.userId === userId && i !== index)) {
+                                if (
+                                  userId &&
+                                  !projectMembers.find(
+                                    (m, i) => m.userId === userId && i !== index
+                                  )
+                                ) {
                                   const newMembers = [...projectMembers];
                                   newMembers[index].userId = userId;
                                   setProjectMembers(newMembers);
                                 }
                               }}
                               options={organizationMember
-                                .filter(u => !projectMembers.find((m, i) => m.userId === u.userId && i !== index))
+                                .filter(
+                                  (u) =>
+                                    !projectMembers.find(
+                                      (m, i) =>
+                                        m.userId === u.userId && i !== index
+                                    )
+                                )
                                 .map((e) => ({
                                   value: e.userId,
                                   label: e.fullname,
@@ -466,24 +508,26 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                             />
                             <Select
                               value={member.role}
-                              style={{ width: 80, marginRight: '8px' }}
-                              onChange={(role: 'ADMIN' | 'USER' | 'VIEWER') => {
+                              style={{ width: 80, marginRight: "8px" }}
+                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
                               }}
                               options={[
-                                { value: 'ADMIN', label: 'Admin' },
-                                { value: 'USER', label: 'User' },
-                                { value: 'VIEWER', label: 'Viewer' }
+                                { value: "ADMIN", label: "Admin" },
+                                { value: "USER", label: "User" },
+                                { value: "VIEWER", label: "Viewer" },
                               ]}
                             />
-                            <Button 
-                              size="small" 
+                            <Button
+                              size="small"
                               type="text"
                               danger
                               onClick={() => {
-                                setProjectMembers(projectMembers.filter((_, i) => i !== index));
+                                setProjectMembers(
+                                  projectMembers.filter((_, i) => i !== index)
+                                );
                               }}
                             >
                               Remove
@@ -538,52 +582,87 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <Form.Item label="Description" name="description">
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontWeight: 'normal', color: 'rgba(255, 255, 255, 0.85)' }}>Team Members</span>
-                <Button 
-                  type="primary" 
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: "normal",
+                    color: "rgba(255, 255, 255, 0.85)",
+                  }}
+                >
+                  Team Members
+                </span>
+                <Button
+                  type="primary"
                   size="small"
                   icon={<PlusCircleOutlined />}
                   onClick={() => {
-                    setProjectMembers([...projectMembers, { userId: '', role: 'USER' }]);
+                    setProjectMembers([
+                      ...projectMembers,
+                      { userId: "", role: "USER" },
+                    ]);
                   }}
                 >
                   Add Member
                 </Button>
               </div>
-              
+
               <Form.Item>
                 <div>
                   {/* Selected Members List */}
                   {projectMembers.length > 0 && (
                     <div>
-                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                        Team Members ({projectMembers.filter(m => m.userId).length})
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Team Members (
+                        {projectMembers.filter((m) => m.userId).length})
                       </div>
                       {projectMembers.map((member, index) => {
                         return (
-                          <div 
+                          <div
                             key={index}
-                            style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'space-between',
-                              marginBottom: '8px'
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginBottom: "8px",
                             }}
                           >
                             <Select
                               placeholder="Select user"
                               value={member.userId || undefined}
-                              style={{ flex: 1, marginRight: '8px' }}
+                              style={{ flex: 1, marginRight: "8px" }}
                               onChange={(userId: string) => {
-                                if (userId && !projectMembers.find((m, i) => m.userId === userId && i !== index)) {
+                                if (
+                                  userId &&
+                                  !projectMembers.find(
+                                    (m, i) => m.userId === userId && i !== index
+                                  )
+                                ) {
                                   const newMembers = [...projectMembers];
                                   newMembers[index].userId = userId;
                                   setProjectMembers(newMembers);
                                 }
                               }}
                               options={organizationMember
-                                .filter(u => !projectMembers.find((m, i) => m.userId === u.userId && i !== index))
+                                .filter(
+                                  (u) =>
+                                    !projectMembers.find(
+                                      (m, i) =>
+                                        m.userId === u.userId && i !== index
+                                    )
+                                )
                                 .map((e) => ({
                                   value: e.userId,
                                   label: e.fullname,
@@ -591,24 +670,26 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                             />
                             <Select
                               value={member.role}
-                              style={{ width: 80, marginRight: '8px' }}
-                              onChange={(role: 'ADMIN' | 'USER' | 'VIEWER') => {
+                              style={{ width: 80, marginRight: "8px" }}
+                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
                               }}
                               options={[
-                                { value: 'ADMIN', label: 'Admin' },
-                                { value: 'USER', label: 'User' },
-                                { value: 'VIEWER', label: 'Viewer' }
+                                { value: "ADMIN", label: "Admin" },
+                                { value: "USER", label: "User" },
+                                { value: "VIEWER", label: "Viewer" },
                               ]}
                             />
-                            <Button 
-                              size="small" 
+                            <Button
+                              size="small"
                               type="text"
                               danger
                               onClick={() => {
-                                setProjectMembers(projectMembers.filter((_, i) => i !== index));
+                                setProjectMembers(
+                                  projectMembers.filter((_, i) => i !== index)
+                                );
                               }}
                             >
                               Remove
@@ -736,19 +817,24 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                 )}
                               </Space>
                             </Button>
-                            <Dropdown
-                              menu={{
-                                items: projectActionItems,
-                                onClick: (e) =>
-                                  onClickProjectAction(e.key, project),
-                              }}
-                              placement="bottomRight"
-                            >
-                              <Button
-                                className="!h-auto flex items-center"
-                                icon={<EllipsisVertical size={16} />}
-                              />
-                            </Dropdown>
+                            {checkRole(
+                              ["ADMIN", "OWNER"],
+                              organizationRole
+                            ) && (
+                              <Dropdown
+                                menu={{
+                                  items: projectActionItems,
+                                  onClick: (e) =>
+                                    onClickProjectAction(e.key, project),
+                                }}
+                                placement="bottomRight"
+                              >
+                                <Button
+                                  className="!h-auto flex items-center"
+                                  icon={<EllipsisVertical size={16} />}
+                                />
+                              </Dropdown>
+                            )}
                           </Space.Compact>
                         </div>
                       ))}
