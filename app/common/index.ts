@@ -8,3 +8,6 @@ export interface ITFromGenerate {
   projectId?: string;
   userId?: string;
 }
+
+export type IOrganizationRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type IProjectRole = "ADMIN" | "USER" | "VIEWER";

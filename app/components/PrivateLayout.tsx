@@ -49,6 +49,7 @@ import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
 import OrganizationMembersServices from "../services/organization-members.service";
+import { checkRole } from "../utils/checkRole";
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
@@ -83,9 +84,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [projectRole, setProjectRole] = useState<string | undefined>();
-  const [organizationRole, setOrganizationRole] = useState<
-    string | undefined
-  >();
+  const [organizationRole, setOrganizationRole] = useState<string>("");
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     []
   );
@@ -133,7 +132,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         organizationId,
         session?.user?.id as string
       );
-    setOrganizationRole(organizationDetail?.role);
+    setOrganizationRole(organizationDetail?.role || "");
     const projects = await projectService.findByOrganizationId(
       organizationId,
       session?.user?.id as string
@@ -155,7 +154,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     console.log(user);
     const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
 
-    setRoles(userRoles || []);
+    // setRoles(userRoles || []);
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
@@ -697,12 +696,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       currentPath,
                       `${currentPath}/${currentPathSub}`,
                     ]}
-                    items={renderMenuItems(filteredMenu)}
+                    items={renderMenuItems(MenuSider, organizationRole)}
                   />
                   <div className="!text-gray-400 px-4 mt-2">
                     {/* Header */}
                     <div className="text-[12px]">{`PROJECT`}</div>
-                    {roles.includes("p-c") && (
+                    {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                       <div className="mt-3 w-full">
                         <Button
                           icon={<PlusCircleOutlined />}
@@ -717,43 +716,42 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     <div
                     // className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1"
                     >
-                      {roles.includes("p-v") &&
-                        getProject?.map((project) => (
-                          <div
-                            key={project.id}
-                            className="w-full  justify-center mt-2 gap-4"
-                          >
-                            <Space.Compact className=" w-full">
+                      {getProject?.map((project) => (
+                        <div
+                          key={project.id}
+                          className="w-full  justify-center mt-2 gap-4"
+                        >
+                          <Space.Compact className=" w-full">
+                            <Button
+                              // className="w-full !bg-gray-800"
+                              className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
+                              onClick={() =>
+                                router.push(`/page/project/${project.id}`)
+                              }
+                            >
+                              <Space>
+                                {project.name}{" "}
+                                {project.status === "deleted" && (
+                                  <Tag color="red">Deleted</Tag>
+                                )}
+                              </Space>
+                            </Button>
+                            <Dropdown
+                              menu={{
+                                items: projectActionItems,
+                                onClick: (e) =>
+                                  onClickProjectAction(e.key, project),
+                              }}
+                              placement="bottomRight"
+                            >
                               <Button
-                                // className="w-full !bg-gray-800"
-                                className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
-                                onClick={() =>
-                                  router.push(`/page/project/${project.id}`)
-                                }
-                              >
-                                <Space>
-                                  {project.name}{" "}
-                                  {project.status === "deleted" && (
-                                    <Tag color="red">Deleted</Tag>
-                                  )}
-                                </Space>
-                              </Button>
-                              <Dropdown
-                                menu={{
-                                  items: projectActionItems,
-                                  onClick: (e) =>
-                                    onClickProjectAction(e.key, project),
-                                }}
-                                placement="bottomRight"
-                              >
-                                <Button
-                                  className="!h-auto flex items-center"
-                                  icon={<EllipsisVertical size={16} />}
-                                />
-                              </Dropdown>
-                            </Space.Compact>
-                          </div>
-                        ))}
+                                className="!h-auto flex items-center"
+                                icon={<EllipsisVertical size={16} />}
+                              />
+                            </Dropdown>
+                          </Space.Compact>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

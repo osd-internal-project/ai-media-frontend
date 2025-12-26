@@ -18,25 +18,25 @@ export const MenuSider = [
     children: [
       {
         key: `dashboard`,
-        role: "d-v",
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
         icon: <FileImageOutlined />,
         label: `Dashboard`,
       },
       {
         key: `group-permission`,
-        role: "g-v",
+        role: ["OWNER", "ADMIN"],
         icon: <LockKeyholeOpen size={16} />,
         label: `Groups & Permission`,
       },
       {
         key: `users-management`,
-        role: "u-v",
+        role: ["OWNER", "ADMIN"],
         icon: <UserSwitchOutlined />,
         label: `User Managament`,
       },
       {
         key: `organization`,
-        // role: "o-v",
+        role: ["OWNER", "ADMIN"],
         icon: <FileImageOutlined />,
         label: `Organization`,
       },
@@ -51,7 +51,7 @@ export const MenuSider = [
     children: [
       {
         key: `roles`,
-        role: "r-v",
+        role: ["OWNER", "ADMIN"],
         icon: <FileImageOutlined />,
         label: `Roles`,
       },
@@ -63,7 +63,7 @@ export const MenuSider = [
       // },
       {
         key: `template-setting`,
-        role: "pg-v",
+        role: ["OWNER", "ADMIN"],
         icon: <CodeOutlined />,
         label: `Template Setting`,
       },
@@ -72,9 +72,14 @@ export const MenuSider = [
 ];
 
 // ฟังก์ชันสร้างเมนูแบบ title + children แสดงตรง ๆ
-export const renderMenuItems = (menuList: any[]) => {
+export const renderMenuItems = (menuList: any[], role: string | undefined) => {
+  if (!role) {
+    return [];
+  }
+  const sortedMenu = filterMenuByOrganizationRole(menuList, role);
+
   const items: any[] = [];
-  menuList.forEach((menu) => {
+  sortedMenu.forEach((menu) => {
     if (menu.children && menu.children.length > 0) {
       items.push({
         type: "group",
@@ -129,6 +134,33 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
 
       // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
       const canAccessMenu = hasAccess(menu.role);
+
+      // ถ้าเมนูหลักไม่มีสิทธิ์ และไม่มี child เลย → ไม่ให้ผ่าน
+      if (!canAccessMenu && (!children || children.length === 0)) return null;
+
+      return {
+        ...menu,
+        children: children || menu.children,
+      };
+    })
+    .filter(Boolean); // ลบ null ออก
+};
+
+export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
+  // const hasAccess = (role: string) => {
+  //   if (!role || role === "") return true; // public
+  //   return userRoles.includes(role);
+  // };
+
+  return menuList
+    .map((menu) => {
+      // filter children ตาม role
+      const children = menu.children
+        ? menu.children.filter((child: any) => role.includes(menu.role))
+        : null;
+
+      // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
+      const canAccessMenu = role.includes(menu.role);
 
       // ถ้าเมนูหลักไม่มีสิทธิ์ และไม่มี child เลย → ไม่ให้ผ่าน
       if (!canAccessMenu && (!children || children.length === 0)) return null;
