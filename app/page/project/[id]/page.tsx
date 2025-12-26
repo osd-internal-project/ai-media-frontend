@@ -31,6 +31,7 @@ const GenerateImagePage: FC = () => {
   const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
     "image"
   );
+  const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
 
@@ -83,16 +84,19 @@ const GenerateImagePage: FC = () => {
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(m => 
-          m.id === parseInt(savedModelId) && 
-          (key === "image" ? m.type === "image" : m.type === "vdo")
+        modelToSelect = processedModels.find(
+          (m) =>
+            m.id === parseInt(savedModelId) &&
+            (key === "image" ? m.type === "image" : m.type === "vdo")
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find((m) =>
-          m.isDefault && (key === "image" ? m.type === "image" : m.type === "vdo")
+        modelToSelect = processedModels.find(
+          (m) =>
+            m.isDefault &&
+            (key === "image" ? m.type === "image" : m.type === "vdo")
         );
 
         // Fallback to first available if no default found
@@ -130,20 +134,25 @@ const GenerateImagePage: FC = () => {
 
   useEffect(() => {
     if (processedModels.length > 0 && !selectedAIModel) {
-      const savedModelId = localStorage.getItem(`selectedAIModel_${activeKey}_${id}`);
+      const savedModelId = localStorage.getItem(
+        `selectedAIModel_${activeKey}_${id}`
+      );
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(m => 
-          m.id === parseInt(savedModelId) && 
-          (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+        modelToSelect = processedModels.find(
+          (m) =>
+            m.id === parseInt(savedModelId) &&
+            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find((m) =>
-          m.isDefault && (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+        modelToSelect = processedModels.find(
+          (m) =>
+            m.isDefault &&
+            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
         );
 
         // Fallback to first available if no default found
@@ -182,39 +191,46 @@ const GenerateImagePage: FC = () => {
                 </span>
                 <Select
                   size="middle"
-                  style={{ 
+                  style={{
                     minWidth: 280,
                   }}
                   className="dark-select"
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id}
                   onChange={(value) => {
-                    const model = filteredAIModels.find(m => m.id === value);
+                    const model = filteredAIModels.find((m) => m.id === value);
                     setSelectedAIModel(model || null);
                     if (model) {
-                      localStorage.setItem(`selectedAIModel_${activeKey}_${id}`, model.id.toString());
+                      localStorage.setItem(
+                        `selectedAIModel_${activeKey}_${id}`,
+                        model.id.toString()
+                      );
                     }
                   }}
                   optionLabelProp="label"
                 >
                   {filteredAIModels
-                    .filter(model => model && model.name)
-                    .map(model => (
-                      <Select.Option 
-                        key={model.id} 
+                    .filter((model) => model && model.name)
+                    .map((model) => (
+                      <Select.Option
+                        key={model.id}
                         value={model.id}
                         label={model.name}
                       >
-                        <Tooltip 
+                        <Tooltip
                           title={
                             <div className="p-4 max-w-sm">
                               <div className="flex items-center justify-between mb-2">
-                                <div className="font-medium text-white">{model.name}</div>
+                                <div className="font-medium text-white">
+                                  {model.name}
+                                </div>
                                 {selectedAIModel?.id === model.id && (
-                                  <div className="text-blue-400 text-xs">✓ Selected</div>
+                                  <div className="text-blue-400 text-xs">
+                                    ✓ Selected
+                                  </div>
                                 )}
                               </div>
-                              
+
                               {model.modelDetails?.description && (
                                 <div className="text-gray-300 text-sm leading-relaxed mb-3">
                                   {model.modelDetails.description}
@@ -223,74 +239,151 @@ const GenerateImagePage: FC = () => {
 
                               {model.modelDetails?.modelId && (
                                 <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">Model ID</div>
-                                  <div className="text-gray-200 text-sm font-mono">{model.modelDetails.modelId}</div>
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Model ID
+                                  </div>
+                                  <div className="text-gray-200 text-sm font-mono">
+                                    {model.modelDetails.modelId}
+                                  </div>
                                 </div>
                               )}
 
                               {model.modelDetails?.pricing && (
                                 <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">Pricing</div>
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Pricing
+                                  </div>
                                   <div className="flex gap-4">
-                                    {model.modelDetails.pricing.imageToVideo && (
+                                    {model.modelDetails.pricing
+                                      .imageToVideo && (
                                       <div>
-                                        <div className="text-gray-300 text-xs">Image-to-video</div>
-                                        <div className="text-white font-medium">{model.modelDetails.pricing.imageToVideo} {model.modelDetails.pricing.unit || 'USD/M tokens'}</div>
+                                        <div className="text-gray-300 text-xs">
+                                          Image-to-video
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .imageToVideo
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/M tokens"}
+                                        </div>
                                       </div>
                                     )}
                                     {model.modelDetails.pricing.textToVideo && (
                                       <div>
-                                        <div className="text-gray-300 text-xs">Text-to-video</div>
-                                        <div className="text-white font-medium">{model.modelDetails.pricing.textToVideo} {model.modelDetails.pricing.unit || 'USD/M tokens'}</div>
+                                        <div className="text-gray-300 text-xs">
+                                          Text-to-video
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .textToVideo
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/M tokens"}
+                                        </div>
                                       </div>
                                     )}
-                                    {model.modelDetails.pricing.imageToImage && (
+                                    {model.modelDetails.pricing
+                                      .imageToImage && (
                                       <div>
-                                        <div className="text-gray-300 text-xs">Image-to-image</div>
-                                        <div className="text-white font-medium">{model.modelDetails.pricing.imageToImage} {model.modelDetails.pricing.unit || 'USD/Piece'}</div>
+                                        <div className="text-gray-300 text-xs">
+                                          Image-to-image
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .imageToImage
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/Piece"}
+                                        </div>
                                       </div>
                                     )}
                                     {model.modelDetails.pricing.textToImage && (
                                       <div>
-                                        <div className="text-gray-300 text-xs">Text-to-image</div>
-                                        <div className="text-white font-medium">{model.modelDetails.pricing.textToImage} {model.modelDetails.pricing.unit || 'USD/Piece'}</div>
+                                        <div className="text-gray-300 text-xs">
+                                          Text-to-image
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .textToImage
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/Piece"}
+                                        </div>
                                       </div>
                                     )}
                                   </div>
                                 </div>
                               )}
 
-                              {(model.modelDetails?.limitations?.resolution || 
-                                model.modelDetails?.limitations?.duration || 
-                                model.modelDetails?.limitations?.frameRate || 
-                                model.modelDetails?.limitations?.concurrentTasks || 
+                              {(model.modelDetails?.limitations?.resolution ||
+                                model.modelDetails?.limitations?.duration ||
+                                model.modelDetails?.limitations?.frameRate ||
+                                model.modelDetails?.limitations
+                                  ?.concurrentTasks ||
                                 model.modelDetails?.limitations?.rpm) && (
                                 <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">Limitations</div>
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Limitations
+                                  </div>
                                   <div className="space-y-1">
-                                    {model.modelDetails.limitations?.resolution && (
+                                    {model.modelDetails.limitations
+                                      ?.resolution && (
                                       <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">Resolution:</span> {model.modelDetails.limitations.resolution.join(', ')}
+                                        <span className="text-gray-400">
+                                          Resolution:
+                                        </span>{" "}
+                                        {model.modelDetails.limitations.resolution.join(
+                                          ", "
+                                        )}
                                       </div>
                                     )}
-                                    {model.modelDetails.limitations?.duration && (
+                                    {model.modelDetails.limitations
+                                      ?.duration && (
                                       <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">Duration:</span> {model.modelDetails.limitations.duration}
+                                        <span className="text-gray-400">
+                                          Duration:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .duration
+                                        }
                                       </div>
                                     )}
-                                    {model.modelDetails.limitations?.frameRate && (
+                                    {model.modelDetails.limitations
+                                      ?.frameRate && (
                                       <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">Frame rate:</span> {model.modelDetails.limitations.frameRate}
+                                        <span className="text-gray-400">
+                                          Frame rate:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .frameRate
+                                        }
                                       </div>
                                     )}
-                                    {model.modelDetails.limitations?.concurrentTasks && (
+                                    {model.modelDetails.limitations
+                                      ?.concurrentTasks && (
                                       <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">Concurrent tasks:</span> {model.modelDetails.limitations.concurrentTasks}
+                                        <span className="text-gray-400">
+                                          Concurrent tasks:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .concurrentTasks
+                                        }
                                       </div>
                                     )}
                                     {model.modelDetails.limitations?.rpm && (
                                       <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">RPM:</span> {model.modelDetails.limitations.rpm}
+                                        <span className="text-gray-400">
+                                          RPM:
+                                        </span>{" "}
+                                        {model.modelDetails.limitations.rpm}
                                       </div>
                                     )}
                                   </div>
@@ -299,26 +392,37 @@ const GenerateImagePage: FC = () => {
 
                               {model.modelDetails?.status && (
                                 <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">Status</div>
-                                  <div className={`inline-block px-2 py-1 text-xs rounded ${
-                                    model.modelDetails.status === 'Activated' ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-200'
-                                  }`}>
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Status
+                                  </div>
+                                  <div
+                                    className={`inline-block px-2 py-1 text-xs rounded ${
+                                      model.modelDetails.status === "Activated"
+                                        ? "bg-green-600 text-white"
+                                        : "bg-gray-600 text-gray-200"
+                                    }`}
+                                  >
                                     {model.modelDetails.status}
                                   </div>
                                 </div>
                               )}
 
                               <div className="flex flex-wrap gap-1 mt-2">
-                                {model.capabilities?.map((capability: string) => (
-                                  <span key={capability} className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded">
-                                    {capability.replace('-', ' ')}
-                                  </span>
-                                ))}
+                                {model.capabilities?.map(
+                                  (capability: string) => (
+                                    <span
+                                      key={capability}
+                                      className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
+                                    >
+                                      {capability.replace("-", " ")}
+                                    </span>
+                                  )
+                                )}
                               </div>
                             </div>
                           }
                           placement="right"
-                          overlayStyle={{ maxWidth: 'none' }}
+                          overlayStyle={{ maxWidth: "none" }}
                         >
                           <div className="flex items-center justify-between">
                             <span>{model.name}</span>
@@ -346,6 +450,7 @@ const GenerateImagePage: FC = () => {
         onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
+            disabled: disableTab,
             key: "image",
             forceRender: true,
             label: (
@@ -354,6 +459,7 @@ const GenerateImagePage: FC = () => {
                 <div>{`Image Gen`}</div>
               </span>
             ),
+
             children: (
               <ImageChat
                 promptGuideOpenStatus={promptGuideOpenStatus}
@@ -364,10 +470,12 @@ const GenerateImagePage: FC = () => {
                 promptGuideTypes={promptGuideTypes}
                 username={session?.user?.name || ""}
                 selectedAIModel={selectedAIModel}
+                setDisableTab={setDisableTab}
               />
             ),
           },
           {
+            disabled: disableTab,
             forceRender: true,
             key: "vdo",
             label: (
@@ -385,6 +493,7 @@ const GenerateImagePage: FC = () => {
                 promptGuideTypes={promptGuideTypes}
                 promptGuideOpenStatus={promptGuideOpenStatus}
                 selectedAIModel={selectedAIModel}
+                setDisableTab={setDisableTab}
               />
             ),
           },
@@ -424,6 +533,7 @@ const GenerateImagePage: FC = () => {
           //   ),
           // },
           {
+            disabled: disableTab,
             forceRender: true,
             key: "library",
             label: (
@@ -440,6 +550,7 @@ const GenerateImagePage: FC = () => {
             ),
           },
           {
+            disabled: disableTab,
             forceRender: true,
             key: "activity",
             label: (

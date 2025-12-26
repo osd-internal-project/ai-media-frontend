@@ -50,6 +50,7 @@ interface VideoChatProps {
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus: boolean;
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
+  setDisableTab: (disable: boolean) => void;
 }
 
 interface VideoConfigurationCardProps {
@@ -87,13 +88,16 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   duration,
   isMultiImage,
 }) => {
-
   const getResolutionLabel = (res: string) => {
     switch (res) {
-      case "480p": return "HD";
-      case "720p": return "2K";
-      case "1080p": return "4K";
-      default: return "4K";
+      case "480p":
+        return "HD";
+      case "720p":
+        return "2K";
+      case "1080p":
+        return "4K";
+      default:
+        return "4K";
     }
   };
 
@@ -108,11 +112,13 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
             className="border border-white/10"
           />
         </div>
-        
+
         {/* Configuration Info */}
         <div className="flex items-center gap-3 flex-1 text-sm">
           <span className="text-white font-medium">Smart Reference</span>
-          <span className="text-purple-400 font-medium">{getResolutionLabel(resolution)}</span>
+          <span className="text-purple-400 font-medium">
+            {getResolutionLabel(resolution)}
+          </span>
           <span className="text-gray-400">{ratio}</span>
           {isMultiImage && (
             <div className="flex items-center gap-1">
@@ -125,12 +131,11 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
             <span className="text-blue-400 text-xs">
-              {selectedAIModel?.name || 'ByteDance-Seeudream-4.5'}
+              {selectedAIModel?.name || "ByteDance-Seeudream-4.5"}
             </span>
           </div>
         </div>
 
-        
         {/* Multiple Reference Images Preview - separate from first frame */}
         <div className="flex-shrink-0 flex items-center gap-1">
           {referenceImages && referenceImages.length > 0 ? (
@@ -163,7 +168,10 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
                     className="w-full h-full object-cover"
                     unoptimized
                     onError={(e) => {
-                      console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
+                      console.error(
+                        `Reference image ${index + 1} failed to load:`,
+                        imageUrl
+                      );
                     }}
                   />
                 </div>
@@ -171,27 +179,33 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
             ))
           ) : (
             <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path 
-                  d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" 
-                  stroke="#9CA3AF" 
-                  strokeWidth="1.5" 
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
                   fill="none"
                 />
-                <path 
-                  d="M4 15L8 11L12 15L16 11L20 15" 
-                  stroke="#9CA3AF" 
-                  strokeWidth="1.5" 
-                  strokeLinecap="round" 
+                <path
+                  d="M4 15L8 11L12 15L16 11L20 15"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
                 />
-                <circle 
-                  cx="8.5" 
-                  cy="8.5" 
-                  r="1.5" 
-                  stroke="#9CA3AF" 
-                  strokeWidth="1.5" 
+                <circle
+                  cx="8.5"
+                  cy="8.5"
+                  r="1.5"
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
                   fill="none"
                 />
               </svg>
@@ -199,12 +213,13 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
           )}
           {referenceImages && referenceImages.length > 3 && (
             <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
-              <span className="text-xs text-gray-400">+{referenceImages.length - 3}</span>
+              <span className="text-xs text-gray-400">
+                +{referenceImages.length - 3}
+              </span>
             </div>
           )}
         </div>
       </div>
-
     </div>
   );
 };
@@ -216,6 +231,7 @@ const VideoChat: FC<VideoChatProps> = ({
   promptGuideTypes = [],
   promptGuideOpenStatus,
   selectedAIModel, // Destructure selectedAIModel
+  setDisableTab,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -229,7 +245,9 @@ const VideoChat: FC<VideoChatProps> = ({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
-  const [firstFrameImage, setFirstFrameImage] = useState<string>("https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=250&fit=crop&crop=faces");
+  const [firstFrameImage, setFirstFrameImage] = useState<string>(
+    "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=250&fit=crop&crop=faces"
+  );
   const pageSize = 3;
 
   // Refs
@@ -246,6 +264,7 @@ const VideoChat: FC<VideoChatProps> = ({
       if (!projectId || (isLoadMore && !hasMore) || loading) return;
 
       setLoading(true);
+      setDisableTab(true);
       if (isLoadMore) {
         isLoadingMoreRef.current = true;
       }
@@ -288,10 +307,11 @@ const VideoChat: FC<VideoChatProps> = ({
               taskId: item.taskId,
               status: item.status,
               prompt: item.prompt,
-              resolution: item.resolution || '1080p',
-              ratio: item.ratio || '16:9',
-              duration: item.duration || '10',
-              firstFrameImage: item.firstFrameImage || (item.imageUrls?.[0]?.thumbnailUrl),
+              resolution: item.resolution || "1080p",
+              ratio: item.ratio || "16:9",
+              duration: item.duration || "10",
+              firstFrameImage:
+                item.firstFrameImage || item.imageUrls?.[0]?.thumbnailUrl,
               referenceImages: item.referenceImages || [],
             });
           });
@@ -321,6 +341,7 @@ const VideoChat: FC<VideoChatProps> = ({
         console.error("Failed to fetch logs:", err);
       } finally {
         setLoading(false);
+        setDisableTab(false);
         if (!isLoadMore) {
           isFirstLoad.current = false;
         }
@@ -372,16 +393,16 @@ const VideoChat: FC<VideoChatProps> = ({
     if (isLoadingMoreRef.current && chatContainerRef.current) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
       const scrollDiff = newScrollHeight - scrollHeightRef.current;
-      
-      chatContainerRef.current.style.scrollBehavior = 'auto';
+
+      chatContainerRef.current.style.scrollBehavior = "auto";
       chatContainerRef.current.scrollTop = scrollDiff;
-      
+
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {
-          chatContainerRef.current.style.scrollBehavior = 'smooth';
+          chatContainerRef.current.style.scrollBehavior = "smooth";
         }
       });
-      
+
       isLoadingMoreRef.current = false;
     }
   }, [messages]);
@@ -432,7 +453,7 @@ const VideoChat: FC<VideoChatProps> = ({
 
   const handleUploadChange: UploadProps["onChange"] = ({ fileList }) => {
     setFiles(fileList);
-    
+
     // Set first frame image when a file is uploaded
     if (fileList.length > 0 && fileList[0].originFileObj) {
       const imageUrl = URL.createObjectURL(fileList[0].originFileObj);
@@ -698,12 +719,12 @@ const VideoChat: FC<VideoChatProps> = ({
                       <VideoConfigurationCard
                         selectedAIModel={selectedAIModel}
                         referenceImages={msg.referenceImages}
-                        resolution={msg.resolution || '1080p'}
-                        ratio={msg.ratio || '16:9'}
-                        duration={msg.duration || '10'}
+                        resolution={msg.resolution || "1080p"}
+                        ratio={msg.ratio || "16:9"}
+                        duration={msg.duration || "10"}
                         isMultiImage={msg.images.length > 1}
                       />
-                      
+
                       <div
                         className={`grid gap-4 mt-4 w-full max-w-6xl ${
                           msg.images.length === 1
