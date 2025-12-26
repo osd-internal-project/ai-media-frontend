@@ -60,6 +60,7 @@ interface ImageChatProps {
   promptGuideOpenStatus?: boolean;
   username?: string;
   selectedAIModel?: TAIModel | null;
+  setDisableTab: (disable: boolean) => void;
 }
 
 interface ChatMessage {
@@ -97,13 +98,16 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
   ratio,
   imageCount,
 }) => {
-  
   const getResolutionLabel = (res: string) => {
     switch (res) {
-      case "2k": return "2K";
-      case "4k": return "4K";
-      case "Unknown": return "?";
-      default: return "?";
+      case "2k":
+        return "2K";
+      case "4k":
+        return "4K";
+      case "Unknown":
+        return "?";
+      default:
+        return "?";
     }
   };
 
@@ -118,27 +122,31 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
               className="border border-white/10"
             />
           </div> */}
-          
+
           <div className="flex items-center gap-3 flex-1 text-sm">
             <span className="text-white font-medium">Smart Reference</span>
-            <span className="text-purple-400 font-medium">{getResolutionLabel(resolution)}</span>
+            <span className="text-purple-400 font-medium">
+              {getResolutionLabel(resolution)}
+            </span>
             <span className="text-gray-400">{ratio}</span>
             {imageCount > 1 && (
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 bg-blue-500 rounded-sm flex items-center justify-center">
                   <span className="text-xs text-white">📷</span>
                 </div>
-                <span className="text-blue-400 text-xs">{imageCount} images</span>
+                <span className="text-blue-400 text-xs">
+                  {imageCount} images
+                </span>
               </div>
             )}
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
               <span className="text-blue-400 text-xs">
-                {selectedAIModel?.name || 'Seedream-4.5'}
+                {selectedAIModel?.name || "Seedream-4.5"}
               </span>
             </div>
           </div>
-          
+
           {/* Multiple Reference Images Preview */}
           <div className="flex-shrink-0 flex items-center gap-1">
             {referenceImages && referenceImages.length > 0 ? (
@@ -171,7 +179,10 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
                       className="w-full h-full object-cover"
                       unoptimized
                       onError={(e) => {
-                        console.error(`Reference image ${index + 1} failed to load:`, imageUrl);
+                        console.error(
+                          `Reference image ${index + 1} failed to load:`,
+                          imageUrl
+                        );
                       }}
                     />
                   </div>
@@ -179,27 +190,33 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
               ))
             ) : (
               <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z" 
-                    stroke="#9CA3AF" 
-                    strokeWidth="1.5" 
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z"
+                    stroke="#9CA3AF"
+                    strokeWidth="1.5"
                     fill="none"
                   />
-                  <path 
-                    d="M4 15L8 11L12 15L16 11L20 15" 
-                    stroke="#9CA3AF" 
-                    strokeWidth="1.5" 
-                    strokeLinecap="round" 
+                  <path
+                    d="M4 15L8 11L12 15L16 11L20 15"
+                    stroke="#9CA3AF"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                     fill="none"
                   />
-                  <circle 
-                    cx="8.5" 
-                    cy="8.5" 
-                    r="1.5" 
-                    stroke="#9CA3AF" 
-                    strokeWidth="1.5" 
+                  <circle
+                    cx="8.5"
+                    cy="8.5"
+                    r="1.5"
+                    stroke="#9CA3AF"
+                    strokeWidth="1.5"
                     fill="none"
                   />
                 </svg>
@@ -207,13 +224,14 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
             )}
             {referenceImages && referenceImages.length > 3 && (
               <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
-                <span className="text-xs text-gray-400">+{referenceImages.length - 3}</span>
+                <span className="text-xs text-gray-400">
+                  +{referenceImages.length - 3}
+                </span>
               </div>
             )}
           </div>
         </div>
       </div>
-
     </>
   );
 };
@@ -227,6 +245,7 @@ const ImageChat: FC<ImageChatProps> = ({
   promptGuideOpenStatus,
   username,
   selectedAIModel,
+  setDisableTab,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -254,6 +273,7 @@ const ImageChat: FC<ImageChatProps> = ({
       if (!projectId || (isLoadMore && !hasMore) || loading) return;
 
       setLoading(true);
+      setDisableTab(true);
       if (isLoadMore) {
         isLoadingMoreRef.current = true;
       }
@@ -265,7 +285,7 @@ const ImageChat: FC<ImageChatProps> = ({
           skip,
           pageSize
         );
-        
+
         if (Array.isArray(response)) {
           if (response.length < pageSize) {
             setHasMore(false);
@@ -273,7 +293,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
           const formattedMessages: ChatMessage[] = [];
           const itemsToProcess = [...response].reverse();
-          
+
           itemsToProcess.forEach((item: any) => {
             formattedMessages.push({
               type: "user",
@@ -292,8 +312,8 @@ const ImageChat: FC<ImageChatProps> = ({
               taskId: item.taskId,
               status: item.status,
               prompt: item.prompt,
-              resolution: item.resolution || 'Unknown',
-              ratio: item.ratio || 'Unknown',
+              resolution: item.resolution || "Unknown",
+              ratio: item.ratio || "Unknown",
               imageCount: item.imageUrls?.length || 1,
               firstFrameImage: item.referenceImages?.[0] || undefined,
               referenceImages: item.referenceImages || [],
@@ -324,6 +344,7 @@ const ImageChat: FC<ImageChatProps> = ({
         console.error("Failed to fetch logs:", err);
       } finally {
         setLoading(false);
+        setDisableTab(false);
         if (!isLoadMore) {
           isFirstLoad.current = false;
         }
@@ -365,16 +386,16 @@ const ImageChat: FC<ImageChatProps> = ({
     if (isLoadingMoreRef.current && chatContainerRef.current) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
       const scrollDiff = newScrollHeight - scrollHeightRef.current;
-      
-      chatContainerRef.current.style.scrollBehavior = 'auto';
+
+      chatContainerRef.current.style.scrollBehavior = "auto";
       chatContainerRef.current.scrollTop = scrollDiff;
-      
+
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {
-          chatContainerRef.current.style.scrollBehavior = 'smooth';
+          chatContainerRef.current.style.scrollBehavior = "smooth";
         }
       });
-      
+
       isLoadingMoreRef.current = false;
     }
   }, [messages]);
@@ -480,13 +501,13 @@ const ImageChat: FC<ImageChatProps> = ({
     }, 100);
 
     try {
-      const payload = { 
-        ...values, 
-        projectId, 
+      const payload = {
+        ...values,
+        projectId,
         userId,
-        modelName: selectedAIModel?.name  // Add selected model name
+        modelName: selectedAIModel?.name, // Add selected model name
       };
-      
+
       // Handle File Upload
       if (files.length > 0) {
         const formData = new FormData();
@@ -509,7 +530,7 @@ const ImageChat: FC<ImageChatProps> = ({
         shouldAutoScrollRef.current = false; // Cancel auto-scroll on error
       } else {
         // Reference image is now stored automatically in database via backend
-        
+
         // Refetch latest messages to get AI response
         setPage(0);
         await fetchMessages(0);
@@ -737,12 +758,12 @@ const ImageChat: FC<ImageChatProps> = ({
                       <ImageConfigurationCard
                         selectedAIModel={selectedAIModel}
                         firstFrameImage={msg.firstFrameImage}
-                        resolution={msg.resolution || '4k'}
-                        ratio={msg.ratio || '1:1'}
+                        resolution={msg.resolution || "4k"}
+                        ratio={msg.ratio || "1:1"}
                         imageCount={msg.imageCount || msg.images.length}
                         referenceImages={msg.referenceImages}
                       />
-                      
+
                       <div
                         className={`grid gap-3 mt-3 w-full ${
                           msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
@@ -860,160 +881,168 @@ const ImageChat: FC<ImageChatProps> = ({
                 userRole={projectRole}
                 fallback={
                   <div className="p-4 text-center text-zinc-400 bg-[#18181b] rounded-3xl border border-white/10">
-                    <p className="text-lg font-medium mb-2">🚫 Access Restricted</p>
-                    <p className="text-sm">You need USER or ADMIN role to use the chat feature.</p>
-                    <p className="text-xs mt-1 text-zinc-500">Contact your project administrator for access.</p>
+                    <p className="text-lg font-medium mb-2">
+                      🚫 Access Restricted
+                    </p>
+                    <p className="text-sm">
+                      You need USER or ADMIN role to use the chat feature.
+                    </p>
+                    <p className="text-xs mt-1 text-zinc-500">
+                      Contact your project administrator for access.
+                    </p>
                   </div>
                 }
               >
                 <Form
-                form={form}
-                onFinish={onFinish}
-                initialValues={{
-                  type: "image",
-                  width: 2048,
-                  height: 2048,
-                  images: 1,
-                  ratio: "1:1",
-                  resolution: "2k",
-                  duration: "10",
-                }}
-              >
-                <Form.Item name="type" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="width" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="height" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="ratio" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="images" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="resolution" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="duration" hidden>
-                  <Input />
-                </Form.Item>
-
-                <div className="flex flex-col gap-2">
-                  {/* Text Area */}
-                  <Form.Item
-                    name="text"
-                    rules={[{ required: true, message: "" }]}
-                    style={{ margin: 0 }}
-                  >
-                    <Input.TextArea
-                      placeholder="Describe the image you want to create, in any language"
-                      autoSize={{ minRows: 2, maxRows: 5 }}
-                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          if (!submitting) {
-                            form.submit();
-                          }
-                        }
-                      }}
-                    />
+                  form={form}
+                  onFinish={onFinish}
+                  initialValues={{
+                    type: "image",
+                    width: 2048,
+                    height: 2048,
+                    images: 1,
+                    ratio: "1:1",
+                    resolution: "2k",
+                    duration: "10",
+                  }}
+                >
+                  <Form.Item name="type" hidden>
+                    <Input />
                   </Form.Item>
-                  {/* Upload List Preview (Custom) */}
-                  {files.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {files.map((file: UploadFile) => (
-                        <div
-                          key={file.uid}
-                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
-                        >
-                          <Image
-                            src={
-                              file.thumbUrl ||
-                              (file.originFileObj
-                                ? URL.createObjectURL(file.originFileObj)
-                                : "")
+                  <Form.Item name="width" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="height" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="ratio" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="images" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="resolution" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="duration" hidden>
+                    <Input />
+                  </Form.Item>
+
+                  <div className="flex flex-col gap-2">
+                    {/* Text Area */}
+                    <Form.Item
+                      name="text"
+                      rules={[{ required: true, message: "" }]}
+                      style={{ margin: 0 }}
+                    >
+                      <Input.TextArea
+                        placeholder="Describe the image you want to create, in any language"
+                        autoSize={{ minRows: 2, maxRows: 5 }}
+                        className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (!submitting) {
+                              form.submit();
                             }
-                            alt="preview"
-                            width={48}
-                            height={48}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
+                          }
+                        }}
+                      />
+                    </Form.Item>
+                    {/* Upload List Preview (Custom) */}
+                    {files.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {files.map((file: UploadFile) => (
                           <div
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={() => {
-                              setFiles(files.filter((f) => f.uid !== file.uid));
+                            key={file.uid}
+                            className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
+                          >
+                            <Image
+                              src={
+                                file.thumbUrl ||
+                                (file.originFileObj
+                                  ? URL.createObjectURL(file.originFileObj)
+                                  : "")
+                              }
+                              alt="preview"
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                            <div
+                              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => {
+                                setFiles(
+                                  files.filter((f) => f.uid !== file.uid)
+                                );
+                              }}
+                            >
+                              <Trash size={12} className="text-white" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Toolbar */}
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-2">
+                        {/* Left Side: Layout matches screenshot with Upload Icon first */}
+                        {/* Upload Button */}
+                        <Form.Item
+                          name="image"
+                          className="mb-0"
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Upload
+                            listType="picture"
+                            // onChange={handleUploadChange}
+                            // beforeUpload={beforeUploadFiles}
+
+                            fileList={files}
+                            onChange={handleUploadChange}
+                            beforeUpload={beforeUpload}
+                            multiple={true}
+                            maxCount={10}
+                            showUploadList={false}
+                            disabled={submitting}
+                            itemRender={(
+                              _originNode,
+                              file,
+                              _fileList,
+                              actions
+                            ) => {
+                              return (
+                                <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
+                                  <Image
+                                    src={file.thumbUrl || ""}
+                                    alt=""
+                                    width={48}
+                                    height={48}
+                                    className="w-12 h-12 object-cover rounded"
+                                    unoptimized
+                                  />
+                                  <Button
+                                    size="small"
+                                    htmlType="button"
+                                    onClick={actions.remove}
+                                    type="link"
+                                    danger
+                                  >
+                                    <Trash width={15} />
+                                  </Button>
+                                </div>
+                              );
                             }}
                           >
-                            <Trash size={12} className="text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {/* Toolbar */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                      {/* Left Side: Layout matches screenshot with Upload Icon first */}
-                      {/* Upload Button */}
-                      <Form.Item
-                        name="image"
-                        className="mb-0"
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Upload
-                          listType="picture"
-                          // onChange={handleUploadChange}
-                          // beforeUpload={beforeUploadFiles}
+                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
+                              <PaperClipOutlined className="text-lg" />
+                            </div>
+                          </Upload>
+                        </Form.Item>
 
-                          fileList={files}
-                          onChange={handleUploadChange}
-                          beforeUpload={beforeUpload}
-                          multiple={true}
-                          maxCount={10}
-                          showUploadList={false}
-                          disabled={submitting}
-                          itemRender={(
-                            _originNode,
-                            file,
-                            _fileList,
-                            actions
-                          ) => {
-                            return (
-                              <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
-                                <Image
-                                  src={file.thumbUrl || ''}
-                                  alt=""
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 object-cover rounded"
-                                  unoptimized
-                                />
-                                <Button
-                                  size="small"
-                                  htmlType="button"
-                                  onClick={actions.remove}
-                                  type="link"
-                                  danger
-                                >
-                                  <Trash width={15} />
-                                </Button>
-                              </div>
-                            );
-                          }}
-                        >
-                          <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                            <PaperClipOutlined className="text-lg" />
-                          </div>
-                        </Upload>
-                      </Form.Item>
-
-                      {/* Model Selector */}
-                      {/* <Select
+                        {/* Model Selector */}
+                        {/* <Select
                                             value={selectedModel}
                                             onChange={setSelectedModel}
                                             variant="borderless"
@@ -1050,90 +1079,90 @@ const ImageChat: FC<ImageChatProps> = ({
                                             ]}
                                         /> */}
 
-                      {/* Resolution Selector */}
-                      <Select
-                        value={form.getFieldValue("resolution") || "2k"}
-                        onChange={(val) => {
-                          form.setFieldValue("resolution", val);
-                          // Trigger re-render if needed or just handle form value
-                        }}
-                        variant="borderless"
-                        popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
-                        styles={{
-                          popup: {
-                            root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                        {/* Resolution Selector */}
+                        <Select
+                          value={form.getFieldValue("resolution") || "2k"}
+                          onChange={(val) => {
+                            form.setFieldValue("resolution", val);
+                            // Trigger re-render if needed or just handle form value
+                          }}
+                          variant="borderless"
+                          popupMatchSelectWidth={false}
+                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
+                          styles={{
+                            popup: {
+                              root: {
+                                backgroundColor: "#3f3f46",
+                                border: "1px solid #52525b",
+                                borderRadius: "8px",
+                                padding: "4px",
+                              },
                             },
-                          },
-                        }}
-                        options={[
-                          { value: "2k", label: "2K" },
-                          { value: "4k", label: "4K" },
-                        ]}
-                      />
+                          }}
+                          options={[
+                            { value: "2k", label: "2K" },
+                            { value: "4k", label: "4K" },
+                          ]}
+                        />
 
-                      {/* Ratio Selector */}
-                      <Select
-                        value={selectedRatio}
-                        onChange={handleRatioChange}
-                        variant="borderless"
-                        popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                        styles={{
-                          popup: {
-                            root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                        {/* Ratio Selector */}
+                        <Select
+                          value={selectedRatio}
+                          onChange={handleRatioChange}
+                          variant="borderless"
+                          popupMatchSelectWidth={false}
+                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                          styles={{
+                            popup: {
+                              root: {
+                                backgroundColor: "#3f3f46",
+                                border: "1px solid #52525b",
+                                borderRadius: "8px",
+                                padding: "4px",
+                              },
                             },
-                          },
-                        }}
-                        options={ratioOptions.map((opt) => ({
-                          value: opt.key,
-                          label: (
-                            <span className="flex items-center gap-1">
-                              <div className="w-3 h-3 border border-white rounded-[1px]" />
-                              {opt.label}
-                            </span>
-                          ),
-                        }))}
-                      />
+                          }}
+                          options={ratioOptions.map((opt) => ({
+                            value: opt.key,
+                            label: (
+                              <span className="flex items-center gap-1">
+                                <div className="w-3 h-3 border border-white rounded-[1px]" />
+                                {opt.label}
+                              </span>
+                            ),
+                          }))}
+                        />
 
-                      {/* Image Count Selector */}
-                      <Select
-                        value={String(selectedImageCount)}
-                        onChange={(val) => {
-                          const count = Number(val);
-                          setSelectedImageCount(count);
-                          form.setFieldValue("images", count);
-                        }}
-                        variant="borderless"
-                        popupMatchSelectWidth={false}
-                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]"
-                        styles={{
-                          popup: {
-                            root: {
-                              backgroundColor: "#3f3f46",
-                              border: "1px solid #52525b",
-                              borderRadius: "8px",
-                              padding: "4px",
+                        {/* Image Count Selector */}
+                        <Select
+                          value={String(selectedImageCount)}
+                          onChange={(val) => {
+                            const count = Number(val);
+                            setSelectedImageCount(count);
+                            form.setFieldValue("images", count);
+                          }}
+                          variant="borderless"
+                          popupMatchSelectWidth={false}
+                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]"
+                          styles={{
+                            popup: {
+                              root: {
+                                backgroundColor: "#3f3f46",
+                                border: "1px solid #52525b",
+                                borderRadius: "8px",
+                                padding: "4px",
+                              },
                             },
-                          },
-                        }}
-                        options={imageCountOptions.map((opt) => ({
-                          value: opt.key,
-                          label: opt.label,
-                        }))}
-                      />
-                    </div>
+                          }}
+                          options={imageCountOptions.map((opt) => ({
+                            value: opt.key,
+                            label: opt.label,
+                          }))}
+                        />
+                      </div>
 
-                    {/* Right Side: Generate Button */}
-                    {/* <Button
+                      {/* Right Side: Generate Button */}
+                      {/* <Button
                                     htmlType="submit"
                                     type="primary"
                                     className="!bg-[#eab308] !text-black hover:!bg-[#facc15] !border-none !font-semibold !h-9 !px-6 !rounded-lg flex items-center gap-2"
@@ -1141,17 +1170,17 @@ const ImageChat: FC<ImageChatProps> = ({
                                 >
                                     {submitting ? <LoadingOutlined /> : <>Generate for Free <Sparkles size={14} /></>}
                                 </Button> */}
-                    <Button
-                      htmlType="submit"
-                      size="large"
-                      disabled={submitting}
-                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
-                    >
-                      <SendOutlined className="text-lg" />
-                    </Button>
+                      <Button
+                        htmlType="submit"
+                        size="large"
+                        disabled={submitting}
+                        className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                      >
+                        <SendOutlined className="text-lg" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Form>
+                </Form>
               </PermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
