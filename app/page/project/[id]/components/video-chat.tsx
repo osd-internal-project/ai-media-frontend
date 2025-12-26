@@ -5,6 +5,7 @@ import React, {
   useCallback,
   type FC,
 } from "react";
+import { ProjectPermissionGuard } from "../../../../hooks/useProjectPermissions";
 import Image from "next/image";
 import {
   Avatar,
@@ -101,13 +102,13 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
     <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className="flex-shrink-0">
+        {/* <div className="flex-shrink-0">
           <Avatar
             src={Avatars.src}
             size={32}
             className="border border-white/10"
           />
-        </div>
+        </div> */}
         
         {/* Configuration Info */}
         <div className="flex items-center gap-3 flex-1 text-sm">
@@ -281,7 +282,7 @@ const VideoChat: FC<VideoChatProps> = ({
             // AI Message
             formattedMessages.push({
               type: "ai",
-              content: "AICave Generated Video",
+              content: "",
               images: item.imageUrls,
               username: "AI Generator",
               time: item.createdAt,
@@ -780,7 +781,18 @@ const VideoChat: FC<VideoChatProps> = ({
           {/* Input Area */}
           <div className="absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10">
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              <Form
+              <ProjectPermissionGuard
+                projectId={projectId}
+                requiredPermission="canUseChat"
+                fallback={
+                  <div className="p-4 text-center text-zinc-400 bg-[#18181b] rounded-3xl border border-white/10">
+                    <p className="text-lg font-medium mb-2">🚫 Access Restricted</p>
+                    <p className="text-sm">You need USER or ADMIN role to use the video chat feature.</p>
+                    <p className="text-xs mt-1 text-zinc-500">Contact your project administrator for access.</p>
+                  </div>
+                }
+              >
+                <Form
                 form={form}
                 onFinish={onFinish}
                 initialValues={{
@@ -1002,6 +1014,7 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 </div>
               </Form>
+              </ProjectPermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
               AI can make mistakes. Please check the generated Video.{" "}

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
-import { Button, Tabs, Select, Tooltip } from "antd";
+import { Button, Tabs, Select, Tooltip, Tag } from "antd";
+import { useProjectPermissions, ProjectPermissionGuard } from "../../../hooks/useProjectPermissions";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -42,6 +43,9 @@ const GenerateImagePage: FC = () => {
     (TAIModel & { capabilities?: string[] }) | null
   >(null);
   const { id } = params as { id: string };
+  
+  // Get project permissions for current user
+  const permissions = useProjectPermissions(id);
 
   useEffect(() => {
     if (loadingData) {
@@ -169,6 +173,20 @@ const GenerateImagePage: FC = () => {
       <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
+      
+      {/* Viewer Role Notification */}
+      {permissions.canViewOnly && (
+        <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <span className="text-lg">👀</span>
+            <div>
+              <div className="font-medium">Read-Only Access</div>
+              <div className="text-sm">You have VIEWER permissions for this project. You can browse content but cannot use chat features.</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Tabs
         className="custom-tabs"
         type="card"
@@ -176,6 +194,57 @@ const GenerateImagePage: FC = () => {
         tabBarExtraContent={
           activeKey === "image" || activeKey === "vdo" ? (
             <div className="flex gap-4 items-center relative">
+              {/* Role Indicator */}
+              <div className="flex items-center gap-2">
+                {permissions.loading ? (
+                  <div className="w-4 h-4 rounded-full bg-gray-400 animate-pulse"></div>
+                ) : permissions.role ? (
+                  <Tag 
+                    color={
+                      permissions.role === 'ADMIN' ? 'red' : 
+                      permissions.role === 'USER' ? 'blue' : 'default'
+                    }
+                    className="px-2 py-1 text-xs font-medium"
+                  >
+                    {permissions.role}
+                  </Tag>
+                ) : null}
+              </div>
+
+              {/* Admin-only Project Management */}
+              <ProjectPermissionGuard
+                projectId={id}
+                requiredPermission="canManageProject"
+                fallback={null}
+              >
+                <div className="flex gap-2">
+                  <Tooltip title="Project Settings (Admin Only)">
+                    <Button 
+                      size="small"
+                      type="default"
+                      onClick={() => {
+                        // TODO: Open project settings modal
+                        console.log('Project settings clicked');
+                      }}
+                    >
+                      ⚙️ Settings
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Manage Members (Admin Only)">
+                    <Button 
+                      size="small"
+                      type="default"
+                      onClick={() => {
+                        // TODO: Open member management modal
+                        console.log('Member management clicked');
+                      }}
+                    >
+                      👥 Members
+                    </Button>
+                  </Tooltip>
+                </div>
+              </ProjectPermissionGuard>
+
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
                   AI Model:
