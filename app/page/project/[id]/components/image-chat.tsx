@@ -618,9 +618,8 @@ const ImageChat: FC<ImageChatProps> = ({
       }
     >
       <div
-        className={`h-[calc(100vh-160px)] ${
-          promptGuideOpenStatus ? "col-span-3" : ""
-        }`}
+        className={`h-[calc(100vh-160px)] ${promptGuideOpenStatus ? "col-span-3" : ""
+          }`}
       >
         {contextHolder}
         {/* Custom Image Preview Modal */}
@@ -709,9 +708,8 @@ const ImageChat: FC<ImageChatProps> = ({
             {messages.map((msg, index) => (
               <div
                 key={`${msg.taskId}-${index}`}
-                className={`flex gap-4 ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-4 ${msg.type === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 {/* AI Avatar */}
                 {msg.type === "ai" && (
@@ -723,9 +721,8 @@ const ImageChat: FC<ImageChatProps> = ({
                 )}
 
                 <div
-                  className={`flex flex-col max-w-[80%] ${
-                    msg.type === "user" ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col max-w-[80%] ${msg.type === "user" ? "items-end" : "items-start"
+                    }`}
                 >
                   {/* Header Info */}
                   <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
@@ -743,10 +740,9 @@ const ImageChat: FC<ImageChatProps> = ({
                   {msg.content && (
                     <div
                       className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-md
-                        ${
-                          msg.type === "user"
-                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                        ${msg.type === "user"
+                          ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
+                          : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
                         }`}
                     >
                       {msg.content}
@@ -765,9 +761,8 @@ const ImageChat: FC<ImageChatProps> = ({
                       />
 
                       <div
-                        className={`grid gap-3 mt-3 w-full ${
-                          msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
-                        }`}
+                        className={`grid gap-3 mt-3 w-full ${msg.images.length > 1 ? "grid-cols-3" : "grid-cols-3"
+                          }`}
                       >
                         {msg.images.map((img, i) => (
                           <div
@@ -876,7 +871,7 @@ const ImageChat: FC<ImageChatProps> = ({
                 </div> */}
 
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              <PermissionGuard
+              {/* <PermissionGuard
                 roles={projectPermissions.useChat}
                 userRole={projectRole}
                 fallback={
@@ -892,157 +887,157 @@ const ImageChat: FC<ImageChatProps> = ({
                     </p>
                   </div>
                 }
+              > */}
+              <Form
+                form={form}
+                onFinish={onFinish}
+                initialValues={{
+                  type: "image",
+                  width: 2048,
+                  height: 2048,
+                  images: 1,
+                  ratio: "1:1",
+                  resolution: "2k",
+                  duration: "10",
+                }}
               >
-                <Form
-                  form={form}
-                  onFinish={onFinish}
-                  initialValues={{
-                    type: "image",
-                    width: 2048,
-                    height: 2048,
-                    images: 1,
-                    ratio: "1:1",
-                    resolution: "2k",
-                    duration: "10",
-                  }}
-                >
-                  <Form.Item name="type" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="width" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="height" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="ratio" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="images" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="resolution" hidden>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item name="duration" hidden>
-                    <Input />
-                  </Form.Item>
+                <Form.Item name="type" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="width" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="height" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="ratio" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="images" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="resolution" hidden>
+                  <Input />
+                </Form.Item>
+                <Form.Item name="duration" hidden>
+                  <Input />
+                </Form.Item>
 
-                  <div className="flex flex-col gap-2">
-                    {/* Text Area */}
-                    <Form.Item
-                      name="text"
-                      rules={[{ required: true, message: "" }]}
-                      style={{ margin: 0 }}
-                    >
-                      <Input.TextArea
-                        placeholder="Describe the image you want to create, in any language"
-                        autoSize={{ minRows: 2, maxRows: 5 }}
-                        className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            if (!submitting) {
-                              form.submit();
-                            }
+                <div className="flex flex-col gap-2">
+                  {/* Text Area */}
+                  <Form.Item
+                    name="text"
+                    rules={[{ required: true, message: "" }]}
+                    style={{ margin: 0 }}
+                  >
+                    <Input.TextArea
+                      placeholder="Describe the image you want to create, in any language"
+                      autoSize={{ minRows: 2, maxRows: 5 }}
+                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (!submitting) {
+                            form.submit();
                           }
-                        }}
-                      />
-                    </Form.Item>
-                    {/* Upload List Preview (Custom) */}
-                    {files.length > 0 && (
-                      <div className="flex gap-2 mt-2">
-                        {files.map((file: UploadFile) => (
-                          <div
-                            key={file.uid}
-                            className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
-                          >
-                            <Image
-                              src={
-                                file.thumbUrl ||
-                                (file.originFileObj
-                                  ? URL.createObjectURL(file.originFileObj)
-                                  : "")
-                              }
-                              alt="preview"
-                              width={48}
-                              height={48}
-                              className="w-full h-full object-cover"
-                              unoptimized
-                            />
-                            <div
-                              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => {
-                                setFiles(
-                                  files.filter((f) => f.uid !== file.uid)
-                                );
-                              }}
-                            >
-                              <Trash size={12} className="text-white" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Toolbar */}
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-2">
-                        {/* Left Side: Layout matches screenshot with Upload Icon first */}
-                        {/* Upload Button */}
-                        <Form.Item
-                          name="image"
-                          className="mb-0"
-                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                  {/* Upload List Preview (Custom) */}
+                  {files.length > 0 && (
+                    <div className="flex gap-2 mt-2">
+                      {files.map((file: UploadFile) => (
+                        <div
+                          key={file.uid}
+                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
                         >
-                          <Upload
-                            listType="picture"
-                            // onChange={handleUploadChange}
-                            // beforeUpload={beforeUploadFiles}
-
-                            fileList={files}
-                            onChange={handleUploadChange}
-                            beforeUpload={beforeUpload}
-                            multiple={true}
-                            maxCount={10}
-                            showUploadList={false}
-                            disabled={submitting}
-                            itemRender={(
-                              _originNode,
-                              file,
-                              _fileList,
-                              actions
-                            ) => {
-                              return (
-                                <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
-                                  <Image
-                                    src={file.thumbUrl || ""}
-                                    alt=""
-                                    width={48}
-                                    height={48}
-                                    className="w-12 h-12 object-cover rounded"
-                                    unoptimized
-                                  />
-                                  <Button
-                                    size="small"
-                                    htmlType="button"
-                                    onClick={actions.remove}
-                                    type="link"
-                                    danger
-                                  >
-                                    <Trash width={15} />
-                                  </Button>
-                                </div>
+                          <Image
+                            src={
+                              file.thumbUrl ||
+                              (file.originFileObj
+                                ? URL.createObjectURL(file.originFileObj)
+                                : "")
+                            }
+                            alt="preview"
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                          <div
+                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                            onClick={() => {
+                              setFiles(
+                                files.filter((f) => f.uid !== file.uid)
                               );
                             }}
                           >
-                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                              <PaperClipOutlined className="text-lg" />
-                            </div>
-                          </Upload>
-                        </Form.Item>
+                            <Trash size={12} className="text-white" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Toolbar */}
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-2">
+                      {/* Left Side: Layout matches screenshot with Upload Icon first */}
+                      {/* Upload Button */}
+                      <Form.Item
+                        name="image"
+                        className="mb-0"
+                        style={{ marginBottom: 0, lineHeight: 1 }}
+                      >
+                        <Upload
+                          listType="picture"
+                          // onChange={handleUploadChange}
+                          // beforeUpload={beforeUploadFiles}
 
-                        {/* Model Selector */}
-                        {/* <Select
+                          fileList={files}
+                          onChange={handleUploadChange}
+                          beforeUpload={beforeUpload}
+                          multiple={true}
+                          maxCount={10}
+                          showUploadList={false}
+                          disabled={submitting}
+                          itemRender={(
+                            _originNode,
+                            file,
+                            _fileList,
+                            actions
+                          ) => {
+                            return (
+                              <div className="flex items-center gap-2 bg-zinc-800 rounded-lg p-2">
+                                <Image
+                                  src={file.thumbUrl || ""}
+                                  alt=""
+                                  width={48}
+                                  height={48}
+                                  className="w-12 h-12 object-cover rounded"
+                                  unoptimized
+                                />
+                                <Button
+                                  size="small"
+                                  htmlType="button"
+                                  onClick={actions.remove}
+                                  type="link"
+                                  danger
+                                >
+                                  <Trash width={15} />
+                                </Button>
+                              </div>
+                            );
+                          }}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
+                            <PaperClipOutlined className="text-lg" />
+                          </div>
+                        </Upload>
+                      </Form.Item>
+
+                      {/* Model Selector */}
+                      {/* <Select
                                             value={selectedModel}
                                             onChange={setSelectedModel}
                                             variant="borderless"
@@ -1079,90 +1074,90 @@ const ImageChat: FC<ImageChatProps> = ({
                                             ]}
                                         /> */}
 
-                        {/* Resolution Selector */}
-                        <Select
-                          value={form.getFieldValue("resolution") || "2k"}
-                          onChange={(val) => {
-                            form.setFieldValue("resolution", val);
-                            // Trigger re-render if needed or just handle form value
-                          }}
-                          variant="borderless"
-                          popupMatchSelectWidth={false}
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
+                      {/* Resolution Selector */}
+                      <Select
+                        value={form.getFieldValue("resolution") || "2k"}
+                        onChange={(val) => {
+                          form.setFieldValue("resolution", val);
+                          // Trigger re-render if needed or just handle form value
+                        }}
+                        variant="borderless"
+                        popupMatchSelectWidth={false}
+                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
+                        styles={{
+                          popup: {
+                            root: {
+                              backgroundColor: "#3f3f46",
+                              border: "1px solid #52525b",
+                              borderRadius: "8px",
+                              padding: "4px",
                             },
-                          }}
-                          options={[
-                            { value: "2k", label: "2K" },
-                            { value: "4k", label: "4K" },
-                          ]}
-                        />
+                          },
+                        }}
+                        options={[
+                          { value: "2k", label: "2K" },
+                          { value: "4k", label: "4K" },
+                        ]}
+                      />
 
-                        {/* Ratio Selector */}
-                        <Select
-                          value={selectedRatio}
-                          onChange={handleRatioChange}
-                          variant="borderless"
-                          popupMatchSelectWidth={false}
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
+                      {/* Ratio Selector */}
+                      <Select
+                        value={selectedRatio}
+                        onChange={handleRatioChange}
+                        variant="borderless"
+                        popupMatchSelectWidth={false}
+                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                        styles={{
+                          popup: {
+                            root: {
+                              backgroundColor: "#3f3f46",
+                              border: "1px solid #52525b",
+                              borderRadius: "8px",
+                              padding: "4px",
                             },
-                          }}
-                          options={ratioOptions.map((opt) => ({
-                            value: opt.key,
-                            label: (
-                              <span className="flex items-center gap-1">
-                                <div className="w-3 h-3 border border-white rounded-[1px]" />
-                                {opt.label}
-                              </span>
-                            ),
-                          }))}
-                        />
+                          },
+                        }}
+                        options={ratioOptions.map((opt) => ({
+                          value: opt.key,
+                          label: (
+                            <span className="flex items-center gap-1">
+                              <div className="w-3 h-3 border border-white rounded-[1px]" />
+                              {opt.label}
+                            </span>
+                          ),
+                        }))}
+                      />
 
-                        {/* Image Count Selector */}
-                        <Select
-                          value={String(selectedImageCount)}
-                          onChange={(val) => {
-                            const count = Number(val);
-                            setSelectedImageCount(count);
-                            form.setFieldValue("images", count);
-                          }}
-                          variant="borderless"
-                          popupMatchSelectWidth={false}
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
+                      {/* Image Count Selector */}
+                      <Select
+                        value={String(selectedImageCount)}
+                        onChange={(val) => {
+                          const count = Number(val);
+                          setSelectedImageCount(count);
+                          form.setFieldValue("images", count);
+                        }}
+                        variant="borderless"
+                        popupMatchSelectWidth={false}
+                        className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[80px]"
+                        styles={{
+                          popup: {
+                            root: {
+                              backgroundColor: "#3f3f46",
+                              border: "1px solid #52525b",
+                              borderRadius: "8px",
+                              padding: "4px",
                             },
-                          }}
-                          options={imageCountOptions.map((opt) => ({
-                            value: opt.key,
-                            label: opt.label,
-                          }))}
-                        />
-                      </div>
+                          },
+                        }}
+                        options={imageCountOptions.map((opt) => ({
+                          value: opt.key,
+                          label: opt.label,
+                        }))}
+                      />
+                    </div>
 
-                      {/* Right Side: Generate Button */}
-                      {/* <Button
+                    {/* Right Side: Generate Button */}
+                    {/* <Button
                                     htmlType="submit"
                                     type="primary"
                                     className="!bg-[#eab308] !text-black hover:!bg-[#facc15] !border-none !font-semibold !h-9 !px-6 !rounded-lg flex items-center gap-2"
@@ -1170,18 +1165,18 @@ const ImageChat: FC<ImageChatProps> = ({
                                 >
                                     {submitting ? <LoadingOutlined /> : <>Generate for Free <Sparkles size={14} /></>}
                                 </Button> */}
-                      <Button
-                        htmlType="submit"
-                        size="large"
-                        disabled={submitting}
-                        className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
-                      >
-                        <SendOutlined className="text-lg" />
-                      </Button>
-                    </div>
+                    <Button
+                      htmlType="submit"
+                      size="large"
+                      disabled={submitting}
+                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                    >
+                      <SendOutlined className="text-lg" />
+                    </Button>
                   </div>
-                </Form>
-              </PermissionGuard>
+                </div>
+              </Form>
+              {/* </PermissionGuard> */}
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
               AI can make mistakes. Please check the generated images.{" "}
@@ -1190,9 +1185,8 @@ const ImageChat: FC<ImageChatProps> = ({
         </div>
       </div>{" "}
       <div
-        className={`${
-          promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
-        }`}
+        className={`${promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
+          }`}
       >
         <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
           <div className="p-4 ">
