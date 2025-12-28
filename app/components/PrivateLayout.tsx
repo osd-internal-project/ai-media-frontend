@@ -85,9 +85,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
     "USER"
   );
+  const [searchTexts, setSearchTexts] = useState<{[key: number]: string}>({});
   const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
-  const [projectRole, setProjectRole] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     []
@@ -166,7 +166,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
   };
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => {
+    setOpen(true);
+    setProjectMembers([{ userId: '', role: 'USER' }]);
+    setSearchTexts({});
+    form.resetFields();
+  };
   const handleClose = () => {
     setOpen(false);
     form.resetFields();
@@ -174,6 +179,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     setShowAddMember(false);
     setSelectedUser("");
     setSelectedRole("USER");
+    setSearchTexts({});
   };
 
   const handleRemoveMember = (userId: string) => {
@@ -191,6 +197,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const handleCloseEdit = () => {
     setOpenEdit(false);
     editForm.resetFields();
+    setProjectMembers([]);
+    setSearchTexts({});
   };
 
   const onFinish = async (values: any) => {
@@ -231,6 +239,17 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           role: member.role || "USER",
         })) || [];
       setProjectMembers(members);
+      
+      // Pre-populate search texts with user names for existing members
+      const initialSearchTexts: {[key: number]: string} = {};
+      members.forEach((member: any, index: number) => {
+        const user = organizationMember.find(u => u.userId === member.userId);
+        if (user) {
+          initialSearchTexts[index] = user.fullname;
+        }
+      });
+      setSearchTexts(initialSearchTexts);
+      
       editForm.setFieldsValue({ ...project });
     }
     if (action === "delete") {
@@ -478,9 +497,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                             }}
                           >
                             <Select
-                              placeholder="Select user"
+                              showSearch
+                              placeholder="Type to search users..."
                               value={member.userId || undefined}
                               style={{ flex: 1, marginRight: "8px" }}
+                              filterOption={false}
+                              onSearch={(searchText) => {
+                                setSearchTexts(prev => ({ ...prev, [index]: searchText }));
+                              }}
                               onChange={(userId: string) => {
                                 if (
                                   userId &&
@@ -493,18 +517,23 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                   setProjectMembers(newMembers);
                                 }
                               }}
-                              options={organizationMember
-                                .filter(
-                                  (u) =>
-                                    !projectMembers.find(
-                                      (m, i) =>
-                                        m.userId === u.userId && i !== index
-                                    )
-                                )
-                                .map((e) => ({
-                                  value: e.userId,
-                                  label: e.fullname,
-                                }))}
+                              options={
+                                (searchTexts[index] && searchTexts[index].length > 0)
+                                  ? organizationMember
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId && i !== index
+                                          ) &&
+                                          u.fullname.toLowerCase().includes(searchTexts[index].toLowerCase())
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
+                                  : []
+                              }
                             />
                             <Select
                               value={member.role}
@@ -528,6 +557,16 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                 setProjectMembers(
                                   projectMembers.filter((_, i) => i !== index)
                                 );
+                                const newSearchTexts: {[key: number]: string} = {};
+                                Object.keys(searchTexts).forEach(key => {
+                                  const oldIndex = parseInt(key);
+                                  if (oldIndex < index) {
+                                    newSearchTexts[oldIndex] = searchTexts[oldIndex];
+                                  } else if (oldIndex > index) {
+                                    newSearchTexts[oldIndex - 1] = searchTexts[oldIndex];
+                                  }
+                                });
+                                setSearchTexts(newSearchTexts);
                               }}
                             >
                               Remove
@@ -640,9 +679,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                             }}
                           >
                             <Select
-                              placeholder="Select user"
+                              showSearch
+                              placeholder="Type to search users..."
                               value={member.userId || undefined}
                               style={{ flex: 1, marginRight: "8px" }}
+                              filterOption={false}
+                              onSearch={(searchText) => {
+                                setSearchTexts(prev => ({ ...prev, [index]: searchText }));
+                              }}
                               onChange={(userId: string) => {
                                 if (
                                   userId &&
@@ -655,18 +699,23 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                   setProjectMembers(newMembers);
                                 }
                               }}
-                              options={organizationMember
-                                .filter(
-                                  (u) =>
-                                    !projectMembers.find(
-                                      (m, i) =>
-                                        m.userId === u.userId && i !== index
-                                    )
-                                )
-                                .map((e) => ({
-                                  value: e.userId,
-                                  label: e.fullname,
-                                }))}
+                              options={
+                                (searchTexts[index] && searchTexts[index].length > 0)
+                                  ? organizationMember
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId && i !== index
+                                          ) &&
+                                          u.fullname.toLowerCase().includes(searchTexts[index].toLowerCase())
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
+                                  : []
+                              }
                             />
                             <Select
                               value={member.role}
@@ -690,6 +739,16 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                 setProjectMembers(
                                   projectMembers.filter((_, i) => i !== index)
                                 );
+                                const newSearchTexts: {[key: number]: string} = {};
+                                Object.keys(searchTexts).forEach(key => {
+                                  const oldIndex = parseInt(key);
+                                  if (oldIndex < index) {
+                                    newSearchTexts[oldIndex] = searchTexts[oldIndex];
+                                  } else if (oldIndex > index) {
+                                    newSearchTexts[oldIndex - 1] = searchTexts[oldIndex];
+                                  }
+                                });
+                                setSearchTexts(newSearchTexts);
                               }}
                             >
                               Remove
@@ -911,7 +970,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 }
               >
                 <OrganizationProvider
-                  value={{ organizationId, projectRole, organizationRole }}
+                  value={{ organizationId, organizationRole }}
                 >
                   {children}
                 </OrganizationProvider>

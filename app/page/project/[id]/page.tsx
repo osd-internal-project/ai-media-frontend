@@ -59,6 +59,7 @@ const GenerateImagePage: FC = () => {
           const actualUserId = userDetails?.userId || session.user.id;
           
           const userRole = await projectService.checkUserRole(id, actualUserId);
+          
           setProjectRole(userRole);
         } catch (error) {
           console.error('Failed to fetch project role:', error);
