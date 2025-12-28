@@ -1,7 +1,10 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
 import { Button, Tabs, Select, Tooltip, Tag } from "antd";
-import { useProjectPermissions, ProjectPermissionGuard } from "../../../hooks/useProjectPermissions";
+import { PermissionGuard } from "../../../components/PermissionGuard";
+import { useOrganization } from "../../../context/OrganizationContext";
+import UserServices from "../../../services/users.service";
+import { axiosUser } from "@/app/lib/axios/axios";
 import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
@@ -44,9 +47,28 @@ const GenerateImagePage: FC = () => {
     (TAIModel & { capabilities?: string[] }) | null
   >(null);
   const { id } = params as { id: string };
-  
-  // Get project permissions for current user
-  const permissions = useProjectPermissions(id);
+  const { organizationId } = useOrganization();
+  const [projectRole, setProjectRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProjectRole = async () => {
+      if (session?.user?.id && id) {
+        try {
+          const userService = UserServices(axiosUser);
+          const userDetails = await userService.findDetailByToken(session.user.id);
+          const actualUserId = userDetails?.userId || session.user.id;
+          
+          const userRole = await projectService.checkUserRole(id, actualUserId);
+          
+          setProjectRole(userRole);
+        } catch (error) {
+          console.error('Failed to fetch project role:', error);
+        }
+      }
+    };
+    
+    fetchProjectRole();
+  }, [session?.user?.id, id]);
 
   useEffect(() => {
     if (loadingData) {
@@ -184,7 +206,7 @@ const GenerateImagePage: FC = () => {
       </div>
       
       {/* Viewer Role Notification */}
-      {permissions.canViewOnly && (
+      {projectRole === 'VIEWER' && (
         <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-800">
             <span className="text-lg">👀</span>
@@ -485,6 +507,7 @@ const GenerateImagePage: FC = () => {
                 activeKey={activeKey}
                 projectId={id}
                 userId={session?.user?.id}
+                projectRole={projectRole}
                 promptGuideTypes={promptGuideTypes}
                 username={session?.user?.name || ""}
                 selectedAIModel={selectedAIModel}
@@ -508,6 +531,7 @@ const GenerateImagePage: FC = () => {
                 activeKey={activeKey}
                 projectId={id}
                 userId={session?.user?.id}
+                projectRole={projectRole}
                 promptGuideTypes={promptGuideTypes}
                 promptGuideOpenStatus={promptGuideOpenStatus}
                 selectedAIModel={selectedAIModel}

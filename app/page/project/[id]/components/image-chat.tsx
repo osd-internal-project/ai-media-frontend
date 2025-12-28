@@ -6,7 +6,8 @@ import React, {
   type FC,
   type ReactElement,
 } from "react";
-import { ProjectPermissionGuard } from "../../../../hooks/useProjectPermissions";
+import { PermissionGuard } from "../../../../components/PermissionGuard";
+import { projectPermissions } from "../../../../utils/permissions";
 import {
   Avatar,
   Button,
@@ -54,6 +55,7 @@ interface ImageChatProps {
   projectId: string;
   userId?: string;
   activeKey: "image" | "vdo" | "omnihuman";
+  projectRole?: string | null;
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;
   username?: string;
@@ -238,6 +240,7 @@ const ImageChat: FC<ImageChatProps> = ({
   projectId,
   userId,
   activeKey,
+  projectRole,
   promptGuideTypes = [],
   promptGuideOpenStatus,
   username,
@@ -873,9 +876,9 @@ const ImageChat: FC<ImageChatProps> = ({
                 </div> */}
 
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              <ProjectPermissionGuard
-                projectId={projectId}
-                requiredPermission="canUseChat"
+              <PermissionGuard
+                roles={projectPermissions.useChat}
+                userRole={projectRole}
                 fallback={
                   <div className="p-4 text-center text-zinc-400 bg-[#18181b] rounded-3xl border border-white/10">
                     <p className="text-lg font-medium mb-2">
@@ -1178,7 +1181,7 @@ const ImageChat: FC<ImageChatProps> = ({
                     </div>
                   </div>
                 </Form>
-              </ProjectPermissionGuard>
+              </PermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500">
               AI can make mistakes. Please check the generated images.{" "}
