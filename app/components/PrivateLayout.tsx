@@ -76,7 +76,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [getProject, setProject] = useState<IProject[]>([]);
   // const [groupName, setGroupName] = useState<string>("");
-  const [roles, setRoles] = useState<string[]>([]);
+  // const [roles, setRoles] = useState<string[]>([]);
   const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
     []
   );
@@ -86,7 +86,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     "USER"
   );
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
-  const filteredMenu = filterMenuByRole(MenuSider, roles);
+  // const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
@@ -95,6 +95,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [personalOrganizations, setPersonalOrganizations] = useState<
     IOrganization[]
   >([]);
+  const [userProfile, setUserProfile] = useState<TUser | null>(null);
   const projectActionItems = [
     {
       key: "edit",
@@ -153,10 +154,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     const userDetail = await userServices.findDetailByToken(
       session?.user?.id as string
     );
+    setUserProfile(userDetail);
     const user = await userServices.findById(session?.user?.id as string);
     console.log(session?.user?.id);
     console.log(user);
-    const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
+    // const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
 
     // setRoles(userRoles || []);
 
@@ -168,8 +170,15 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const handleOpen = () => {
     setOpen(true);
-    setProjectMembers([{ userId: "", role: "USER" }]);
-    setSearchTexts({});
+    if (userProfile) {
+      setSearchTexts((prev) => ({ 0: userProfile.fullname }));
+      console.log(searchTexts);
+      setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
+    } else {
+      setProjectMembers([]);
+      setSearchTexts({});
+    }
+
     form.resetFields();
   };
   const handleClose = () => {
