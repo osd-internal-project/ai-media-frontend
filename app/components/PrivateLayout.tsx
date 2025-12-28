@@ -166,7 +166,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
   };
 
-  const handleOpen = () => setOpen(true);
+  const handleOpenAddProject = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
     form.resetFields();
@@ -200,7 +200,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       organizationId: organizationId,
     };
 
-    const response = await projectService.create(projectData);
+    const response = await projectService.create({
+      ...projectData,
+      organizationId: organizationId,
+    });
     if (response) {
       setOpen(false);
       setLoading(true);
@@ -394,11 +397,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         {open ? (
           <Modal
-            title="Create Project"
+            title="Add Project"
             open={open}
             onCancel={handleClose}
             footer={false}
-            okText="Create"
+            okText="Submit"
             width={500}
           >
             <Form
@@ -787,7 +790,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         <Button
                           icon={<PlusCircleOutlined />}
                           className="w-full"
-                          onClick={handleOpen}
+                          onClick={handleOpenAddProject}
                         >
                           {`Add new project`}
                         </Button>
