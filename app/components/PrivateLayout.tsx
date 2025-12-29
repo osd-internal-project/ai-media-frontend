@@ -23,7 +23,7 @@ import {
   Divider,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 // import PrivateNavigation from "./PrivateNavigation";
@@ -106,9 +106,23 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       label: "Delete",
     },
   ];
+  // const searchParams = useSearchParams();
+  // const urlOrganizationId = searchParams.get("organizationId");
+
   useEffect(() => {
     if (session?.user?.id) setLoading(true);
   }, [session?.user?.id]);
+
+  // useEffect(() => {
+  //   if (
+  //     session?.user?.id &&
+  //     urlOrganizationId &&
+  //     userProfile &&
+  //     urlOrganizationId !== userProfile.recentOrganizationId
+  //   ) {
+  //     handleOrganizationChange(urlOrganizationId);
+  //   }
+  // }, [session?.user?.id, urlOrganizationId, userProfile]);
   useEffect(() => {
     if (loading) {
       fecthdata();
@@ -116,12 +130,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   }, [loading]);
   const fecthdata = async () => {
     const personalOrganizations = await organizationService.findManyByUserId(
-      session?.user?.id as string,
+      userProfile?.userId || "",
       { type: "personal" }
     );
     setPersonalOrganizations(personalOrganizations);
     const teamOrganizations = await organizationService.findManyByUserId(
-      session?.user?.id as string,
+      userProfile?.userId || "",
       { type: "team" }
     );
     setTeamOrganizations(teamOrganizations);
@@ -303,7 +317,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     const payload = {
       ...values,
       type: "team",
-      createdById: session?.user?.id,
+      createdById: userProfile?.userId || "",
       slug: values.name.toLowerCase().replace(/ /g, "-"),
     };
     const response = await organizationService.create(payload);
