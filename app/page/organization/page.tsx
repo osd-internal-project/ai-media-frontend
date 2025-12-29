@@ -11,10 +11,9 @@ import {
   Input,
   Select,
   Popconfirm,
-  Tabs,
-  Badge,
   Avatar,
   Space,
+  InputNumber,
 } from "antd";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import OrganizationService from "@/app/services/organization.service";
@@ -127,6 +126,9 @@ export default function OrganizationDetailPage() {
     setCurrentMemberId(member.id);
     editMemberForm.setFieldsValue({
       role: member.role,
+      maxToken: member.maxToken,
+      maxImages: member.maxImages,
+      apiKeys: member.apiKeys,
     });
     setIsEditMemberModalOpen(true);
   };
@@ -182,6 +184,18 @@ export default function OrganizationDetailPage() {
       dataIndex: "joinedAt",
       key: "joinedAt",
       render: (text) => new Date(text).toLocaleDateString(),
+    },
+    {
+      title: "Max Token",
+      dataIndex: "maxToken",
+      key: "maxToken",
+      render: (val) => val?.toLocaleString() || 0,
+    },
+    {
+      title: "Max Images",
+      dataIndex: "maxImages",
+      key: "maxImages",
+      render: (val) => val?.toLocaleString() || 0,
     },
     {
       title: "Action",
@@ -308,12 +322,21 @@ export default function OrganizationDetailPage() {
               <Select.Option value="VIEWER">VIEWER</Select.Option>
             </Select>
           </Form.Item>
+          <Form.Item name="maxToken" label="Max Token">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="maxImages" label="Max Images">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="apiKeys" label="API Keys">
+            <Input.TextArea rows={3} />
+          </Form.Item>
         </Form>
       </Modal>
 
       {/* Edit Member Modal */}
       <Modal
-        title="Edit Member Role"
+        title="Edit Member"
         open={isEditMemberModalOpen}
         onCancel={() => setIsEditMemberModalOpen(false)}
         onOk={() => editMemberForm.submit()}
@@ -330,6 +353,15 @@ export default function OrganizationDetailPage() {
               <Select.Option value="MEMBER">MEMBER</Select.Option>
               <Select.Option value="VIEWER">VIEWER</Select.Option>
             </Select>
+          </Form.Item>
+          <Form.Item name="maxToken" label="Max Token">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="maxImages" label="Max Images">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="apiKeys" label="API Keys">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>

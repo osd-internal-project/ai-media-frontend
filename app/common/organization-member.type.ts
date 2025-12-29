@@ -7,4 +7,7 @@ export interface IOrganizationMember {
   role: string;
   joinedAt: string;
   organization?: IOrganization;
+  maxToken?: number;
+  maxImages?: number;
+  apiKeys?: string;
 }

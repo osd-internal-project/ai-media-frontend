@@ -64,6 +64,16 @@ const OrganizationMembersServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    createFromInvite: async (value: any) => {
+      return await axiosInstance
+        .post(`${baseUrl}/invite`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
     update: async (id: number, value: any) => {
       return await axiosInstance
         .patch(`${baseUrl}/${id}`, value)
