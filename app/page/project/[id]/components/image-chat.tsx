@@ -411,14 +411,21 @@ const ImageChat: FC<ImageChatProps> = ({
   }, [messages.length]);
 
   // Handlers
-  const handleUploadChange: UploadProps["onChange"] = ({ fileList }) =>
+  const handleUploadChange: UploadProps["onChange"] = ({ fileList }) => {
     setFiles(fileList);
+  };
 
   const beforeUpload = (file: RcFile) => {
     if (files.find((f) => f.name === file.name)) {
       message.warning(`Duplicate file: ${file.name}`);
       return false;
     }
+    
+    if (files.length >= 10) {
+      messageApi.warning(`Upload limit: 10 files max`);
+      return false;
+    }
+    
     return false;
   };
 
@@ -551,6 +558,7 @@ const ImageChat: FC<ImageChatProps> = ({
   // Options
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedImageCount, setSelectedImageCount] = useState<number>(1);
+  const [selectedResolution, setSelectedResolution] = useState<string>("2k");
 
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
     "1:1": { width: 2048, height: 2048 },
@@ -571,6 +579,25 @@ const ImageChat: FC<ImageChatProps> = ({
         width: size.width,
         height: size.height,
         ratio: ratio,
+      });
+    }
+  };
+
+  const handleResolutionChange = (resolution: string) => {
+    setSelectedResolution(resolution);
+    form.setFieldValue("resolution", resolution);
+    
+    const currentRatio = selectedRatio;
+    const baseSize = RATIO_SIZE_MAP[currentRatio];
+    
+    if (baseSize) {
+      const scaleFactor = resolution === "4k" ? 1.414 : 1; // √2 for 4K (doubles area)
+      const newWidth = Math.round(baseSize.width * scaleFactor);
+      const newHeight = Math.round(baseSize.height * scaleFactor);
+      
+      form.setFieldsValue({
+        width: newWidth,
+        height: newHeight,
       });
     }
   };
@@ -869,9 +896,8 @@ const ImageChat: FC<ImageChatProps> = ({
                         </Button>
                     </div>
                 </div> */}
-
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              {/* <PermissionGuard
+              <PermissionGuard
                 roles={projectPermissions.useChat}
                 userRole={projectRole}
                 fallback={
@@ -887,7 +913,7 @@ const ImageChat: FC<ImageChatProps> = ({
                     </p>
                   </div>
                 }
-              > */}
+              >
               <Form
                 form={form}
                 onFinish={onFinish}
@@ -1030,9 +1056,19 @@ const ImageChat: FC<ImageChatProps> = ({
                             );
                           }}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                            <PaperClipOutlined className="text-lg" />
-                          </div>
+                          <Tooltip 
+                            title={`Upload files (${files.length}/10)`}
+                            placement="top"
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                              <PaperClipOutlined className="text-lg" />
+                              {files.length > 0 && (
+                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                  {files.length}
+                                </div>
+                              )}
+                            </div>
+                          </Tooltip>
                         </Upload>
                       </Form.Item>
 
@@ -1076,13 +1112,11 @@ const ImageChat: FC<ImageChatProps> = ({
 
                       {/* Resolution Selector */}
                       <Select
-                        value={form.getFieldValue("resolution") || "2k"}
-                        onChange={(val) => {
-                          form.setFieldValue("resolution", val);
-                          // Trigger re-render if needed or just handle form value
-                        }}
+                        value={selectedResolution}
+                        onChange={handleResolutionChange}
                         variant="borderless"
                         popupMatchSelectWidth={false}
+                        disabled={submitting}
                         className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[60px] text-center"
                         styles={{
                           popup: {
@@ -1176,10 +1210,15 @@ const ImageChat: FC<ImageChatProps> = ({
                   </div>
                 </div>
               </Form>
-              {/* </PermissionGuard> */}
+              </PermissionGuard>
             </div>
-            <div className="text-center mt-3 text-xs text-zinc-500">
-              AI can make mistakes. Please check the generated images.{" "}
+            <div className="text-center mt-3 text-xs text-zinc-500 space-y-1">
+              <div>AI can make mistakes. Please check the generated images.</div>
+              {files.length > 0 && (
+                <div className="text-blue-400">
+                  📎 {files.length}/10 files
+                </div>
+              )}
             </div>
           </div>
         </div>
