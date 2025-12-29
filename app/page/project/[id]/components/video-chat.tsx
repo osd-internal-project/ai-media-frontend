@@ -472,6 +472,12 @@ const VideoChat: FC<VideoChatProps> = ({
       message.warning(`Duplicate file: ${file.name}`);
       return false;
     }
+    
+    if (files.length >= 2) {
+      message.warning(`Upload limit: 2 files max`);
+      return false;
+    }
+    
     return false;
   };
   const onFinish = async (values: ITFromGenerate) => {
@@ -800,7 +806,7 @@ const VideoChat: FC<VideoChatProps> = ({
           {/* Input Area */}
           <div className="absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10">
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
-              {/* <PermissionGuard
+              <PermissionGuard
                 roles={projectPermissions.useChat}
                 userRole={projectRole}
                 fallback={
@@ -816,7 +822,7 @@ const VideoChat: FC<VideoChatProps> = ({
                     </p>
                   </div>
                 }
-              > */}
+              >
               <Form
                 form={form}
                 onFinish={onFinish}
@@ -926,9 +932,19 @@ const VideoChat: FC<VideoChatProps> = ({
                           showUploadList={false}
                           disabled={submitting}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer">
-                            <PaperClipOutlined className="text-lg" />
-                          </div>
+                          <Tooltip 
+                            title={`Upload files (${files.length}/2)`}
+                            placement="top"
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                              <PaperClipOutlined className="text-lg" />
+                              {files.length > 0 && (
+                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                  {files.length}
+                                </div>
+                              )}
+                            </div>
+                          </Tooltip>
                         </Upload>
                       </Form.Item>
                       {/* Resolution Selector */}
@@ -1041,10 +1057,15 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 </div>
               </Form>
-              {/* </PermissionGuard> */}
+              </PermissionGuard>
             </div>
-            <div className="text-center mt-3 text-xs text-zinc-500">
-              AI can make mistakes. Please check the generated Video.{" "}
+            <div className="text-center mt-3 text-xs text-zinc-500 space-y-1">
+              <div>AI can make mistakes. Please check the generated Video.</div>
+              {files.length > 0 && (
+                <div className="text-blue-400">
+                  📎 {files.length}/2 files
+                </div>
+              )}
             </div>
           </div>
         </div>
