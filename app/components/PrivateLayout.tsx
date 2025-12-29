@@ -129,17 +129,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
   }, [loading]);
   const fecthdata = async () => {
-    const personalOrganizations = await organizationService.findManyByUserId(
-      userProfile?.userId || "",
-      { type: "personal" }
-    );
-    setPersonalOrganizations(personalOrganizations);
-    const teamOrganizations = await organizationService.findManyByUserId(
-      userProfile?.userId || "",
-      { type: "team" }
-    );
-    setTeamOrganizations(teamOrganizations);
     await fetchdataUser();
+
     setLoading(false);
     // const response = await projectService.findAll(session?.user?.id as string);
     // setProject(response);
@@ -168,10 +159,17 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     const userDetail = await userServices.findDetailByToken(
       session?.user?.id as string
     );
-    setUserProfile(userDetail);
-    const user = await userServices.findById(session?.user?.id as string);
-    console.log(session?.user?.id);
-    console.log(user);
+    const personalOrganizations = await organizationService.findManyByUserId(
+      userDetail?.userId || "",
+      { type: "personal" }
+    );
+    setPersonalOrganizations(personalOrganizations || []);
+
+    const teamOrganizations = await organizationService.findManyByUserId(
+      userDetail?.userId || "",
+      { type: "team" }
+    );
+    setTeamOrganizations(teamOrganizations || []);
     // const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
 
     // setRoles(userRoles || []);
