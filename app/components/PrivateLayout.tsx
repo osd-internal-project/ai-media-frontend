@@ -38,6 +38,7 @@ import {
   CrownOutlined,
   EyeOutlined,
   TeamOutlined,
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
@@ -360,6 +361,13 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       </ConfigProvider>
     );
   }
+
+  const isAdminRoute = pathname.startsWith("/page/admin-management");
+
+  if (isAdminRoute) {
+    return <>{children}</>;
+  }
+
   return (
     <ConfigProvider
       theme={{
@@ -831,6 +839,26 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   preview={false}
                   className="mb-2"
                 />
+              </div>
+              {/* Admin Management Button */}
+              <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
+                {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                  <>
+                    <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
+                      ADMINISTRATION
+                    </div>
+                    <div className="mt-3 w-full">
+                      <Button
+                        icon={<UserSwitchOutlined />}
+                        className="w-full"
+                        // type="primary"
+                        onClick={() => router.push("/page/admin-management")}
+                      >
+                        Admin Management
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="w-full  justify-center items-center py-5 flex-shrink-0 px-2">
                 <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2 mb-2">

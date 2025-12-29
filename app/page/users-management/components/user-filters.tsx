@@ -8,7 +8,6 @@ import {
   Space,
   Modal,
   Form,
-  InputNumber,
   Switch,
   type FormInstance,
 } from "antd";
@@ -232,7 +231,7 @@ const UserFiltersPage: FC<props> = ({
                 </Select>
               </Form.Item>
 
-              <Form.Item label="API Keys" name="apiKeys">
+              {/* <Form.Item label="API Keys" name="apiKeys">
                 <Input placeholder="Enter API Keys" />
               </Form.Item>
 
@@ -252,7 +251,7 @@ const UserFiltersPage: FC<props> = ({
                 ]}
               >
                 <InputNumber className="!w-full" min={0} />
-              </Form.Item>
+              </Form.Item> */}
 
               <Form.Item label="Status" name="status" valuePropName="checked">
                 <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
