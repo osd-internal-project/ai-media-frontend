@@ -756,6 +756,11 @@ const ImageChat: FC<ImageChatProps> = ({
                     <span>{msg.username}</span>
                     <span>•</span>
                     <span>
+                      {new Date(msg.time).toLocaleDateString([], {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
                       {new Date(msg.time).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
