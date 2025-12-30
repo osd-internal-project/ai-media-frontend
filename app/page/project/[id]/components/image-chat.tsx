@@ -142,7 +142,7 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
               <span className="text-blue-400 text-xs">
-                {selectedAIModel?.name || "Seedream-4.5"}
+                {selectedAIModel?.name || "Unknown Model"}
               </span>
             </div>
           </div>
@@ -512,7 +512,7 @@ const ImageChat: FC<ImageChatProps> = ({
         ...values,
         projectId,
         userId,
-        modelName: selectedAIModel?.name, // Add selected model name
+        modelName: selectedAIModel?.name,
       };
 
       // Handle File Upload

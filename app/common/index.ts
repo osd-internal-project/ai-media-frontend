@@ -7,6 +7,7 @@ export interface ITFromGenerate {
   ratio: string;
   projectId?: string;
   userId?: string;
+  modelName?: string;
 }
 
 export type IOrganizationRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
