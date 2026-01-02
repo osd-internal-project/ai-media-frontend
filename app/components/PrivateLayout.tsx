@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
-// import PrivateNavigation from "./PrivateNavigation";
+import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -860,48 +860,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   </>
                 )}
               </div>
-              <div className="w-full  justify-center items-center py-5 flex-shrink-0 px-2">
-                <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2 mb-2">
-                  ORGANIZATION
-                </div>
-                <div className="mt-3 w-full mb-2">
-                  <Button
-                    size="middle"
-                    onClick={handleOpenCreateOrg}
-                    icon={<PlusCircleOutlined />}
-                    className="w-full"
-                  >
-                    {`Add new organization`}
-                  </Button>
-                </div>
-                <div className="w-full flex items-center space-x-1">
-                  <Select
-                    size="middle"
-                    className="dark-select w-full  "
-                    placeholder="Choose Organization"
-                    onChange={handleOrganizationChange}
-                    value={organizationId}
-                    options={[
-                      {
-                        label: <span>PERSONAL</span>,
-                        title: "personal",
-                        options: personalOrganizations.map((organization) => ({
-                          label: <span>{organization.name}</span>,
-                          value: organization.organizationId,
-                        })),
-                      },
-                      {
-                        label: <span>TEAMS</span>,
-                        title: "teams",
-                        options: teamOrganizations.map((organization) => ({
-                          label: <span>{organization.name}</span>,
-                          value: organization.organizationId,
-                        })),
-                      },
-                    ]}
-                  />
-                </div>
-              </div>
+
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
@@ -1030,15 +989,18 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             </div>
           </Sider>
           <Layout className="flex-1 w-full h-full overflow-hidden">
-            {/* {groupName === "admin-user" ? (
             <PrivateNavigation
               user={
                 session?.user
                   ? { fullname: session.user.name ?? "" }
                   : undefined
               }
+              organizationId={organizationId}
+              personalOrganizations={personalOrganizations}
+              teamOrganizations={teamOrganizations}
+              handleOrganizationChange={handleOrganizationChange}
+              handleOpenCreateOrg={handleOpenCreateOrg}
             />
-          ) : null} */}
             <div className="w-full h-screen p-2  overflow-y-auto">
               <PrivateContent
                 user={

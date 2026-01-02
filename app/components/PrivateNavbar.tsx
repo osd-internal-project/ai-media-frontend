@@ -1,16 +1,34 @@
 "use client";
 
-import { Avatar, Button, Layout, Popover, Space } from "antd";
+import { Avatar, Button, Divider, Layout, Popover, Select, Space } from "antd";
 import { signOut } from "next-auth/react";
-import { ExclamationCircleOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  ExclamationCircleOutlined,
+  PlusCircleOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
+import { IOrganization } from "../common/organization.type";
 
 const { Header } = Layout;
 
 interface Props {
   user?: { fullname: string };
   pageTitle: string;
+  organizationId?: string;
+  personalOrganizations: IOrganization[];
+  teamOrganizations: IOrganization[];
+  handleOrganizationChange: (value: string) => void;
+  handleOpenCreateOrg: () => void;
 }
-const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
+const NavbarUser: React.FC<Props> = ({
+  user,
+  pageTitle,
+  organizationId,
+  personalOrganizations,
+  teamOrganizations,
+  handleOrganizationChange,
+  handleOpenCreateOrg,
+}) => {
   const content = (
     <div className="flex flex-col gap-2">
       <p style={{ marginBottom: 8 }}></p>
@@ -36,7 +54,70 @@ const NavbarUser: React.FC<Props> = ({ user, pageTitle }) => {
       }}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <div className="text-2xl">{pageTitle}</div>
+        <div className=" justify-center items-center py-5 flex-shrink-0 px-2">
+          {/* <div className="mt-3 w-full mb-2">
+            <Button
+              size="middle"
+              onClick={handleOpenCreateOrg}
+              icon={<PlusCircleOutlined />}
+              className="w-full"
+            >
+              {`Add new organization`}
+            </Button>
+          </div> */}
+          <div className="w-full flex items-center space-x-1">
+            <Select
+              size="middle"
+              className="dark-select w-[200px]  "
+              placeholder="Choose Organization"
+              onChange={handleOrganizationChange}
+              value={organizationId}
+              options={[
+                {
+                  label: <span>PERSONAL</span>,
+                  title: "personal",
+                  options: personalOrganizations.map((organization) => ({
+                    label: <span>{organization.name}</span>,
+                    value: organization.organizationId,
+                  })),
+                },
+                {
+                  label: <span>TEAMS</span>,
+                  title: "teams",
+                  options: teamOrganizations.map((organization) => ({
+                    label: <span>{organization.name}</span>,
+                    value: organization.organizationId,
+                  })),
+                },
+              ]}
+              popupRender={(menu) => (
+                <div className=" w-fit">
+                  {menu}
+                  <Divider style={{ margin: "8px 0" }} />
+                  <Button
+                    type="link"
+                    size="middle"
+                    onClick={handleOpenCreateOrg}
+                    icon={<PlusCircleOutlined />}
+                    className="w-full"
+                  >
+                    {`Add new organization`}
+                  </Button>{" "}
+                  <Divider style={{ margin: "8px 0" }} />
+                  <Button
+                    type="link"
+                    size="middle"
+                    onClick={handleOpenCreateOrg}
+                    icon={<SettingOutlined />}
+                    className="w-full"
+                  >
+                    {`Manage Organization`}
+                  </Button>
+                </div>
+              )}
+            />
+          </div>
+        </div>
         {user ? (
           <div className="flex items-center gap-4">
             <Avatar size={48} />
