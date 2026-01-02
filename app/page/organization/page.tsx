@@ -172,6 +172,39 @@ export default function OrganizationDetailPage() {
       },
     },
     {
+      title: "Name",
+      dataIndex: ["users", "fullname"],
+      key: "fullName",
+    },
+    {
+      title: "Email",
+      dataIndex: ["users", "email"],
+      key: "description",
+    },
+    {
+      title: "Description",
+      dataIndex: ["users", "description"],
+      key: "description",
+      ellipsis: true,
+    },
+    {
+      title: "Status",
+      dataIndex: ["users", "status"],
+      key: "status",
+      filters: [
+        { text: "Enabled", value: "active" },
+        { text: "Disabled", value: "inactive" },
+      ],
+      render: (status) => (
+        <Tag
+          color={status === "active" ? "green" : "red"}
+          className="rounded-full px-3"
+        >
+          {status === "active" ? "Enabled" : "Unabled"}
+        </Tag>
+      ),
+    },
+    {
       title: "Role",
       dataIndex: "role",
       key: "role",
@@ -223,12 +256,29 @@ export default function OrganizationDetailPage() {
   }
 
   return (
-    <div className="p-4">
-      <Card
-        title="Organization Details"
-        extra={<Button onClick={handleEdit}>Edit</Button>}
-      >
-        <Descriptions bordered column={1}>
+    <div className="p-4 space-y-4 ">
+      <div>
+        <Card>
+          <div className=" flex justify-between">
+            <div className=" flex space-x-2">
+              <div className=" font-bold text-xl"> {organization?.name}</div>
+              <div>
+                {organization?.type === "team" ? (
+                  <Tag color="orange">TEAM</Tag>
+                ) : (
+                  <Tag color="blue">PERSONAL</Tag>
+                )}
+              </div>
+            </div>
+            <Button type="link" onClick={handleEdit}>
+              Edit
+            </Button>
+          </div>
+          <div>Created At: {organization?.createdAt}</div>
+          <div className=" text-sm text-gray-500 min-h-4">
+            {organization?.description}
+          </div>
+          {/* <Descriptions bordered column={1}>
           <Descriptions.Item label="Name">
             {organization?.name}
           </Descriptions.Item>
@@ -243,8 +293,9 @@ export default function OrganizationDetailPage() {
               ? new Date(organization.createdAt).toLocaleDateString()
               : "-"}
           </Descriptions.Item>
-        </Descriptions>
-      </Card>
+        </Descriptions> */}
+        </Card>
+      </div>
 
       <Card
         title="Members"
