@@ -6,6 +6,9 @@ export const checkRole = (
   userRole: OrganizationRole | ProjectRole | string | undefined | null
 ): boolean => {
   if (!userRole) return false;
+  
+  if (userRole === 'ADMIN') return true;
+  
   return allowedRoles.includes(userRole as any);
 };
 

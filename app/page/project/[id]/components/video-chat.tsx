@@ -134,7 +134,7 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
             <span className="text-blue-400 text-xs">
-              {selectedAIModel?.name || "ByteDance-Seeudream-4.5"}
+              {selectedAIModel?.name || "Unknown Model"}
             </span>
           </div>
         </div>
@@ -490,6 +490,7 @@ const VideoChat: FC<VideoChatProps> = ({
         projectId,
         userId,
         type: "vdo",
+        modelName: selectedAIModel?.name,
       };
 
       // Handle file upload if any
@@ -699,6 +700,11 @@ const VideoChat: FC<VideoChatProps> = ({
                     <span>{msg.username}</span>
                     <span>•</span>
                     <span>
+                      {new Date(msg.time).toLocaleDateString([], {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
                       {new Date(msg.time).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",

@@ -4,9 +4,7 @@ import Link from "next/link";
 import {
   CodeOutlined,
   FileImageOutlined,
-  UserSwitchOutlined,
 } from "@ant-design/icons";
-import { LockKeyholeOpen, SquareChevronRight } from "lucide-react";
 
 export const MenuSider = [
   {
@@ -21,18 +19,6 @@ export const MenuSider = [
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
         icon: <FileImageOutlined />,
         label: `Dashboard`,
-      },
-      {
-        key: `group-permission`,
-        role: ["OWNER", "ADMIN"],
-        icon: <LockKeyholeOpen size={16} />,
-        label: `Groups & Permission`,
-      },
-      {
-        key: `users-management`,
-        role: ["OWNER", "ADMIN"],
-        icon: <UserSwitchOutlined />,
-        label: `User Managament`,
       },
       {
         key: `organization`,
@@ -120,6 +106,11 @@ export const findMenuLabel = (menuList: any[], key: string): string | null => {
 };
 
 export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
+  // ADMIN has super user access to all menus
+  if (userRoles.includes('ADMIN')) {
+    return menuList;
+  }
+
   const hasAccess = (role: string) => {
     if (!role || role === "") return true; // public
     return userRoles.includes(role);
@@ -147,10 +138,10 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
 };
 
 export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
-  // const hasAccess = (role: string) => {
-  //   if (!role || role === "") return true; // public
-  //   return userRoles.includes(role);
-  // };
+  // ADMIN has super user access to all menus
+  if (role === 'ADMIN') {
+    return menuList;
+  }
 
   return menuList
     .map((menu) => {
