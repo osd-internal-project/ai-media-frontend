@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
-import { Button, Tabs, Select, Tooltip, Tag } from "antd";
+import { Button, Tabs, Select, Tooltip, Tag, ConfigProvider } from "antd";
 import { PermissionGuard } from "../../../components/PermissionGuard";
 import { useOrganization } from "../../../context/OrganizationContext";
 import UserServices from "../../../services/users.service";
@@ -13,7 +13,14 @@ import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import PromptGenerateVdo from "./components/prompt-generate-vdo";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
+import {
+  Image,
+  Video,
+  Folder,
+  Folders,
+  ContactRound,
+  Star,
+} from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
@@ -223,7 +230,6 @@ const GenerateImagePage: FC = () => {
         </div>
       )}
       <div className=" flex justify-between mb-2">
-        <div></div>
         <div>
           {activeKey === "image" || activeKey === "vdo" ? (
             <div className="flex gap-4 items-center relative">
@@ -492,6 +498,7 @@ const GenerateImagePage: FC = () => {
       </div>
       <Tabs
         tabPosition="left"
+        // style={{ height: "100vh" }}
         className="custom-tabs"
         // type="card"
         activeKey={activeKey}
@@ -769,10 +776,9 @@ const GenerateImagePage: FC = () => {
             label: (
               <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Image />
-                <div className="text-center text-xs">{`Image Gen`}</div>
+                <div className="text-center ">{`Image`}</div>
               </div>
             ),
-
             children: (
               <ImageChat
                 promptGuideOpenStatus={promptGuideOpenStatus}
@@ -795,7 +801,7 @@ const GenerateImagePage: FC = () => {
             label: (
               <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Video />
-                <div className="text-center text-xs">{`VDO Gen`}</div>
+                <div className="text-center ">{`Vedio`}</div>
               </div>
             ),
             children: (
@@ -853,8 +859,8 @@ const GenerateImagePage: FC = () => {
             key: "library",
             label: (
               <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
-                <Folder />
-                <div className="text-center text-xs">{`Library`}</div>
+                <Star size={24} />
+                <div className="text-center">{`Library`}</div>
               </div>
             ),
             children: (
@@ -871,7 +877,7 @@ const GenerateImagePage: FC = () => {
             label: (
               <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Folders />
-                <div className="text-center text-xs">{`All Activity`}</div>
+                <div className="text-center">{`All Activity`}</div>
               </div>
             ),
             children: (
@@ -883,6 +889,7 @@ const GenerateImagePage: FC = () => {
           },
         ]}
       />
+
       <style>{`
         .custom-tabs .ant-tabs-nav {
           margin-bottom: 0;
@@ -892,41 +899,39 @@ const GenerateImagePage: FC = () => {
         }
 
         .custom-tabs .ant-tabs-nav-wrap {
-          background: #000000;
-          border-bottom-left-radius: 12px;
-          border-bottom-right-radius: 12px;
-          padding: 8px 12px;
+          background: transparent;
+          padding: 8px 0px;
           display: inline-block;
         }
 
         .custom-tabs .ant-tabs-tab {
           background: transparent;
-          border: none;
-          color: #6b7280;
+          border: none !important;
+          color: #9ca3af;
           padding: 12px 8px;
           font-size: 16px;
           font-weight: 500;
           transition: all 0.3s;
           width: fit-content;
+          border-radius: 8px;
+          margin: 4px 0;
         }
 
         .custom-tabs .ant-tabs-tab:hover {
-          color: #9ca3af;
+          color: #e5e7eb;
+          background-color: rgba(255, 255, 255, 0.05);
         }
 
         .custom-tabs .ant-tabs-tab-active {
-          // background-color: #363A3D;
-          
+          background-color: #27272a !important;
         }
 
         .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #ffffff;
+          color: #ffffff !important;
         }
 
         .custom-tabs .ant-tabs-ink-bar {
-          background: #6366f1;
-          height: 3px;
-          border-radius: 3px 3px 0 0;
+          display: none !important;
         }
 
         .custom-tabs .ant-tabs-tab .anticon {

@@ -807,7 +807,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={120}
+            width={100}
             trigger={null}
             collapsible
             // collapsed={true}

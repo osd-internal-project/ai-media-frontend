@@ -21,13 +21,13 @@ export const MenuSider = [
       {
         key: `dashboard`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <ChartPie size={24} />,
+        icon: <ChartPie size={22} />,
         label: `Dashboard`,
       },
       {
         key: `project`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <Bot size={24} />,
+        icon: <Bot size={22} />,
         label: `Project`,
       },
       // {
@@ -48,7 +48,7 @@ export const MenuSider = [
       // {
       //   key: `roles`,
       //   role: ["OWNER", "ADMIN"],
-      //   icon: <ChartPie size={24} />,
+      //   icon: <ChartPie size={22} />,
       //   label: `Roles`,
       // },
       // {
@@ -60,7 +60,7 @@ export const MenuSider = [
       {
         key: `settings/template-setting`,
         role: ["OWNER", "ADMIN"],
-        icon: <LayoutTemplate size={24} />,
+        icon: <LayoutTemplate size={22} />,
         label: `Template`,
       },
     ],
@@ -75,7 +75,7 @@ export const MenuSider = [
       {
         key: `admin-management`,
         role: ["OWNER", "ADMIN"],
-        icon: <Settings size={24} />,
+        icon: <Settings size={22} />,
         label: `Admin`,
       },
     ],
@@ -129,7 +129,7 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
                 >
                   {child.icon}
                 </div>
-                <div className="text-center text-sm text-white">
+                <div className="text-center  text-white text-[12px]">
                   {child.label}
                 </div>
               </Link>
@@ -168,7 +168,7 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
             >
               {menu.icon}
             </div>
-            <div className="text-center ">{menu.label}</div>
+            <div className="text-center text-sm ">{menu.label}</div>
           </Link>
         ),
       });
