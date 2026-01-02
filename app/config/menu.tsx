@@ -24,18 +24,18 @@ export const MenuSider = [
         icon: <ChartPie size={22} />,
         label: `Dashboard`,
       },
-      {
-        key: `project`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <Bot size={22} />,
-        label: `Project`,
-      },
       // {
-      //   key: `organization`,
-      //   role: ["OWNER", "ADMIN"],
-      //   icon: <FileImageOutlined />,
-      //   label: `Organization`,
+      //   key: `project`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+      //   icon: <Bot size={24} />,
+      //   label: `Project`,
       // },
+      {
+        key: `project-layout`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        icon: <FileImageOutlined />,
+        label: `Projects`,
+      },
     ],
   },
   {

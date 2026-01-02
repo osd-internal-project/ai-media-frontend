@@ -41,6 +41,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
+  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
   const currentPathSub = pathname.split("/")[3];
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -847,12 +848,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   <Menu
                     // mode="inline"
                     selectedKeys={[
-                      currentPath,
-                      `${currentPath}/${currentPathSub}`,
+                      mappedPath,
+                      `${mappedPath}/${currentPathSub}`,
                     ]}
                     defaultSelectedKeys={[
-                      currentPath,
-                      `${currentPath}/${currentPathSub}`,
+                      mappedPath,
+                      `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
                     // inlineCollapsed={true}
@@ -878,7 +879,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         >
                           <Space.Compact className=" w-full">
                             <Button
-                              // className="w-full !bg-gray-800"
                               className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
                               onClick={() =>
                                 router.push(`/page/project/${project.id}`)
