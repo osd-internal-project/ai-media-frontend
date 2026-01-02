@@ -815,6 +815,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             className="hidden md:block p-2 h-screen"
           >
             <div className="bg-black rounded-2xl h-full flex flex-col">
+              {/* Logo at top of sidebar */}
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
                   width={"120px"}
@@ -1047,6 +1048,23 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           color: white !important; 
         }
   
+        /* Remove ALL sidebar borders and lines */
+        .ant-layout-sider,
+        .ant-layout-sider *,
+        .ant-layout-sider::before,
+        .ant-layout-sider::after {
+          border: none !important;
+          border-right: none !important;
+          border-left: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        /* Force transparent borders on layout */
+        .ant-layout {
+          border: none !important;
+        }
+        
         /* Ensure icon container is centered and has spacing */
         .menu-icon-container {
           padding: 8px;

@@ -13,7 +13,7 @@ import {
 export const MenuSider = [
   {
     key: `general`,
-    label: <span className=" text-[10px]">GENERAL</span>,
+    // label: <span className=" text-[10px]">GENERAL</span>,
     role: "",
     disabled: true,
     header: true,
@@ -42,27 +42,6 @@ export const MenuSider = [
         icon: <LayoutTemplate size={22} />,
         label: `Template`,
       },
-    ],
-  },
-  {
-    key: `settings`,
-    label: <span className=" text-[10px]">SETTING</span>,
-    disabled: true,
-    role: ["OWNER", "ADMIN"],
-    header: false,
-    children: [
-      // {
-      //   key: `roles`,
-      //   role: ["OWNER", "ADMIN"],
-      //   icon: <ChartPie size={22} />,
-      //   label: `Roles`,
-      // },
-      // {
-      //   key: `prompt-guide`,
-      //   role: "pg-v",
-      //   icon: <CodeOutlined />,
-      //   label: `Prompt Guide`,
-      // },
       {
         key: `admin-management`,
         role: ["OWNER", "ADMIN"],

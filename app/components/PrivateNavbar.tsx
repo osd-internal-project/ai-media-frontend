@@ -69,18 +69,8 @@ const NavbarUser: React.FC<Props> = ({
       }}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <div className=" justify-center items-center flex-shrink-0 px-2">
-          {/* <div className="mt-3 w-full mb-2">
-            <Button
-              size="middle"
-              onClick={handleOpenCreateOrg}
-              icon={<PlusCircleOutlined />}
-              className="w-full"
-            >
-              {`Add new organization`}
-            </Button>
-          </div> */}
-          <div className="w-full flex items-center space-x-1">
+        <div className="flex items-center justify-between w-full px-4">
+          <div className="flex items-center gap-6">
             <Select
               size="large"
               className="dark-select w-[200px]  "
