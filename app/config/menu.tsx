@@ -26,6 +26,12 @@ export const MenuSider = [
         icon: <FileImageOutlined />,
         label: `Organization`,
       },
+      {
+        key: `project-layout`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        icon: <FileImageOutlined />,
+        label: `Projects`,
+      },
     ],
   },
   {

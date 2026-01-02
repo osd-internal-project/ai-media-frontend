@@ -875,8 +875,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
                   />
-                  <div className="!text-gray-400 px-4 mt-2">
-                    {/* Header */}
+                  {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
                     {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                       <div className="mt-3 w-full">
@@ -889,10 +888,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         </Button>
                       </div>
                     )}
-                    {/* ⭐ Scroll section */}
-                    <div
-                    // className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1"
-                    >
+                    <div>
                       {getProject?.map((project) => (
                         <div
                           key={project.id}
@@ -900,7 +896,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         >
                           <Space.Compact className=" w-full">
                             <Button
-                              // className="w-full !bg-gray-800"
                               className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
                               onClick={() =>
                                 router.push(`/page/project/${project.id}`)
@@ -935,7 +930,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
               <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
