@@ -1,10 +1,8 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import {
-  CodeOutlined,
-  FileImageOutlined,
-} from "@ant-design/icons";
+import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
+import { Bot, ChartPie, LayoutTemplate } from "lucide-react";
 
 export const MenuSider = [
   {
@@ -17,15 +15,21 @@ export const MenuSider = [
       {
         key: `dashboard`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <FileImageOutlined />,
+        icon: <ChartPie size={24} />,
         label: `Dashboard`,
       },
       {
-        key: `organization`,
-        role: ["OWNER", "ADMIN"],
-        icon: <FileImageOutlined />,
-        label: `Organization`,
+        key: `project`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        icon: <Bot size={24} />,
+        label: `Project`,
       },
+      // {
+      //   key: `organization`,
+      //   role: ["OWNER", "ADMIN"],
+      //   icon: <FileImageOutlined />,
+      //   label: `Organization`,
+      // },
     ],
   },
   {
@@ -35,12 +39,12 @@ export const MenuSider = [
     role: "s-v",
     header: false,
     children: [
-      {
-        key: `roles`,
-        role: ["OWNER", "ADMIN"],
-        icon: <FileImageOutlined />,
-        label: `Roles`,
-      },
+      // {
+      //   key: `roles`,
+      //   role: ["OWNER", "ADMIN"],
+      //   icon: <ChartPie size={24} />,
+      //   label: `Roles`,
+      // },
       // {
       //   key: `prompt-guide`,
       //   role: "pg-v",
@@ -50,7 +54,7 @@ export const MenuSider = [
       {
         key: `template-setting`,
         role: ["OWNER", "ADMIN"],
-        icon: <CodeOutlined />,
+        icon: <LayoutTemplate size={24} />,
         label: `Template Setting`,
       },
     ],
@@ -71,22 +75,81 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
         type: "group",
         label: menu.label,
         key: menu.key,
-        children: menu.children.map((child: any) => ({
-          key: child.key,
-          icon: child.icon,
-          label:
-            menu.disabled && menu.header ? (
-              <Link href={`/page/${child.key}`}>{child.label}</Link>
-            ) : (
-              <Link href={`/page/${menu.key}/${child.key}`}>{child.label}</Link>
+        children: menu.children.map((child: any) => {
+          const isDirectLink = menu.disabled && menu.header;
+          const href = isDirectLink
+            ? `/page/${child.key}`
+            : `/page/${menu.key}/${child.key}`;
+
+          return {
+            key: child.key,
+            style: { height: "auto", padding: "4px 0" }, // Allow flexible height
+            label: (
+              <Link
+                href={href}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  lineHeight: "normal",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "24px",
+                    marginBottom: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  className="menu-icon-container"
+                >
+                  {child.icon}
+                </div>
+                <div className="text-center text-sm text-gray-500">
+                  {child.label}
+                </div>
+              </Link>
             ),
-        })),
+          };
+        }),
       });
     } else {
       items.push({
         key: menu.key,
-        icon: menu.icon,
-        label: <Link href={`/page/${menu.key}`}>{menu.label}</Link>,
+        // icon: menu.icon, // Hide default icon prop to use custom layout if needed, but here we keep strict compatibility or apply same logic?
+        // Current config doesn't seem to hit this else block for the sidebar items in question.
+        // But for consistency:
+        style: { height: "auto", padding: "4px 0" },
+        // Removed original text label from Antd Item if we want full custom.
+        label: (
+          <Link
+            href={`/page/${menu.key}`}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              lineHeight: "normal",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {menu.icon}
+            </div>
+            <div className="text-center ">{menu.label}</div>
+          </Link>
+        ),
       });
     }
   });
@@ -107,7 +170,7 @@ export const findMenuLabel = (menuList: any[], key: string): string | null => {
 
 export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
   // ADMIN has super user access to all menus
-  if (userRoles.includes('ADMIN')) {
+  if (userRoles.includes("ADMIN") || userRoles.includes("OWNER")) {
     return menuList;
   }
 
@@ -139,7 +202,7 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
 
 export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
   // ADMIN has super user access to all menus
-  if (role === 'ADMIN') {
+  if (role === "ADMIN" || role === "OWNER") {
     return menuList;
   }
 

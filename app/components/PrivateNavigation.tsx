@@ -11,6 +11,8 @@ interface NavigationProps {
   teamOrganizations: IOrganization[];
   handleOrganizationChange: (value: string) => void;
   handleOpenCreateOrg: () => void;
+  handleManageOrg: () => void;
+  organizationRole?: string;
 }
 
 const PrivateNavigation: React.FC<NavigationProps> = ({
@@ -20,6 +22,8 @@ const PrivateNavigation: React.FC<NavigationProps> = ({
   teamOrganizations,
   handleOrganizationChange,
   handleOpenCreateOrg,
+  handleManageOrg,
+  organizationRole,
 }) => {
   const pathname = usePathname(); // /page/roles
   const key = pathname.split("/"); // roles
@@ -33,6 +37,8 @@ const PrivateNavigation: React.FC<NavigationProps> = ({
       teamOrganizations={teamOrganizations}
       handleOrganizationChange={handleOrganizationChange}
       handleOpenCreateOrg={handleOpenCreateOrg}
+      handleManageOrg={handleManageOrg}
+      organizationRole={organizationRole}
     />
   );
 };
