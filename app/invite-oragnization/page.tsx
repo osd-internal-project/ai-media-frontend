@@ -117,6 +117,12 @@ const AddUserContent = () => {
           ...(organizationId ? { recentOrganizationId: organizationId } : {}),
         });
         if (resUser) {
+          await organizationService.createOwner({
+            name: values.fullname,
+            slug: "",
+            type: "personal",
+            createdById: resUser.userId,
+          });
           const organizationMember =
             await organizationMemberService.createFromInvite({
               userId: resUser.userId,
