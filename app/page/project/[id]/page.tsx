@@ -55,18 +55,20 @@ const GenerateImagePage: FC = () => {
       if (session?.user?.id && id) {
         try {
           const userService = UserServices(axiosUser);
-          const userDetails = await userService.findDetailByToken(session.user.id);
+          const userDetails = await userService.findDetailByToken(
+            session.user.id
+          );
           const actualUserId = userDetails?.userId || session.user.id;
-          
+
           const userRole = await projectService.checkUserRole(id, actualUserId);
-          
+
           setProjectRole(userRole);
         } catch (error) {
-          console.error('Failed to fetch project role:', error);
+          console.error("Failed to fetch project role:", error);
         }
       }
     };
-    
+
     fetchProjectRole();
   }, [session?.user?.id, id]);
 
@@ -204,26 +206,26 @@ const GenerateImagePage: FC = () => {
       <div>
         <HeaderGenerateImagePage getProject={getProject} />
       </div>
-      
+
       {/* Viewer Role Notification */}
-      {projectRole === 'VIEWER' && (
+      {projectRole === "VIEWER" && (
         <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-800">
             <span className="text-lg">👀</span>
             <div>
               <div className="font-medium">Read-Only Access</div>
-              <div className="text-sm">You have VIEWER permissions for this project. You can browse content but cannot use chat features.</div>
+              <div className="text-sm">
+                You have VIEWER permissions for this project. You can browse
+                content but cannot use chat features.
+              </div>
             </div>
           </div>
         </div>
       )}
-      
-      <Tabs
-        className="custom-tabs"
-        type="card"
-        activeKey={activeKey}
-        tabBarExtraContent={
-          activeKey === "image" || activeKey === "vdo" ? (
+      <div className=" flex justify-between mb-2">
+        <div></div>
+        <div>
+          {activeKey === "image" || activeKey === "vdo" ? (
             <div className="flex gap-4 items-center relative">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -485,8 +487,279 @@ const GenerateImagePage: FC = () => {
             </div>
           ) : (
             ""
-          )
-        }
+          )}
+        </div>
+      </div>
+      <Tabs
+        tabPosition="left"
+        className="custom-tabs"
+        // type="card"
+        activeKey={activeKey}
+        // tabBarExtraContent={
+        //   activeKey === "image" || activeKey === "vdo" ? (
+        //     <div className="flex gap-4 items-center relative">
+        //       <div className="flex items-center gap-3">
+        //         <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+        //           AI Model:
+        //         </span>
+        //         <Select
+        //           size="middle"
+        //           style={{
+        //             minWidth: 280,
+        //           }}
+        //           className="dark-select"
+        //           placeholder="Choose an AI model"
+        //           value={selectedAIModel?.id}
+        //           onChange={(value) => {
+        //             const model = filteredAIModels.find((m) => m.id === value);
+        //             setSelectedAIModel(model || null);
+        //             if (model) {
+        //               localStorage.setItem(
+        //                 `selectedAIModel_${activeKey}_${id}`,
+        //                 model.id.toString()
+        //               );
+        //             }
+        //           }}
+        //           optionLabelProp="label"
+        //         >
+        //           {filteredAIModels
+        //             .filter((model) => model && model.name)
+        //             .map((model) => (
+        //               <Select.Option
+        //                 key={model.id}
+        //                 value={model.id}
+        //                 label={model.name}
+        //               >
+        //                 <Tooltip
+        //                   title={
+        //                     <div className="p-4 max-w-sm">
+        //                       <div className="flex items-center justify-between mb-2">
+        //                         <div className="font-medium text-white">
+        //                           {model.name}
+        //                         </div>
+        //                         {selectedAIModel?.id === model.id && (
+        //                           <div className="text-blue-400 text-xs">
+        //                             ✓ Selected
+        //                           </div>
+        //                         )}
+        //                       </div>
+
+        //                       {model.modelDetails?.description && (
+        //                         <div className="text-gray-300 text-sm leading-relaxed mb-3">
+        //                           {model.modelDetails.description}
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.modelId && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Model ID
+        //                           </div>
+        //                           <div className="text-gray-200 text-sm font-mono">
+        //                             {model.modelDetails.modelId}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.pricing && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Pricing
+        //                           </div>
+        //                           <div className="flex gap-4">
+        //                             {model.modelDetails.pricing
+        //                               .imageToVideo && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Image-to-video
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .imageToVideo
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/M tokens"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing.textToVideo && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Text-to-video
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .textToVideo
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/M tokens"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing
+        //                               .imageToImage && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Image-to-image
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .imageToImage
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/Piece"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing.textToImage && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Text-to-image
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .textToImage
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/Piece"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {(model.modelDetails?.limitations?.resolution ||
+        //                         model.modelDetails?.limitations?.duration ||
+        //                         model.modelDetails?.limitations?.frameRate ||
+        //                         model.modelDetails?.limitations
+        //                           ?.concurrentTasks ||
+        //                         model.modelDetails?.limitations?.rpm) && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Limitations
+        //                           </div>
+        //                           <div className="space-y-1">
+        //                             {model.modelDetails.limitations
+        //                               ?.resolution && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Resolution:
+        //                                 </span>{" "}
+        //                                 {model.modelDetails.limitations.resolution.join(
+        //                                   ", "
+        //                                 )}
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.duration && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Duration:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .duration
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.frameRate && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Frame rate:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .frameRate
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.concurrentTasks && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Concurrent tasks:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .concurrentTasks
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations?.rpm && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   RPM:
+        //                                 </span>{" "}
+        //                                 {model.modelDetails.limitations.rpm}
+        //                               </div>
+        //                             )}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.status && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Status
+        //                           </div>
+        //                           <div
+        //                             className={`inline-block px-2 py-1 text-xs rounded ${
+        //                               model.modelDetails.status === "Activated"
+        //                                 ? "bg-green-600 text-white"
+        //                                 : "bg-gray-600 text-gray-200"
+        //                             }`}
+        //                           >
+        //                             {model.modelDetails.status}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       <div className="flex flex-wrap gap-1 mt-2">
+        //                         {model.capabilities?.map(
+        //                           (capability: string) => (
+        //                             <span
+        //                               key={capability}
+        //                               className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
+        //                             >
+        //                               {capability.replace("-", " ")}
+        //                             </span>
+        //                           )
+        //                         )}
+        //                       </div>
+        //                     </div>
+        //                   }
+        //                   placement="right"
+        //                   overlayStyle={{ maxWidth: "none" }}
+        //                 >
+        //                   <div className="flex items-center justify-between">
+        //                     <span>{model.name}</span>
+        //                     {selectedAIModel?.id === model.id && (
+        //                       <span className="text-blue-400 ml-2">✓</span>
+        //                     )}
+        //                   </div>
+        //                 </Tooltip>
+        //               </Select.Option>
+        //             ))}
+        //         </Select>
+        //       </div>
+        //       <Button
+        //         type={promptGuideOpenStatus ? "primary" : "default"}
+        //         ghost={promptGuideOpenStatus}
+        //         onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+        //       >
+        //         Prompt Guild
+        //       </Button>
+        //     </div>
+        //   ) : (
+        //     ""
+        //   )
+        // }
         onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
@@ -494,10 +767,10 @@ const GenerateImagePage: FC = () => {
             key: "image",
             forceRender: true,
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Image />
-                <div>{`Image Gen`}</div>
-              </span>
+                <div className="text-center text-xs">{`Image Gen`}</div>
+              </div>
             ),
 
             children: (
@@ -520,10 +793,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "vdo",
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Video />
-                <div>{`VDO Gen`}</div>
-              </span>
+                <div className="text-center text-xs">{`VDO Gen`}</div>
+              </div>
             ),
             children: (
               <VideoChat
@@ -579,10 +852,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "library",
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Folder />
-                <div>{`Library`}</div>
-              </span>
+                <div className="text-center text-xs">{`Library`}</div>
+              </div>
             ),
             children: (
               <PromptLibrary
@@ -596,10 +869,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "activity",
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Folders />
-                <div>{`All Activity`}</div>
-              </span>
+                <div className="text-center text-xs">{`All Activity`}</div>
+              </div>
             ),
             children: (
               <PromptActivity
@@ -630,10 +903,11 @@ const GenerateImagePage: FC = () => {
           background: transparent;
           border: none;
           color: #6b7280;
-          padding: 12px 24px;
+          padding: 12px 8px;
           font-size: 16px;
           font-weight: 500;
           transition: all 0.3s;
+          width: fit-content;
         }
 
         .custom-tabs .ant-tabs-tab:hover {
@@ -641,7 +915,8 @@ const GenerateImagePage: FC = () => {
         }
 
         .custom-tabs .ant-tabs-tab-active {
-          background: transparent;
+          // background-color: #363A3D;
+          
         }
 
         .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
@@ -655,7 +930,7 @@ const GenerateImagePage: FC = () => {
         }
 
         .custom-tabs .ant-tabs-tab .anticon {
-          margin-right: 8px;
+          margin-right: 0;
         }
 
         /* Dark Select Styling */

@@ -4,48 +4,27 @@ import {
   Layout,
   Menu,
   Image,
-  Avatar,
-  Badge,
   Button,
   Form,
   Modal,
   Input,
   Select,
   theme,
-  Popover,
-  Space,
-  Dropdown,
-  MenuProps,
-  Tag,
   Spin,
-  Table,
-  Card,
-  Divider,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
+import { usePathname, useRouter } from "next/navigation";
+import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
 import { signOut, useSession } from "next-auth/react";
-import {
-  DownOutlined,
-  PlusCircleOutlined,
-  SettingOutlined,
-  UserOutlined,
-  CloseOutlined,
-  CrownOutlined,
-  EyeOutlined,
-  TeamOutlined,
-  UserSwitchOutlined,
-} from "@ant-design/icons";
+import { PlusCircleOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
 import type { IProject, ProjectMemberInput } from "../common/project.type";
-import { EllipsisVertical } from "lucide-react";
 import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
@@ -368,6 +347,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     return <>{children}</>;
   }
 
+  function handleManageOrg(): void {
+    router.push(`/page/organization`);
+  }
+
   return (
     <ConfigProvider
       theme={{
@@ -389,7 +372,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             itemColor: "white",
             itemHoverBg: "#363A3D",
             itemHoverColor: "white",
-            itemSelectedBg: "#363A3D",
+            itemSelectedBg: "#1668dc",
             itemSelectedColor: "white",
             itemDisabledColor: "#white",
           },
@@ -824,10 +807,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={250}
+            width={120}
             trigger={null}
             collapsible
-            collapsed={collapsed}
+            // collapsed={true}
             className="hidden md:block p-2 h-screen"
           >
             <div className="bg-black rounded-2xl h-full flex flex-col">
@@ -842,29 +825,27 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               </div>
               {/* Admin Management Button */}
               <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                   <>
                     <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                      ADMINISTRATION
+                      ADMIN
                     </div>
                     <div className="mt-3 w-full">
                       <Button
                         icon={<UserSwitchOutlined />}
-                        className="w-full"
                         // type="primary"
                         onClick={() => router.push("/page/admin-management")}
                       >
-                        Admin Management
+                        Admin
                       </Button>
                     </div>
                   </>
-                )}
+                )} */}
               </div>
-
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
-                    mode="inline"
+                    // mode="inline"
                     selectedKeys={[
                       currentPath,
                       `${currentPath}/${currentPathSub}`,
@@ -874,6 +855,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${currentPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
+                    // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
@@ -933,7 +915,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   </div> */}
                 </div>
               )}
-              <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+              {/* <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
                   <Avatar />
                 </Badge>
@@ -955,7 +937,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     />
                   </Popover>
                 </>
-              </div>
+              </div> */}
               {/* {groupName !== "admin-user" ? (
               <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
@@ -985,6 +967,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </Sider>
           <Layout className="flex-1 w-full h-full overflow-hidden">
             <PrivateNavigation
+              organizationRole={organizationRole}
               user={
                 session?.user
                   ? { fullname: session.user.name ?? "" }
@@ -995,6 +978,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               teamOrganizations={teamOrganizations}
               handleOrganizationChange={handleOrganizationChange}
               handleOpenCreateOrg={handleOpenCreateOrg}
+              handleManageOrg={handleManageOrg}
             />
             <div className="w-full h-screen p-2  overflow-y-auto">
               <PrivateContent

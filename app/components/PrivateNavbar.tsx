@@ -1,6 +1,16 @@
 "use client";
 
-import { Avatar, Button, Divider, Layout, Popover, Select, Space } from "antd";
+import {
+  Avatar,
+  Button,
+  ConfigProvider,
+  Divider,
+  Layout,
+  Popover,
+  Select,
+  Space,
+} from "antd";
+
 import { signOut } from "next-auth/react";
 import {
   ExclamationCircleOutlined,
@@ -8,6 +18,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { IOrganization } from "../common/organization.type";
+import { checkRole } from "../utils/checkRole";
 
 const { Header } = Layout;
 
@@ -19,6 +30,8 @@ interface Props {
   teamOrganizations: IOrganization[];
   handleOrganizationChange: (value: string) => void;
   handleOpenCreateOrg: () => void;
+  handleManageOrg: () => void;
+  organizationRole?: string;
 }
 const NavbarUser: React.FC<Props> = ({
   user,
@@ -28,6 +41,8 @@ const NavbarUser: React.FC<Props> = ({
   teamOrganizations,
   handleOrganizationChange,
   handleOpenCreateOrg,
+  handleManageOrg,
+  organizationRole,
 }) => {
   const content = (
     <div className="flex flex-col gap-2">
@@ -45,7 +60,7 @@ const NavbarUser: React.FC<Props> = ({
   return (
     <Header
       style={{
-        height: "80px",
+        // height: "80px",
         background: "transparent",
         lineHeight: "normal",
         padding: 10,
@@ -54,7 +69,7 @@ const NavbarUser: React.FC<Props> = ({
       }}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <div className=" justify-center items-center py-5 flex-shrink-0 px-2">
+        <div className=" justify-center items-center flex-shrink-0 px-2">
           {/* <div className="mt-3 w-full mb-2">
             <Button
               size="middle"
@@ -67,7 +82,7 @@ const NavbarUser: React.FC<Props> = ({
           </div> */}
           <div className="w-full flex items-center space-x-1">
             <Select
-              size="middle"
+              size="large"
               className="dark-select w-[200px]  "
               placeholder="Choose Organization"
               onChange={handleOrganizationChange}
@@ -102,12 +117,12 @@ const NavbarUser: React.FC<Props> = ({
                     className="w-full"
                   >
                     {`Add new organization`}
-                  </Button>{" "}
+                  </Button>
                   <Divider style={{ margin: "8px 0" }} />
                   <Button
                     type="link"
                     size="middle"
-                    onClick={handleOpenCreateOrg}
+                    onClick={handleManageOrg}
                     icon={<SettingOutlined />}
                     className="w-full"
                   >
@@ -131,11 +146,13 @@ const NavbarUser: React.FC<Props> = ({
                 placement="bottomRight"
                 title={false}
               >
-                <Button
-                  type="default"
-                  size="small"
-                  icon={<SettingOutlined />}
-                />
+                {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                  <Button
+                    type="default"
+                    size="small"
+                    icon={<SettingOutlined />}
+                  />
+                )}
               </Popover>
             </>
           </div>
