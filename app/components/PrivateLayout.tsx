@@ -373,7 +373,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             itemColor: "white",
             itemHoverBg: "#363A3D",
             itemHoverColor: "white",
-            itemSelectedBg: "#1668dc",
+            itemSelectedBg: "transparent",
             itemSelectedColor: "white",
             itemDisabledColor: "#white",
           },
@@ -808,7 +808,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={100}
+            width={90}
             trigger={null}
             collapsible
             // collapsed={true}
@@ -1027,6 +1027,38 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         .dark-select .ant-select-arrow {
           color: #9ca3af !important;
         }
+
+        /* Custom Sidebar Menu Styling */
+        .ant-menu-item-selected .menu-icon-container {
+          background-color: #1677ff; 
+          border-radius: 8px; 
+          padding: 8px;
+          min-width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .menu-text-label {
+          color:gray !important;
+        }
+        .ant-menu-item-selected .menu-text-label {
+          font-weight: bold !important;
+          color: white !important; 
+        }
+  
+        /* Ensure icon container is centered and has spacing */
+        .menu-icon-container {
+          padding: 8px;
+          border-radius: 8px;
+          min-width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+     
 
       `}</style>
     </ConfigProvider>

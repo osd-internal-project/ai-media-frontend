@@ -13,7 +13,7 @@ import {
 export const MenuSider = [
   {
     key: `general`,
-    label: <span className=" text-[12px]">GENERAL</span>,
+    label: <span className=" text-[10px]">GENERAL</span>,
     role: "",
     disabled: true,
     header: true,
@@ -33,14 +33,20 @@ export const MenuSider = [
       {
         key: `project-layout`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <FileImageOutlined />,
+        icon: <Bot size={22} />,
         label: `Projects`,
+      },
+      {
+        key: `settings/template-setting`,
+        role: ["OWNER", "ADMIN"],
+        icon: <LayoutTemplate size={22} />,
+        label: `Template`,
       },
     ],
   },
   {
     key: `settings`,
-    label: <span className=" text-[12px]">SETTING</span>,
+    label: <span className=" text-[10px]">SETTING</span>,
     disabled: true,
     role: ["OWNER", "ADMIN"],
     header: false,
@@ -58,21 +64,6 @@ export const MenuSider = [
       //   label: `Prompt Guide`,
       // },
       {
-        key: `settings/template-setting`,
-        role: ["OWNER", "ADMIN"],
-        icon: <LayoutTemplate size={22} />,
-        label: `Template`,
-      },
-    ],
-  },
-  {
-    key: `admin`,
-    label: <span className=" text-[12px]">ADMIN</span>,
-    role: ["OWNER", "ADMIN"],
-    disabled: true,
-    header: true,
-    children: [
-      {
         key: `admin-management`,
         role: ["OWNER", "ADMIN"],
         icon: <Settings size={22} />,
@@ -80,6 +71,14 @@ export const MenuSider = [
       },
     ],
   },
+  // {
+  //   key: `admin`,
+  //   label: <span className=" text-[10px]">ADMIN</span>,
+  //   role: ["OWNER", "ADMIN"],
+  //   disabled: true,
+  //   header: true,
+  //   children: [],
+  // },
 ];
 
 // ฟังก์ชันสร้างเมนูแบบ title + children แสดงตรง ๆ
@@ -129,7 +128,7 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
                 >
                   {child.icon}
                 </div>
-                <div className="text-center  text-white text-[12px]">
+                <div className="text-center menu-text-label text-[10px]">
                   {child.label}
                 </div>
               </Link>
@@ -165,10 +164,13 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
                 alignItems: "center",
                 justifyContent: "center",
               }}
+              className="menu-icon-container"
             >
               {menu.icon}
             </div>
-            <div className="text-center text-sm ">{menu.label}</div>
+            <div className="text-center menu-text-label text-[10px]">
+              {menu.label}
+            </div>
           </Link>
         ),
       });
