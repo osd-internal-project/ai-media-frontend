@@ -160,6 +160,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     const userDetail = await userServices.findDetailByToken(
       session?.user?.id as string
     );
+    setUserProfile(userDetail);
     const personalOrganizations = await organizationService.findManyByUserId(
       userDetail?.userId || "",
       { type: "personal" }
@@ -319,7 +320,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       createdById: userProfile?.userId || "",
       slug: values.name.toLowerCase().replace(/ /g, "-"),
     };
-    const response = await organizationService.create(payload);
+    const response = await organizationService.createOwner(payload);
     if (response) {
       setOpenCreateOrg(false);
       createOrgForm.resetFields();

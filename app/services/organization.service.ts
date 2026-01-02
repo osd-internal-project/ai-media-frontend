@@ -51,6 +51,16 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    createOwner: async (value: any) => {
+      return await axiosInstance
+        .post(`${baseUrl}/owner`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
     update: async (id: string, value: any) => {
       return await axiosInstance
         .patch(`${baseUrl}/${id}`, value)
