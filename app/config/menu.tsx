@@ -2,7 +2,13 @@
 import React from "react";
 import Link from "next/link";
 import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
-import { Bot, ChartPie, LayoutTemplate } from "lucide-react";
+import {
+  Bot,
+  ChartPie,
+  LayoutTemplate,
+  Settings,
+  ShieldUser,
+} from "lucide-react";
 
 export const MenuSider = [
   {
@@ -36,7 +42,7 @@ export const MenuSider = [
     key: `settings`,
     label: <span className=" text-[12px]">SETTING</span>,
     disabled: true,
-    role: "s-v",
+    role: ["OWNER", "ADMIN"],
     header: false,
     children: [
       // {
@@ -52,10 +58,25 @@ export const MenuSider = [
       //   label: `Prompt Guide`,
       // },
       {
-        key: `template-setting`,
+        key: `settings/template-setting`,
         role: ["OWNER", "ADMIN"],
         icon: <LayoutTemplate size={24} />,
-        label: `Template Setting`,
+        label: `Template`,
+      },
+    ],
+  },
+  {
+    key: `admin`,
+    label: <span className=" text-[12px]">ADMIN</span>,
+    role: ["OWNER", "ADMIN"],
+    disabled: true,
+    header: true,
+    children: [
+      {
+        key: `admin-management`,
+        role: ["OWNER", "ADMIN"],
+        icon: <Settings size={24} />,
+        label: `Admin`,
       },
     ],
   },
@@ -79,7 +100,7 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
           const isDirectLink = menu.disabled && menu.header;
           const href = isDirectLink
             ? `/page/${child.key}`
-            : `/page/${menu.key}/${child.key}`;
+            : `/page/${child.key}`;
 
           return {
             key: child.key,
@@ -108,7 +129,7 @@ export const renderMenuItems = (menuList: any[], role: string | undefined) => {
                 >
                   {child.icon}
                 </div>
-                <div className="text-center text-sm text-gray-500">
+                <div className="text-center text-sm text-white">
                   {child.label}
                 </div>
               </Link>

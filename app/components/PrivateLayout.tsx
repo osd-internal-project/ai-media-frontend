@@ -372,7 +372,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             itemColor: "white",
             itemHoverBg: "#363A3D",
             itemHoverColor: "white",
-            itemSelectedBg: "#363A3D",
+            itemSelectedBg: "#1668dc",
             itemSelectedColor: "white",
             itemDisabledColor: "#white",
           },
@@ -807,7 +807,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={150}
+            width={120}
             trigger={null}
             collapsible
             // collapsed={true}
@@ -825,7 +825,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               </div>
               {/* Admin Management Button */}
               <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                   <>
                     <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
                       ADMIN
@@ -840,9 +840,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       </Button>
                     </div>
                   </>
-                )}
+                )} */}
               </div>
-
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
@@ -1028,7 +1027,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         .dark-select .ant-select-arrow {
           color: #9ca3af !important;
         }
-  
+
       `}</style>
     </ConfigProvider>
   );

@@ -1,6 +1,16 @@
 "use client";
 
-import { Avatar, Button, Divider, Layout, Popover, Select, Space } from "antd";
+import {
+  Avatar,
+  Button,
+  ConfigProvider,
+  Divider,
+  Layout,
+  Popover,
+  Select,
+  Space,
+} from "antd";
+
 import { signOut } from "next-auth/react";
 import {
   ExclamationCircleOutlined,
@@ -59,7 +69,7 @@ const NavbarUser: React.FC<Props> = ({
       }}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <div className=" justify-center items-center py-5 flex-shrink-0 px-2">
+        <div className=" justify-center items-center flex-shrink-0 px-2">
           {/* <div className="mt-3 w-full mb-2">
             <Button
               size="middle"
