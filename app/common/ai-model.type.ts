@@ -29,6 +29,7 @@ export type TAIModel = {
   type: string;
   mode: string;
   isDefault?: boolean;
+  capabilities?: string[];
   modelDetails?: TModelDetails;
   createdAt?: string | Date;
   updatedAt?: string | Date;

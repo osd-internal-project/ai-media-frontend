@@ -1,23 +1,25 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
-import { Button, Tabs, Select, Tooltip, Tag } from "antd";
-import { PermissionGuard } from "../../../components/PermissionGuard";
+import { Tabs, Drawer } from "antd";
 import { useOrganization } from "../../../context/OrganizationContext";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
-import PromptGenerateImage from "./components/prompt-generate-image";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
 import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
-import PromptGenerateVdo from "./components/prompt-generate-vdo";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folder, Folders, ContactRound } from "lucide-react";
+import {
+  Image,
+  Video,
+  Folders,
+  Star,
+  LightbulbIcon,
+} from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
-import PromptOmnihuman from "./components/prompt-omnihuman";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
 import VideoChat from "./components/video-chat";
@@ -38,6 +40,7 @@ const GenerateImagePage: FC = () => {
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
@@ -55,18 +58,20 @@ const GenerateImagePage: FC = () => {
       if (session?.user?.id && id) {
         try {
           const userService = UserServices(axiosUser);
-          const userDetails = await userService.findDetailByToken(session.user.id);
+          const userDetails = await userService.findDetailByToken(
+            session.user.id
+          );
           const actualUserId = userDetails?.userId || session.user.id;
-          
+
           const userRole = await projectService.checkUserRole(id, actualUserId);
-          
+
           setProjectRole(userRole);
         } catch (error) {
-          console.error('Failed to fetch project role:', error);
+          console.error("Failed to fetch project role:", error);
         }
       }
     };
-    
+
     fetchProjectRole();
   }, [session?.user?.id, id]);
 
@@ -202,291 +207,449 @@ const GenerateImagePage: FC = () => {
   return (
     <div>
       <div>
-        <HeaderGenerateImagePage getProject={getProject} />
+        <HeaderGenerateImagePage 
+          getProject={getProject} 
+          activeKey={activeKey}
+          selectedAIModel={selectedAIModel}
+          filteredAIModels={filteredAIModels}
+          onAIModelChange={(value) => {
+            const model = filteredAIModels.find((m) => m.id === parseInt(value));
+            setSelectedAIModel(model || null);
+            if (model) {
+              localStorage.setItem(
+                `selectedAIModel_${activeKey}_${id}`,
+                model.id.toString()
+              );
+            }
+          }}
+          promptGuideOpenStatus={promptGuideOpenStatus}
+          onPromptGuideToggle={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+        />
       </div>
-      
+
       {/* Viewer Role Notification */}
-      {projectRole === 'VIEWER' && (
+      {projectRole === "VIEWER" && (
         <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-800">
             <span className="text-lg">👀</span>
             <div>
               <div className="font-medium">Read-Only Access</div>
-              <div className="text-sm">You have VIEWER permissions for this project. You can browse content but cannot use chat features.</div>
+              <div className="text-sm">
+                You have VIEWER permissions for this project. You can browse
+                content but cannot use chat features.
+              </div>
             </div>
           </div>
         </div>
       )}
       
-      <Tabs
-        className="custom-tabs"
-        type="card"
-        activeKey={activeKey}
-        tabBarExtraContent={
-          activeKey === "image" || activeKey === "vdo" ? (
-            <div className="flex gap-4 items-center relative">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
-                  AI Model:
-                </span>
-                <Select
-                  size="middle"
-                  style={{
-                    minWidth: 280,
-                  }}
-                  className="dark-select"
-                  placeholder="Choose an AI model"
-                  value={selectedAIModel?.id}
-                  onChange={(value) => {
-                    const model = filteredAIModels.find((m) => m.id === value);
-                    setSelectedAIModel(model || null);
-                    if (model) {
-                      localStorage.setItem(
-                        `selectedAIModel_${activeKey}_${id}`,
-                        model.id.toString()
-                      );
-                    }
-                  }}
-                  optionLabelProp="label"
-                >
-                  {filteredAIModels
-                    .filter((model) => model && model.name)
-                    .map((model) => (
-                      <Select.Option
-                        key={model.id}
-                        value={model.id}
-                        label={model.name}
-                      >
-                        <Tooltip
-                          title={
-                            <div className="p-4 max-w-sm">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="font-medium text-white">
-                                  {model.name}
-                                </div>
-                                {selectedAIModel?.id === model.id && (
-                                  <div className="text-blue-400 text-xs">
-                                    ✓ Selected
-                                  </div>
-                                )}
-                              </div>
-
-                              {model.modelDetails?.description && (
-                                <div className="text-gray-300 text-sm leading-relaxed mb-3">
-                                  {model.modelDetails.description}
-                                </div>
-                              )}
-
-                              {model.modelDetails?.modelId && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Model ID
-                                  </div>
-                                  <div className="text-gray-200 text-sm font-mono">
-                                    {model.modelDetails.modelId}
-                                  </div>
-                                </div>
-                              )}
-
-                              {model.modelDetails?.pricing && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Pricing
-                                  </div>
-                                  <div className="flex gap-4">
-                                    {model.modelDetails.pricing
-                                      .imageToVideo && (
-                                      <div>
-                                        <div className="text-gray-300 text-xs">
-                                          Image-to-video
-                                        </div>
-                                        <div className="text-white font-medium">
-                                          {
-                                            model.modelDetails.pricing
-                                              .imageToVideo
-                                          }{" "}
-                                          {model.modelDetails.pricing.unit ||
-                                            "USD/M tokens"}
-                                        </div>
-                                      </div>
-                                    )}
-                                    {model.modelDetails.pricing.textToVideo && (
-                                      <div>
-                                        <div className="text-gray-300 text-xs">
-                                          Text-to-video
-                                        </div>
-                                        <div className="text-white font-medium">
-                                          {
-                                            model.modelDetails.pricing
-                                              .textToVideo
-                                          }{" "}
-                                          {model.modelDetails.pricing.unit ||
-                                            "USD/M tokens"}
-                                        </div>
-                                      </div>
-                                    )}
-                                    {model.modelDetails.pricing
-                                      .imageToImage && (
-                                      <div>
-                                        <div className="text-gray-300 text-xs">
-                                          Image-to-image
-                                        </div>
-                                        <div className="text-white font-medium">
-                                          {
-                                            model.modelDetails.pricing
-                                              .imageToImage
-                                          }{" "}
-                                          {model.modelDetails.pricing.unit ||
-                                            "USD/Piece"}
-                                        </div>
-                                      </div>
-                                    )}
-                                    {model.modelDetails.pricing.textToImage && (
-                                      <div>
-                                        <div className="text-gray-300 text-xs">
-                                          Text-to-image
-                                        </div>
-                                        <div className="text-white font-medium">
-                                          {
-                                            model.modelDetails.pricing
-                                              .textToImage
-                                          }{" "}
-                                          {model.modelDetails.pricing.unit ||
-                                            "USD/Piece"}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {(model.modelDetails?.limitations?.resolution ||
-                                model.modelDetails?.limitations?.duration ||
-                                model.modelDetails?.limitations?.frameRate ||
-                                model.modelDetails?.limitations
-                                  ?.concurrentTasks ||
-                                model.modelDetails?.limitations?.rpm) && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Limitations
-                                  </div>
-                                  <div className="space-y-1">
-                                    {model.modelDetails.limitations
-                                      ?.resolution && (
-                                      <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">
-                                          Resolution:
-                                        </span>{" "}
-                                        {model.modelDetails.limitations.resolution.join(
-                                          ", "
-                                        )}
-                                      </div>
-                                    )}
-                                    {model.modelDetails.limitations
-                                      ?.duration && (
-                                      <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">
-                                          Duration:
-                                        </span>{" "}
-                                        {
-                                          model.modelDetails.limitations
-                                            .duration
-                                        }
-                                      </div>
-                                    )}
-                                    {model.modelDetails.limitations
-                                      ?.frameRate && (
-                                      <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">
-                                          Frame rate:
-                                        </span>{" "}
-                                        {
-                                          model.modelDetails.limitations
-                                            .frameRate
-                                        }
-                                      </div>
-                                    )}
-                                    {model.modelDetails.limitations
-                                      ?.concurrentTasks && (
-                                      <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">
-                                          Concurrent tasks:
-                                        </span>{" "}
-                                        {
-                                          model.modelDetails.limitations
-                                            .concurrentTasks
-                                        }
-                                      </div>
-                                    )}
-                                    {model.modelDetails.limitations?.rpm && (
-                                      <div className="text-gray-300 text-sm">
-                                        <span className="text-gray-400">
-                                          RPM:
-                                        </span>{" "}
-                                        {model.modelDetails.limitations.rpm}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {model.modelDetails?.status && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Status
-                                  </div>
-                                  <div
-                                    className={`inline-block px-2 py-1 text-xs rounded ${
-                                      model.modelDetails.status === "Activated"
-                                        ? "bg-green-600 text-white"
-                                        : "bg-gray-600 text-gray-200"
-                                    }`}
-                                  >
-                                    {model.modelDetails.status}
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {model.capabilities?.map(
-                                  (capability: string) => (
-                                    <span
-                                      key={capability}
-                                      className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
-                                    >
-                                      {capability.replace("-", " ")}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          }
-                          placement="right"
-                          overlayStyle={{ maxWidth: "none" }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>{model.name}</span>
-                            {selectedAIModel?.id === model.id && (
-                              <span className="text-blue-400 ml-2">✓</span>
-                            )}
-                          </div>
-                        </Tooltip>
-                      </Select.Option>
-                    ))}
-                </Select>
-              </div>
-              <Button
-                type={promptGuideOpenStatus ? "primary" : "default"}
-                ghost={promptGuideOpenStatus}
-                onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
-              >
-                Prompt Guild
-              </Button>
-            </div>
-          ) : (
-            ""
-          )
+      {/* Prompt Guide Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-2">
+            <LightbulbIcon className="w-5 h-5" />
+            <span>Prompt Guide</span>
+          </div>
         }
+        closable={{ "aria-label": "Close Button" }}
+        onClose={() => setOpen(false)}
+        open={open}
+        width={600}
+      >
+        <div className="space-y-6">
+          {/* Introduction */}
+          <p className="text-gray-300 leading-relaxed">
+            This article introduces prompt usage tips for Seedream 4.0's
+            text-to-image generation, image editing, reference-based
+            generation and multi-image creation, helping you quickly get
+            started with video creation and turn ideas into image creations.
+          </p>
+
+          {/* General Guidelines Section */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Seedream 4.0 supports a wide range of tasks such as
+              text-to-image generation, image editing, reference-based
+              generation and multi-image creation. For optimal image creation
+              results, consider the following best practices when crafting
+              prompts:
+            </p>
+          </div>
+
+          {/* Guidelines List */}
+          <div className="space-y-6">
+            {/* Guideline 1 */}
+            <div>
+              <h3 className="text-lg font-medium text-blue-400 mb-2">
+                1. Clearly describe the scene using natural language
+              </h3>
+              <p className="text-gray-300 mb-3">
+                Use coherent natural language to describe the subject + action
+                + environment. If aesthetics matter, include descriptors of
+                style, color, lighting, or composition.
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="text-gray-300">
+                  <span className="text-green-400">• Recommended:</span> A
+                  girl in a lavish dress walking under a parasol along a
+                  tree-lined path, in the style of a Monet oil painting.
+                </li>
+                <li className="text-gray-300">
+                  <span className="text-red-400">• Avoid:</span> Girl,
+                  umbrella, tree-lined street, oil painting texture.
+                </li>
+              </ul>
+            </div>
+
+            {/* Guideline 2 */}
+            <div>
+              <h3 className="text-lg font-medium text-blue-400 mb-2">
+                2. Specify application scenario
+              </h3>
+              <p className="text-gray-300 mb-3">
+                If you have a specific use case, explicitly state the image
+                purpose and type in your prompt.
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="text-gray-300">
+                  <span className="text-green-400">• Recommended:</span>{" "}
+                  Design a logo for a gaming company. The logo features a dog
+                  playing with a game controller. The company name "PITBULL"
+                  is written on it.
+                </li>
+                <li className="text-gray-300">
+                  <span className="text-red-400">• Avoid:</span> An abstract
+                  image of a dog holding a controller, and the word PITBULL on
+                  it.
+                </li>
+              </ul>
+            </div>
+
+            {/* Guideline 3 */}
+            <div>
+              <h3 className="text-lg font-medium text-blue-400 mb-2">
+                3. Enhance stylistic rendering
+              </h3>
+              <p className="text-gray-300">
+                If a particular style is needed, use precise style keywords or
+                reference images to achieve better results.
+              </p>
+            </div>
+
+            {/* Guideline 4 */}
+            <div>
+              <h3 className="text-lg font-medium text-blue-400 mb-2">
+                4. Improve text rendering accuracy
+              </h3>
+              <p className="text-gray-300 mb-3">
+                Use double quotation marks for the text that needs to appear
+                in the generated image.
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="text-gray-300">
+                  <span className="text-green-400">• Recommended:</span>{" "}
+                  Generate a poster with the title "Seedream 4.0".
+                </li>
+                <li className="text-gray-300">
+                  <span className="text-red-400">• Avoid:</span> Generate a
+                  poster titled Seedream 4.0.
+                </li>
+              </ul>
+            </div>
+
+            {/* Guideline 5 */}
+            <div>
+              <h3 className="text-lg font-medium text-blue-400 mb-2">
+                5. Clearly define image editing goals and fixed elements
+              </h3>
+              <p className="text-gray-300 mb-3">
+                Use concise, unambiguous instructions for modifications. Avoid
+                vague pronouns. If other elements should remain unchanged,
+                specify that explicitly.
+              </p>
+              <ul className="space-y-2 ml-4">
+                <li className="text-gray-300">
+                  <span className="text-green-400">• Recommended:</span> Dress
+                  the tallest panda in pink Peking Opera costume and headgear,
+                  keeping its pose unchanged.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Drawer>
+      <Tabs
+        tabPosition="left"
+        // style={{ height: "100vh" }}
+        className="custom-tabs"
+        // type="card"
+        activeKey={activeKey}
+        // tabBarExtraContent={
+        //   activeKey === "image" || activeKey === "vdo" ? (
+        //     <div className="flex gap-4 items-center relative">
+        //       <div className="flex items-center gap-3">
+        //         <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+        //           AI Model:
+        //         </span>
+        //         <Select
+        //           size="middle"
+        //           style={{
+        //             minWidth: 280,
+        //           }}
+        //           className="dark-select"
+        //           placeholder="Choose an AI model"
+        //           value={selectedAIModel?.id}
+        //           onChange={(value) => {
+        //             const model = filteredAIModels.find((m) => m.id === value);
+        //             setSelectedAIModel(model || null);
+        //             if (model) {
+        //               localStorage.setItem(
+        //                 `selectedAIModel_${activeKey}_${id}`,
+        //                 model.id.toString()
+        //               );
+        //             }
+        //           }}
+        //           optionLabelProp="label"
+        //         >
+        //           {filteredAIModels
+        //             .filter((model) => model && model.name)
+        //             .map((model) => (
+        //               <Select.Option
+        //                 key={model.id}
+        //                 value={model.id}
+        //                 label={model.name}
+        //               >
+        //                 <Tooltip
+        //                   title={
+        //                     <div className="p-4 max-w-sm">
+        //                       <div className="flex items-center justify-between mb-2">
+        //                         <div className="font-medium text-white">
+        //                           {model.name}
+        //                         </div>
+        //                         {selectedAIModel?.id === model.id && (
+        //                           <div className="text-blue-400 text-xs">
+        //                             ✓ Selected
+        //                           </div>
+        //                         )}
+        //                       </div>
+
+        //                       {model.modelDetails?.description && (
+        //                         <div className="text-gray-300 text-sm leading-relaxed mb-3">
+        //                           {model.modelDetails.description}
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.modelId && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Model ID
+        //                           </div>
+        //                           <div className="text-gray-200 text-sm font-mono">
+        //                             {model.modelDetails.modelId}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.pricing && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Pricing
+        //                           </div>
+        //                           <div className="flex gap-4">
+        //                             {model.modelDetails.pricing
+        //                               .imageToVideo && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Image-to-video
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .imageToVideo
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/M tokens"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing.textToVideo && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Text-to-video
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .textToVideo
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/M tokens"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing
+        //                               .imageToImage && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Image-to-image
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .imageToImage
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/Piece"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.pricing.textToImage && (
+        //                               <div>
+        //                                 <div className="text-gray-300 text-xs">
+        //                                   Text-to-image
+        //                                 </div>
+        //                                 <div className="text-white font-medium">
+        //                                   {
+        //                                     model.modelDetails.pricing
+        //                                       .textToImage
+        //                                   }{" "}
+        //                                   {model.modelDetails.pricing.unit ||
+        //                                     "USD/Piece"}
+        //                                 </div>
+        //                               </div>
+        //                             )}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {(model.modelDetails?.limitations?.resolution ||
+        //                         model.modelDetails?.limitations?.duration ||
+        //                         model.modelDetails?.limitations?.frameRate ||
+        //                         model.modelDetails?.limitations
+        //                           ?.concurrentTasks ||
+        //                         model.modelDetails?.limitations?.rpm) && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Limitations
+        //                           </div>
+        //                           <div className="space-y-1">
+        //                             {model.modelDetails.limitations
+        //                               ?.resolution && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Resolution:
+        //                                 </span>{" "}
+        //                                 {model.modelDetails.limitations.resolution.join(
+        //                                   ", "
+        //                                 )}
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.duration && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Duration:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .duration
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.frameRate && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Frame rate:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .frameRate
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations
+        //                               ?.concurrentTasks && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   Concurrent tasks:
+        //                                 </span>{" "}
+        //                                 {
+        //                                   model.modelDetails.limitations
+        //                                     .concurrentTasks
+        //                                 }
+        //                               </div>
+        //                             )}
+        //                             {model.modelDetails.limitations?.rpm && (
+        //                               <div className="text-gray-300 text-sm">
+        //                                 <span className="text-gray-400">
+        //                                   RPM:
+        //                                 </span>{" "}
+        //                                 {model.modelDetails.limitations.rpm}
+        //                               </div>
+        //                             )}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       {model.modelDetails?.status && (
+        //                         <div className="mb-3">
+        //                           <div className="text-gray-400 text-xs mb-1">
+        //                             Status
+        //                           </div>
+        //                           <div
+        //                             className={`inline-block px-2 py-1 text-xs rounded ${
+        //                               model.modelDetails.status === "Activated"
+        //                                 ? "bg-green-600 text-white"
+        //                                 : "bg-gray-600 text-gray-200"
+        //                             }`}
+        //                           >
+        //                             {model.modelDetails.status}
+        //                           </div>
+        //                         </div>
+        //                       )}
+
+        //                       <div className="flex flex-wrap gap-1 mt-2">
+        //                         {model.capabilities?.map(
+        //                           (capability: string) => (
+        //                             <span
+        //                               key={capability}
+        //                               className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
+        //                             >
+        //                               {capability.replace("-", " ")}
+        //                             </span>
+        //                           )
+        //                         )}
+        //                       </div>
+        //                     </div>
+        //                   }
+        //                   placement="right"
+        //                   overlayStyle={{ maxWidth: "none" }}
+        //                 >
+        //                   <div className="flex items-center justify-between">
+        //                     <span>{model.name}</span>
+        //                     {selectedAIModel?.id === model.id && (
+        //                       <span className="text-blue-400 ml-2">✓</span>
+        //                     )}
+        //                   </div>
+        //                 </Tooltip>
+        //               </Select.Option>
+        //             ))}
+        //         </Select>
+        //       </div>
+        //       <Button
+        //         type={promptGuideOpenStatus ? "primary" : "default"}
+        //         ghost={promptGuideOpenStatus}
+        //         onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+        //       >
+        //         Prompt Guild
+        //       </Button>
+        //     </div>
+        //   ) : (
+        //     ""
+        //   )
+        // }
         onChange={(key) => onChangeTab(key as "image" | "vdo")}
         items={[
           {
@@ -494,12 +657,11 @@ const GenerateImagePage: FC = () => {
             key: "image",
             forceRender: true,
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Image />
-                <div>{`Image Gen`}</div>
-              </span>
+                <div className="text-center ">{`Image`}</div>
+              </div>
             ),
-
             children: (
               <ImageChat
                 promptGuideOpenStatus={promptGuideOpenStatus}
@@ -520,10 +682,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "vdo",
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Video />
-                <div>{`VDO Gen`}</div>
-              </span>
+                <div className="text-center ">{`Vedio`}</div>
+              </div>
             ),
             children: (
               <VideoChat
@@ -579,10 +741,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "library",
             label: (
-              <span className="flex justify-center gap-2">
-                <Folder />
-                <div>{`Library`}</div>
-              </span>
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
+                <Star size={24} />
+                <div className="text-center">{`Library`}</div>
+              </div>
             ),
             children: (
               <PromptLibrary
@@ -596,10 +758,10 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "activity",
             label: (
-              <span className="flex justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
                 <Folders />
-                <div>{`All Activity`}</div>
-              </span>
+                <div className="text-center">{`All Activity`}</div>
+              </div>
             ),
             children: (
               <PromptActivity
@@ -610,6 +772,7 @@ const GenerateImagePage: FC = () => {
           },
         ]}
       />
+
       <style>{`
         .custom-tabs .ant-tabs-nav {
           margin-bottom: 0;
@@ -619,43 +782,43 @@ const GenerateImagePage: FC = () => {
         }
 
         .custom-tabs .ant-tabs-nav-wrap {
-          background: #000000;
-          border-bottom-left-radius: 12px;
-          border-bottom-right-radius: 12px;
-          padding: 8px 12px;
+          background: transparent;
+          padding: 8px 0px;
           display: inline-block;
         }
 
         .custom-tabs .ant-tabs-tab {
           background: transparent;
-          border: none;
-          color: #6b7280;
-          padding: 12px 24px;
+          border: none !important;
+          color: #9ca3af;
+          padding: 12px 8px;
           font-size: 16px;
           font-weight: 500;
           transition: all 0.3s;
+          width: fit-content;
+          border-radius: 8px;
+          margin: 4px 0;
         }
 
         .custom-tabs .ant-tabs-tab:hover {
-          color: #9ca3af;
+          color: #e5e7eb;
+          background-color: rgba(255, 255, 255, 0.05);
         }
 
         .custom-tabs .ant-tabs-tab-active {
-          background: transparent;
+          background-color: #27272a !important;
         }
 
         .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #ffffff;
+          color: #ffffff !important;
         }
 
         .custom-tabs .ant-tabs-ink-bar {
-          background: #6366f1;
-          height: 3px;
-          border-radius: 3px 3px 0 0;
+          display: none !important;
         }
 
         .custom-tabs .ant-tabs-tab .anticon {
-          margin-right: 8px;
+          margin-right: 0;
         }
 
         /* Dark Select Styling */

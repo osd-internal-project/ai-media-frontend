@@ -4,48 +4,27 @@ import {
   Layout,
   Menu,
   Image,
-  Avatar,
-  Badge,
   Button,
   Form,
   Modal,
   Input,
   Select,
   theme,
-  Popover,
-  Space,
-  Dropdown,
-  MenuProps,
-  Tag,
   Spin,
-  Table,
-  Card,
-  Divider,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { renderMenuItems, MenuSider, filterMenuByRole } from "../config/menu";
+import { usePathname, useRouter } from "next/navigation";
+import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
-// import PrivateNavigation from "./PrivateNavigation";
+import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
 import { signOut, useSession } from "next-auth/react";
-import {
-  DownOutlined,
-  PlusCircleOutlined,
-  SettingOutlined,
-  UserOutlined,
-  CloseOutlined,
-  CrownOutlined,
-  EyeOutlined,
-  TeamOutlined,
-  UserSwitchOutlined,
-} from "@ant-design/icons";
+import { PlusCircleOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
 import type { IProject, ProjectMemberInput } from "../common/project.type";
-import { EllipsisVertical } from "lucide-react";
 import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
@@ -62,6 +41,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
+  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
   const currentPathSub = pathname.split("/")[3];
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -369,6 +349,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     return <>{children}</>;
   }
 
+  function handleManageOrg(): void {
+    router.push(`/page/organization`);
+  }
+
   return (
     <ConfigProvider
       theme={{
@@ -390,7 +374,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             itemColor: "white",
             itemHoverBg: "#363A3D",
             itemHoverColor: "white",
-            itemSelectedBg: "#363A3D",
+            itemSelectedBg: "transparent",
             itemSelectedColor: "white",
             itemDisabledColor: "#white",
           },
@@ -825,13 +809,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={250}
+            width={90}
             trigger={null}
             collapsible
-            collapsed={collapsed}
+            // collapsed={true}
             className="hidden md:block p-2 h-screen"
           >
             <div className="bg-black rounded-2xl h-full flex flex-col">
+              {/* Logo at top of sidebar */}
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
                   width={"120px"}
@@ -843,82 +828,39 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               </div>
               {/* Admin Management Button */}
               <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                   <>
                     <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                      ADMINISTRATION
+                      ADMIN
                     </div>
                     <div className="mt-3 w-full">
                       <Button
                         icon={<UserSwitchOutlined />}
-                        className="w-full"
                         // type="primary"
                         onClick={() => router.push("/page/admin-management")}
                       >
-                        Admin Management
+                        Admin
                       </Button>
                     </div>
                   </>
-                )}
-              </div>
-              <div className="w-full  justify-center items-center py-5 flex-shrink-0 px-2">
-                <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2 mb-2">
-                  ORGANIZATION
-                </div>
-                <div className="mt-3 w-full mb-2">
-                  <Button
-                    size="middle"
-                    onClick={handleOpenCreateOrg}
-                    icon={<PlusCircleOutlined />}
-                    className="w-full"
-                  >
-                    {`Add new organization`}
-                  </Button>
-                </div>
-                <div className="w-full flex items-center space-x-1">
-                  <Select
-                    size="middle"
-                    className="dark-select w-full  "
-                    placeholder="Choose Organization"
-                    onChange={handleOrganizationChange}
-                    value={organizationId}
-                    options={[
-                      {
-                        label: <span>PERSONAL</span>,
-                        title: "personal",
-                        options: personalOrganizations.map((organization) => ({
-                          label: <span>{organization.name}</span>,
-                          value: organization.organizationId,
-                        })),
-                      },
-                      {
-                        label: <span>TEAMS</span>,
-                        title: "teams",
-                        options: teamOrganizations.map((organization) => ({
-                          label: <span>{organization.name}</span>,
-                          value: organization.organizationId,
-                        })),
-                      },
-                    ]}
-                  />
-                </div>
+                )} */}
               </div>
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
-                    mode="inline"
+                    // mode="inline"
                     selectedKeys={[
-                      currentPath,
-                      `${currentPath}/${currentPathSub}`,
+                      mappedPath,
+                      `${mappedPath}/${currentPathSub}`,
                     ]}
                     defaultSelectedKeys={[
-                      currentPath,
-                      `${currentPath}/${currentPathSub}`,
+                      mappedPath,
+                      `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
+                    // inlineCollapsed={true}
                   />
-                  <div className="!text-gray-400 px-4 mt-2">
-                    {/* Header */}
+                  {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
                     {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                       <div className="mt-3 w-full">
@@ -931,10 +873,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         </Button>
                       </div>
                     )}
-                    {/* ⭐ Scroll section */}
-                    <div
-                    // className="mt-3 h-[300px] overflow-y-auto hide-scrollbar pr-1"
-                    >
+                    <div>
                       {getProject?.map((project) => (
                         <div
                           key={project.id}
@@ -942,7 +881,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         >
                           <Space.Compact className=" w-full">
                             <Button
-                              // className="w-full !bg-gray-800"
                               className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
                               onClick={() =>
                                 router.push(`/page/project/${project.id}`)
@@ -977,10 +915,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
-              <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+              {/* <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
                   <Avatar />
                 </Badge>
@@ -1002,7 +940,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     />
                   </Popover>
                 </>
-              </div>
+              </div> */}
               {/* {groupName !== "admin-user" ? (
               <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
                 <Badge dot color="green">
@@ -1031,15 +969,20 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             </div>
           </Sider>
           <Layout className="flex-1 w-full h-full overflow-hidden">
-            {/* {groupName === "admin-user" ? (
             <PrivateNavigation
+              organizationRole={organizationRole}
               user={
                 session?.user
                   ? { fullname: session.user.name ?? "" }
                   : undefined
               }
+              organizationId={organizationId}
+              personalOrganizations={personalOrganizations}
+              teamOrganizations={teamOrganizations}
+              handleOrganizationChange={handleOrganizationChange}
+              handleOpenCreateOrg={handleOpenCreateOrg}
+              handleManageOrg={handleManageOrg}
             />
-          ) : null} */}
             <div className="w-full h-screen p-2  overflow-y-auto">
               <PrivateContent
                 user={
@@ -1086,6 +1029,55 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         .dark-select .ant-select-arrow {
           color: #9ca3af !important;
         }
+
+        /* Custom Sidebar Menu Styling */
+        .ant-menu-item-selected .menu-icon-container {
+          background-color: #1677ff; 
+          border-radius: 8px; 
+          padding: 8px;
+          min-width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .menu-text-label {
+          color:gray !important;
+        }
+        .ant-menu-item-selected .menu-text-label {
+          font-weight: bold !important;
+          color: white !important; 
+        }
+  
+        /* Remove ALL sidebar borders and lines */
+        .ant-layout-sider,
+        .ant-layout-sider *,
+        .ant-layout-sider::before,
+        .ant-layout-sider::after {
+          border: none !important;
+          border-right: none !important;
+          border-left: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        /* Force transparent borders on layout */
+        .ant-layout {
+          border: none !important;
+        }
+        
+        /* Ensure icon container is centered and has spacing */
+        .menu-icon-container {
+          padding: 8px;
+          border-radius: 8px;
+          min-width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+     
 
       `}</style>
     </ConfigProvider>

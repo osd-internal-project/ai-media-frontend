@@ -1,14 +1,29 @@
-import { Button, Drawer, Select } from "antd";
+import { Button, Drawer, Select, Tooltip } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
 import React, { useState, type FC } from "react";
 import { LightbulbIcon } from "lucide-react";
 import type { IProject } from "@/app/common/project.type";
+import type { TAIModel } from "@/app/common/ai-model.type";
 
 export interface props {
   getProject?: IProject;
+  activeKey?: string;
+  selectedAIModel?: (TAIModel & { capabilities?: string[] }) | null;
+  filteredAIModels?: TAIModel[];
+  onAIModelChange?: (value: string) => void;
+  promptGuideOpenStatus?: boolean;
+  onPromptGuideToggle?: () => void;
 }
 
-const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
+const HeaderGenerateImagePage: FC<props> = ({ 
+  getProject, 
+  activeKey, 
+  selectedAIModel, 
+  filteredAIModels, 
+  onAIModelChange, 
+  promptGuideOpenStatus, 
+  onPromptGuideToggle 
+}) => {
   const [open, setOpen] = useState(false);
 
   const showDrawer = () => {
@@ -20,18 +35,275 @@ const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
   };
 
   return (
-    <div className="grid grid-cols-2 bg-black w-full p-4 rounded-t-2xl">
-      <div className="flex col-span-1 flex-col">
-        <span className="text-2xl font-bold">{`${getProject?.name}`}</span>
-        <span className="text-md text-[#9B9C9E]">{`Shake up your creativity with image generation`}</span>
+    <div className="bg-black w-full p-4 rounded-t-2xl">
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col">
+          <span className="text-2xl font-bold">{`${getProject?.name}`}</span>
+          <span className="text-md text-[#9B9C9E]">{`Shake up your creativity with image generation`}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          {(activeKey === "image" || activeKey === "vdo") && filteredAIModels && (
+            <>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+                  AI Model:
+                </span>
+                <Select
+                  size="middle"
+                  style={{
+                    minWidth: 280,
+                  }}
+                  className="dark-select"
+                  placeholder="Choose an AI model"
+                  value={selectedAIModel?.id?.toString()}
+                  onChange={onAIModelChange}
+                  optionLabelProp="label"
+                >
+                  {filteredAIModels
+                    .filter((model) => model && model.name)
+                    .map((model) => (
+                      <Select.Option
+                        key={model.id}
+                        value={model.id.toString()}
+                        label={model.name}
+                      >
+                        <Tooltip
+                          title={
+                            <div className="p-4 max-w-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium text-white">
+                                  {model.name}
+                                </div>
+                                {selectedAIModel?.id === model.id && (
+                                  <div className="text-blue-400 text-xs">
+                                    ✓ Selected
+                                  </div>
+                                )}
+                              </div>
+
+                              {model.modelDetails?.description && (
+                                <div className="text-gray-300 text-sm leading-relaxed mb-3">
+                                  {model.modelDetails.description}
+                                </div>
+                              )}
+
+                              {model.modelDetails?.modelId && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Model ID
+                                  </div>
+                                  <div className="text-gray-200 text-sm font-mono">
+                                    {model.modelDetails.modelId}
+                                  </div>
+                                </div>
+                              )}
+
+                              {model.modelDetails?.pricing && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Pricing
+                                  </div>
+                                  <div className="flex gap-4">
+                                    {model.modelDetails.pricing
+                                      .imageToVideo && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">
+                                          Image-to-video
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .imageToVideo
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/M tokens"}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing.textToVideo && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">
+                                          Text-to-video
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .textToVideo
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/M tokens"}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing
+                                      .imageToImage && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">
+                                          Image-to-image
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .imageToImage
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/Piece"}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {model.modelDetails.pricing.textToImage && (
+                                      <div>
+                                        <div className="text-gray-300 text-xs">
+                                          Text-to-image
+                                        </div>
+                                        <div className="text-white font-medium">
+                                          {
+                                            model.modelDetails.pricing
+                                              .textToImage
+                                          }{" "}
+                                          {model.modelDetails.pricing.unit ||
+                                            "USD/Piece"}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {(model.modelDetails?.limitations?.resolution ||
+                                model.modelDetails?.limitations?.duration ||
+                                model.modelDetails?.limitations?.frameRate ||
+                                model.modelDetails?.limitations
+                                  ?.concurrentTasks ||
+                                model.modelDetails?.limitations?.rpm) && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Limitations
+                                  </div>
+                                  <div className="space-y-1">
+                                    {model.modelDetails.limitations
+                                      ?.resolution && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">
+                                          Resolution:
+                                        </span>{" "}
+                                        {model.modelDetails.limitations.resolution.join(
+                                          ", "
+                                        )}
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations
+                                      ?.duration && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">
+                                          Duration:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .duration
+                                        }
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations
+                                      ?.frameRate && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">
+                                          Frame rate:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .frameRate
+                                        }
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations
+                                      ?.concurrentTasks && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">
+                                          Concurrent tasks:
+                                        </span>{" "}
+                                        {
+                                          model.modelDetails.limitations
+                                            .concurrentTasks
+                                        }
+                                      </div>
+                                    )}
+                                    {model.modelDetails.limitations?.rpm && (
+                                      <div className="text-gray-300 text-sm">
+                                        <span className="text-gray-400">
+                                          RPM:
+                                        </span>{" "}
+                                        {model.modelDetails.limitations.rpm}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {model.modelDetails?.status && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Status
+                                  </div>
+                                  <div
+                                    className={`inline-block px-2 py-1 text-xs rounded ${
+                                      model.modelDetails.status === "Activated"
+                                        ? "bg-green-600 text-white"
+                                        : "bg-gray-600 text-gray-200"
+                                    }`}
+                                  >
+                                    {model.modelDetails.status}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {model.capabilities?.map(
+                                  (capability: string) => (
+                                    <span
+                                      key={capability}
+                                      className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
+                                    >
+                                      {capability.replace("-", " ")}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          }
+                          placement="right"
+                          overlayStyle={{ maxWidth: "none" }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{model.name}</span>
+                            {selectedAIModel?.id === model.id && (
+                              <span className="text-blue-400 ml-2">✓</span>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </Select.Option>
+                    ))}
+                </Select>
+              </div>
+              <Button
+                type={promptGuideOpenStatus ? "primary" : "default"}
+                ghost={promptGuideOpenStatus}
+                onClick={onPromptGuideToggle}
+              >
+                Prompt Guild
+              </Button>
+              <Button
+                type="link"
+                className="!text-[#686B6E]"
+                icon={<LightbulbIcon className="w-4 h-4" />}
+                onClick={showDrawer}
+              >
+                Prompt Guide
+              </Button>
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex col-span-1 justify-end">
-        <Button
-          type="link"
-          className="!text-[#686B6E]"
-          icon={<BulbOutlined />}
-          onClick={showDrawer}
-        >{`Prompt Guide`}</Button>
         <Drawer
           title={
             <div className="flex items-center gap-2">
@@ -167,7 +439,6 @@ const HeaderGenerateImagePage: FC<props> = ({ getProject }) => {
             </div>
           </div>
         </Drawer>
-      </div>
     </div>
   );
 };
