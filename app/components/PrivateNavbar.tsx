@@ -69,10 +69,13 @@ const NavbarUser: React.FC<Props> = ({
       }}
     >
       <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+          ORGANIZATION:
+        </span>
         <div className="flex items-center justify-between w-full px-4">
           <div className="flex items-center gap-6">
             <Select
-              size="large"
+              size="middle"
               className="dark-select w-[200px]  "
               placeholder="Choose Organization"
               onChange={handleOrganizationChange}
@@ -126,8 +129,10 @@ const NavbarUser: React.FC<Props> = ({
         {user ? (
           <div className="flex items-center gap-4">
             <Avatar size={48} />
-            <div className="grid grid-cols-1 items-center gap-2">
-              <span className="font-bold text-white">{user.fullname}</span>
+            <div className="flex items-center">
+              <span className="font-bold text-white whitespace-nowrap">
+                {user.fullname}
+              </span>
             </div>
             <>
               <Popover
