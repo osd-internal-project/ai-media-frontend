@@ -3,6 +3,7 @@ const config = {
   backendReportUrl: process.env.NEXT_PUBLIC_API_BASE_URL_REPORT,
   backendUserUrl: process.env.AUTH_BACKEND_URL,
   nextauthUrl: process.env.NEXTAUTH_URL,
+  version: process.env.NEXT_PUBLIC_VERSION,
 };
 
 export default config;

@@ -83,6 +83,48 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    invitationDetail: async (token: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/invitation/${token}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    acceptInvitation: async (value: {
+      token: string;
+      username: string;
+      password: string;
+      fullname: string;
+      phoneNumber: string;
+    }) => {
+      return await axiosInstance
+        .post(`${baseUrl}/invitation/accept`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    invite: async (value: {
+      email: string;
+      organizationId: string;
+      role: string;
+    }) => {
+      return await axiosInstance
+        .post(`${baseUrl}/invitation`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
   };
 };
 

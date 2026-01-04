@@ -14,6 +14,7 @@ import {
   Avatar,
   Space,
   InputNumber,
+  message,
 } from "antd";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import OrganizationService from "@/app/services/organization.service";
@@ -24,18 +25,23 @@ import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 
+
+
 export default function OrganizationDetailPage() {
+  const [messageApi, contextHolder] = message.useMessage();
   const { organizationId } = useOrganization();
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Forms
   const [editForm] = Form.useForm();
   const [addMemberForm] = Form.useForm();
   const [editMemberForm] = Form.useForm();
+  const [inviteForm] = Form.useForm();
 
   // Services
   const organizationService = OrganizationService(axiosUser);
@@ -46,6 +52,13 @@ export default function OrganizationDetailPage() {
   const [availableUsers, setAvailableUsers] = useState<TUser[]>([]);
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
   const [isEditMemberModalOpen, setIsEditMemberModalOpen] = useState(false);
+
+  const showMessage = (type: "error" | "success" | "warning" | "loading", content: string) => {
+    messageApi.open({
+      type: type,
+      content: content,
+    });
+  };
 
   useEffect(() => {
     if (organizationId) {
@@ -107,20 +120,6 @@ export default function OrganizationDetailPage() {
     setIsAddMemberModalOpen(true);
   };
 
-  const onAddMemberFinish = async (values: any) => {
-    if (!organizationId) return;
-    try {
-      await organizationMemberService.create({
-        ...values,
-        organizationId: organizationId,
-      });
-      setIsAddMemberModalOpen(false);
-      fetchOrganizationData();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   // Edit Member
   const handleEditMember = (member: any) => {
     setCurrentMemberId(member.id);
@@ -141,6 +140,43 @@ export default function OrganizationDetailPage() {
       fetchOrganizationData();
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // Invite User
+  const handleInvite = () => {
+    inviteForm.resetFields();
+    setIsInviteModalOpen(true);
+  };
+
+  const onInviteFinish = async (values: any) => {
+    if (!organizationId) return;
+    try {
+      const res = await organizationService.invite({
+        ...values,
+        organizationId: organizationId,
+      });
+      setIsInviteModalOpen(false);
+      showMessage("success", "Invitation sent successfully");
+    } catch (error: any) {
+      console.error("Debug Error:", error);
+      // 1. ดึง message จากหลายๆ แหล่งที่เป็นไปได้
+      let msg =
+        error?.response?.data?.message || // กรณี Standard Axios
+        error?.response?.data?.error ||   // บางที error text อยู่ใน field error
+        error?.message ||                 // กรณี Axios General Error หรือถูก Unwrapped แล้ว
+        "Failed to invite user";
+
+      // 2. แก้ปัญหาถ้า message เป็น Array (เช่น NestJS Class Validator)
+      if (Array.isArray(msg)) {
+        msg = msg.join(', ');
+      }
+
+      // 3. ถ้า msg เป็น Object (กันเหนียว) ให้แปลงเป็น String
+      if (typeof msg === 'object') {
+        msg = JSON.stringify(msg);
+      }
+      showMessage("error", msg)
     }
   };
 
@@ -257,6 +293,7 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="p-4 space-y-4 ">
+      {contextHolder}
       <div>
         <Card>
           <div className=" flex justify-between">
@@ -301,9 +338,9 @@ export default function OrganizationDetailPage() {
         title="Members"
         className="mt-4"
         extra={
-          <Button type="primary" onClick={handleAddMember}>
-            Add Member
-          </Button>
+          <Space>
+            <Button type="primary" onClick={handleInvite}>Invite User</Button>
+          </Space>
         }
       >
         <Table
@@ -326,60 +363,6 @@ export default function OrganizationDetailPage() {
             <Input />
           </Form.Item>
           <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Add Member Modal */}
-      <Modal
-        title="Add Member"
-        open={isAddMemberModalOpen}
-        onCancel={() => setIsAddMemberModalOpen(false)}
-        onOk={() => addMemberForm.submit()}
-      >
-        <Form
-          form={addMemberForm}
-          onFinish={onAddMemberFinish}
-          layout="vertical"
-        >
-          <Form.Item name="userId" label="User" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select User"
-              showSearch
-              optionFilterProp="label"
-            >
-              {availableUsers.map((user) => (
-                <Select.Option
-                  key={user.userId}
-                  value={user.userId}
-                  label={user.fullname}
-                >
-                  {user.fullname} ({user.email})
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true }]}
-            // initialValue="MEMBER"
-          >
-            <Select>
-              <Select.Option value="OWNER">OWNER</Select.Option>
-              <Select.Option value="ADMIN">ADMIN</Select.Option>
-              <Select.Option value="MEMBER">MEMBER</Select.Option>
-              <Select.Option value="VIEWER">VIEWER</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="maxToken" label="Max Token">
-            <InputNumber style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item name="maxImages" label="Max Images">
-            <InputNumber style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item name="apiKeys" label="API Keys">
             <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
@@ -415,6 +398,75 @@ export default function OrganizationDetailPage() {
             <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Invite User Modal */}
+      <Modal
+        title={
+          <div className="text-lg font-bold">
+            Invite User
+          </div>
+        }
+        open={isInviteModalOpen}
+        onCancel={() => setIsInviteModalOpen(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="pt-4">
+          <div className="mb-4 font-bold text-base">User Information</div>
+          <Form form={inviteForm} onFinish={onInviteFinish} layout="vertical">
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: "Please input email!" },
+                  { type: "email", message: "Please enter a valid email!" },
+                ]}
+                className="col-span-1"
+              >
+                <Input placeholder="name@company.com" />
+              </Form.Item>
+              <Form.Item
+                name="role"
+                label={
+                  <span>
+                    Role <span className="text-red-500">*</span>
+                  </span>
+                }
+                rules={[{ required: true, message: "Please select a role!" }]}
+                initialValue="MEMBER"
+                className="col-span-1"
+              >
+                <Select placeholder="Select role">
+                  <Select.Option value="ADMIN">ADMIN</Select.Option>
+                  <Select.Option value="MEMBER">MEMBER</Select.Option>
+                  <Select.Option value="VIEWER">VIEWER</Select.Option>
+                </Select>
+              </Form.Item>
+            </div>
+
+            <div className="text-gray-400 text-sm mb-6">
+              We will send an invitation link to the user's email address.
+            </div>
+
+            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+              <Button
+                onClick={() => setIsInviteModalOpen(false)}
+                className="h-10 px-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => inviteForm.submit()}
+                className="h-10 px-6 bg-[#1f2937] hover:bg-[#374151] text-white border-none"
+              >
+                Confirm
+              </Button>
+            </div>
+          </Form>
+        </div>
       </Modal>
     </div>
   );

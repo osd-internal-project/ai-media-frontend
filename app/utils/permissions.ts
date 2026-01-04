@@ -6,9 +6,9 @@ export const checkRole = (
   userRole: OrganizationRole | ProjectRole | string | undefined | null
 ): boolean => {
   if (!userRole) return false;
-  
+
   if (userRole === 'ADMIN') return true;
-  
+
   return allowedRoles.includes(userRole as any);
 };
 
@@ -20,24 +20,24 @@ export const organizationPermissions = {
 };
 
 export const projectPermissions = {
-  manageProject: ['ADMIN'] as ProjectRole[],
-  useChat: ['ADMIN', 'USER'] as ProjectRole[],
-  editContent: ['ADMIN', 'USER'] as ProjectRole[],
+  manageProject: ['OWNER', 'ADMIN'] as ProjectRole[],
+  useChat: ['OWNER', 'ADMIN', 'USER'] as ProjectRole[],
+  editContent: ['OWNER', 'ADMIN', 'USER'] as ProjectRole[],
   viewOnly: ['VIEWER'] as ProjectRole[],
-  viewAll: ['ADMIN', 'USER', 'VIEWER'] as ProjectRole[],
+  viewAll: ['OWNER', 'ADMIN', 'USER', 'VIEWER'] as ProjectRole[],
 };
 
-export const canCreateProjects = (organizationRole: string) => 
+export const canCreateProjects = (organizationRole: string) =>
   checkRole(organizationPermissions.createProjects, organizationRole);
 
-export const canManageMembers = (organizationRole: string) => 
+export const canManageMembers = (organizationRole: string) =>
   checkRole(organizationPermissions.manageMembers, organizationRole);
 
-export const canUseChat = (projectRole: string) => 
+export const canUseChat = (projectRole: string) =>
   checkRole(projectPermissions.useChat, projectRole);
 
-export const canManageProject = (projectRole: string) => 
+export const canManageProject = (projectRole: string) =>
   checkRole(projectPermissions.manageProject, projectRole);
 
-export const canEditContent = (projectRole: string) => 
+export const canEditContent = (projectRole: string) =>
   checkRole(projectPermissions.editContent, projectRole);

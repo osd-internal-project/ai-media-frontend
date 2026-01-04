@@ -38,3 +38,11 @@ export type TUserForm = {
   password?: string;
   groups?: string[];
 };
+
+export type TUserRegister = {
+  email: string;
+  fullname: string;
+  username: string;
+  password?: string;
+  phoneNumber?: string;
+};

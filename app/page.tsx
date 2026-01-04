@@ -10,5 +10,5 @@ export default async function Page() {
     signIn();
     return null;
   }
-  redirect("/page/dashboard");
+  redirect("/page/project-layout");
 }

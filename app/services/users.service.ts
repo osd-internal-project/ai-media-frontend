@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 import type { TRoles } from "../common/roles.type";
-import type { TUser } from "../common/user.type";
+import type { TUser, TUserRegister } from "../common/user.type";
 
 const UserServices = (axiosInstance: AxiosInstance) => {
   const baseUsersUrl = "/users";
@@ -117,6 +117,16 @@ const UserServices = (axiosInstance: AxiosInstance) => {
         .catch((err) => {
           console.log(err);
           return;
+        });
+    },
+    register: async (value: TUserRegister) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/register`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
         });
     },
   };

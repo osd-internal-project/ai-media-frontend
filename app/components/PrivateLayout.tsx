@@ -63,7 +63,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   );
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
+  const [selectedRole, setSelectedRole] = useState<"OWNER" | "ADMIN" | "USER" | "VIEWER">(
     "USER"
   );
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
@@ -320,7 +320,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
     fecthdataByOrganization(organizationId);
     if (response) {
-      router.push(`/page/dashboard`);
+      router.push(`/page/project-layout`);
     }
   }
   if (!session?.user.id) {
@@ -539,37 +539,38 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase()
+                                          )
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
                             <Select
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
-                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
+                              onChange={(role: "OWNER" | "ADMIN" | "USER" | "VIEWER") => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
                               }}
                               options={[
+                                { value: "OWNER", label: "Owner" },
                                 { value: "ADMIN", label: "Admin" },
                                 { value: "USER", label: "User" },
                                 { value: "VIEWER", label: "Viewer" },
@@ -734,37 +735,38 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase()
+                                          )
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
                             <Select
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
-                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
+                              onChange={(role: "OWNER" | "ADMIN" | "USER" | "VIEWER") => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
                               }}
                               options={[
+                                { value: "OWNER", label: "Owner" },
                                 { value: "ADMIN", label: "Admin" },
                                 { value: "USER", label: "User" },
                                 { value: "VIEWER", label: "Viewer" },
@@ -858,7 +860,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                    // inlineCollapsed={true}
+                  // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>

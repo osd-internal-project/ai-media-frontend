@@ -18,12 +18,6 @@ export const MenuSider = [
     disabled: true,
     header: true,
     children: [
-      {
-        key: `dashboard`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <ChartPie size={22} />,
-        label: `Dashboard`,
-      },
       // {
       //   key: `project`,
       //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
@@ -47,6 +41,12 @@ export const MenuSider = [
         role: ["OWNER", "ADMIN"],
         icon: <Settings size={22} />,
         label: `Admin`,
+      },
+      {
+        key: `dashboard`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        icon: <ChartPie size={22} />,
+        label: `Dashboard`,
       },
     ],
   },

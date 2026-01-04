@@ -14,7 +14,7 @@ const Page = () => {
   }, [status, router]);
 
   if (session) {
-    redirect("/page/dashboard");
+    redirect("/page/project-layout");
   }
   return redirect("/login");
 };

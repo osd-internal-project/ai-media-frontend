@@ -2,7 +2,7 @@ export type ProjectMember = {
   id: string;
   projectId: string;
   userId: string;
-  role: 'ADMIN' | 'USER' | 'VIEWER';
+  role: 'OWNER' | 'ADMIN' | 'USER' | 'VIEWER';
   joinedAt: string;
   users?: {
     userId: string;
@@ -14,7 +14,7 @@ export type ProjectMember = {
 
 export type ProjectMemberInput = {
   userId: string;
-  role: 'ADMIN' | 'USER' | 'VIEWER';
+  role: 'OWNER' | 'ADMIN' | 'USER' | 'VIEWER';
 };
 
 export type IProject = {

@@ -241,11 +241,22 @@
 "use client";
 import { useEffect } from "react";
 import { signIn } from "next-auth/react";
+import "../css/loading.css";
 
 export default function SignIn() {
   useEffect(() => {
-    signIn("keycloak", { callbackUrl: "/page/dashboard" });
+    signIn("keycloak", { callbackUrl: "/page/project-layout" });
   }, []);
 
-  return <div>Redirecting to Keycloak...</div>;
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="loader-box">
+        <div className="loading-wrapper">
+          <div className="loader">
+            <div className="loader-inner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
