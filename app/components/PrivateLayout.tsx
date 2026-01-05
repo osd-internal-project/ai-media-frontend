@@ -63,9 +63,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   );
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<"OWNER" | "ADMIN" | "USER" | "VIEWER">(
-    "USER"
-  );
+  const [selectedRole, setSelectedRole] = useState<
+    "OWNER" | "ADMIN" | "USER" | "VIEWER"
+  >("USER");
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
   // const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
@@ -539,32 +539,34 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase()
+                                            )
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
                             <Select
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
-                              onChange={(role: "OWNER" | "ADMIN" | "USER" | "VIEWER") => {
+                              onChange={(
+                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER"
+                              ) => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
@@ -735,32 +737,34 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase()
+                                            )
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
                             <Select
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
-                              onChange={(role: "OWNER" | "ADMIN" | "USER" | "VIEWER") => {
+                              onChange={(
+                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER"
+                              ) => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
                                 setProjectMembers(newMembers);
@@ -860,7 +864,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                  // inlineCollapsed={true}
+                    // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
@@ -974,8 +978,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             <PrivateNavigation
               organizationRole={organizationRole}
               user={
-                session?.user
-                  ? { fullname: session.user.name ?? "" }
+                userProfile
+                  ? { fullname: userProfile.fullname ?? "" }
                   : undefined
               }
               organizationId={organizationId}
@@ -985,14 +989,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
             />
-            <div className="w-full h-screen overflow-hidden">
-              <PrivateContent
-                user={
-                  session?.user
-                    ? { fullname: session.user.name ?? "" }
-                    : undefined
-                }
-              >
+            <div className="w-full h-screen p-2  overflow-y-auto">
+              <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
                   value={{ organizationId, organizationRole }}
                 >
