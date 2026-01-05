@@ -195,7 +195,9 @@ const Page: FC = () => {
 
             <div className="flex justify-between items-center mb-4">
               <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox className="text-gray-400">Remember me</Checkbox>
+                <Checkbox className="text-white">
+                  <div className="text-white">Remember me</div>
+                </Checkbox>
               </Form.Item>
               <a
                 href="#"
