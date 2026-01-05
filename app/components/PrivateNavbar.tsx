@@ -19,6 +19,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { User, LogOut, CreditCard } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
 import { checkRole } from "../utils/checkRole";
 
@@ -46,16 +47,18 @@ const NavbarUser: React.FC<Props> = ({
   handleManageOrg,
   organizationRole,
 }) => {
+  const router = useRouter();
+  
   const content = (
     <>
       <div
         className="flex items-center gap-3 px-3 py-2 text-white hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
         onClick={() => {
-          /* Handle profile click */
+          router.push('/page/profile');
         }}
       >
         <User className="w-4 h-4" />
-        <span className="text-sm font-medium">Profile</span>
+        <span className="text-sm font-medium">User Profile</span>
       </div>
       
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
