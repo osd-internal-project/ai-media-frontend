@@ -85,7 +85,7 @@ const OrganizationMembersServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    del: async (id: number) => {
+    delete: async (id: number) => {
       return await axiosInstance
         .delete(`${baseUrl}/${id}`)
         .then((res) => {

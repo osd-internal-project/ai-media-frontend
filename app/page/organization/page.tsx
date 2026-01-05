@@ -25,8 +25,6 @@ import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 
-
-
 export default function OrganizationDetailPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const { organizationId } = useOrganization();
@@ -53,7 +51,10 @@ export default function OrganizationDetailPage() {
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
   const [isEditMemberModalOpen, setIsEditMemberModalOpen] = useState(false);
 
-  const showMessage = (type: "error" | "success" | "warning" | "loading", content: string) => {
+  const showMessage = (
+    type: "error" | "success" | "warning" | "loading",
+    content: string
+  ) => {
     messageApi.open({
       type: type,
       content: content,
@@ -163,27 +164,27 @@ export default function OrganizationDetailPage() {
       // 1. ดึง message จากหลายๆ แหล่งที่เป็นไปได้
       let msg =
         error?.response?.data?.message || // กรณี Standard Axios
-        error?.response?.data?.error ||   // บางที error text อยู่ใน field error
-        error?.message ||                 // กรณี Axios General Error หรือถูก Unwrapped แล้ว
+        error?.response?.data?.error || // บางที error text อยู่ใน field error
+        error?.message || // กรณี Axios General Error หรือถูก Unwrapped แล้ว
         "Failed to invite user";
 
       // 2. แก้ปัญหาถ้า message เป็น Array (เช่น NestJS Class Validator)
       if (Array.isArray(msg)) {
-        msg = msg.join(', ');
+        msg = msg.join(", ");
       }
 
       // 3. ถ้า msg เป็น Object (กันเหนียว) ให้แปลงเป็น String
-      if (typeof msg === 'object') {
+      if (typeof msg === "object") {
         msg = JSON.stringify(msg);
       }
-      showMessage("error", msg)
+      showMessage("error", msg);
     }
   };
 
   // Remove Member
   const handleRemoveMember = async (memberId: number) => {
     try {
-      await organizationMemberService.del(memberId);
+      await organizationMemberService.delete(memberId);
       fetchOrganizationData();
     } catch (error) {
       console.error(error);
@@ -275,7 +276,7 @@ export default function OrganizationDetailPage() {
             Edit
           </Button>
           <Popconfirm
-            title="Remove member?"
+            title="Remove Member?"
             onConfirm={() => handleRemoveMember(record.id)}
           >
             <Button type="link" danger>
@@ -339,7 +340,9 @@ export default function OrganizationDetailPage() {
         className="mt-4"
         extra={
           <Space>
-            <Button type="primary" onClick={handleInvite}>Invite User</Button>
+            <Button type="primary" onClick={handleInvite}>
+              Invite User
+            </Button>
           </Space>
         }
       >
@@ -402,11 +405,7 @@ export default function OrganizationDetailPage() {
 
       {/* Invite User Modal */}
       <Modal
-        title={
-          <div className="text-lg font-bold">
-            Invite User
-          </div>
-        }
+        title={<div className="text-lg font-bold">Invite User</div>}
         open={isInviteModalOpen}
         onCancel={() => setIsInviteModalOpen(false)}
         footer={null}
@@ -447,7 +446,7 @@ export default function OrganizationDetailPage() {
             </div>
 
             <div className="text-gray-400 text-sm mb-6">
-              We will send an invitation link to the user's email address.
+              {`We will send an invitation link to the user's email address.`}
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-100">

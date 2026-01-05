@@ -1,5 +1,7 @@
 import KeycloakProvider from "next-auth/providers/keycloak";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt";
+import config from "../../../config";
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
@@ -14,15 +16,16 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
         grant_type: "refresh_token",
         refresh_token: String(token.refreshToken),
-  }),
-});
+      }),
+    });
 
-const contentType = response.headers.get("content-type");
-  const refreshedTokens = contentType?.includes("application/json")
-    ? await response.json()
-    : response;
-if (!response.ok) {
-  throw refreshedTokens;
+    const contentType = response.headers.get("content-type");
+    const refreshedTokens = contentType?.includes("application/json")
+      ? await response.json()
+      : response;
+
+    if (!response.ok) {
+      throw refreshedTokens;
     }
 
     return {
@@ -54,24 +57,133 @@ export const authOptions = {
         },
       },
     }),
+    CredentialsProvider({
+      name: "Keycloak",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          // Call the backend service for login
+          const url = `${config.backendUserUrl}/auth/login`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: credentials?.username,
+              password: credentials?.password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            console.error("Login failed:", data);
+            return null;
+          }
+
+          return {
+            id: data.sub || "user",
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresIn: data.expires_in,
+            idToken: data.id_token,
+          };
+        } catch (error) {
+          console.error("Authorize error:", error);
+          return null;
+        }
+      },
+    }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }: any) {
-      // Initial sign in
+    async signIn({ user, account }: any) {
+      // 1. Google/Keycloak Login Flow
+      if (account?.provider === "keycloak") {
+        try {
+          // Keycloak usually returns email in 'user.email'
+          const email = user.email;
+          if (!email) return false;
+
+          const url = `${config.backendUserUrl}/auth/check`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+
+          if (!response.ok) return false;
+
+          const data = await response.json();
+          if (!data.exists) {
+            // Redirect to login with error message if user not found in DB
+            // Note: Returning a string redirects in NextAuth v4
+            return "/login?error=403";
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Error checking user existence:", error);
+          return false;
+        }
+      }
+      // 2. Credentials Login Flow (already validated in authorize)
+      return true;
+    },
+    async jwt({ token, account, user, profile }: any) {
+      // Initial sign in from Keycloak Provider (Google or standard Keycloak)
       if (account && profile) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.idToken = account.id_token;
         token.expiresAt = account.expires_at! * 1000;
 
-        // Extract roles from Keycloak token
-        const decodedToken = JSON.parse(Buffer.from(account.access_token!.split(".")[1], "base64").toString());
+        // Extract roles safely
+        if (account.access_token) {
+          try {
+            const parts = account.access_token.split(".");
+            if (parts.length === 3) {
+              const decodedToken = JSON.parse(
+                Buffer.from(parts[1], "base64").toString()
+              );
+              token.roles = decodedToken.realm_access?.roles || [];
+              token.groups = decodedToken.groups || [];
+              token.sub = decodedToken.sub;
+            }
+          } catch (e) {
+            console.error("Failed to decode token", e);
+          }
+        }
 
-        // Get realm roles
-        token.roles = decodedToken.realm_access?.roles || [];
+        return token;
+      }
 
-        // Get groups (if configured in Keycloak)
-        token.groups = decodedToken.groups || [];
+      // Initial sign in from Credentials Provider (Backend Login)
+      if (user) {
+        token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.expiresAt = Date.now() + user.expiresIn * 1000;
+        token.idToken = user.idToken;
+
+        // Decode token from backend
+        if (user.accessToken) {
+          try {
+            const parts = user.accessToken.split(".");
+            if (parts.length === 3) {
+              const decodedToken = JSON.parse(
+                Buffer.from(parts[1], "base64").toString()
+              );
+              token.roles = decodedToken.realm_access?.roles || [];
+              token.groups = decodedToken.groups || [];
+              token.sub = decodedToken.sub;
+            }
+          } catch (e) {
+            console.error("Failed to decode user token from backend", e);
+          }
+        }
 
         return token;
       }
@@ -85,13 +197,11 @@ export const authOptions = {
       return refreshAccessToken(token);
     },
     async session({ session, token }: any) {
-      // Send properties to the client
       session.accessToken = token.accessToken;
       session.error = token.error;
       session.user.roles = token.roles;
       session.user.groups = token.groups;
       session.user.id = token.sub!;
-
       return session;
     },
   },
@@ -113,6 +223,7 @@ export const authOptions = {
     },
   },
   pages: {
+    signIn: "/login",
     error: "/error",
   },
   session: {
