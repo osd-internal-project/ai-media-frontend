@@ -65,25 +65,21 @@ const Page: FC = () => {
   }, [messageApi, router]);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen flex items-center justify-center bg-[#0f1115] relative overflow-hidden p-4">
       {contextHolder}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-20"></div>
-        <div className="absolute w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-20"></div>
-        <div className="absolute w-96 h-96 bg-purple-800 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 bottom-0 left-1/2"></div>
-      </div>
+      {/* Background Gradients/Effects - generic dark theme vibe */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1a1d26] to-[#0f1115] z-0 pointer-events-none" />
 
       {/* Grid Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
-      <div className="relative z-10 w-full max-w-6xl flex bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-purple-500/20">
+      <div className="relative z-10 w-full max-w-6xl flex bg-[#1c2027] rounded-3xl shadow-2xl overflow-hidden border border-[#2a2f38]">
         {/* Left Side - AI Visualization */}
-        <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-purple-600/20 to-indigo-600/20 p-12 items-center justify-center relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-[#15191f] p-12 items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0">
             {/* Neural Network Animation */}
             {mounted && (
-              <svg className="w-full h-full opacity-30" viewBox="0 0 400 400">
+              <svg className="w-full h-full opacity-20" viewBox="0 0 400 400">
                 <defs>
                   <linearGradient
                     id="grad1"
@@ -94,11 +90,11 @@ const Page: FC = () => {
                   >
                     <stop
                       offset="0%"
-                      style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
+                      style={{ stopColor: "#9ca3af", stopOpacity: 1 }}
                     />
                     <stop
                       offset="100%"
-                      style={{ stopColor: "#6366f1", stopOpacity: 1 }}
+                      style={{ stopColor: "#4b5563", stopOpacity: 1 }}
                     />
                   </linearGradient>
                 </defs>
@@ -132,26 +128,19 @@ const Page: FC = () => {
 
           <div className="relative z-10 text-center">
             <div className="mb-8 animate-float">
-              <div className="w-32 h-32 mx-auto bg-linear-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                <svg
-                  className="w-16 h-16 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
+              {/* Logo from Signup */}
+              <div className="mb-4 flex justify-center">
+                <img
+                  src="/images/Logo.png"
+                  alt="Ai Cave Logo"
+                  style={{ width: 150, height: 150, objectFit: "contain" }}
+                />
               </div>
             </div>
-            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-purple-400 to-indigo-400">
-              AI Cave
+            <h2 className="text-3xl font-bold mb-4 text-white italic tracking-wide">
+              Ai Cave
             </h2>
-            <p className="text-purple-200 text-lg">
+            <p className="text-gray-400 text-lg">
               Experience the future of intelligent automation
             </p>
           </div>
@@ -161,25 +150,8 @@ const Page: FC = () => {
         <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
           {/* Logo/Header */}
           <div className="text-center mb-8">
-            <div className="inline-block mb-4 animate-pulse">
-              <div className="w-16 h-16 bg-linear-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-            </div>
             <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-purple-300">Sign in to continue to AI Cave</p>
+            <p className="text-gray-400">Sign in to continue to AI Cave</p>
           </div>
 
           {/* Form */}
@@ -200,11 +172,10 @@ const Page: FC = () => {
               ]}
             >
               <Input
-                prefix={<User className="text-purple-400 w-4 h-4" />}
+                prefix={<User className="text-gray-500 w-4 h-4" />}
                 placeholder="Email or Username"
                 size="large"
-                className="bg-black/50 border-purple-500/30 hover:border-purple-500 focus:border-purple-500 text-white rounded-lg placeholder-purple-400/50"
-                style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "white" }}
+                className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38]"
               />
             </Form.Item>
 
@@ -215,21 +186,20 @@ const Page: FC = () => {
               ]}
             >
               <Input.Password
-                prefix={<Lock className="text-purple-400 w-4 h-4" />}
+                prefix={<Lock className="text-gray-500 w-4 h-4" />}
                 placeholder="Password"
                 size="large"
-                className="bg-black/50 border-purple-500/30 hover:border-purple-500 focus:border-purple-500 text-white rounded-lg placeholder-purple-400/50"
-                style={{ backgroundColor: "rgba(0,0,0,0.5)", color: "white" }}
+                className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38] [&>input]:bg-transparent [&>input]:text-white"
               />
             </Form.Item>
 
             <div className="flex justify-between items-center mb-4">
               <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox className="text-purple-300">Remember me</Checkbox>
+                <Checkbox className="text-gray-400">Remember me</Checkbox>
               </Form.Item>
               <a
                 href="#"
-                className="text-purple-400 hover:text-purple-300 text-sm"
+                className="text-[#3b82f6] hover:text-[#2563eb] text-sm"
               >
                 Forgot Password?
               </a>
@@ -241,7 +211,7 @@ const Page: FC = () => {
                 htmlType="submit"
                 size="large"
                 loading={loading}
-                className="w-full bg-linear-to-r from-purple-600 to-indigo-600 border-0 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+                className="w-full h-11 bg-[#4b5563] hover:bg-[#586170] text-white border-none font-medium text-base rounded-lg shadow-lg"
               >
                 LOGIN
               </Button>
@@ -252,10 +222,10 @@ const Page: FC = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-purple-500/30"></div>
+                <div className="w-full border-t border-[#374151]"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-transparent text-purple-300">
+                <span className="px-4 bg-[#1c2027] text-gray-400">
                   Or continue with
                 </span>
               </div>
@@ -264,7 +234,7 @@ const Page: FC = () => {
             <div className="mt-6">
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center px-4 py-2 border border-purple-500/30 rounded-lg hover:border-purple-500 hover:bg-purple-500/10 transition-all duration-300 text-white cursor-pointer"
+                className="w-full h-10 bg-white text-black hover:bg-gray-100 border-none font-medium flex items-center justify-center rounded-lg cursor-pointer"
               >
                 {/* Google Icon SVG */}
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -285,16 +255,16 @@ const Page: FC = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                Sign in with Google
+                Continue with Google
               </button>
             </div>
           </div>
           <div className="text-center mt-6">
-            <span className="text-purple-300 text-sm">
-              Don&apos;t have an account?{" "}
+            <span className="text-gray-400 text-sm">
+              {` Don't have an account? `}
               <a
                 href="/signup"
-                className="text-purple-400 hover:text-purple-200 font-semibold"
+                className="text-[#3b82f6] hover:text-[#2563eb] font-semibold"
               >
                 Sign Up
               </a>
