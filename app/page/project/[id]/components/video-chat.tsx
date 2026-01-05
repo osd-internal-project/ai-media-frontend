@@ -48,7 +48,7 @@ import { TAIModel } from "@/app/common/ai-model.type";
 interface VideoChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "vdo" | "omnihuman";
+  activeKey: "image" | "vdo" | "library" | "activity";
   projectRole?: string | null;
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus: boolean;

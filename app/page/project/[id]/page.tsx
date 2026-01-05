@@ -34,7 +34,7 @@ const GenerateImagePage: FC = () => {
   const aiModelService = AIModelServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "omnihuman">(
+  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "library" | "activity">(
     "image"
   );
   const [disableTab, setDisableTab] = useState<boolean>(false);
@@ -107,7 +107,7 @@ const GenerateImagePage: FC = () => {
     setAIModels(models || []);
   };
 
-  const onChangeTab = (key: "image" | "vdo") => {
+  const onChangeTab = (key: "image" | "vdo" | "library" | "activity") => {
     setActiveKey(key);
 
     if (processedModels.length > 0) {
@@ -228,7 +228,7 @@ const GenerateImagePage: FC = () => {
       </div>
 
       {/* Viewer Role Notification */}
-      {projectRole === "VIEWER" && (
+      {/* {projectRole === "VIEWER" && (
         <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-800">
             <span className="text-lg">👀</span>
@@ -241,7 +241,7 @@ const GenerateImagePage: FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
       
       {/* Prompt Guide Drawer */}
       <Drawer
@@ -381,7 +381,7 @@ const GenerateImagePage: FC = () => {
       </Drawer>
       <Tabs
         tabPosition="left"
-        // style={{ height: "100vh" }}
+        style={{ marginTop: "0px" }}
         className="custom-tabs"
         // type="card"
         activeKey={activeKey}
@@ -650,16 +650,16 @@ const GenerateImagePage: FC = () => {
         //     ""
         //   )
         // }
-        onChange={(key) => onChangeTab(key as "image" | "vdo")}
+        onChange={(key) => onChangeTab(key as "image" | "vdo" | "library" | "activity")}
         items={[
           {
             disabled: disableTab,
             key: "image",
             forceRender: true,
             label: (
-              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
-                <Image />
-                <div className="text-center ">{`Image`}</div>
+              <div className="flex items-center gap-2 px-2 py-1 w-full">
+                <Image size={20} />
+                <span className="text-base font-medium">Image</span>
               </div>
             ),
             children: (
@@ -682,9 +682,9 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "vdo",
             label: (
-              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
-                <Video />
-                <div className="text-center ">{`Vedio`}</div>
+              <div className="flex items-center gap-2 px-2 py-1 w-full">
+                <Video size={20} />
+                <span className="text-base font-medium">Video</span>
               </div>
             ),
             children: (
@@ -741,16 +741,18 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "library",
             label: (
-              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
-                <Star size={24} />
-                <div className="text-center">{`Library`}</div>
+              <div className="flex items-center gap-2 px-2 py-1 w-full">
+                <Star size={20} />
+                <span className="text-base font-medium">Library</span>
               </div>
             ),
             children: (
-              <PromptLibrary
-                key={`activity-${activeKey}`}
-                activeKey={activeKey}
-              />
+              <div className="h-full">
+                <PromptLibrary
+                  key={`activity-${activeKey}`}
+                  activeKey={activeKey}
+                />
+              </div>
             ),
           },
           {
@@ -758,67 +760,138 @@ const GenerateImagePage: FC = () => {
             forceRender: true,
             key: "activity",
             label: (
-              <div className="flex flex-col items-center justify-center gap-1 min-w-[70px]">
-                <Folders />
-                <div className="text-center">{`All Activity`}</div>
+              <div className="flex items-center gap-2 px-2 py-1 w-full">
+                <Folders size={20} />
+                <span className="text-base font-medium">All Activity</span>
               </div>
             ),
             children: (
-              <PromptActivity
-                activeKey={activeKey}
-                key={`activity-${activeKey}`}
-              />
+              <div className="h-full">
+                <PromptActivity
+                  activeKey={activeKey}
+                  key={`activity-${activeKey}`}
+                />
+              </div>
             ),
           },
         ]}
       />
 
       <style>{`
-        .custom-tabs .ant-tabs-nav {
-          margin-bottom: 0;
-        }
-        .custom-tabs .ant-tabs-nav::before {
-          border-bottom: none;
-        }
-
-        .custom-tabs .ant-tabs-nav-wrap {
+        .custom-tabs {
           background: transparent;
-          padding: 8px 0px;
-          display: inline-block;
         }
-
+        
+        .custom-tabs .ant-tabs-nav {
+          background: #18181B;
+          width: 220px;
+          padding: 8px;
+          margin: 0;
+          margin-left: 16px;
+          position: relative;
+          top: 0;
+          border-radius: 12px;
+          border: none;
+        }
+        
+        .custom-tabs .ant-tabs-nav::before {
+          border: none !important;
+          display: none;
+        }
+        
+        .custom-tabs .ant-tabs-nav::after {
+          border: none !important;
+          display: none;
+        }
+        
+        .custom-tabs .ant-tabs-nav-list {
+          width: 100%;
+          border: none;
+        }
+        
+        .custom-tabs .ant-tabs-nav-wrap {
+          border: none;
+          border-right: none;
+        }
+        
         .custom-tabs .ant-tabs-tab {
           background: transparent;
-          border: none !important;
-          color: #9ca3af;
-          padding: 12px 8px;
-          font-size: 16px;
-          font-weight: 500;
-          transition: all 0.3s;
-          width: fit-content;
+          border: none;
           border-radius: 8px;
-          margin: 4px 0;
+          margin: 0;
+          padding: 0;
+          transition: none !important;
+          width: 100%;
         }
-
+        
         .custom-tabs .ant-tabs-tab:hover {
-          color: #e5e7eb;
-          background-color: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.05);
         }
-
+        
         .custom-tabs .ant-tabs-tab-active {
-          background-color: #27272a !important;
+          background: #444444;
+          border: 1px solid #444444 !important;
         }
-
+        
+        .custom-tabs .ant-tabs-tab-active::before {
+          border-color: #444444 !important;
+        }
+        
+        .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+          border-color: #444444 !important;
+        }
+        
+        .custom-tabs .ant-tabs-tab-btn {
+          color: #ffffff !important;
+          padding: 0;
+          width: 100%;
+          transition: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        .custom-tabs .ant-tabs-tab:focus,
+        .custom-tabs .ant-tabs-tab:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+          border: none !important;
+        }
+        
+        .custom-tabs .ant-tabs-tab-btn:focus,
+        .custom-tabs .ant-tabs-tab-btn:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+          border: none !important;
+        }
+        
+        .custom-tabs .ant-tabs-tab span {
+          color: #ffffff !important;
+        }
+        
         .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
           color: #ffffff !important;
         }
-
-        .custom-tabs .ant-tabs-ink-bar {
-          display: none !important;
+        
+        .custom-tabs .ant-tabs-tab-active span {
+          color: #ffffff !important;
         }
-
-        .custom-tabs .ant-tabs-tab .anticon {
-          margin-right: 0;
+        
+        .custom-tabs .ant-tabs-content-holder {
+          background: transparent;
+          border: none;
+          border-left: none;
+        }
+        
+        .custom-tabs .ant-tabs-content {
+          height: 100%;
+        }
+        
+        .custom-tabs .ant-tabs-tabpane {
+          height: 100%;
+        }
+        
+        .custom-tabs .ant-tabs-ink-bar {
+          display: none;
         }
 
         /* Dark Select Styling */

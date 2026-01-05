@@ -110,10 +110,11 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
   };
 
   return (
-    <div className='p-4 rounded-lg mb-4'>
+    <div className='h-[calc(100vh-160px)]'>
       {contextHolders}
-      <div className='grid sm:grid-cols-2 md:grid-cols-5'>
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2'>
+      <div className='grid sm:grid-cols-2 md:grid-cols-5 h-full p-4'>
+        <div className='md:col-span-4 sm:col-span-2 flex flex-col h-full'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto'>
           {getData.data.map((image, imgIndex) => {
             return (
               <div key={imgIndex} className='relative group w-full h-[200px] text-center '>
@@ -193,7 +194,9 @@ const PromptActivity: FC<props> = ({ shouldRefetch, activeKey }): ReactElement =
             );
           })}
 
-          <div className='col sm:col-span-2 md:col-span-4 justify-center items-center flex mt-4'>
+          </div>
+          
+          <div className='flex justify-center items-center mt-4 pt-4'>
             <Pagination
               current={page}
               total={total}
