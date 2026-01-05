@@ -659,7 +659,7 @@ const GenerateImagePage: FC = () => {
             label: (
               <div className="flex items-center gap-2 px-2 py-1 w-full">
                 <Image size={20} />
-                <span className="text-base font-medium">Image</span>
+                <span className="text-base font-medium">Image Gen</span>
               </div>
             ),
             children: (
@@ -684,7 +684,7 @@ const GenerateImagePage: FC = () => {
             label: (
               <div className="flex items-center gap-2 px-2 py-1 w-full">
                 <Video size={20} />
-                <span className="text-base font-medium">Video</span>
+                <span className="text-base font-medium">Video Gen</span>
               </div>
             ),
             children: (

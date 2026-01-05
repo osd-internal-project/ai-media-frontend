@@ -290,9 +290,10 @@ const HeaderGenerateImagePage: FC<props> = ({
                 ghost={promptGuideOpenStatus}
                 onClick={onPromptGuideToggle}
               >
-                Prompt Guild
+                Prompt Example
               </Button>
               <Button
+                size="small"
                 type="link"
                 className="!text-[#686B6E]"
                 icon={<LightbulbIcon className="w-4 h-4" />}
