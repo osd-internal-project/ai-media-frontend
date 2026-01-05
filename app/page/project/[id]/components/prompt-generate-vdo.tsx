@@ -25,7 +25,7 @@ import type { TPromptGuideType } from "@/app/common/prompt-guide.type";
 
 export interface props {
   projectId: string;
-  activeKey: "image" | "vdo" | "omnihuman";
+  activeKey: "image" | "vdo" | "library" | "activity";
   userId?: string;
   shouldRefetch?: boolean;
   promptGuideTypes: TPromptGuideType[];

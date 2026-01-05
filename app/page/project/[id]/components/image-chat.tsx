@@ -54,7 +54,7 @@ import { TAIModel } from "@/app/common/ai-model.type";
 interface ImageChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "vdo" | "omnihuman";
+  activeKey: "image" | "vdo" | "library" | "activity";
   projectRole?: string | null;
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus?: boolean;

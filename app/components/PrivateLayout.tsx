@@ -985,7 +985,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
             />
-            <div className="w-full h-screen p-2  overflow-y-auto">
+            <div className="w-full h-screen overflow-hidden">
               <PrivateContent
                 user={
                   session?.user

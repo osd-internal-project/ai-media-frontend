@@ -122,52 +122,54 @@ const PromptLibrary: FC<props> = ({
   };
 
   return (
-    <div className="p-4 rounded-lg mb-4">
+    <div className="h-[calc(100vh-160px)]">
       {contextHolders}
-      <div className="grid sm:grid-cols-2 md:grid-cols-5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:col-span-4 sm:col-span-2">
-          {getData.data.map((image, imgIndex) => {
-            return (
-              <div
-                key={imgIndex}
-                className="relative group w-full h-[200px] text-center "
-              >
+      <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4">
+        <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto">
+            {getData.data.map((image, imgIndex) => {
+              return (
                 <div
-                  className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
-                  onClick={() => onSelectPrompt(image)}
+                  key={imgIndex}
+                  className="relative group w-full h-[200px] text-center "
                 >
-                  {image.typeGenerate === "vdo" ? (
-                    <VideoItem
-                      key={imgIndex}
-                      videoData={image}
-                      onDownloadVideo={onDownloadVideo}
-                    />
-                  ) : (
-                    <img
-                      src={image.imageUrl}
-                      loading="lazy"
-                      alt="Video thumbnail"
-                    />
-                  )}
+                  <div
+                    className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
+                    onClick={() => onSelectPrompt(image)}
+                  >
+                    {image.typeGenerate === "vdo" ? (
+                      <VideoItem
+                        key={imgIndex}
+                        videoData={image}
+                        onDownloadVideo={onDownloadVideo}
+                      />
+                    ) : (
+                      <img
+                        src={image.imageUrl}
+                        loading="lazy"
+                        alt="Video thumbnail"
+                      />
+                    )}
 
-                  <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                      onClick={() =>
-                        handleOpenImage(image.imageUrl, image.typeGenerate)
-                      }
-                    >
-                      <Download className="w-4 h-4 text-gray-800" />
-                    </button>
+                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button
+                        className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
+                        onClick={() =>
+                          handleOpenImage(image.imageUrl, image.typeGenerate)
+                        }
+                      >
+                        <Download className="w-4 h-4 text-gray-800" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-
-          <div className="col sm:col-span-2 md:col-span-4 justify-center items-center flex mt-4">
+              );
+            })}
+          </div>
+          
+          <div className="flex justify-center items-center mt-4 pt-4">
             <Pagination
               current={page}
               total={total}
