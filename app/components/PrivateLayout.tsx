@@ -988,7 +988,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
             />
-            <div className="w-full h-screen p-2 md:p-2 mobile-padding overflow-y-auto mobile-full">
+            <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
                   value={{ organizationId, organizationRole }}
