@@ -5,16 +5,21 @@ import {
   Button,
   ConfigProvider,
   Divider,
+  Drawer,
+  Image,
   Layout,
+  Menu,
   Popover,
   Select,
   Space,
   Tag,
+  theme,
 } from "antd";
 
 import { signOut } from "next-auth/react";
 import {
   ExclamationCircleOutlined,
+  MenuOutlined,
   PlusCircleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
@@ -22,6 +27,9 @@ import { User, LogOut, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
 import { checkRole } from "../utils/checkRole";
+import { renderMenuItems, MenuSider } from "../config/menu";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const { Header } = Layout;
 
@@ -48,21 +56,39 @@ const NavbarUser: React.FC<Props> = ({
   organizationRole,
 }) => {
   const router = useRouter();
-  
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const currentPath = pathname.split("/")[2];
+  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
+  const currentPathSub = pathname.split("/")[3];
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   const content = (
     <>
       <div
         className="flex items-center gap-3 px-3 py-2 text-white hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
         onClick={() => {
-          router.push('/page/profile');
+          router.push("/page/profile");
         }}
       >
         <User className="w-4 h-4" />
         <span className="text-sm font-medium">User Profile</span>
       </div>
-      
+
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
-      
+
       <div className="px-3 py-1">
         <div className="flex items-center gap-3 py-2 text-white">
           <CreditCard className="w-4 h-4" />
@@ -97,9 +123,9 @@ const NavbarUser: React.FC<Props> = ({
           <span className="text-sm text-gray-300">Payments</span>
         </div>
       </div>
-      
+
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
-      
+
       <div
         className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
         onClick={() => signOut({ callbackUrl: "/" })}
@@ -120,15 +146,25 @@ const NavbarUser: React.FC<Props> = ({
         borderRadius: "30px",
       }}
     >
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+      <div className="mx-auto px-2 sm:px-4 lg:px-8 flex justify-between items-center">
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            className="text-white border-none"
+            onClick={() => setMobileMenuOpen(true)}
+            size="large"
+          />
+        )}
+
+        <span className="text-sm font-medium text-gray-600 whitespace-nowrap hidden sm:block">
           ORGANIZATION:
         </span>
-        <div className="flex items-center justify-between w-full px-4">
-          <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between w-full px-2 sm:px-4">
+          <div className="flex items-center gap-2 sm:gap-6">
             <Select
               size="middle"
-              className="dark-select w-[250px]  "
+              className="dark-select w-[180px] sm:w-[250px]"
               placeholder="Choose Organization"
               onChange={handleOrganizationChange}
               value={organizationId}
@@ -182,6 +218,7 @@ const NavbarUser: React.FC<Props> = ({
         {user ? (
           <>
             <Tag
+              className="hidden sm:block"
               style={{
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 border: "none",
@@ -197,10 +234,10 @@ const NavbarUser: React.FC<Props> = ({
             >
               1,000 Tokens
             </Tag>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Avatar size={48} />
               <div className="flex items-center">
-                <span className="font-bold text-white whitespace-nowrap">
+                <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">
                   {user.fullname}
                 </span>
               </div>
@@ -221,13 +258,13 @@ const NavbarUser: React.FC<Props> = ({
                     },
                   }}
                 >
-                  {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                  {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && ( */}
                     <Button
                       type="default"
                       size="small"
                       icon={<SettingOutlined />}
                     />
-                  )}
+                  {/* )} */}
                 </Popover>
               </>
             </div>
@@ -241,6 +278,70 @@ const NavbarUser: React.FC<Props> = ({
           </div>
         )}
       </div>
+
+      {isMobile && (
+        <Drawer
+          title=""
+          placement="left"
+          closable={true}
+          onClose={() => setMobileMenuOpen(false)}
+          open={mobileMenuOpen}
+        styles={{
+          body: { padding: "0rem", backgroundColor: "#0f0f0f" },
+          header: { display: "none" },
+        }}
+        width={90}
+      >
+        <div className="bg-black rounded-2xl h-full flex flex-col">
+          {/* Logo at top of mobile drawer */}
+          <div className="w-full flex justify-center items-center pt-8 flex-shrink-0">
+            <Image
+              width={"60px"}
+              src="/images/Logo.png"
+              alt="OSD Logo"
+              preview={false}
+              className="mb-2"
+            />
+          </div>
+          
+          {organizationId && (
+            <ConfigProvider
+              theme={{
+                algorithm: theme.darkAlgorithm,
+                components: {
+                  Menu: {
+                    itemBg: "transparent",
+                    itemColor: "white",
+                    itemHoverBg: "#363A3D",
+                    itemHoverColor: "white",
+                    itemSelectedBg: "transparent",
+                    itemSelectedColor: "white",
+                    itemDisabledColor: "white",
+                  },
+                },
+              }}
+            >
+              <Menu
+                mode="vertical"
+                selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
+                defaultSelectedKeys={[
+                  mappedPath,
+                  `${mappedPath}/${currentPathSub}`,
+                ]}
+                items={renderMenuItems(MenuSider, organizationRole)}
+                onClick={() => setMobileMenuOpen(false)}
+                className="mobile-drawer"
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "white",
+                }}
+              />
+            </ConfigProvider>
+          )}
+        </div>
+        </Drawer>
+      )}
     </Header>
   );
 };
