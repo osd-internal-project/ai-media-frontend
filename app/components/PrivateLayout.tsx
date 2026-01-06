@@ -818,11 +818,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             width={90}
             trigger={null}
             collapsible
-            // collapsed={true}
-            className="hidden md:block p-2 h-screen"
+            collapsed={false}
+            className="hidden md:block p-2 h-screen mobile-hide"
           >
             <div className="bg-black rounded-2xl h-full flex flex-col">
-              {/* Logo at top of sidebar */}
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
                   width={"120px"}
@@ -989,7 +988,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
             />
-            <div className="w-full h-screen p-2  overflow-y-auto">
+            <div className="w-full h-screen p-2 md:p-2 mobile-padding overflow-y-auto mobile-full">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
                   value={{ organizationId, organizationRole }}

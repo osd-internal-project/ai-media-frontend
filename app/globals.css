@@ -4,6 +4,90 @@
   font-family: 'Prompt', sans-serif !important;
 }
 
+/* Base responsive styles */
+@media (min-width: 768px) {
+  .mobile-menu-btn,
+  .mobile-menu-btn.ant-btn {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-full {
+    width: 100% !important;
+  }
+  
+  .mobile-padding {
+    padding: 0.5rem !important;
+  }
+  
+  /* Force sidebar to be hidden on mobile */
+  .ant-layout-sider {
+    display: none !important;
+  }
+  
+  /* Ensure main content takes full width on mobile */
+  .ant-layout-content {
+    margin-left: 0 !important;
+  }
+  
+  /* Mobile drawer menu styling */
+  .ant-drawer-body {
+    padding: 0 !important;
+  }
+  
+  /* Mobile menu items - match desktop sidebar styling */
+  .mobile-drawer .ant-menu-item {
+    padding: 4px 0 !important;
+    height: auto !important;
+    line-height: normal !important;
+  }
+  
+  .mobile-drawer .ant-menu-item a {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+  }
+  
+  /* Mobile drawer icon container styling */
+  .mobile-drawer .ant-menu-item-selected .menu-icon-container {
+    background-color: #1677ff !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .mobile-drawer .menu-icon-container {
+    padding: 8px !important;
+    border-radius: 8px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .mobile-drawer .menu-text-label {
+    color: gray !important;
+  }
+  
+  .mobile-drawer .ant-menu-item-selected .menu-text-label {
+    font-weight: bold !important;
+    color: white !important; 
+  }
+}
+
 .ant-select-selector {
   background-color: black !important;
   color: #fff !important;
