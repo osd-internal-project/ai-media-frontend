@@ -29,10 +29,10 @@ const Page: FC = () => {
       // Local Login: Sends credentials to Keycloak via NextAuth CredentialsProvider
       const result = await signIn("credentials", {
         redirect: false,
-        username: values.email, // Keycloak often uses email or username
+        username: values.email,
         password: values.password,
+        callbackUrl: "/page/project-layout",
       });
-      console.log(result);
       if (result?.error) {
         messageApi.error("Login failed! Please check your User or Password.");
       } else {
@@ -66,8 +66,6 @@ const Page: FC = () => {
       } else {
         messageApi.error(error);
       }
-      // Remove error param
-      router.replace("/login");
     }
   }, [messageApi, router]);
   useEffect(() => {

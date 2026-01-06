@@ -71,7 +71,7 @@ const NavbarUser: React.FC<Props> = ({
 
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-    
+
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -128,7 +128,7 @@ const NavbarUser: React.FC<Props> = ({
 
       <div
         className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => signOut({ callbackUrl: "/login" })}
       >
         <LogOut className="w-4 h-4" />
         <span className="text-sm font-medium">Logout</span>
@@ -259,11 +259,11 @@ const NavbarUser: React.FC<Props> = ({
                   }}
                 >
                   {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && ( */}
-                    <Button
-                      type="default"
-                      size="small"
-                      icon={<SettingOutlined />}
-                    />
+                  <Button
+                    type="default"
+                    size="small"
+                    icon={<SettingOutlined />}
+                  />
                   {/* )} */}
                 </Popover>
               </>
@@ -286,60 +286,60 @@ const NavbarUser: React.FC<Props> = ({
           closable={true}
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}
-        styles={{
-          body: { padding: "0rem", backgroundColor: "#0f0f0f" },
-          header: { display: "none" },
-        }}
-        width={90}
-      >
-        <div className="bg-black rounded-2xl h-full flex flex-col">
-          {/* Logo at top of mobile drawer */}
-          <div className="w-full flex justify-center items-center pt-8 flex-shrink-0">
-            <Image
-              width={"60px"}
-              src="/images/Logo.png"
-              alt="OSD Logo"
-              preview={false}
-              className="mb-2"
-            />
-          </div>
-          
-          {organizationId && (
-            <ConfigProvider
-              theme={{
-                algorithm: theme.darkAlgorithm,
-                components: {
-                  Menu: {
-                    itemBg: "transparent",
-                    itemColor: "white",
-                    itemHoverBg: "#363A3D",
-                    itemHoverColor: "white",
-                    itemSelectedBg: "transparent",
-                    itemSelectedColor: "white",
-                    itemDisabledColor: "white",
-                  },
-                },
-              }}
-            >
-              <Menu
-                mode="vertical"
-                selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
-                defaultSelectedKeys={[
-                  mappedPath,
-                  `${mappedPath}/${currentPathSub}`,
-                ]}
-                items={renderMenuItems(MenuSider, organizationRole)}
-                onClick={() => setMobileMenuOpen(false)}
-                className="mobile-drawer"
-                style={{
-                  backgroundColor: "transparent",
-                  border: "none",
-                  color: "white",
-                }}
+          styles={{
+            body: { padding: "0rem", backgroundColor: "#0f0f0f" },
+            header: { display: "none" },
+          }}
+          width={90}
+        >
+          <div className="bg-black rounded-2xl h-full flex flex-col">
+            {/* Logo at top of mobile drawer */}
+            <div className="w-full flex justify-center items-center pt-8 flex-shrink-0">
+              <Image
+                width={"60px"}
+                src="/images/Logo.png"
+                alt="OSD Logo"
+                preview={false}
+                className="mb-2"
               />
-            </ConfigProvider>
-          )}
-        </div>
+            </div>
+
+            {organizationId && (
+              <ConfigProvider
+                theme={{
+                  algorithm: theme.darkAlgorithm,
+                  components: {
+                    Menu: {
+                      itemBg: "transparent",
+                      itemColor: "white",
+                      itemHoverBg: "#363A3D",
+                      itemHoverColor: "white",
+                      itemSelectedBg: "transparent",
+                      itemSelectedColor: "white",
+                      itemDisabledColor: "white",
+                    },
+                  },
+                }}
+              >
+                <Menu
+                  mode="vertical"
+                  selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
+                  defaultSelectedKeys={[
+                    mappedPath,
+                    `${mappedPath}/${currentPathSub}`,
+                  ]}
+                  items={renderMenuItems(MenuSider, organizationRole)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mobile-drawer"
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "white",
+                  }}
+                />
+              </ConfigProvider>
+            )}
+          </div>
         </Drawer>
       )}
     </Header>
