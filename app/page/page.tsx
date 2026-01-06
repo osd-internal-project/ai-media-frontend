@@ -8,15 +8,12 @@ const Page = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
+    if (status === "authenticated") {
+      router.replace("/page/project-layout");
     }
   }, [status, router]);
 
-  if (session) {
-    redirect("/page/project-layout");
-  }
-  return redirect("/login");
+  return null;
 };
 
 export default Page;

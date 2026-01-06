@@ -48,7 +48,7 @@ const NavbarUser: React.FC<Props> = ({
   organizationRole,
 }) => {
   const router = useRouter();
-  
+
   const content = (
     <>
       <div
@@ -60,9 +60,9 @@ const NavbarUser: React.FC<Props> = ({
         <User className="w-4 h-4" />
         <span className="text-sm font-medium">User Profile</span>
       </div>
-      
+
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
-      
+
       <div className="px-3 py-1">
         <div className="flex items-center gap-3 py-2 text-white">
           <CreditCard className="w-4 h-4" />
@@ -97,12 +97,12 @@ const NavbarUser: React.FC<Props> = ({
           <span className="text-sm text-gray-300">Payments</span>
         </div>
       </div>
-      
+
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
-      
+
       <div
         className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => signOut({ callbackUrl: "/login" })}
       >
         <LogOut className="w-4 h-4" />
         <span className="text-sm font-medium">Logout</span>
