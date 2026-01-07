@@ -26,16 +26,18 @@ const HeaderGenerateImagePage: FC<props> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth < 1400 && window.innerWidth >= 768);
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   const showDrawer = () => {
@@ -48,10 +50,16 @@ const HeaderGenerateImagePage: FC<props> = ({
 
   const TitleSection = () => (
     <div className="flex flex-col">
-      <span className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+      <span
+        className={`font-bold ${isMobile || isTablet ? "text-xl" : "text-2xl"}`}
+      >
         {`${getProject?.name}`}
       </span>
-      <span className={`text-[#9B9C9E] ${isMobile ? 'text-sm' : 'text-md'}`}>
+      <span
+        className={`text-[#9B9C9E] ${
+          isMobile || isTablet ? "text-sm" : "text-md"
+        }`}
+      >
         {`Shake up your creativity with image generation`}
       </span>
     </div>
@@ -60,26 +68,52 @@ const HeaderGenerateImagePage: FC<props> = ({
   return (
     <div className="bg-black w-full p-4 pt-0 rounded-t-2xl">
       {/* Mobile: Title at top */}
-      {isMobile && <TitleSection />}
-      
+      {isMobile && (
+        <div className="mb-4">
+          <TitleSection />
+        </div>
+      )}
+
       {/* Controls section */}
-      <div className={`flex ${isMobile ? 'justify-center mt-4' : 'justify-between'} items-center`}>
-        {/* Desktop: Title on left */}
-        {!isMobile && <TitleSection />}
-        
-        <div className={`flex items-center ${isMobile ? 'flex-wrap justify-center' : ''} gap-4`}>
+      <div
+        className={`flex ${
+          isMobile
+            ? "flex-col space-y-4"
+            : isTablet
+            ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
+            : "justify-between items-center"
+        }`}
+      >
+        {/* Desktop/Tablet: Title on left */}
+        {!isMobile && (
+          <div className="flex-shrink-0">
+            <TitleSection />
+          </div>
+        )}
+
+        {/* Controls wrapper */}
+        <div
+          className={`flex ${
+            isMobile
+              ? "items-center gap-1 justify-end flex-nowrap"
+              : isTablet
+              ? "flex-wrap gap-3 justify-end"
+              : "items-center gap-4"
+          }`}
+        >
           {(activeKey === "image" || activeKey === "vdo") &&
             filteredAIModels && (
               <>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
+                {/* AI Model Selection */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-gray-600">
                     AI Model:
                   </span>
                   <Select
-                    size={isMobile ? "small" : "middle"}
+                    size="middle"
                     style={{
-                      minWidth: isMobile ? 200 : 280,
-                      width: isMobile ? '100%' : 'auto',
+                      minWidth: isMobile ? 160 : isTablet ? 250 : 280,
+                      width: "auto",
                     }}
                     className="dark-select"
                     placeholder="Choose an AI model"
@@ -316,28 +350,36 @@ const HeaderGenerateImagePage: FC<props> = ({
                       ))}
                   </Select>
                 </div>
+
+                {/* Action Buttons - Inline with AI Model */}
                 <Button
                   type={promptGuideOpenStatus ? "primary" : "default"}
                   ghost={promptGuideOpenStatus}
                   onClick={onPromptGuideToggle}
-                  size={isMobile ? "small" : "middle"}
+                  size="middle"
                 >
-                  {isMobile ? "Example" : "Prompt Example"}
+                  {isMobile
+                    ? "Examples"
+                    : isTablet
+                    ? "Examples"
+                    : "Prompt Examples"}
                 </Button>
-                <Button
-                  size="small"
-                  type="link"
-                  className="!text-[#686B6E]"
-                  icon={<LightbulbIcon className="w-4 h-4" />}
-                  onClick={showDrawer}
-                >
-                  {isMobile ? "Guide" : "Prompt Guide"}
-                </Button>
+                <Tooltip title={isMobile ? "Prompt Guide" : undefined} placement="top">
+                  <Button
+                    size={isMobile ? "small" : "middle"}
+                    type="link"
+                    className="!text-[#686B6E]"
+                    icon={<LightbulbIcon className="w-4 h-4" />}
+                    onClick={showDrawer}
+                  >
+                    {isMobile ? "" : isTablet ? "Guide" : "Prompt Guide"}
+                  </Button>
+                </Tooltip>
               </>
             )}
         </div>
       </div>
-      
+
       <Drawer
         title={
           <div className="flex items-center gap-2">
@@ -348,7 +390,9 @@ const HeaderGenerateImagePage: FC<props> = ({
         closable={{ "aria-label": "Close Button" }}
         onClose={onClose}
         open={open}
-        width={600}
+        width={isMobile ? "90%" : isTablet ? "80%" : 600}
+        placement={isMobile ? "bottom" : "right"}
+        height={isMobile ? "80%" : undefined}
       >
         <div className="space-y-6">
           {/* Introduction */}

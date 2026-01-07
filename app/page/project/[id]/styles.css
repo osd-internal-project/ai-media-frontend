@@ -50,11 +50,12 @@
   .custom-tabs .ant-tabs-nav {
     width: 100% !important;
     margin: 0 !important;
+    padding: 8px !important;
     margin-bottom: 8px !important;
     flex-shrink: 0;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: 80px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
   }
   
   .custom-tabs .ant-tabs-nav-wrap {

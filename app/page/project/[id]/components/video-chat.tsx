@@ -91,6 +91,7 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   duration,
   isMultiImage,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "480p":
@@ -103,6 +104,17 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
         return "4K";
     }
   };
+
+  useEffect(() => {
+      const checkScreenSize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+  
+      checkScreenSize();
+      window.addEventListener("resize", checkScreenSize);
+  
+      return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
 
   return (
     <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
@@ -118,7 +130,7 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
 
         {/* Configuration Info */}
         <div className="flex items-center gap-3 flex-1 text-sm">
-          <span className="text-white font-medium">Smart Reference</span>
+          <span className="text-white font-medium">{isMobile ? "" : "Smart Reference"}</span>
           <span className="text-purple-400 font-medium">
             {getResolutionLabel(resolution)}
           </span>

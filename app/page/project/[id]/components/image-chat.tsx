@@ -98,6 +98,7 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
   ratio,
   imageCount,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "2k":
@@ -110,6 +111,17 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
         return "?";
     }
   };
+
+  useEffect(() => {
+      const checkScreenSize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+  
+      checkScreenSize();
+      window.addEventListener("resize", checkScreenSize);
+  
+      return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
 
   return (
     <>
@@ -124,7 +136,7 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
           </div> */}
 
           <div className="flex items-center gap-3 flex-1 text-sm">
-            <span className="text-white font-medium">Smart Reference</span>
+            <span className="text-white font-medium">{isMobile ? "" : "Smart Reference"}</span>
             <span className="text-purple-400 font-medium">
               {getResolutionLabel(resolution)}
             </span>
