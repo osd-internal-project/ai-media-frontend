@@ -696,6 +696,7 @@ const GenerateImagePage: FC = () => {
                 username={session?.user?.name || ""}
                 selectedAIModel={selectedAIModel}
                 setDisableTab={setDisableTab}
+                onPromptGuideToggle={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
               />
             ),
           },
@@ -720,6 +721,7 @@ const GenerateImagePage: FC = () => {
                 promptGuideOpenStatus={promptGuideOpenStatus}
                 selectedAIModel={selectedAIModel}
                 setDisableTab={setDisableTab}
+                onPromptGuideToggle={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
               />
             ),
           },

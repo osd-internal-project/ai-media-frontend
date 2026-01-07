@@ -21,6 +21,7 @@ import {
   Spin,
   Select,
   Space,
+  Drawer,
   Tooltip,
 } from "antd";
 import {
@@ -54,6 +55,7 @@ interface VideoChatProps {
   promptGuideOpenStatus: boolean;
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
   setDisableTab: (disable: boolean) => void;
+  onPromptGuideToggle?: () => void;
 }
 
 interface VideoConfigurationCardProps {
@@ -106,15 +108,15 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   };
 
   useEffect(() => {
-      const checkScreenSize = () => {
-        setIsMobile(window.innerWidth < 768);
-      };
-  
-      checkScreenSize();
-      window.addEventListener("resize", checkScreenSize);
-  
-      return () => window.removeEventListener("resize", checkScreenSize);
-    }, []);
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   return (
     <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
@@ -130,7 +132,9 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
 
         {/* Configuration Info */}
         <div className="flex items-center gap-3 flex-1 text-sm">
-          <span className="text-white font-medium">{isMobile ? "" : "Smart Reference"}</span>
+          <span className="text-white font-medium">
+            {isMobile ? "" : "Smart Reference"}
+          </span>
           <span className="text-purple-400 font-medium">
             {getResolutionLabel(resolution)}
           </span>
@@ -248,6 +252,7 @@ const VideoChat: FC<VideoChatProps> = ({
   promptGuideOpenStatus,
   selectedAIModel, // Destructure selectedAIModel
   setDisableTab,
+  onPromptGuideToggle,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -261,6 +266,7 @@ const VideoChat: FC<VideoChatProps> = ({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [firstFrameImage, setFirstFrameImage] = useState<string>(
     "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=250&fit=crop&crop=faces"
   );
@@ -273,6 +279,18 @@ const VideoChat: FC<VideoChatProps> = ({
   const scrollHeightRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
   const lastScrollTop = useRef<number>(0);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Fetch Data (Pagination)
   const fetchMessages = useCallback(
@@ -484,12 +502,12 @@ const VideoChat: FC<VideoChatProps> = ({
       message.warning(`Duplicate file: ${file.name}`);
       return false;
     }
-    
+
     if (files.length >= 2) {
       message.warning(`Upload limit: 2 files max`);
       return false;
     }
-    
+
     return false;
   };
   const onFinish = async (values: ITFromGenerate) => {
@@ -627,12 +645,15 @@ const VideoChat: FC<VideoChatProps> = ({
   return (
     <div
       className={
-        promptGuideOpenStatus ? "flex gap-2 h-full" : "h-full flex flex-col"
+        promptGuideOpenStatus && !isMobile
+          ? "flex gap-2 h-full"
+          : "h-full flex flex-col"
       }
     >
       <div
-        className={`h-full flex flex-col ${promptGuideOpenStatus ? "flex-1" : ""
-          }`}
+        className={`h-full flex flex-col ${
+          promptGuideOpenStatus && !isMobile ? "flex-1" : ""
+        }`}
       >
         {contextHolder}
         <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
@@ -692,8 +713,9 @@ const VideoChat: FC<VideoChatProps> = ({
             {messages.map((msg, index) => (
               <div
                 key={`${msg.taskId}-${index}`}
-                className={`flex gap-4 ${msg.type === "user" ? "justify-end" : "justify-start"
-                  }`}
+                className={`flex gap-4 ${
+                  msg.type === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 {msg.type === "ai" && (
                   <Avatar
@@ -703,10 +725,11 @@ const VideoChat: FC<VideoChatProps> = ({
                   />
                 )}
                 <div
-                  className={`flex flex-col ${msg.type === "user"
-                    ? "max-w-[80%] items-end"
-                    : "max-w-full items-start min-w-[480px]"
-                    }`}
+                  className={`flex flex-col ${
+                    msg.type === "user"
+                      ? "max-w-[80%] items-end"
+                      : "max-w-full items-start min-w-[480px]"
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
                     <span>{msg.username}</span>
@@ -727,10 +750,11 @@ const VideoChat: FC<VideoChatProps> = ({
                   {msg.content && (
                     <div
                       className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-md
-                                        ${msg.type === "user"
-                          ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                          : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
-                        }`}
+                                        ${
+                                          msg.type === "user"
+                                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
+                                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                                        }`}
                     >
                       {msg.content}
                     </div>
@@ -750,12 +774,13 @@ const VideoChat: FC<VideoChatProps> = ({
                       />
 
                       <div
-                        className={`grid gap-4 mt-4 w-full max-w-6xl ${msg.images.length === 1
-                          ? "grid-cols-1"
-                          : msg.images.length === 2
+                        className={`grid gap-4 mt-4 w-full max-w-6xl ${
+                          msg.images.length === 1
+                            ? "grid-cols-1"
+                            : msg.images.length === 2
                             ? "grid-cols-1 md:grid-cols-2"
                             : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                          }`}
+                        }`}
                       >
                         {msg.images.map((videoData, i) => (
                           <VideoItem
@@ -841,264 +866,264 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 }
               >
-              <Form
-                form={form}
-                onFinish={onFinish}
-                initialValues={{
-                  type: "vdo",
-                  width: 1280,
-                  height: 720,
-                  images: 1,
-                  ratio: "16:9",
-                  resolution: "1080p",
-                  duration: "10",
-                }}
-              >
-                <Form.Item name="type" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="width" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="height" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="ratio" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="images" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="resolution" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="duration" hidden>
-                  <Input />
-                </Form.Item>
-
-                <div className="flex flex-col gap-2">
-                  <Form.Item
-                    name="text"
-                    rules={[{ required: true, message: "" }]}
-                    style={{ margin: 0 }}
-                  >
-                    <Input.TextArea
-                      placeholder="Describe the video you want to create"
-                      autoSize={{ minRows: 2, maxRows: 5 }}
-                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          if (!submitting) {
-                            form.submit();
-                          }
-                        }
-                      }}
-                    />
+                <Form
+                  form={form}
+                  onFinish={onFinish}
+                  initialValues={{
+                    type: "vdo",
+                    width: 1280,
+                    height: 720,
+                    images: 1,
+                    ratio: "16:9",
+                    resolution: "1080p",
+                    duration: "10",
+                  }}
+                >
+                  <Form.Item name="type" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="width" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="height" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="ratio" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="images" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="resolution" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="duration" hidden>
+                    <Input />
                   </Form.Item>
 
-                  {/* Upload List Preview (Custom) */}
-                  {files.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {files.map((file: UploadFile) => (
-                        <div
-                          key={file.uid}
-                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
-                        >
-                          <Image
-                            src={
-                              file.thumbUrl ||
-                              (file.originFileObj
-                                ? URL.createObjectURL(file.originFileObj)
-                                : "")
-                            }
-                            alt="preview"
-                            width={48}
-                            height={48}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
-                          <div
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={() => {
-                              setFiles(
-                                files.filter((f) => f.uid !== file.uid)
-                              );
-                            }}
-                          >
-                            <Trash size={12} className="text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                      {/* File Upload (for Image-to-Video if supported) */}
-                      <Form.Item
-                        name="image"
-                        className="mb-0"
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Upload
-                          fileList={files}
-                          onChange={handleUploadChange}
-                          beforeUpload={beforeUpload}
-                          multiple={false} // Maybe single image for video init?
-                          maxCount={2}
-                          showUploadList={false}
-                          disabled={submitting}
-                        >
-                          <Tooltip 
-                            title={`Upload files (${files.length}/2)`}
-                            placement="top"
-                          >
-                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
-                              <PaperClipOutlined className="text-lg" />
-                              {files.length > 0 && (
-                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-                                  {files.length}
-                                </div>
-                              )}
-                            </div>
-                          </Tooltip>
-                        </Upload>
-                      </Form.Item>
-                      {/* Resolution Selector */}
-                      <Form.Item
-                        name="resolution"
-                        className="w-full m-0"
-                        initialValue={"1080p"}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          optionFilterProp="label"
-                          placeholder="เลือกความละเอียด"
-                          options={[
-                            { value: "480p", label: "480p - Standard" },
-                            { value: "720p", label: "720p - HD" },
-                            { value: "1080p", label: "1080p - Full HD" },
-                          ]}
-                        />
-                      </Form.Item>
-                      {/* Ratio Selector */}
-                      <Form.Item<ITFromGenerate>
-                        className="w-full"
-                        name={`ratio`}
-                        rules={[
-                          {
-                            required: true,
-                            message: "กรุณาเลือกอัตราส่วนของวิดีโอ!",
-                          },
-                        ]}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          defaultValue="16:9"
-                          onChange={handleRatioChange}
-                          variant="borderless"
-                          popupMatchSelectWidth={false}
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          options={[
-                            { value: "16:9", label: "16:9 - Widescreen" },
-                            { value: "4:3", label: "4:3 - Standard" },
-                            { value: "1:1", label: "1:1 - Square" },
-                            { value: "3:4", label: "3:4 - Portrait" },
-                            { value: "9:16", label: "9:16 - Vertical" },
-                            { value: "21:9", label: "21:9 - Ultrawide" },
-                          ]}
-                        />
-                      </Form.Item>
-                      <Form.Item<ITFromGenerate>
-                        className="w-full"
-                        name={`duration`}
-                        rules={[
-                          {
-                            required: true,
-                            message: "กรุณาเลือกความยาวของวิดีโอ!",
-                          },
-                        ]}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          optionFilterProp="label"
-                          placeholder="เลือกความยาว"
-                          allowClear
-                          options={[
-                            { value: "5", label: "5 วินาที" },
-                            { value: "10", label: "10 วินาที" },
-                          ]}
-                        />
-                      </Form.Item>
-                    </div>
-                    <Button
-                      htmlType="submit"
-                      size="large"
-                      disabled={submitting}
-                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                  <div className="flex flex-col gap-2">
+                    <Form.Item
+                      name="text"
+                      rules={[{ required: true, message: "" }]}
+                      style={{ margin: 0 }}
                     >
-                      <SendOutlined className="text-lg" />
-                    </Button>
+                      <Input.TextArea
+                        placeholder="Describe the video you want to create"
+                        autoSize={{ minRows: 2, maxRows: 5 }}
+                        className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (!submitting) {
+                              form.submit();
+                            }
+                          }
+                        }}
+                      />
+                    </Form.Item>
+
+                    {/* Upload List Preview (Custom) */}
+                    {files.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {files.map((file: UploadFile) => (
+                          <div
+                            key={file.uid}
+                            className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
+                          >
+                            <Image
+                              src={
+                                file.thumbUrl ||
+                                (file.originFileObj
+                                  ? URL.createObjectURL(file.originFileObj)
+                                  : "")
+                              }
+                              alt="preview"
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                            <div
+                              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => {
+                                setFiles(
+                                  files.filter((f) => f.uid !== file.uid)
+                                );
+                              }}
+                            >
+                              <Trash size={12} className="text-white" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-2">
+                        {/* File Upload (for Image-to-Video if supported) */}
+                        <Form.Item
+                          name="image"
+                          className="mb-0"
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Upload
+                            fileList={files}
+                            onChange={handleUploadChange}
+                            beforeUpload={beforeUpload}
+                            multiple={false} // Maybe single image for video init?
+                            maxCount={2}
+                            showUploadList={false}
+                            disabled={submitting}
+                          >
+                            <Tooltip
+                              title={`Upload files (${files.length}/2)`}
+                              placement="top"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                <PaperClipOutlined className="text-lg" />
+                                {files.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {files.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          </Upload>
+                        </Form.Item>
+                        {/* Resolution Selector */}
+                        <Form.Item
+                          name="resolution"
+                          className="w-full m-0"
+                          initialValue={"1080p"}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            optionFilterProp="label"
+                            placeholder="เลือกความละเอียด"
+                            options={[
+                              { value: "480p", label: "480p - Standard" },
+                              { value: "720p", label: "720p - HD" },
+                              { value: "1080p", label: "1080p - Full HD" },
+                            ]}
+                          />
+                        </Form.Item>
+                        {/* Ratio Selector */}
+                        <Form.Item<ITFromGenerate>
+                          className="w-full"
+                          name={`ratio`}
+                          rules={[
+                            {
+                              required: true,
+                              message: "กรุณาเลือกอัตราส่วนของวิดีโอ!",
+                            },
+                          ]}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            defaultValue="16:9"
+                            onChange={handleRatioChange}
+                            variant="borderless"
+                            popupMatchSelectWidth={false}
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            options={[
+                              { value: "16:9", label: "16:9 - Widescreen" },
+                              { value: "4:3", label: "4:3 - Standard" },
+                              { value: "1:1", label: "1:1 - Square" },
+                              { value: "3:4", label: "3:4 - Portrait" },
+                              { value: "9:16", label: "9:16 - Vertical" },
+                              { value: "21:9", label: "21:9 - Ultrawide" },
+                            ]}
+                          />
+                        </Form.Item>
+                        <Form.Item<ITFromGenerate>
+                          className="w-full"
+                          name={`duration`}
+                          rules={[
+                            {
+                              required: true,
+                              message: "กรุณาเลือกความยาวของวิดีโอ!",
+                            },
+                          ]}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            optionFilterProp="label"
+                            placeholder="เลือกความยาว"
+                            allowClear
+                            options={[
+                              { value: "5", label: "5 วินาที" },
+                              { value: "10", label: "10 วินาที" },
+                            ]}
+                          />
+                        </Form.Item>
+                      </div>
+                      <Button
+                        htmlType="submit"
+                        size="large"
+                        disabled={submitting}
+                        className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                      >
+                        <SendOutlined className="text-lg" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Form>
+                </Form>
               </PermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500 space-y-1">
               <div>AI can make mistakes. Please check the generated Video.</div>
               {files.length > 0 && (
-                <div className="text-blue-400">
-                  📎 {files.length}/2 files
-                </div>
+                <div className="text-blue-400">📎 {files.length}/2 files</div>
               )}
             </div>
           </div>
         </div>
       </div>
-      <div
-        className={`${promptGuideOpenStatus ? "h-full block w-80 flex-shrink-0" : "hidden"
+      {!isMobile && (
+        <div
+          className={`${
+            promptGuideOpenStatus ? "h-full block w-80 flex-shrink-0" : "hidden"
           }`}
-      >
-        <div className="h-full bg-[#18181b] text-white relative rounded-xl border border-white/10 flex flex-col">
-          <div className="p-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
-          </div>
-          <div className="text-sm flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto px-4 pb-4">
-              {promptGuideTypes.map((type) => (
+        >
+          <div className="h-full bg-[#18181b] text-white relative rounded-xl border border-white/10 flex flex-col">
+            <div className="p-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
+            </div>
+            <div className="text-sm flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto px-4 pb-4">
+                {promptGuideTypes.map((type) => (
                   <div key={type.id}>
                     <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
                       {type.title}
@@ -1120,10 +1145,61 @@ const VideoChat: FC<VideoChatProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+      {isMobile && (
+        <Drawer
+          title="Prompt Examples"
+          placement="bottom"
+          onClose={onPromptGuideToggle}
+          open={promptGuideOpenStatus}
+          height="80%"
+          className="prompt-guide-drawer"
+          styles={{
+            header: {
+              background: "#18181b",
+              color: "white",
+              borderBottom: "none",
+            },
+            body: {
+              padding: "0",
+              background: "#18181b",
+            },
+          }}
+        >
+          <div className="h-full bg-[#18181b] text-white relative flex flex-col">
+            <div className="text-sm flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto px-4 pb-4">
+                {promptGuideTypes.map((type) => (
+                  <div key={type.id}>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
+                      {type.title}
+                    </h3>
+                    <div className="space-y-3 w-full">
+                      {type.promptGuide?.map(
+                        (item: TPromptGuide, index: number) => (
+                          <Button
+                            htmlType="button"
+                            key={item.id || index}
+                            size="large"
+                            onClick={() => item.id && onSetPromptText(item.id)}
+                            className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
+                          >
+                            <Space className=" ">{item.title}</Space>
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Drawer>
+      )}
     </div>
   );
 };

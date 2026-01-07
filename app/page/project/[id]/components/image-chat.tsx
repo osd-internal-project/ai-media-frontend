@@ -24,6 +24,7 @@ import {
   Row,
   Space,
   Tooltip,
+  Drawer,
 } from "antd";
 import {
   UserOutlined,
@@ -61,6 +62,7 @@ interface ImageChatProps {
   username?: string;
   selectedAIModel?: TAIModel | null;
   setDisableTab: (disable: boolean) => void;
+  onPromptGuideToggle?: () => void;
 }
 
 interface ChatMessage {
@@ -258,6 +260,7 @@ const ImageChat: FC<ImageChatProps> = ({
   username,
   selectedAIModel,
   setDisableTab,
+  onPromptGuideToggle,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -271,6 +274,7 @@ const ImageChat: FC<ImageChatProps> = ({
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const pageSize = 3;
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -278,6 +282,18 @@ const ImageChat: FC<ImageChatProps> = ({
   const isFirstLoad = useRef<boolean>(true);
   const scrollHeightRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const shouldAutoScrollRef = useRef<boolean>(false);
 
   const fetchMessages = useCallback(
@@ -653,14 +669,14 @@ const ImageChat: FC<ImageChatProps> = ({
   return (
     <div
       className={
-        promptGuideOpenStatus
+        promptGuideOpenStatus && !isMobile
           ? "flex gap-2 h-full"
           : "h-full flex flex-col"
       }
     >
       <div
         className={`h-full flex flex-col ${
-          promptGuideOpenStatus ? "flex-1" : ""
+          promptGuideOpenStatus && !isMobile ? "flex-1" : ""
         }`}
       >
         {contextHolder}
@@ -1247,39 +1263,94 @@ const ImageChat: FC<ImageChatProps> = ({
           </div>
         </div>
       </div>{" "}
-      <div className={`${promptGuideOpenStatus ? "h-full block w-80 flex-shrink-0" : "hidden"}`}>
-        <div className="h-full bg-[#18181b] text-white relative rounded-xl border border-white/10 flex flex-col">
-          <div className="p-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
-          </div>
-          <div className="text-sm flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto px-4 pb-4">
-              {promptGuideTypes.map((type) => (
-                  <div key={type.id}>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
-                      {type.title}
-                    </h3>
-                    <div className="space-y-3 w-full">
-                      {type.promptGuide?.map(
-                        (item: TPromptGuide, index: number) => (
-                          <Button
-                            htmlType="button" // Prevent form submission
-                            key={item.id || index}
-                            size="large"
-                            onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
-                            className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
-                          >
-                            <Space className=" ">{item.title}</Space>
-                          </Button>
-                        )
-                      )}
+      {/* Desktop Prompt Guide Panel */}
+      {!isMobile && (
+        <div className={`${promptGuideOpenStatus ? "h-full block w-80 flex-shrink-0" : "hidden"}`}>
+          <div className="h-full bg-[#18181b] text-white relative rounded-xl border border-white/10 flex flex-col">
+            <div className="p-4 flex-shrink-0">
+              <h2 className="text-lg font-semibold mb-2">Prompt Examples</h2>
+            </div>
+            <div className="text-sm flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto px-4 pb-4">
+                {promptGuideTypes.map((type) => (
+                    <div key={type.id}>
+                      <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
+                        {type.title}
+                      </h3>
+                      <div className="space-y-3 w-full">
+                        {type.promptGuide?.map(
+                          (item: TPromptGuide, index: number) => (
+                            <Button
+                              htmlType="button" // Prevent form submission
+                              key={item.id || index}
+                              size="large"
+                              onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                              className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
+                            >
+                              <Space className=" ">{item.title}</Space>
+                            </Button>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Mobile Prompt Guide Drawer */}
+      {isMobile && (
+        <Drawer
+          title="Prompt Examples"
+          placement="bottom"
+          onClose={onPromptGuideToggle}
+          open={promptGuideOpenStatus}
+          height="80%"
+          className="prompt-guide-drawer"
+          styles={{
+            header: {
+              background: '#18181b',
+              color: 'white',
+              borderBottom: 'none',
+            },
+            body: {
+              padding: '0',
+              background: '#18181b',
+            },
+          }}
+        >
+          <div className="h-full bg-[#18181b] text-white relative flex flex-col">
+            <div className="text-sm flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto px-4 pb-4">
+                {promptGuideTypes.map((type) => (
+                    <div key={type.id}>
+                      <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
+                        {type.title}
+                      </h3>
+                      <div className="space-y-3 w-full">
+                        {type.promptGuide?.map(
+                          (item: TPromptGuide, index: number) => (
+                            <Button
+                              htmlType="button"
+                              key={item.id || index}
+                              size="large"
+                              onClick={() => item.id && onSetPromptText(item.id)}
+                              className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
+                            >
+                              <Space className=" ">{item.title}</Space>
+                            </Button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </Drawer>
+      )}
     </div>
   );
 };
