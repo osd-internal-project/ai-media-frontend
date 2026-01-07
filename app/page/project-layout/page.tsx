@@ -267,7 +267,7 @@ const ProjectsPage = () => {
   };
 
   return (
-    <div className="p-6 bg-black min-h-screen text-white">
+    <div className="p-6 bg-black text-white h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">

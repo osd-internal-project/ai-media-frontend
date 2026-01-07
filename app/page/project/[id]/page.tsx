@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
 import { Tabs, Drawer } from "antd";
+import "./styles.css";
 import { useOrganization } from "../../../context/OrganizationContext";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
@@ -41,6 +42,7 @@ const GenerateImagePage: FC = () => {
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
@@ -52,6 +54,18 @@ const GenerateImagePage: FC = () => {
   const { id } = params as { id: string };
   const { organizationId } = useOrganization();
   const [projectRole, setProjectRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   useEffect(() => {
     const fetchProjectRole = async () => {
@@ -205,8 +219,9 @@ const GenerateImagePage: FC = () => {
   );
 
   return (
-    <div>
-      <div>
+    <div className="h-full flex flex-col"
+      style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <div className="flex-shrink-0">
         <HeaderGenerateImagePage 
           getProject={getProject} 
           activeKey={activeKey}
@@ -379,12 +394,19 @@ const GenerateImagePage: FC = () => {
           </div>
         </div>
       </Drawer>
-      <Tabs
-        tabPosition="left"
-        style={{ marginTop: "0px" }}
-        className="custom-tabs"
-        // type="card"
-        activeKey={activeKey}
+      
+      <div className="flex-1 min-h-0">
+        <Tabs
+          tabPosition={isMobile ? "top" : "left"}
+          style={{ 
+            height: "100%", 
+            width: "100%",
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row"
+          }}
+          className="custom-tabs"
+          activeKey={activeKey}
+          size={isMobile ? "small" : "large"}
         // tabBarExtraContent={
         //   activeKey === "image" || activeKey === "vdo" ? (
         //     <div className="flex gap-4 items-center relative">
@@ -775,154 +797,8 @@ const GenerateImagePage: FC = () => {
             ),
           },
         ]}
-      />
-
-      <style>{`
-        .custom-tabs {
-          background: transparent;
-        }
-        
-        .custom-tabs .ant-tabs-nav {
-          background: #18181B;
-          width: 220px;
-          padding: 8px;
-          margin: 0;
-          margin-left: 16px;
-          position: relative;
-          top: 0;
-          border-radius: 12px;
-          border: none;
-        }
-        
-        .custom-tabs .ant-tabs-nav::before {
-          border: none !important;
-          display: none;
-        }
-        
-        .custom-tabs .ant-tabs-nav::after {
-          border: none !important;
-          display: none;
-        }
-        
-        .custom-tabs .ant-tabs-nav-list {
-          width: 100%;
-          border: none;
-        }
-        
-        .custom-tabs .ant-tabs-nav-wrap {
-          border: none;
-          border-right: none;
-        }
-        
-        .custom-tabs .ant-tabs-tab {
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          margin: 0;
-          padding: 0;
-          transition: none !important;
-          width: 100%;
-        }
-        
-        .custom-tabs .ant-tabs-tab:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .custom-tabs .ant-tabs-tab-active {
-          background: #444444;
-          border: 1px solid #444444 !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-active::before {
-          border-color: #444444 !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          border-color: #444444 !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-btn {
-          color: #ffffff !important;
-          padding: 0;
-          width: 100%;
-          transition: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab:focus,
-        .custom-tabs .ant-tabs-tab:focus-visible {
-          outline: none !important;
-          box-shadow: none !important;
-          border: none !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-btn:focus,
-        .custom-tabs .ant-tabs-tab-btn:focus-visible {
-          outline: none !important;
-          box-shadow: none !important;
-          border: none !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab span {
-          color: #ffffff !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-          color: #ffffff !important;
-        }
-        
-        .custom-tabs .ant-tabs-tab-active span {
-          color: #ffffff !important;
-        }
-        
-        .custom-tabs .ant-tabs-content-holder {
-          background: transparent;
-          border: none;
-          border-left: none;
-        }
-        
-        .custom-tabs .ant-tabs-content {
-          height: 100%;
-        }
-        
-        .custom-tabs .ant-tabs-tabpane {
-          height: 100%;
-        }
-        
-        .custom-tabs .ant-tabs-ink-bar {
-          display: none;
-        }
-
-        /* Dark Select Styling */
-        .dark-select .ant-select-selector {
-          background-color: #27272a !important;
-          border: 1px solid #3f3f46 !important;
-          color: #d1d5db !important;
-        }
-
-        .dark-select .ant-select-selection-item {
-          color: #d1d5db !important;
-        }
-
-        .dark-select .ant-select-selection-placeholder {
-          color: #6b7280 !important;
-        }
-
-        .dark-select:hover .ant-select-selector {
-          border-color: #52525b !important;
-        }
-
-        .dark-select.ant-select-focused .ant-select-selector {
-          border-color: #3b82f6 !important;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-        }
-
-        .dark-select .ant-select-arrow {
-          color: #9ca3af !important;
-        }
-
-      `}</style>
+        />
+      </div>
     </div>
   );
 };

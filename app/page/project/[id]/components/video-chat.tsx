@@ -615,11 +615,11 @@ const VideoChat: FC<VideoChatProps> = ({
   return (
     <div
       className={
-        promptGuideOpenStatus ? "grid md:grid-cols-4 sm:grid-cols-1 gap-2" : ""
+        promptGuideOpenStatus ? "flex gap-2 h-full" : "h-full flex flex-col"
       }
     >
       <div
-        className={`h-[calc(100vh-160px)] ${promptGuideOpenStatus ? "col-span-3" : ""
+        className={`h-full flex flex-col ${promptGuideOpenStatus ? "flex-1" : ""
           }`}
       >
         {contextHolder}
@@ -1077,15 +1077,16 @@ const VideoChat: FC<VideoChatProps> = ({
         </div>
       </div>
       <div
-        className={`${promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
+        className={`${promptGuideOpenStatus ? "h-full block w-80 flex-shrink-0" : "hidden"
           }`}
       >
-        <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-          <div className="p-4 ">
+        <div className="h-full bg-[#18181b] text-white relative rounded-xl border border-white/10 flex flex-col">
+          <div className="p-4 flex-shrink-0">
             <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
-            <div className="text-sm h-full ">
-              <div className="flex-1 h-[calc(100vh-270px)] overflow-y-auto">
-                {promptGuideTypes.map((type) => (
+          </div>
+          <div className="text-sm flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto px-4 pb-4">
+              {promptGuideTypes.map((type) => (
                   <div key={type.id}>
                     <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
                       {type.title}
@@ -1107,7 +1108,6 @@ const VideoChat: FC<VideoChatProps> = ({
                     </div>
                   </div>
                 ))}
-              </div>
             </div>
           </div>
         </div>
