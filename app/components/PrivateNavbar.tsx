@@ -70,9 +70,9 @@ const NavbarUser: React.FC<Props> = ({
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
-    return () => window.removeEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   const content = (
@@ -200,15 +200,17 @@ const NavbarUser: React.FC<Props> = ({
                     >
                       <span className="font-medium">Add new organization</span>
                     </Button>
-                    <Button
-                      type="text"
-                      size="large"
-                      onClick={handleManageOrg}
-                      icon={<SettingOutlined className="text-green-400" />}
-                      className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <span className="font-medium">Manage Organization</span>
-                    </Button>
+                    {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                      <Button
+                        type="text"
+                        size="large"
+                        onClick={handleManageOrg}
+                        icon={<SettingOutlined className="text-green-400" />}
+                        className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                      >
+                        <span className="font-medium">Manage Organization</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
