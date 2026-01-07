@@ -151,7 +151,7 @@ const NavbarUser: React.FC<Props> = ({
           <Button
             type="text"
             icon={<MenuOutlined />}
-            className="text-white border-none"
+            className="text-white border-none flex-shrink-0"
             onClick={() => setMobileMenuOpen(true)}
             size="large"
           />
@@ -160,14 +160,24 @@ const NavbarUser: React.FC<Props> = ({
         <span className="text-sm font-medium text-gray-600 whitespace-nowrap hidden sm:block">
           ORGANIZATION:
         </span>
-        <div className="flex items-center justify-between w-full px-2 sm:px-4">
-          <div className="flex items-center gap-2 sm:gap-6">
+        <div className={`flex items-center ${isMobile ? 'flex-1 min-w-0' : 'justify-between w-full'} px-2 sm:px-4`}>
+          <div className={`flex items-center gap-2 sm:gap-6 ${isMobile ? 'flex-1 min-w-0' : ''}`}>
             <Select
               size="middle"
               className="dark-select w-[180px] sm:w-[250px]"
               placeholder="Choose Organization"
               onChange={handleOrganizationChange}
               value={organizationId}
+              getPopupContainer={isMobile ? () => document.body : undefined}
+              dropdownStyle={
+                isMobile
+                  ? {
+                      zIndex: 9999,
+                      position: 'fixed',
+                    }
+                  : undefined
+              }
+              popupMatchSelectWidth={!isMobile}
               options={[
                 {
                   label: <span>PERSONAL</span>,
@@ -187,7 +197,9 @@ const NavbarUser: React.FC<Props> = ({
                 },
               ]}
               popupRender={(menu) => (
-                <div>
+                <div
+                  className={isMobile ? 'w-[280px] max-h-[400px] overflow-y-auto' : ''}
+                >
                   <div className="p-2">{menu}</div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent mx-3" />
                   <div className="p-2 space-y-1">
@@ -216,39 +228,40 @@ const NavbarUser: React.FC<Props> = ({
               )}
             />
           </div>
-        </div>
-        {user ? (
-          <>
-            <Tag
-              className="hidden sm:block"
-              style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                border: "none",
-                color: "white",
-                fontSize: "13px",
-                fontWeight: "600",
-                padding: "6px 16px",
-                borderRadius: "20px",
-                boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-              }}
-            >
-              1,000 Tokens
-            </Tag>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Avatar size={48} />
-              <div className="flex items-center">
-                <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base">
-                  {user.fullname}
-                </span>
-              </div>
-              <>
+          
+          {/* User Section */}
+          {user && (
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              <Tag
+                style={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  border: "none",
+                  color: "white",
+                  fontSize: isMobile ? "10px" : "13px",
+                  fontWeight: "600",
+                  padding: isMobile ? "3px 8px" : "6px 16px",
+                  borderRadius: isMobile ? "12px" : "20px",
+                  boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                {"1,000 Tokens"}
+              </Tag>
+              <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2 sm:gap-4'}`}>
+                <Avatar size={isMobile ? 34 : 48} />
+                {!isMobile && (
+                  <div className="flex items-center min-w-0">
+                    <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base truncate">
+                      {user.fullname}
+                    </span>
+                  </div>
+                )}
                 <Popover
                   content={content}
                   arrow={false}
                   trigger="click"
-                  placement="bottomRight"
+                  placement={isMobile ? "bottomLeft" : "bottomRight"}
                   title={false}
                   styles={{
                     body: {
@@ -256,29 +269,31 @@ const NavbarUser: React.FC<Props> = ({
                       backgroundColor: "#18181B",
                       borderRadius: "8px",
                       border: "1px solid #333",
-                      width: "220px",
+                      width: isMobile ? "200px" : "220px",
                     },
                   }}
                 >
-                  {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && ( */}
                   <Button
                     type="default"
-                    size="small"
+                    size={isMobile ? "small" : "small"}
                     icon={<SettingOutlined />}
+                    className="flex-shrink-0"
                   />
-                  {/* )} */}
                 </Popover>
-              </>
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-4">
-            <Avatar size={48} />
-            <div className="grid grid-cols-1 items-center gap-2">
-              <span className="font-bold text-white">{`Geust`}</span>
+          )}
+          
+          {/* Guest User Section */}
+          {!user && (
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <Avatar size={48} />
+              <div className="grid grid-cols-1 items-center gap-2">
+                <span className="font-bold text-white">{`Guest`}</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {isMobile && (

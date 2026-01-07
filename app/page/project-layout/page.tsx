@@ -54,6 +54,7 @@ const ProjectsPage = () => {
 
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);
+  const [isMobile, setIsMobile] = useState(false);
 
   const projectActionItems = [
     {
@@ -65,6 +66,17 @@ const ProjectsPage = () => {
       label: "Delete",
     },
   ];
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   const onClickProjectAction = (action: string, project: IProject) => {
     console.log("click", action, project);
@@ -267,20 +279,20 @@ const ProjectsPage = () => {
   };
 
   return (
-    <div className="p-6 bg-black text-white h-full overflow-y-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
+      <div className={`flex ${isMobile ? 'flex-row' : 'flex-col sm:flex-row'} justify-between items-center mb-6 sm:mb-8 ${isMobile ? 'gap-3' : 'gap-4 sm:gap-0'}`}>
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
             Projects
           </h1>
         </div>
         {checkRole(["ADMIN", "OWNER"], organizationRole) && (
           <Button
-            size="large"
+            size={isMobile ? "middle" : "large"}
             icon={<PlusOutlined />}
             onClick={handleOpen}
             style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-            className="!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md"
+            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? 'w-auto' : 'w-full sm:w-auto'}`}
           >
             Create Project
           </Button>
@@ -299,36 +311,36 @@ const ProjectsPage = () => {
           {projects.map((project) => (
             <Col xs={24} sm={12} lg={8} key={project.id}>
               <div
-                className="group relative rounded-xl p-4 hover:bg-zinc-700/50 hover:scale-100 hover:shadow-lg hover:shadow-zinc-400/10 transition-all duration-300 cursor-pointer hover:border-zinc-500/60 h-full flex flex-col border border-zinc-700/50"
+                className="group relative rounded-xl p-3 sm:p-4 hover:bg-zinc-700/50 hover:scale-100 hover:shadow-lg hover:shadow-zinc-400/10 transition-all duration-300 cursor-pointer hover:border-zinc-500/60 h-full flex flex-col border border-zinc-700/50"
                 style={{ backgroundColor: "#18181B" }}
                 onClick={() => router.push(`/page/project/${project.id}`)}
               >
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200 group-hover:shadow-md">
-                        <ProjectOutlined className="text-sm text-white" />
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-orange-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200 group-hover:shadow-md">
+                        <ProjectOutlined className="text-xs sm:text-sm text-white" />
                       </div>
-                      <div className="flex items-center gap-2 min-w-0">
-                        {project.name && project.name.length > 20 ? (
+                      <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                        {project.name && project.name.length > 15 ? (
                           <Tooltip
                             title={project.name}
                             placement="top"
                             mouseEnterDelay={0.5}
                           >
-                            <h3 className="text-lg font-semibold text-white truncate min-w-0">
+                            <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
                               {project.name}
                             </h3>
                           </Tooltip>
                         ) : (
-                          <h3 className="text-lg font-semibold text-white truncate min-w-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
                             {project.name}
                           </h3>
                         )}
                         {project.status === "deleted" ? (
-                          <span className="inline-block w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                          <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full flex-shrink-0"></span>
                         ) : (
-                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></span>
+                          <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full flex-shrink-0"></span>
                         )}
                       </div>
                     </div>
@@ -347,10 +359,10 @@ const ProjectsPage = () => {
                         placement="bottomRight"
                       >
                         <Button
-                          className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700"
+                          className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !p-1 sm:!p-2"
                           type="text"
                           size="small"
-                          icon={<EllipsisVertical size={16} />}
+                          icon={<EllipsisVertical size={14} />}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </Dropdown>
@@ -360,25 +372,22 @@ const ProjectsPage = () => {
 
                 {/* Content */}
                 <div className="flex-grow">
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                  <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                     {project.description || "No description provided"}
                   </p>
                 </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
-                  {/* <div className="flex items-center space-x-1">
-                    <UserOutlined />
-                    <span>{getUserRole(project)}</span>
-                  </div> */}
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <div className="flex items-center space-x-1">
-                      <TeamOutlined />
+                      <TeamOutlined className="text-xs" />
                       <span>{project.members?.length || 0}</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <CalendarOutlined />
-                      <span>{formatDate(project.createdAt)}</span>
+                      <CalendarOutlined className="text-xs" />
+                      <span className="hidden sm:inline">{formatDate(project.createdAt)}</span>
+                      <span className="sm:hidden">{new Date(project.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                     </div>
                   </div>
                 </div>
@@ -395,7 +404,7 @@ const ProjectsPage = () => {
           onCancel={handleClose}
           footer={false}
           okText="Submit"
-          width={500}
+          width={isMobile ? "75%" : 500}
         >
           <Form
             form={form}
@@ -573,7 +582,7 @@ const ProjectsPage = () => {
           open={openEdit}
           onCancel={handleCloseEdit}
           footer={false}
-          width={500}
+          width={isMobile ? "75%" : 500}
         >
           <Form
             form={editForm}
