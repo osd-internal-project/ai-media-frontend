@@ -9,5 +9,5 @@ export default async function Page() {
   if (!session) {
     redirect("/login");
   }
-  redirect("/page/project-layout");
+  redirect("/page/project");
 }

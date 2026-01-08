@@ -41,7 +41,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
-  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
+  const mappedPath = currentPath === "project" ? "project" : currentPath;
   const currentPathSub = pathname.split("/")[3];
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -320,7 +320,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
     fecthdataByOrganization(organizationId);
     if (response) {
-      router.push(`/page/project-layout`);
+      router.push(`/page/project`);
     }
   }
   if (!session?.user.id) {

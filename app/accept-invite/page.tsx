@@ -224,7 +224,7 @@ const AcceptInviteContent = () => {
                     message: "Invitation accepted successfully",
                     description: "You have successfully accepted the invitation.",
                 });
-                router.push("page/project-layout");
+                router.push("page/project");
             }
         } catch (error) {
             console.error("Error accepting invitation:", error);

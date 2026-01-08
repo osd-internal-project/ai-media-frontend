@@ -61,7 +61,7 @@ const NavbarUser: React.FC<Props> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   const currentPath = pathname.split("/")[2];
-  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
+  const mappedPath = currentPath === "project" ? "project" : currentPath;
   const currentPathSub = pathname.split("/")[3];
 
   useEffect(() => {

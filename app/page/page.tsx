@@ -9,7 +9,7 @@ const Page = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/page/project-layout");
+      router.replace("/page/project");
     }
   }, [status, router]);
 

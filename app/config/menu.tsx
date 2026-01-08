@@ -25,7 +25,7 @@ export const MenuSider = [
       //   label: `Project`,
       // },
       {
-        key: `project-layout`,
+        key: `project`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
         icon: <Bot size={22} />,
         label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>PROJECTS</span>,

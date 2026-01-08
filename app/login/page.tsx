@@ -31,13 +31,13 @@ const Page: FC = () => {
         redirect: false,
         username: values.email,
         password: values.password,
-        callbackUrl: "/page/project-layout",
+        callbackUrl: "/page/project",
       });
       if (result?.error) {
         messageApi.error("Login failed! Please check your User or Password.");
       } else {
         messageApi.success("Login successful!");
-        router.push("/page/project-layout");
+        router.push("/page/project");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -51,7 +51,7 @@ const Page: FC = () => {
     // Google Login: Redirects to Google via Keycloak
     signIn(
       "keycloak",
-      { callbackUrl: "/page/project-layout" },
+      { callbackUrl: "/page/project" },
       { kc_idp_hint: "google" }
     );
   };
