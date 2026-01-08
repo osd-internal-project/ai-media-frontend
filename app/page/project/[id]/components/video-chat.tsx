@@ -509,16 +509,6 @@ const VideoChat: FC<VideoChatProps> = ({
     setSubmitting(true);
     shouldAutoScrollRef.current = true;
 
-    const userMessage: ChatMessage = {
-      type: "user",
-      content: values.text,
-      username: username || "",
-      time: new Date().toISOString(),
-      genneratedStatus: "PENDING",
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    form.resetFields();
-
     setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -547,6 +537,13 @@ const VideoChat: FC<VideoChatProps> = ({
       const response = await GenerateImageServices(axiosCore).create(payload);
 
       if (response && response.status === 200 && response.data) {
+        const userMessage: ChatMessage = {
+          type: "user",
+          content: values.text,
+          username: username || "",
+          time: new Date().toISOString(),
+          genneratedStatus: "PENDING",
+        };
         // Optimistic AI Message (Pending)
         const galleryItem = response.data;
         const aiMessage: ChatMessage = {
@@ -564,7 +561,7 @@ const VideoChat: FC<VideoChatProps> = ({
           duration: values.duration || "10",
           genneratedStatus: galleryItem.genneratedStatus,
         };
-        setMessages((prev) => [...prev, aiMessage]);
+        setMessages((prev) => [...prev, userMessage, aiMessage]);
         setTimeout(() => {
           bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
@@ -590,6 +587,8 @@ const VideoChat: FC<VideoChatProps> = ({
       // Don't set submitting false here immediately if we want to show loading
       // But since we added an AI PENDING message, we can stop "Submitting" state in form
       setSubmitting(false);
+      form.resetFields();
+      setFiles([]);
     }
   };
 

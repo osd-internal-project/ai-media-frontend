@@ -857,7 +857,7 @@ const ImageChat: FC<ImageChatProps> = ({
                               }
                             />
                             <span className="text-gray-300">
-                              Generating images... ({msg.status})
+                              Generating images... ({msg.genneratedStatus})
                             </span>
                           </div>
                         )}
