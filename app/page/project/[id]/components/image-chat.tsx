@@ -512,6 +512,7 @@ const ImageChat: FC<ImageChatProps> = ({
   };
 
   const onFinish = async (values: ITFromGenerate) => {
+    
     setSubmitting(true);
     shouldAutoScrollRef.current = true; // Set flag to enable auto-scroll
 
@@ -526,8 +527,11 @@ const ImageChat: FC<ImageChatProps> = ({
     // Add user message to chat immediately
     setMessages((prev) => [...prev, userMessage]);
 
-    // Clear the form immediately
-    form.resetFields();
+    const currentValues = form.getFieldsValue();
+    form.setFieldsValue({
+      ...currentValues,
+      text: undefined,
+    });
     setFiles([]);
 
     // Scroll to bottom immediately after adding user message

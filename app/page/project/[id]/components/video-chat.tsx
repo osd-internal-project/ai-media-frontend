@@ -511,6 +511,7 @@ const VideoChat: FC<VideoChatProps> = ({
     return false;
   };
   const onFinish = async (values: ITFromGenerate) => {
+    
     setCurrentPrompt(values.text);
     setSubmitting(true);
 
@@ -544,8 +545,11 @@ const VideoChat: FC<VideoChatProps> = ({
         return;
       }
 
-      // Clear form immediately after successful submission
-      form.resetFields();
+      const currentValues = form.getFieldsValue();
+      form.setFieldsValue({
+        ...currentValues,
+        text: undefined,
+      });
       setFiles([]);
 
       // Poll for task completion
@@ -571,7 +575,11 @@ const VideoChat: FC<VideoChatProps> = ({
 
               if (updateLogs) {
                 messageApi.success("สร้างวิดีโอสำเร็จ");
-                form.resetFields();
+                const currentValues = form.getFieldsValue();
+                form.setFieldsValue({
+                  ...currentValues,
+                  text: undefined,
+                });
                 setFiles([]);
                 setCurrentPrompt("");
                 setPage(0);
