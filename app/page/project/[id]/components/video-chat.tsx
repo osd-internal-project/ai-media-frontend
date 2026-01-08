@@ -17,33 +17,30 @@ import {
   Upload,
   type UploadFile,
   type UploadProps,
-  notification,
   Spin,
   Select,
-  Space,
   Tooltip,
+  Space,
+  Switch,
 } from "antd";
 import {
   UserOutlined,
   PaperClipOutlined,
   SendOutlined,
-  LikeOutlined,
   LoadingOutlined,
-  CloseOutlined,
 } from "@ant-design/icons";
 import { axiosCore } from "@/app/lib/axios/axios";
 import LogsServices from "@/app/services/logs.service";
 import GenerateImageServices from "@/app/services/generate-image.service";
-import GalleryServices from "@/app/services/gellory.service";
 import Avatars from "@/public/images/Avatar.jpg";
-import VideoPlayer from "./video-player"; // Import the optimized player
 import type { ITFromGenerate } from "@/app/common";
 import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { RcFile } from "antd/es/upload";
-import { Download, Trash } from "lucide-react";
+import { Trash, Volume2, VolumeX } from "lucide-react";
 import VideoItem from "./video-player";
 import { TAIModel } from "@/app/common/ai-model.type";
+import config from "@/app/config";
 
 interface VideoChatProps {
   projectId: string;
@@ -52,6 +49,7 @@ interface VideoChatProps {
   projectRole?: string | null;
   promptGuideTypes?: TPromptGuideType[];
   promptGuideOpenStatus: boolean;
+  username?: string; // Added username
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
   setDisableTab: (disable: boolean) => void;
 }
@@ -63,11 +61,13 @@ interface VideoConfigurationCardProps {
   resolution: string;
   ratio: string;
   duration: string;
+  generateAudio?: boolean;
   isMultiImage: boolean;
 }
 
 interface ChatMessage {
   id?: string;
+  galleryId?: string;
   type: "user" | "ai";
   content?: string;
   images?: { imageUrl: string; thumbnailUrl: string }[]; // We'll store video URLs here for consistency
@@ -81,12 +81,15 @@ interface ChatMessage {
   duration?: string;
   firstFrameImage?: string;
   referenceImages?: string[]; // Array of reference image URLs
+  genneratedStatus?: string;
+  generateAudio?: boolean;
 }
 
 const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   selectedAIModel,
   referenceImages,
   resolution,
+  generateAudio,
   ratio,
   duration,
   isMultiImage,
@@ -105,24 +108,18 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   };
 
   return (
-    <div className="mt-3 p-3 bg-[#1e1e21] rounded-lg border border-white/5">
+    <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5">
       <div className="flex items-center gap-3">
-        {/* Avatar */}
-        {/* <div className="flex-shrink-0">
-          <Avatar
-            src={Avatars.src}
-            size={32}
-            className="border border-white/10"
-          />
-        </div> */}
-
-        {/* Configuration Info */}
         <div className="flex items-center gap-3 flex-1 text-sm">
           <span className="text-white font-medium">Smart Reference</span>
           <span className="text-purple-400 font-medium">
             {getResolutionLabel(resolution)}
+          </span>{" "}
+          <span className="text-gray-400">
+            {generateAudio ? <Volume2 /> : <VolumeX />}
           </span>
           <span className="text-gray-400">{ratio}</span>
+          <span className="text-gray-400">{duration}s</span>
           {isMultiImage && (
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-blue-500 rounded-sm flex items-center justify-center">
@@ -170,7 +167,7 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
                     height={32}
                     className="w-full h-full object-cover"
                     unoptimized
-                    onError={(e) => {
+                    onError={() => {
                       console.error(
                         `Reference image ${index + 1} failed to load:`,
                         imageUrl
@@ -234,7 +231,8 @@ const VideoChat: FC<VideoChatProps> = ({
   projectRole,
   promptGuideTypes = [],
   promptGuideOpenStatus,
-  selectedAIModel, // Destructure selectedAIModel
+  username,
+  selectedAIModel,
   setDisableTab,
 }) => {
   const [form] = Form.useForm();
@@ -248,10 +246,8 @@ const VideoChat: FC<VideoChatProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(0);
-  const [currentPrompt, setCurrentPrompt] = useState<string>("");
-  const [firstFrameImage, setFirstFrameImage] = useState<string>(
-    "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=250&fit=crop&crop=faces"
-  );
+  const [currentId, setCurrentId] = useState<string | undefined>("");
+  // Removed unused currentPrompt and firstFrameImage
   const pageSize = 3;
 
   // Refs
@@ -260,11 +256,13 @@ const VideoChat: FC<VideoChatProps> = ({
   const isFirstLoad = useRef<boolean>(true);
   const scrollHeightRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
-  const lastScrollTop = useRef<number>(0);
+  const shouldAutoScrollRef = useRef<boolean>(false);
+  const isAtBottomRef = useRef<boolean>(true);
+  // Removed lastScrollTop as it's not used in the new handleScroll logic from image-chat
 
   // Fetch Data (Pagination)
   const fetchMessages = useCallback(
-    async (currentPage: number, isLoadMore = false) => {
+    async (currentPage: number, isLoadMore = false, currentId?: string) => {
       if (!projectId || (isLoadMore && !hasMore) || loading) return;
 
       setLoading(true);
@@ -272,15 +270,15 @@ const VideoChat: FC<VideoChatProps> = ({
       if (isLoadMore) {
         isLoadingMoreRef.current = true;
       }
-
       try {
         const skip = currentPage * pageSize;
-        const response = await LogsServices(axiosCore).findVdo(
-          projectId,
-          skip,
-          pageSize
-        );
-
+        const response = currentId
+          ? await LogsServices(axiosCore).findVdoByFristId(projectId, currentId)
+          : await LogsServices(axiosCore).findVdoByPage(
+              projectId,
+              skip,
+              pageSize
+            );
         if (Array.isArray(response)) {
           // Check if we got less than pageSize, meaning no more data
           if (response.length < pageSize) {
@@ -290,10 +288,14 @@ const VideoChat: FC<VideoChatProps> = ({
           // Process response into ChatMessage format
           const formattedMessages: ChatMessage[] = [];
           const itemsToProcess = [...response].reverse();
-
+          const topId = itemsToProcess?.[0]?.id;
+          if (topId) {
+            setCurrentId(String(topId));
+          }
           itemsToProcess.forEach((item: any) => {
             // User Message
             formattedMessages.push({
+              id: item.id,
               type: "user",
               content: item.prompt,
               username: item.users.fullname,
@@ -303,14 +305,17 @@ const VideoChat: FC<VideoChatProps> = ({
             });
             // AI Message
             formattedMessages.push({
+              id: item.id,
               type: "ai",
               content: "",
               images: item.imageUrls,
+              genneratedStatus: item.genneratedStatus,
               username: "AI Generator",
               time: item.createdAt,
               taskId: item.taskId,
               status: item.status,
               prompt: item.prompt,
+              generateAudio: item.generateAudio || true,
               resolution: item.resolution || "1080p",
               ratio: item.ratio || "16:9",
               duration: item.duration || "10",
@@ -322,23 +327,31 @@ const VideoChat: FC<VideoChatProps> = ({
 
           if (isLoadMore) {
             setMessages((prev) => {
-              const existingTaskIds = new Set(prev.map((m) => m.taskId));
+              const existingTaskIds = new Set(prev.map((m) => m.id));
               const uniqueNewMessages = formattedMessages.filter(
-                (m) => !existingTaskIds.has(m.taskId)
+                (m) => !existingTaskIds.has(m.id)
               );
 
               if (uniqueNewMessages.length === 0) {
                 setHasMore(false);
                 return prev;
               }
-              // Add older messages at the beginning
+
               return [...uniqueNewMessages, ...prev];
             });
           } else {
             setMessages(formattedMessages);
-            setTimeout(() => {
-              bottomRef.current?.scrollIntoView({ behavior: "instant" });
-            }, 100);
+            if (
+              isFirstLoad.current ||
+              isAtBottomRef.current ||
+              shouldAutoScrollRef.current
+            ) {
+              setTimeout(() => {
+                bottomRef.current?.scrollIntoView({
+                  behavior: isFirstLoad.current ? "instant" : "smooth",
+                });
+              }, 100);
+            }
           }
         }
       } catch (err) {
@@ -351,8 +364,32 @@ const VideoChat: FC<VideoChatProps> = ({
         }
       }
     },
-    [projectId, hasMore, loading]
+    [projectId, hasMore, loading, setDisableTab]
   );
+
+  // SSE Integration
+  useEffect(() => {
+    if (!projectId) return; // Changed from userId to projectId
+    const url = `${config.backendCoreUrl}/generate-image/sse/project/${projectId}`;
+    const eventSource = new EventSource(url);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.galleryId) {
+          console.log("start messages");
+          fetchMessages(page, false, currentId);
+        }
+      } catch (e) {
+        console.error("SSE Error", e);
+      }
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [projectId]); // Changed dependency to projectId
 
   // Initial Load
   useEffect(() => {
@@ -367,30 +404,34 @@ const VideoChat: FC<VideoChatProps> = ({
   }, [projectId, activeKey]);
 
   // Scroll Handling - Load more when scrolling to TOP
-  const handleScroll = useCallback(
-    (e: React.UIEvent<HTMLDivElement>) => {
-      const target = e.currentTarget;
-      const scrollTop = target.scrollTop;
-      const scrollThreshold = 50; // Trigger when within 50px of top
+  // const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  //   const target = e.currentTarget;
+  //   const isAtBottom =
+  //     Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
+  //     50;
+  //   isAtBottomRef.current = isAtBottom;
 
-      // Check if scrolling up and near the top
-      if (
-        scrollTop < scrollThreshold &&
-        scrollTop < lastScrollTop.current &&
-        hasMore &&
-        !loading &&
-        !isFirstLoad.current
-      ) {
-        scrollHeightRef.current = target.scrollHeight;
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchMessages(nextPage, true);
-      }
+  //   if (target.scrollTop === 0 && hasMore && !loading && !isFirstLoad.current) {
+  //     scrollHeightRef.current = target.scrollHeight;
+  //     const nextPage = page + 1;
+  //     setPage(nextPage);
+  //     fetchMessages(nextPage, true);
+  //   }
+  // };
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtBottom =
+      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
+      50;
+    isAtBottomRef.current = isAtBottom;
 
-      lastScrollTop.current = scrollTop;
-    },
-    [hasMore, loading, page, fetchMessages]
-  );
+    if (target.scrollTop === 0 && hasMore && !loading && !isFirstLoad.current) {
+      scrollHeightRef.current = target.scrollHeight;
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchMessages(nextPage, true);
+    }
+  };
 
   // Restore scroll position after loading more
   useEffect(() => {
@@ -411,31 +452,22 @@ const VideoChat: FC<VideoChatProps> = ({
     }
   }, [messages]);
 
-  // Auto-scroll to bottom on new message submission
   useEffect(() => {
-    if (
-      !isFirstLoad.current &&
-      page === 0 &&
-      bottomRef.current &&
-      !isLoadingMoreRef.current &&
-      submitting
-    ) {
+    if (shouldAutoScrollRef.current && messages.length > 0) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        shouldAutoScrollRef.current = false;
       }, 100);
     }
-  }, [messages, submitting]);
+  }, [messages.length]);
 
   const onDownloadVideo = async (videoUrl: string) => {
     try {
-      // Extract filename from URL (before query parameters)
       const urlWithoutParams = videoUrl.split("?")[0];
       const filename = urlWithoutParams.split("/").pop() || "video.mp4";
 
-      // Show loading message for larger files
       const hide = message.loading("Downloading video...", 0);
 
-      // Fetch the video directly from the URL
       const response = await fetch(videoUrl);
       if (!response.ok) throw new Error("Download failed");
 
@@ -457,14 +489,6 @@ const VideoChat: FC<VideoChatProps> = ({
 
   const handleUploadChange: UploadProps["onChange"] = ({ fileList }) => {
     setFiles(fileList);
-
-    // Set first frame image when a file is uploaded
-    if (fileList.length > 0 && fileList[0].originFileObj) {
-      const imageUrl = URL.createObjectURL(fileList[0].originFileObj);
-      setFirstFrameImage(imageUrl);
-    } else if (fileList.length === 0) {
-      setFirstFrameImage("");
-    }
   };
 
   const beforeUpload = (file: RcFile) => {
@@ -472,17 +496,32 @@ const VideoChat: FC<VideoChatProps> = ({
       message.warning(`Duplicate file: ${file.name}`);
       return false;
     }
-    
+
     if (files.length >= 2) {
       message.warning(`Upload limit: 2 files max`);
       return false;
     }
-    
+
     return false;
   };
   const onFinish = async (values: ITFromGenerate) => {
-    setCurrentPrompt(values.text);
+    // setCurrentPrompt(values.text);
     setSubmitting(true);
+    shouldAutoScrollRef.current = true;
+
+    const userMessage: ChatMessage = {
+      type: "user",
+      content: values.text,
+      username: username || "",
+      time: new Date().toISOString(),
+      genneratedStatus: "PENDING",
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    form.resetFields();
+
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
 
     try {
       const payload: ITFromGenerate = {
@@ -493,7 +532,6 @@ const VideoChat: FC<VideoChatProps> = ({
         modelName: selectedAIModel?.name,
       };
 
-      // Handle file upload if any
       if (files.length > 0) {
         const formData = new FormData();
         formData.append("type", "create-attend");
@@ -508,79 +546,49 @@ const VideoChat: FC<VideoChatProps> = ({
 
       const response = await GenerateImageServices(axiosCore).create(payload);
 
-      if (response.status === 400) {
-        messageApi.error(`${response.data}`);
+      if (response && response.status === 200 && response.data) {
+        // Optimistic AI Message (Pending)
+        const galleryItem = response.data;
+        const aiMessage: ChatMessage = {
+          type: "ai",
+          galleryId: galleryItem.id,
+          taskId: galleryItem.taskId,
+          content: "",
+          username: "AI Generator",
+          time: new Date().toISOString(),
+          status: false,
+          prompt: values.text,
+          resolution: values.resolution || "1080p",
+          generateAudio: values.generateAudio,
+          ratio: values.ratio || "16:9",
+          duration: values.duration || "10",
+          genneratedStatus: galleryItem.genneratedStatus,
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+        form.resetFields();
+        setFiles([]);
+        console.log("galleryItem", galleryItem);
+        // setCurrentPrompt("");
+      } else {
+        messageApi.error(
+          `${
+            typeof response.data === "string"
+              ? response.data
+              : "Error creation failed"
+          }`
+        );
         setSubmitting(false);
-        return;
       }
-
-      // Clear form immediately after successful submission
-      form.resetFields();
-      setFiles([]);
-
-      // Poll for task completion
-      const checkStatus = async () => {
-        try {
-          const task = await GenerateImageServices(axiosCore).findById(
-            response.data.id
-          );
-
-          if (task?.status === "succeeded") {
-            if (task && task.content) {
-              const taskId = task.id;
-              const updateData = {
-                content: task.content,
-                status: "success",
-                tokenUsed: task.usage?.total_tokens || 0,
-              };
-
-              const updateLogs = await LogsServices(axiosCore).findByTaskId(
-                taskId,
-                updateData
-              );
-
-              if (updateLogs) {
-                messageApi.success("สร้างวิดีโอสำเร็จ");
-                form.resetFields();
-                setFiles([]);
-                setCurrentPrompt("");
-                setPage(0);
-                setHasMore(true);
-                await fetchMessages(0);
-                setSubmitting(false);
-                return;
-              }
-            } else {
-              messageApi.error("ไม่มีข้อมูลวิดีโอที่ได้รับกลับมา");
-              setSubmitting(false);
-              return;
-            }
-          }
-
-          if (task?.status === "failed") {
-            messageApi.error("การสร้างวิดีโอล้มเหลว");
-            setSubmitting(false);
-            return;
-          }
-
-          if (task?.status === "processing" || task?.status === "pending") {
-            setTimeout(checkStatus, 3000);
-            return;
-          }
-
-          console.warn("Unknown status:", task?.status);
-          setTimeout(checkStatus, 3000);
-        } catch (err) {
-          console.error("Error checking status:", err);
-          messageApi.error("เกิดข้อผิดพลาดระหว่างตรวจสอบสถานะ");
-          setSubmitting(false);
-        }
-      };
-
-      checkStatus();
     } catch (error: any) {
       const msg = error.response?.data?.message || "An error occurred";
       messageApi.error(msg);
+      setSubmitting(false);
+    } finally {
+      // Don't set submitting false here immediately if we want to show loading
+      // But since we added an AI PENDING message, we can stop "Submitting" state in form
       setSubmitting(false);
     }
   };
@@ -594,7 +602,6 @@ const VideoChat: FC<VideoChatProps> = ({
     );
   }
 
-  // Common Ratios for Keyframe/Image-to-Video might be same
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
     "16:9": { width: 1280, height: 720 },
     "9:16": { width: 720, height: 1280 },
@@ -619,25 +626,23 @@ const VideoChat: FC<VideoChatProps> = ({
       }
     >
       <div
-        className={`h-[calc(100vh-160px)] ${promptGuideOpenStatus ? "col-span-3" : ""
-          }`}
+        className={`h-[calc(100vh-160px)] ${
+          promptGuideOpenStatus ? "col-span-3" : ""
+        }`}
       >
         {contextHolder}
         <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-          {/* Chat Area */}
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6 pb-40"
+            className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6"
           >
-            {/* Loading indicator at top when loading more */}
             {loading && !isFirstLoad.current && (
               <div className="flex justify-center py-4">
                 <div className="w-6 h-6 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
               </div>
             )}
 
-            {/* Empty State / Prompt Guides */}
             {!loading && messages.length === 0 && (
               <div className="text-white pt-10 px-5 flex-1 overflow-auto">
                 <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedance`}</h1>
@@ -655,12 +660,12 @@ const VideoChat: FC<VideoChatProps> = ({
                         {type.promptGuide?.map(
                           (item: TPromptGuide, index: number) => (
                             <Button
-                              htmlType="button" // Prevent form submission
+                              htmlType="button"
                               key={item.id || index}
                               size="large"
                               onClick={() =>
                                 item.id && onSetPromptText(item.id)
-                              } // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                              }
                               className="w-full !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                             >
                               <span className="flex-1 text-left">
@@ -679,9 +684,12 @@ const VideoChat: FC<VideoChatProps> = ({
 
             {messages.map((msg, index) => (
               <div
-                key={`${msg.taskId}-${index}`}
-                className={`flex gap-4 ${msg.type === "user" ? "justify-end" : "justify-start"
-                  }`}
+                key={`${msg.id}-${index}`}
+                className={`flex gap-4 ${
+                  msg.type === "user"
+                    ? "justify-end  border-t-2 pt-2 border-white/10"
+                    : "justify-start"
+                }`}
               >
                 {msg.type === "ai" && (
                   <Avatar
@@ -691,10 +699,11 @@ const VideoChat: FC<VideoChatProps> = ({
                   />
                 )}
                 <div
-                  className={`flex flex-col ${msg.type === "user"
-                    ? "max-w-[80%] items-end"
-                    : "max-w-full items-start min-w-[480px]"
-                    }`}
+                  className={`flex flex-col ${
+                    msg.type === "user"
+                      ? "max-w-[80%] items-end"
+                      : "max-w-full items-start min-w-[480px]"
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
                     <span>{msg.username}</span>
@@ -714,45 +723,67 @@ const VideoChat: FC<VideoChatProps> = ({
 
                   {msg.content && (
                     <div
-                      className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-md
-                                        ${msg.type === "user"
-                          ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                          : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
-                        }`}
+                      className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md
+                                        ${
+                                          msg.type === "user"
+                                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
+                                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                                        }`}
                     >
                       {msg.content}
                     </div>
                   )}
 
-                  {/* Video Grid */}
-                  {msg.type === "ai" && msg.images && msg.images.length > 0 && (
+                  {msg.type === "ai" && (
                     <>
-                      {/* Video Configuration Card */}
                       <VideoConfigurationCard
                         selectedAIModel={selectedAIModel}
                         referenceImages={msg.referenceImages}
                         resolution={msg.resolution || "1080p"}
                         ratio={msg.ratio || "16:9"}
                         duration={msg.duration || "10"}
-                        isMultiImage={msg.images.length > 1}
+                        isMultiImage={
+                          msg.images ? msg.images.length > 1 : false
+                        }
                       />
-
-                      <div
-                        className={`grid gap-4 mt-4 w-full max-w-6xl ${msg.images.length === 1
-                          ? "grid-cols-1"
-                          : msg.images.length === 2
-                            ? "grid-cols-1 md:grid-cols-2"
-                            : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                          }`}
-                      >
-                        {msg.images.map((videoData, i) => (
-                          <VideoItem
-                            key={i}
-                            videoData={videoData}
-                            onDownloadVideo={onDownloadVideo}
+                      {(msg.genneratedStatus === "PENDING" ||
+                        msg.genneratedStatus === "PROCESSING") && (
+                        <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
+                          <Spin
+                            indicator={
+                              <LoadingOutlined style={{ fontSize: 24 }} spin />
+                            }
                           />
-                        ))}
-                      </div>
+                          <span className="text-gray-300">
+                            Generating video... ({msg.genneratedStatus})
+                          </span>
+                        </div>
+                      )}
+                      {msg.genneratedStatus === "FAIL" && (
+                        <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
+                          Generate failed
+                        </div>
+                      )}
+                      {msg.genneratedStatus === "SUCCESS" &&
+                        msg.images &&
+                        msg.images.length === 0 && (
+                          <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
+                            Generate failed
+                          </div>
+                        )}
+                      {msg.genneratedStatus === "SUCCESS" &&
+                        msg.images &&
+                        msg.images.length > 0 && (
+                          <div className={`grid gap-2 mt-2  w-full`}>
+                            {msg.images.map((videoData, i) => (
+                              <VideoItem
+                                key={i}
+                                videoData={videoData}
+                                onDownloadVideo={onDownloadVideo}
+                              />
+                            ))}
+                          </div>
+                        )}
                     </>
                   )}
                 </div>
@@ -766,51 +797,10 @@ const VideoChat: FC<VideoChatProps> = ({
               </div>
             ))}
 
-            {submitting && (
-              <>
-                {/* User's prompt message */}
-                <div className="flex gap-4 justify-end">
-                  <div className="flex flex-col items-end gap-1 max-w-2xl">
-                    <div className="text-xs text-gray-400">
-                      You • {new Date().toLocaleString()}
-                    </div>
-                    <div className="flex gap-3 items-start">
-                      <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl px-5 py-3 shadow-lg">
-                        <p className="text-sm leading-relaxed">
-                          {currentPrompt}
-                        </p>
-                      </div>
-                      <Avatar
-                        icon={<UserOutlined />}
-                        size={40}
-                        className="bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI loading response */}
-                <div className="flex gap-4 justify-start">
-                  <Avatar
-                    src={Avatars.src}
-                    size={40}
-                    className="border border-white/10"
-                  />
-                  <div className="bg-[#27272a] px-5 py-4 rounded-2xl rounded-tl-sm border border-white/5">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
             <div ref={bottomRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-10">
+          <div className=" p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-2">
             <div className="max-w-6xl mx-auto relative bg-[#27272a] rounded-3xl p-1 border border-white/10 focus-within:border-purple-500/50 transition-colors shadow-2xl">
               <PermissionGuard
                 roles={projectPermissions.useChat}
@@ -829,256 +819,264 @@ const VideoChat: FC<VideoChatProps> = ({
                   </div>
                 }
               >
-              <Form
-                form={form}
-                onFinish={onFinish}
-                initialValues={{
-                  type: "vdo",
-                  width: 1280,
-                  height: 720,
-                  images: 1,
-                  ratio: "16:9",
-                  resolution: "1080p",
-                  duration: "10",
-                }}
-              >
-                <Form.Item name="type" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="width" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="height" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="ratio" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="images" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="resolution" hidden>
-                  <Input />
-                </Form.Item>
-                <Form.Item name="duration" hidden>
-                  <Input />
-                </Form.Item>
-
-                <div className="flex flex-col gap-2">
-                  <Form.Item
-                    name="text"
-                    rules={[{ required: true, message: "" }]}
-                    style={{ margin: 0 }}
-                  >
-                    <Input.TextArea
-                      placeholder="Describe the video you want to create"
-                      autoSize={{ minRows: 2, maxRows: 5 }}
-                      className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          if (!submitting) {
-                            form.submit();
-                          }
-                        }
-                      }}
-                    />
+                <Form
+                  form={form}
+                  onFinish={onFinish}
+                  initialValues={{
+                    type: "vdo",
+                    width: 1280,
+                    height: 720,
+                    images: 1,
+                    ratio: "16:9",
+                    resolution: "1080p",
+                    duration: "10",
+                  }}
+                >
+                  <Form.Item name="type" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="width" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="height" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="ratio" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="images" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="resolution" hidden>
+                    <Input />
+                  </Form.Item>
+                  <Form.Item name="duration" hidden>
+                    <Input />
                   </Form.Item>
 
-                  {/* Upload List Preview (Custom) */}
-                  {files.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {files.map((file: UploadFile) => (
-                        <div
-                          key={file.uid}
-                          className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
-                        >
-                          <Image
-                            src={
-                              file.thumbUrl ||
-                              (file.originFileObj
-                                ? URL.createObjectURL(file.originFileObj)
-                                : "")
-                            }
-                            alt="preview"
-                            width={48}
-                            height={48}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
-                          <div
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={() => {
-                              setFiles(
-                                files.filter((f) => f.uid !== file.uid)
-                              );
-                            }}
-                          >
-                            <Trash size={12} className="text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                      {/* File Upload (for Image-to-Video if supported) */}
-                      <Form.Item
-                        name="image"
-                        className="mb-0"
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Upload
-                          fileList={files}
-                          onChange={handleUploadChange}
-                          beforeUpload={beforeUpload}
-                          multiple={false} // Maybe single image for video init?
-                          maxCount={2}
-                          showUploadList={false}
-                          disabled={submitting}
-                        >
-                          <Tooltip 
-                            title={`Upload files (${files.length}/2)`}
-                            placement="top"
-                          >
-                            <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
-                              <PaperClipOutlined className="text-lg" />
-                              {files.length > 0 && (
-                                <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-                                  {files.length}
-                                </div>
-                              )}
-                            </div>
-                          </Tooltip>
-                        </Upload>
-                      </Form.Item>
-                      {/* Resolution Selector */}
-                      <Form.Item
-                        name="resolution"
-                        className="w-full m-0"
-                        initialValue={"1080p"}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          optionFilterProp="label"
-                          placeholder="เลือกความละเอียด"
-                          options={[
-                            { value: "480p", label: "480p - Standard" },
-                            { value: "720p", label: "720p - HD" },
-                            { value: "1080p", label: "1080p - Full HD" },
-                          ]}
-                        />
-                      </Form.Item>
-                      {/* Ratio Selector */}
-                      <Form.Item<ITFromGenerate>
-                        className="w-full"
-                        name={`ratio`}
-                        rules={[
-                          {
-                            required: true,
-                            message: "กรุณาเลือกอัตราส่วนของวิดีโอ!",
-                          },
-                        ]}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          defaultValue="16:9"
-                          onChange={handleRatioChange}
-                          variant="borderless"
-                          popupMatchSelectWidth={false}
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          options={[
-                            { value: "16:9", label: "16:9 - Widescreen" },
-                            { value: "4:3", label: "4:3 - Standard" },
-                            { value: "1:1", label: "1:1 - Square" },
-                            { value: "3:4", label: "3:4 - Portrait" },
-                            { value: "9:16", label: "9:16 - Vertical" },
-                            { value: "21:9", label: "21:9 - Ultrawide" },
-                          ]}
-                        />
-                      </Form.Item>
-                      <Form.Item<ITFromGenerate>
-                        className="w-full"
-                        name={`duration`}
-                        rules={[
-                          {
-                            required: true,
-                            message: "กรุณาเลือกความยาวของวิดีโอ!",
-                          },
-                        ]}
-                        style={{ marginBottom: 0, lineHeight: 1 }}
-                      >
-                        <Select
-                          className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
-                          styles={{
-                            popup: {
-                              root: {
-                                backgroundColor: "#3f3f46",
-                                border: "1px solid #52525b",
-                                borderRadius: "8px",
-                                padding: "4px",
-                              },
-                            },
-                          }}
-                          optionFilterProp="label"
-                          placeholder="เลือกความยาว"
-                          allowClear
-                          options={[
-                            { value: "5", label: "5 วินาที" },
-                            { value: "10", label: "10 วินาที" },
-                          ]}
-                        />
-                      </Form.Item>
-                    </div>
-                    <Button
-                      htmlType="submit"
-                      size="large"
-                      disabled={submitting}
-                      className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                  <div className="flex flex-col gap-2">
+                    <Form.Item
+                      name="text"
+                      rules={[{ required: true, message: "" }]}
+                      style={{ margin: 0 }}
                     >
-                      <SendOutlined className="text-lg" />
-                    </Button>
+                      <Input.TextArea
+                        placeholder="Describe the video you want to create"
+                        autoSize={{ minRows: 2, maxRows: 5 }}
+                        className="!bg-transparent !border-none !text-white !placeholder-gray-500 !shadow-none !p-2 !text-base !resize-none !focus:ring-0"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (!submitting) {
+                              form.submit();
+                            }
+                          }
+                        }}
+                      />
+                    </Form.Item>
+
+                    {files.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {files.map((file: UploadFile) => (
+                          <div
+                            key={file.uid}
+                            className="relative w-12 h-12 rounded overflow-hidden border border-white/20"
+                          >
+                            <Image
+                              src={
+                                file.thumbUrl ||
+                                (file.originFileObj
+                                  ? URL.createObjectURL(file.originFileObj)
+                                  : "")
+                              }
+                              alt="preview"
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                            <div
+                              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => {
+                                setFiles(
+                                  files.filter((f) => f.uid !== file.uid)
+                                );
+                              }}
+                            >
+                              <Trash size={12} className="text-white" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-2">
+                        <Form.Item
+                          name="image"
+                          className="mb-0"
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Upload
+                            fileList={files}
+                            onChange={handleUploadChange}
+                            beforeUpload={beforeUpload}
+                            multiple={false}
+                            maxCount={2}
+                            showUploadList={false}
+                            disabled={submitting}
+                          >
+                            <Tooltip
+                              title={`Upload files (${files.length}/2)`}
+                              placement="top"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                <PaperClipOutlined className="text-lg" />
+                                {files.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {files.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          </Upload>
+                        </Form.Item>
+                        <Form.Item
+                          name="generateAudio"
+                          className="w-full m-0"
+                          initialValue={true}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                          valuePropName="checked"
+                        >
+                          <Switch
+                            checkedChildren={<Volume2 />}
+                            unCheckedChildren={<VolumeX />}
+                          />
+                        </Form.Item>
+                        <Form.Item
+                          name="resolution"
+                          className="w-full m-0"
+                          initialValue={"1080p"}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            optionFilterProp="label"
+                            placeholder="เลือกความละเอียด"
+                            options={[
+                              { value: "480p", label: "480p - Standard" },
+                              { value: "720p", label: "720p - HD" },
+                              { value: "1080p", label: "1080p - Full HD" },
+                            ]}
+                          />
+                        </Form.Item>
+                        <Form.Item<ITFromGenerate>
+                          className="w-full"
+                          name={`ratio`}
+                          rules={[
+                            {
+                              required: true,
+                              message: "กรุณาเลือกอัตราส่วนของวิดีโอ!",
+                            },
+                          ]}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            defaultValue="16:9"
+                            onChange={handleRatioChange}
+                            variant="borderless"
+                            popupMatchSelectWidth={false}
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            options={[
+                              { value: "16:9", label: "16:9 - Widescreen" },
+                              { value: "4:3", label: "4:3 - Standard" },
+                              { value: "1:1", label: "1:1 - Square" },
+                              { value: "3:4", label: "3:4 - Portrait" },
+                              { value: "9:16", label: "9:16 - Vertical" },
+                              { value: "21:9", label: "21:9 - Ultrawide" },
+                            ]}
+                          />
+                        </Form.Item>
+                        <Form.Item<ITFromGenerate>
+                          className="w-full"
+                          name={`duration`}
+                          rules={[
+                            {
+                              required: true,
+                              message: "กรุณาเลือกความยาวของวิดีโอ!",
+                            },
+                          ]}
+                          style={{ marginBottom: 0, lineHeight: 1 }}
+                        >
+                          <Select
+                            className="!bg-[#3f3f46] !h-8 !rounded-lg hover:!bg-[#52525b] transition-colors [&_.ant-select-selector]:!pl-3 [&_.ant-select-selector]:!pr-3 [&_.ant-select-selection-item]:!text-white [&_.ant-select-selection-item]:!text-xs [&_.ant-select-selection-item]:!leading-8 min-w-[70px]"
+                            styles={{
+                              popup: {
+                                root: {
+                                  backgroundColor: "#3f3f46",
+                                  border: "1px solid #52525b",
+                                  borderRadius: "8px",
+                                  padding: "4px",
+                                },
+                              },
+                            }}
+                            optionFilterProp="label"
+                            placeholder="เลือกความยาว"
+                            allowClear
+                            options={[
+                              { value: "5", label: "5 วินาที" },
+                              { value: "10", label: "10 วินาที" },
+                            ]}
+                          />
+                        </Form.Item>
+                      </div>
+                      <Button
+                        htmlType="submit"
+                        size="large"
+                        disabled={submitting}
+                        className="w-10 h-10 rounded-lg !bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center !border-none !text-zinc-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                      >
+                        <SendOutlined className="text-lg" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Form>
+                </Form>
               </PermissionGuard>
             </div>
             <div className="text-center mt-3 text-xs text-zinc-500 space-y-1">
               <div>AI can make mistakes. Please check the generated Video.</div>
+              {username}
               {files.length > 0 && (
-                <div className="text-blue-400">
-                  📎 {files.length}/2 files
-                </div>
+                <div className="text-blue-400">📎 {files.length}/2 files</div>
               )}
             </div>
           </div>
         </div>
       </div>
       <div
-        className={`${promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
-          }`}
+        className={`${
+          promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
+        }`}
       >
         <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
           <div className="p-4 ">
@@ -1094,10 +1092,10 @@ const VideoChat: FC<VideoChatProps> = ({
                       {type.promptGuide?.map(
                         (item: TPromptGuide, index: number) => (
                           <Button
-                            htmlType="button" // Prevent form submission
+                            htmlType="button"
                             key={item.id || index}
                             size="large"
-                            onClick={() => item.id && onSetPromptText(item.id)} // Assuming 'title' is the prompt text, or adjust if there's a specific 'prompt' field
+                            onClick={() => item.id && onSetPromptText(item.id)}
                             className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
                           >
                             <Space className=" ">{item.title}</Space>

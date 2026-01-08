@@ -10,13 +10,7 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import {
-  Image,
-  Video,
-  Folders,
-  Star,
-  LightbulbIcon,
-} from "lucide-react";
+import { Image, Video, Folders, Star, LightbulbIcon } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import ImageChat from "./components/image-chat";
@@ -34,9 +28,9 @@ const GenerateImagePage: FC = () => {
   const aiModelService = AIModelServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<"image" | "vdo" | "library" | "activity">(
-    "image"
-  );
+  const [activeKey, setActiveKey] = useState<
+    "image" | "vdo" | "library" | "activity"
+  >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -207,13 +201,15 @@ const GenerateImagePage: FC = () => {
   return (
     <div>
       <div>
-        <HeaderGenerateImagePage 
-          getProject={getProject} 
+        <HeaderGenerateImagePage
+          getProject={getProject}
           activeKey={activeKey}
           selectedAIModel={selectedAIModel}
           filteredAIModels={filteredAIModels}
           onAIModelChange={(value) => {
-            const model = filteredAIModels.find((m) => m.id === parseInt(value));
+            const model = filteredAIModels.find(
+              (m) => m.id === parseInt(value)
+            );
             setSelectedAIModel(model || null);
             if (model) {
               localStorage.setItem(
@@ -223,7 +219,9 @@ const GenerateImagePage: FC = () => {
             }
           }}
           promptGuideOpenStatus={promptGuideOpenStatus}
-          onPromptGuideToggle={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
+          onPromptGuideToggle={() =>
+            setPromptGuideOpenStatus(!promptGuideOpenStatus)
+          }
         />
       </div>
 
@@ -242,7 +240,7 @@ const GenerateImagePage: FC = () => {
           </div>
         </div>
       )} */}
-      
+
       {/* Prompt Guide Drawer */}
       <Drawer
         title={
@@ -260,20 +258,19 @@ const GenerateImagePage: FC = () => {
           {/* Introduction */}
           <p className="text-gray-300 leading-relaxed">
             This article introduces prompt usage tips for Seedream 4.0's
-            text-to-image generation, image editing, reference-based
-            generation and multi-image creation, helping you quickly get
-            started with video creation and turn ideas into image creations.
+            text-to-image generation, image editing, reference-based generation
+            and multi-image creation, helping you quickly get started with video
+            creation and turn ideas into image creations.
           </p>
 
           {/* General Guidelines Section */}
           <div>
             <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
             <p className="text-gray-300 leading-relaxed">
-              Seedream 4.0 supports a wide range of tasks such as
-              text-to-image generation, image editing, reference-based
-              generation and multi-image creation. For optimal image creation
-              results, consider the following best practices when crafting
-              prompts:
+              Seedream 4.0 supports a wide range of tasks such as text-to-image
+              generation, image editing, reference-based generation and
+              multi-image creation. For optimal image creation results, consider
+              the following best practices when crafting prompts:
             </p>
           </div>
 
@@ -285,19 +282,19 @@ const GenerateImagePage: FC = () => {
                 1. Clearly describe the scene using natural language
               </h3>
               <p className="text-gray-300 mb-3">
-                Use coherent natural language to describe the subject + action
-                + environment. If aesthetics matter, include descriptors of
-                style, color, lighting, or composition.
+                Use coherent natural language to describe the subject + action +
+                environment. If aesthetics matter, include descriptors of style,
+                color, lighting, or composition.
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> A
-                  girl in a lavish dress walking under a parasol along a
-                  tree-lined path, in the style of a Monet oil painting.
+                  <span className="text-green-400">• Recommended:</span> A girl
+                  in a lavish dress walking under a parasol along a tree-lined
+                  path, in the style of a Monet oil painting.
                 </li>
                 <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span> Girl,
-                  umbrella, tree-lined street, oil painting texture.
+                  <span className="text-red-400">• Avoid:</span> Girl, umbrella,
+                  tree-lined street, oil painting texture.
                 </li>
               </ul>
             </div>
@@ -313,10 +310,10 @@ const GenerateImagePage: FC = () => {
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span>{" "}
-                  Design a logo for a gaming company. The logo features a dog
-                  playing with a game controller. The company name "PITBULL"
-                  is written on it.
+                  <span className="text-green-400">• Recommended:</span> Design
+                  a logo for a gaming company. The logo features a dog playing
+                  with a game controller. The company name "PITBULL" is written
+                  on it.
                 </li>
                 <li className="text-gray-300">
                   <span className="text-red-400">• Avoid:</span> An abstract
@@ -343,8 +340,8 @@ const GenerateImagePage: FC = () => {
                 4. Improve text rendering accuracy
               </h3>
               <p className="text-gray-300 mb-3">
-                Use double quotation marks for the text that needs to appear
-                in the generated image.
+                Use double quotation marks for the text that needs to appear in
+                the generated image.
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
@@ -650,7 +647,9 @@ const GenerateImagePage: FC = () => {
         //     ""
         //   )
         // }
-        onChange={(key) => onChangeTab(key as "image" | "vdo" | "library" | "activity")}
+        onChange={(key) =>
+          onChangeTab(key as "image" | "vdo" | "library" | "activity")
+        }
         items={[
           {
             disabled: disableTab,
@@ -697,6 +696,7 @@ const GenerateImagePage: FC = () => {
                 promptGuideTypes={promptGuideTypes}
                 promptGuideOpenStatus={promptGuideOpenStatus}
                 selectedAIModel={selectedAIModel}
+                username={session?.user?.name || ""}
                 setDisableTab={setDisableTab}
               />
             ),

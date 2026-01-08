@@ -15,12 +15,16 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    findById: async (projectId: string, skip?: number, take?: number) => {
+    findImageByPage: async (
+      projectId: string,
+      skip?: number,
+      take?: number
+    ) => {
       const params: any = {};
       if (skip !== undefined) params.skip = skip;
       if (take !== undefined) params.take = take;
       return await axiosInstance
-        .get(`${baseUrl}/${projectId}`, { params })
+        .get(`${baseUrl}/find-image/${projectId}`, { params })
         .then((res) => {
           return res.data;
         })
@@ -29,12 +33,38 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findVdo: async (projectId: string, skip?: number, take?: number) => {
+    findImageByFristId: async (projectId: string, fristId: string) => {
+      const params: any = {};
+      if (fristId !== undefined) params.fristid = fristId;
+      return await axiosInstance
+        .get(`${baseUrl}/find-image/${projectId}/frist`, { params })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findVdoByPage: async (projectId: string, skip?: number, take?: number) => {
       const params: any = {};
       if (skip !== undefined) params.skip = skip;
       if (take !== undefined) params.take = take;
       return await axiosInstance
         .get(`${baseUrl}/find-vdo/${projectId}`, { params })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findVdoByFristId: async (projectId: string, fristId: string) => {
+      const params: any = {};
+      if (fristId !== undefined) params.fristid = fristId;
+      return await axiosInstance
+        .get(`${baseUrl}/find-vdo/${projectId}/frist`, { params })
         .then((res) => {
           return res.data;
         })
