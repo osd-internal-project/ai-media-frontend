@@ -31,7 +31,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
   const { data: session } = useSession();
 
   // Extract the current path and check for sub-routes
-  
+
   // Determine which menu item should be selected
   const getSelectedKey = () => {
     if (pathname.includes('/admin-management/users-management')) {
@@ -53,7 +53,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
     {
       key: "group-permission",
       icon: <LockKeyholeOpen size={16} />,
-      label: "Group & Permissions", 
+      label: "Group & Permissions",
       onClick: () => router.push("/page/admin-management/group-permission"),
     },
   ];
@@ -64,7 +64,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
         type="default"
         block
         size="small"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => signOut({ callbackUrl: "/login" })}
       >
         Sign Out
       </Button>
@@ -77,7 +77,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
         algorithm: theme.darkAlgorithm,
         token: {
           colorBgBase: "#000000",
-          colorBgContainer: "#000000", 
+          colorBgContainer: "#000000",
           colorBgElevated: "#1a1a1a",
           colorTextBase: "#f0f0f0",
         },

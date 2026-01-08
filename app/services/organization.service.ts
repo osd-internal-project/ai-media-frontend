@@ -91,7 +91,7 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
         })
         .catch((err) => {
           console.log(err);
-          return;
+          throw err;
         });
     },
     acceptInvitation: async (value: {

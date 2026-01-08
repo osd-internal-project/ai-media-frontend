@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, type FC } from "react";
+import React, { useEffect, useState, type FC } from "react";
 import { Form, Input, Button, Checkbox, message } from "antd";
 import { User, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
@@ -11,6 +11,13 @@ const Page: FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [form] = Form.useForm();
+  const [nodes, setNodes] = useState<
+    | {
+      circles: Array<{ cx: number; cy: number; delay: number }>;
+      lines: Array<{ x1: number; y1: number; x2: number; y2: number; delay: number }>;
+    }
+    | { circles: []; lines: [] }
+  >({ circles: [], lines: [] });
 
   React.useEffect(() => {
     setMounted(true);
@@ -22,15 +29,15 @@ const Page: FC = () => {
       // Local Login: Sends credentials to Keycloak via NextAuth CredentialsProvider
       const result = await signIn("credentials", {
         redirect: false,
-        username: values.email, // Keycloak often uses email or username
+        username: values.email,
         password: values.password,
+        callbackUrl: "/page/project",
       });
-      console.log(result);
       if (result?.error) {
         messageApi.error("Login failed! Please check your User or Password.");
       } else {
         messageApi.success("Login successful!");
-        router.push("/page/project-layout");
+        router.push("/page/project");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -44,7 +51,7 @@ const Page: FC = () => {
     // Google Login: Redirects to Google via Keycloak
     signIn(
       "keycloak",
-      { callbackUrl: "/page/project-layout" },
+      { callbackUrl: "/page/project" },
       { kc_idp_hint: "google" }
     );
   };
@@ -59,16 +66,34 @@ const Page: FC = () => {
       } else {
         messageApi.error(error);
       }
-      // Remove error param
-      router.replace("/login");
     }
   }, [messageApi, router]);
-
+  useEffect(() => {
+    // Generate random positions only on client
+    setNodes({
+      circles: [...Array(20)].map(() => ({
+        cx: Math.random() * 400,
+        cy: Math.random() * 400,
+        delay: Math.random() * 2,
+      })),
+      lines: [...Array(15)].map(() => ({
+        x1: Math.random() * 400,
+        y1: Math.random() * 400,
+        x2: Math.random() * 400,
+        y2: Math.random() * 400,
+        delay: Math.random() * 2,
+      })),
+    });
+  }, []);
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f1115] relative overflow-hidden p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
       {contextHolder}
       {/* Background Gradients/Effects - generic dark theme vibe */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#1a1d26] to-[#0f1115] z-0 pointer-events-none" />
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-20"></div>
+        <div className="absolute w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-20"></div>
+        <div className="absolute w-96 h-96 bg-purple-800 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 bottom-0 left-1/2"></div>
+      </div>
 
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -78,71 +103,57 @@ const Page: FC = () => {
         <div className="hidden lg:flex lg:w-1/2 bg-[#15191f] p-12 items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0">
             {/* Neural Network Animation */}
-            {mounted && (
-              <svg className="w-full h-full opacity-20" viewBox="0 0 400 400">
-                <defs>
-                  <linearGradient
-                    id="grad1"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop
-                      offset="0%"
-                      style={{ stopColor: "#9ca3af", stopOpacity: 1 }}
-                    />
-                    <stop
-                      offset="100%"
-                      style={{ stopColor: "#4b5563", stopOpacity: 1 }}
-                    />
-                  </linearGradient>
-                </defs>
-                {[...Array(20)].map((_, i) => (
-                  <circle
-                    key={i}
-                    cx={Math.random() * 400}
-                    cy={Math.random() * 400}
-                    r="2"
-                    fill="url(#grad1)"
-                    className="animate-pulse"
-                    style={{ animationDelay: `${Math.random() * 2}s` }}
-                  />
-                ))}
-                {[...Array(15)].map((_, i) => (
-                  <line
-                    key={i}
-                    x1={Math.random() * 400}
-                    y1={Math.random() * 400}
-                    x2={Math.random() * 400}
-                    y2={Math.random() * 400}
-                    stroke="url(#grad1)"
-                    strokeWidth="0.5"
-                    className="animate-pulse"
-                    style={{ animationDelay: `${Math.random() * 2}s` }}
-                  />
-                ))}
-              </svg>
-            )}
+            <svg className="w-full h-full opacity-30" viewBox="0 0 400 400">
+              <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: "#8b5cf6", stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: "#6366f1", stopOpacity: 1 }} />
+                </linearGradient>
+              </defs>
+              {nodes.circles.map((node, i) => (
+                <circle
+                  key={i}
+                  cx={node.cx}
+                  cy={node.cy}
+                  r="2"
+                  fill="url(#grad1)"
+                  className="animate-pulse"
+                  style={{ animationDelay: `${node.delay}s` }}
+                />
+              ))}
+              {nodes.lines.map((line, i) => (
+                <line
+                  key={i}
+                  x1={line.x1}
+                  y1={line.y1}
+                  x2={line.x2}
+                  y2={line.y2}
+                  stroke="url(#grad1)"
+                  strokeWidth="0.5"
+                  className="animate-pulse"
+                  style={{ animationDelay: `${line.delay}s` }}
+                />
+              ))}
+            </svg>
           </div>
 
           <div className="relative z-10 text-center">
             <div className="mb-8 animate-float">
-              {/* Logo from Signup */}
-              <div className="mb-4 flex justify-center">
-                <img
-                  src="/images/Logo.png"
-                  alt="Ai Cave Logo"
-                  style={{ width: 150, height: 150, objectFit: "contain" }}
-                />
+              <div className="w-32 h-32 mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
+                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
               </div>
             </div>
-            <h2 className="text-3xl font-bold mb-4 text-white italic tracking-wide">
+            <h2 className="text-4xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
               Ai Cave
             </h2>
-            <p className="text-gray-400 text-lg">
-              Experience the future of intelligent automation
-            </p>
+            <p className="text-purple-200 text-lg">Experience the future of intelligent automation</p>
           </div>
         </div>
 
@@ -150,6 +161,13 @@ const Page: FC = () => {
         <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
           {/* Logo/Header */}
           <div className="text-center mb-8">
+            <div className="inline-block mb-4 animate-pulse">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
             <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
             <p className="text-gray-400">Sign in to continue to AI Cave</p>
           </div>

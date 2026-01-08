@@ -43,6 +43,19 @@ const DashboardPage: FC = () => {
     createdAt: Date | string;
   }>({ projectId: "", createdAt: "" });
   const [searchForm] = useForm();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   useEffect(() => {
     if (loading) fecthdata();
   }, [loading, session, params]);
@@ -160,8 +173,8 @@ const DashboardPage: FC = () => {
         token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
       }}
     >
-      <div className="w-full pt-6">
-        <Row gutter={[8, 8]} className="">
+      <div className={`w-full ${isMobile ? 'pt-3 px-3' : 'pt-6'}`}>
+        <Row gutter={[isMobile ? 4 : 8, isMobile ? 4 : 8]} className="">
           <Col span={24}>
             <SummaryFilterComponent
               searchForm={searchForm}
@@ -178,10 +191,11 @@ const DashboardPage: FC = () => {
               items={items}
               tabBarExtraContent={
                 <Button
+                  size={isMobile ? "small" : "middle"}
                   className="!border-[#6366F1] !text-[#6366F1]"
                   onClick={exportcsv}
                 >
-                  Export CSV
+                  {isMobile ? "Export" : "Export CSV"}
                 </Button>
               }
             />

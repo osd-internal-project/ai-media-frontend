@@ -16,7 +16,7 @@ import {
   Popconfirm,
   Space,
 } from "antd";
-import React, { useState, type FC, type ReactElement } from "react";
+import React, { useState, type FC, type ReactElement, useEffect } from "react";
 
 export interface props {
   promptGuideTypes: TPromptGuideType[];
@@ -44,9 +44,20 @@ const PromptGuideComponent: FC<props> = ({
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
-
+  const [isMobile, setIsMobile] = useState(false);
   const [typeForm] = Form.useForm();
   const [guideForm] = Form.useForm();
+
+  useEffect(() => {
+      const checkScreenSize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+  
+      checkScreenSize();
+      window.addEventListener("resize", checkScreenSize);
+  
+      return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
 
   const handleAddType = () => {
     typeForm.resetFields();
@@ -72,10 +83,10 @@ const PromptGuideComponent: FC<props> = ({
   };
 
   return (
-    <div className="min-h-screen p-8 text-white font-sans">
+    <div className="min-h-screen p-4 md:p-8 text-white font-sans">
       <Row gutter={[16, 16]}>
-        <Col span={6}>
-          <div className="flex justify-between items-center mb-8">
+        <Col xs={24} md={8} lg={6}>
+          <div className="flex justify-between items-center mb-4 md:mb-8">
             <h1 className="text-lg font-bold">Prompt Guide</h1>
             <Button
               icon={<PlusOutlined />}
@@ -120,7 +131,7 @@ const PromptGuideComponent: FC<props> = ({
                         key={item.id}
                         onClick={() => onSelectPromptGuide(item.id!)}
                         className={`
-                          group flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
+                          group flex items-center justify-between px-2 md:px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
                           ${
                             isActive
                               ? "bg-[#1E1E1E]"
@@ -142,13 +153,13 @@ const PromptGuideComponent: FC<props> = ({
                         }
                       >
                         <span
-                          className={`text-base truncate ${
+                          className={`text-sm md:text-base truncate ${
                             isActive ? "text-white" : "text-[#CCC]"
                           }`}
                         >
                           {item.title}
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 md:gap-2">
                           <Popconfirm
                             title="Delete this prompt?"
                             onConfirm={(e) => {
@@ -178,18 +189,24 @@ const PromptGuideComponent: FC<props> = ({
             ))}
           </div>
         </Col>
-        <Col span={18}>
+        <Col xs={24} md={16} lg={18}>
           {selectedPromptGuide && (
             <Card>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <div className="font-bold text-lg">Edit Prompt</div>
-                <Button
-                  danger
-                  type="primary"
-                  onClick={() => onDeletePromptGuide(selectedPromptGuide.id!)}
+                <Popconfirm
+                  title="Delete this prompt?"
+                  description="Are you sure you want to delete this prompt guide? This action cannot be undone."
+                  onConfirm={() => onDeletePromptGuide(selectedPromptGuide.id!)}
                 >
-                  Delete
-                </Button>
+                  <Button
+                    danger
+                    type="primary"
+                    size="small"
+                  >
+                    Delete
+                  </Button>
+                </Popconfirm>
               </div>
               <Form
                 layout="vertical"
@@ -204,7 +221,7 @@ const PromptGuideComponent: FC<props> = ({
                   <Input />
                 </Form.Item>
                 <Form.Item name={"textPrompt"} label="Text Prompt">
-                  <Input.TextArea rows={10} />
+                  <Input.TextArea rows={6} className="md:!min-h-[200px]" />
                 </Form.Item>
                 <Button type="primary" htmlType="submit">
                   Save Changes
@@ -221,6 +238,7 @@ const PromptGuideComponent: FC<props> = ({
         open={isTypeModalOpen}
         onCancel={() => setIsTypeModalOpen(false)}
         onOk={() => typeForm.submit()}
+        width={isMobile ? "75%" : 500}
       >
         <Form form={typeForm} onFinish={handleCreateType} layout="vertical">
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>

@@ -41,7 +41,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [loading, setLoading] = useState<boolean>(false);
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
-  const mappedPath = currentPath === "project" ? "project-layout" : currentPath;
+  const mappedPath = currentPath === "project" ? "project" : currentPath;
   const currentPathSub = pathname.split("/")[3];
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -277,7 +277,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         type="default"
         block
         size="small"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => signOut({ callbackUrl: "/login" })}
       >
         Sign Out
       </Button>
@@ -320,7 +320,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
     fecthdataByOrganization(organizationId);
     if (response) {
-      router.push(`/page/project-layout`);
+      router.push(`/page/project`);
     }
   }
   if (!session?.user.id) {
@@ -539,25 +539,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase()
+                                          )
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
@@ -737,25 +737,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase()
+                                          )
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
@@ -818,11 +818,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             width={90}
             trigger={null}
             collapsible
-            // collapsed={true}
-            className="hidden md:block p-2 h-screen"
+            collapsed={false}
+            className="hidden md:block p-2 h-screen mobile-hide"
           >
             <div className="bg-black rounded-2xl h-full flex flex-col">
-              {/* Logo at top of sidebar */}
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
                   width={"120px"}
@@ -864,7 +863,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                    // inlineCollapsed={true}
+                  // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
@@ -989,7 +988,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
             />
-            <div className="w-full h-screen p-2  overflow-y-auto">
+            <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
                   value={{ organizationId, organizationRole }}

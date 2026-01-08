@@ -11,6 +11,7 @@ import {
     LockOutlined,
     MailOutlined,
     BankOutlined,
+    CloseCircleOutlined,
 } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import { axiosUser } from "../lib/axios/axios";
@@ -178,6 +179,7 @@ const AcceptInviteContent = () => {
     const [checking, setChecking] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [userExists, setUserExists] = useState(false);
+    const [isError, setIsError] = useState(false);
 
     useEffect(() => {
         if (token) {
@@ -207,6 +209,7 @@ const AcceptInviteContent = () => {
                 description: "Please try again later.",
             });
             setChecking(false);
+            setIsError(true);
         }
     }
 
@@ -221,7 +224,7 @@ const AcceptInviteContent = () => {
                     message: "Invitation accepted successfully",
                     description: "You have successfully accepted the invitation.",
                 });
-                router.push("page/project-layout");
+                router.push("page/project");
             }
         } catch (error) {
             console.error("Error accepting invitation:", error);
@@ -238,6 +241,40 @@ const AcceptInviteContent = () => {
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 p-4">
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
                 <p className="text-white mt-4 text-lg">Verifying invitation</p>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 overflow-hidden relative">
+                {/* Background Effects (reused) */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute top-0 -left-4 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+                    <div className="absolute top-0 -right-4 w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-32 left-20 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+                </div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+
+                <div className="relative z-10 w-full max-w-md text-center">
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 animate-fadeIn">
+                        <CloseCircleOutlined style={{ color: "white" }} className="text-6xl mb-6" />
+                        <h1 className="text-2xl font-bold text-white mb-4">
+                            Error verifying token
+                        </h1>
+                        <p className="text-gray-400 mb-8">
+                            The invitation link is invalid or has expired. Please contact the administrator for a new invitation.
+                        </p>
+                        <Button
+                            type="primary"
+                            size="large"
+                            onClick={() => router.push("/")}
+                            className="w-full h-12 bg-white/10 border-white/10 hover:bg-white/20 hover:border-white/20 text-white rounded-xl font-semibold text-lg"
+                        >
+                            Back to Home
+                        </Button>
+                    </div>
+                </div>
             </div>
         );
     }
