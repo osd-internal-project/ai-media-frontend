@@ -1,99 +1,63 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import { Button, Image } from "antd";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { Image } from "antd";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { axiosCore } from "../lib/axios/axios";
+import PlanServices, { Plan } from "../services/plan.service";
+import PricingCards from "./components/PricingCards";
+import DetailedComparisonTable from "./components/DetailedComparisonTable";
 
-const PricingPage = () => {
+const PackagePage = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
     "monthly"
   );
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
   const pricingRef = useRef<HTMLDivElement | null>(null);
   const featureRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const planService = useMemo(() => PlanServices(axiosCore), []);
 
   const handleGetStarted = () => {
     router.push("/login");
   };
 
-  const plans = [
-    {
-      name: "Essential",
-      price: { monthly: 14, annually: 11 },
-      popular: false,
-      description: "Start experimenting with the magic of AI creation.",
-      badge: null,
-      borderColor: "border-blue-500",
-      features: [
-        { icon: "💳", text: "4,000 credits / month" },
-        { icon: "🖼️", text: "~Up to 4,000 images" },
-        { icon: "🎬", text: "~Up to 50 videos" },
-        { icon: "👤", text: "~13 consistent characters" },
-        { icon: "🤖", text: "~13 personalized models" },
-        { icon: "📖", text: "~Up to 5 One-Click Stories" },
-        { icon: "⚡", text: "~8 parallel generations" },
-        {
-          icon: "🎨",
-          text: "Access to 100+ premium image, video and audio models",
-        },
-        { icon: "📝", text: "One-Click Story Creation" },
-      ],
-    },
-    {
-      name: "Advanced",
-      price: { monthly: 29, annually: 23 },
-      popular: false,
-      description: "Unlock deeper control and create at scale.",
-      badge: null,
-      borderColor: "border-blue-600",
-      features: [
-        { icon: "💳", text: "12,000 credits / month" },
-        { icon: "♾️", text: "Add credits as needed" },
-        { icon: "🖼️", text: "~Up to 12,000 images" },
-        { icon: "🎬", text: "~Up to 150 videos" },
-        { icon: "👤", text: "~40 consistent characters" },
-        { icon: "🤖", text: "~40 personalized models" },
-        { icon: "📖", text: "~Up to 17 One-Click Stories" },
-        { icon: "⚡", text: "~16 parallel generations" },
-        {
-          icon: "🎨",
-          text: "Access to 100+ premium image, video and audio models",
-        },
-        { icon: "📝", text: "One-Click Story Creation" },
-      ],
-    },
-    {
-      name: "Infinite",
-      price: { monthly: 56, annually: 45 },
-      popular: true,
-      description: "Create at full speed with uninterrupted flow.",
-      badge: "MOST POPULAR",
-      borderColor: "border-pink-500",
-      features: [
-        { icon: "💳", text: "24,000 credits / month" },
-        { icon: "♾️", text: "Add credits as needed" },
-        { icon: "🖼️", text: "~Up to 24,000 images" },
-        { icon: "🎬", text: "~Up to 300 videos" },
-        { icon: "👤", text: "~80 consistent characters" },
-        { icon: "🤖", text: "~80 personalized models" },
-        { icon: "📖", text: "~Up to 34 One-Click Stories" },
-        { icon: "⚡", text: "~32 parallel generations" },
-        {
-          icon: "🎨",
-          text: "Access to 100+ premium image, video and audio models",
-        },
-        { icon: "📝", text: "One-Click Story Creation" },
-      ],
-    },
-  ];
+
+  const fetchPlans = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await planService.findAllFormatted();
+      console.log(data);
+      
+      setPlans(data);
+    } catch (error) {
+      console.error('Failed to fetch plans:', error);
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [planService]);
+
+  useEffect(() => {
+    setMounted(true);
+    fetchPlans();
+  }, [fetchPlans]);
 
   if (!mounted) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading plans...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -270,292 +234,19 @@ const PricingPage = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`bg-[#171717] rounded-lg overflow-hidden border-t-4 ${plan.borderColor} relative`}
-            >
-              {/* Header */}
-              <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {plan.name}
-                  </h3>
-                  {plan.badge && (
-                    <span className="bg-pink-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                      {plan.badge}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold text-white">
-                    $
-                    {billingPeriod === "monthly"
-                      ? plan.price.monthly
-                      : plan.price.annually}
-                  </span>
-                  <span className="text-gray-400 text-sm">/Seat/mo</span>
-                </div>
-                <button
-                  onClick={handleGetStarted}
-                  className="w-full bg-[#6c6c6c] hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4"
-                >
-                  Get Started
-                </button>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  {plan.description}
-                </p>
-              </div>
-
-              {/* Features - Top Section */}
-              <div className="px-6 pb-6">
-                <div className="space-y-3">
-                  {/* Credits */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-green-400">
-                      {plan.features[0].icon}
-                    </span>
-                    <span className="text-green-400 font-medium">
-                      {plan.features[0].text}
-                    </span>
-                  </div>
-
-                  {/* Add credits if available */}
-                  {plan.features[1]?.icon === "♾️" && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-green-400">
-                        {plan.features[1].icon}
-                      </span>
-                      <span className="text-green-400 font-medium">
-                        {plan.features[1].text}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Features - Bottom Section */}
-              <div className="bg-gray-750 px-6 py-6">
-                <div className="space-y-3">
-                  {plan.features
-                    .slice(plan.features[1]?.icon === "♾️" ? 2 : 1)
-                    .map((feature, featureIndex) => (
-                      <div
-                        key={featureIndex}
-                        className="flex items-center gap-3"
-                      >
-                        <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
-                        <span className="text-gray-300 text-sm">
-                          {feature.text}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <PricingCards 
+          plans={plans}
+          billingPeriod={billingPeriod}
+          onGetStarted={handleGetStarted}
+        />
 
         {/* Detailed Comparison Table */}
-        <div ref={featureRef} className="max-w-6xl mx-auto mt-16 bg-[#0f0f0f] rounded-lg overflow-hidden border border-[#171717]">
-          <div>
-            <table className="w-full">
-              {/* Plan Headers */}
-              <thead>
-                <tr>
-                  <th className="w-1/4"></th>
-                  <th className="text-center p-6 border-r border-[#171717]">
-                    <div className="text-white">
-                      <h3 className="text-2xl font-bold mb-4">Free Plan</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        Elit eu odio interdum facilisis curabitur mauris
-                        phasellus.
-                      </p>
-                    </div>
-                  </th>
-                  <th className="text-center p-6 border-r border-[#171717]">
-                    <div className="text-white">
-                      <h3 className="text-2xl font-bold mb-4">Lite Plan</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        Elit eu odio interdum facilisis curabitur mauris
-                        phasellus.
-                      </p>
-                    </div>
-                  </th>
-                  <th className="text-center p-6">
-                    <div className="text-white">
-                      <h3 className="text-2xl font-bold mb-4">Pro Plan</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        Elit eu odio interdum facilisis curabitur mauris
-                        phasellus.
-                      </p>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {/* Plan Chapter Header */}
-                <tr className="border-t border-[#171717]">
-                  <td colSpan={4} className="p-4 bg-[#171717]">
-                    <h4 className="text-gray-400 text-sm font-semibold tracking-wider uppercase">
-                      PLAN CHAPTER
-                    </h4>
-                  </td>
-                </tr>
-
-                {/* Plan Features */}
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Plan Chapter Header 2 */}
-                <tr className="border-t border-[#171717]">
-                  <td colSpan={4} className="p-4 bg-[#171717]">
-                    <h4 className="text-gray-400 text-sm font-semibold tracking-wider uppercase">
-                      PLAN CHAPTER
-                    </h4>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]"></td>
-                  <td className="p-4 text-center border-r border-[#171717]">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-
-                <tr className="border-t border-[#171717]">
-                  <td className="p-4 text-white font-medium border-r border-[#171717]">
-                    Plan feature
-                  </td>
-                  <td className="p-4 text-center border-r border-[#171717]"></td>
-                  <td className="p-4 text-center border-r border-[#171717]"></td>
-                  <td className="p-4 text-center">
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-5 h-5 text-white" />
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div ref={featureRef}>
+          <DetailedComparisonTable plans={plans} />
         </div>
       </div>
     </div>
   );
 };
 
-export default PricingPage;
+export default PackagePage;

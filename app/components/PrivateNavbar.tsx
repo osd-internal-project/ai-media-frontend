@@ -30,6 +30,7 @@ import { checkRole } from "../utils/checkRole";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import PackageModal from "./PackageModal";
 
 const { Header } = Layout;
 
@@ -59,6 +60,7 @@ const NavbarUser: React.FC<Props> = ({
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [packageModalOpen, setPackageModalOpen] = useState(false);
 
   const currentPath = pathname.split("/")[2];
   const mappedPath = currentPath === "project" ? "project" : currentPath;
@@ -160,8 +162,16 @@ const NavbarUser: React.FC<Props> = ({
         <span className="text-sm font-medium text-gray-600 whitespace-nowrap hidden sm:block">
           ORGANIZATION:
         </span>
-        <div className={`flex items-center ${isMobile ? 'flex-1 min-w-0' : 'justify-between w-full'} px-2 sm:px-4`}>
-          <div className={`flex items-center gap-2 sm:gap-6 ${isMobile ? 'flex-1 min-w-0' : ''}`}>
+        <div
+          className={`flex items-center ${
+            isMobile ? "flex-1 min-w-0" : "justify-between w-full"
+          } px-2 sm:px-4`}
+        >
+          <div
+            className={`flex items-center gap-2 sm:gap-6 ${
+              isMobile ? "flex-1 min-w-0" : ""
+            }`}
+          >
             <Select
               size="middle"
               className="dark-select w-[180px] sm:w-[250px]"
@@ -173,7 +183,7 @@ const NavbarUser: React.FC<Props> = ({
                 isMobile
                   ? {
                       zIndex: 9999,
-                      position: 'fixed',
+                      position: "fixed",
                     }
                   : undefined
               }
@@ -198,7 +208,9 @@ const NavbarUser: React.FC<Props> = ({
               ]}
               popupRender={(menu) => (
                 <div
-                  className={isMobile ? 'w-[280px] max-h-[400px] overflow-y-auto' : ''}
+                  className={
+                    isMobile ? "w-[280px] max-h-[400px] overflow-y-auto" : ""
+                  }
                 >
                   <div className="p-2">{menu}</div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent mx-3" />
@@ -228,13 +240,37 @@ const NavbarUser: React.FC<Props> = ({
               )}
             />
           </div>
-          
+
           {/* User Section */}
           {user && (
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              {checkRole(["ADMIN"], organizationRole) && (
+                <Button
+                  type="primary"
+                  onClick={() => setPackageModalOpen(true)}
+                  style={{
+                    fontSize: isMobile ? "10px" : "13px",
+                    padding: isMobile ? "3px 8px" : "6px 16px",
+                    borderRadius: isMobile ? "24px" : "12px",
+                    backgroundColor: "#1A1A1A",
+                    borderColor: "#3f3f46",
+                    background:
+                      "linear-gradient(135deg, #fdcec9 0%, #94a96b 50%, #60983f 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
+                    isMobile ? "w-auto" : "w-full sm:w-auto"
+                  }`}
+                >
+                  Upgrade
+                </Button>
+              )}
               <Tag
                 style={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   border: "none",
                   color: "white",
                   fontSize: isMobile ? "10px" : "13px",
@@ -248,7 +284,11 @@ const NavbarUser: React.FC<Props> = ({
               >
                 {"1,000 Tokens"}
               </Tag>
-              <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2 sm:gap-4'}`}>
+              <div
+                className={`flex items-center ${
+                  isMobile ? "gap-1" : "gap-2 sm:gap-4"
+                }`}
+              >
                 <Avatar size={isMobile ? 34 : 48} />
                 {!isMobile && (
                   <div className="flex items-center min-w-0">
@@ -283,7 +323,7 @@ const NavbarUser: React.FC<Props> = ({
               </div>
             </div>
           )}
-          
+
           {/* Guest User Section */}
           {!user && (
             <div className="flex items-center gap-4 flex-shrink-0">
@@ -359,6 +399,12 @@ const NavbarUser: React.FC<Props> = ({
           </div>
         </Drawer>
       )}
+
+      {/* Package Modal */}
+      <PackageModal
+        open={packageModalOpen}
+        onClose={() => setPackageModalOpen(false)}
+      />
     </Header>
   );
 };
