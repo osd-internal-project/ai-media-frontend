@@ -48,6 +48,14 @@ const GenerateImagePage: FC = () => {
   const { id } = params as { id: string };
   const { organizationId } = useOrganization();
   const [projectRole, setProjectRole] = useState<string | null>(null);
+  
+  const onSetPromptTextRef = React.useRef<((id: number) => Promise<void>) | null>(null);
+  
+  const handleSetPromptText = async (id: number) => {
+    if (onSetPromptTextRef.current) {
+      await onSetPromptTextRef.current(id);
+    }
+  };
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -239,6 +247,8 @@ const GenerateImagePage: FC = () => {
           onPromptGuideToggle={() =>
             setPromptGuideOpenStatus(!promptGuideOpenStatus)
           }
+          promptGuideTypes={promptGuideTypes}
+          onSetPromptText={handleSetPromptText}
         />
       </div>
 
@@ -697,9 +707,7 @@ const GenerateImagePage: FC = () => {
                   username={session?.user?.name || ""}
                   selectedAIModel={selectedAIModel}
                   setDisableTab={setDisableTab}
-                  onPromptGuideToggle={() =>
-                    setPromptGuideOpenStatus(!promptGuideOpenStatus)
-                  }
+                  onSetPromptTextRef={onSetPromptTextRef}
                 />
               ),
             },
@@ -725,9 +733,7 @@ const GenerateImagePage: FC = () => {
                   selectedAIModel={selectedAIModel}
                   username={session?.user?.name || ""}
                   setDisableTab={setDisableTab}
-                  onPromptGuideToggle={() =>
-                    setPromptGuideOpenStatus(!promptGuideOpenStatus)
-                  }
+                  onSetPromptTextRef={onSetPromptTextRef}
                 />
               ),
             },

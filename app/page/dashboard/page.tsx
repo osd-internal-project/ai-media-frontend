@@ -11,6 +11,7 @@ import {
   Row,
   Tabs,
   type TabsProps,
+  Result,
 } from "antd";
 import TableOwnerComponent from "./components/table-owner";
 import { axiosCore, axiosReport } from "@/app/lib/axios/axios";
@@ -25,8 +26,11 @@ import TableProductComponent from "./components/table-product";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
 import ReportServices from "@/app/services/report.service";
+import { canViewDashboard } from "@/app/utils/permissions";
+import { useOrganization } from "@/app/context/OrganizationContext";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
+  const { organizationRole } = useOrganization();
   const dashboardServices = DashboardServices(axiosCore);
   const projectServices = ProjectService(axiosCore);
   const [getdata, setData] = useState<ITDashboard>();
@@ -166,6 +170,25 @@ const DashboardPage: FC = () => {
       ),
     },
   ];
+
+  // Check if user has permission to view dashboard
+  if (!canViewDashboard(organizationRole || "")) {
+    return (
+      <ConfigProvider
+        theme={{
+          token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
+        }}
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Result
+            status="403"
+            title="Access Denied"
+            subTitle="You don't have permission to view the dashboard. Only organization owners can access this page."
+          />
+        </div>
+      </ConfigProvider>
+    );
+  }
 
   return (
     <ConfigProvider

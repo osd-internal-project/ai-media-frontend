@@ -9,12 +9,15 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 
 import { useOrganization } from "@/app/context/OrganizationContext";
+import { canManageTemplates } from "@/app/utils/permissions";
 
 const TemplateSettingPage: FC = (): ReactElement => {
   const [modal, contextHolder] = Modal.useModal();
   const promptguideServices = PromptGuideServices(axiosCore);
   const promptguideTypeServices = PromptGuideTypeServices(axiosCore);
-  const { organizationId } = useOrganization();
+  const { organizationId, organizationRole } = useOrganization();
+  
+  const canManage = canManageTemplates(organizationRole || "");
 
   const [promptGuideForm] = Form.useForm();
   const [selectedPromptGuide, setSelectedPromptGuide] =
@@ -119,6 +122,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
           onDeletePromptGuideType={onDeletePromptGuideType}
           onCreatePromptGuide={onCreatePromptGuide}
           onDeletePromptGuide={onDeletePromptGuide}
+          canManage={canManage}
         />
       ),
     },

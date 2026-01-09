@@ -28,6 +28,7 @@ export interface props {
   onDeletePromptGuideType: (id: number) => void;
   onCreatePromptGuide: (values: any) => void;
   onDeletePromptGuide: (id: number) => void;
+  canManage: boolean;
 }
 
 const PromptGuideComponent: FC<props> = ({
@@ -40,6 +41,7 @@ const PromptGuideComponent: FC<props> = ({
   onDeletePromptGuideType,
   onCreatePromptGuide,
   onDeletePromptGuide,
+  canManage,
 }): ReactElement => {
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
@@ -88,40 +90,44 @@ const PromptGuideComponent: FC<props> = ({
         <Col xs={24} md={8} lg={6}>
           <div className="flex justify-between items-center mb-4 md:mb-8">
             <h1 className="text-lg font-bold">Prompt Guide</h1>
-            <Button
-              icon={<PlusOutlined />}
-              onClick={handleAddType}
-              type="primary"
-              size="small"
-            >
-              Add Type
-            </Button>
+            {canManage && (
+              <Button
+                icon={<PlusOutlined />}
+                onClick={handleAddType}
+                type="primary"
+                size="small"
+              >
+                Add Type
+              </Button>
+            )}
           </div>
           <div className="space-y-4">
             {promptGuideTypes.map((group) => (
               <div key={group.id}>
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-[#888] font-medium">{group.title}</h3>
-                  <Space>
-                    <Button
-                      icon={<PlusOutlined />}
-                      size="small"
-                      type="text"
-                      className="text-[#888] hover:text-white"
-                      onClick={() => handleAddGuide(group.id)}
-                    />
-                    <Popconfirm
-                      title="Delete this type?"
-                      onConfirm={() => onDeletePromptGuideType(group.id)}
-                    >
+                  {canManage && (
+                    <Space>
                       <Button
-                        icon={<DeleteOutlined />}
+                        icon={<PlusOutlined />}
                         size="small"
                         type="text"
-                        danger
+                        className="text-[#888] hover:text-white"
+                        onClick={() => handleAddGuide(group.id)}
                       />
-                    </Popconfirm>
-                  </Space>
+                      <Popconfirm
+                        title="Delete this type?"
+                        onConfirm={() => onDeletePromptGuideType(group.id)}
+                      >
+                        <Button
+                          icon={<DeleteOutlined />}
+                          size="small"
+                          type="text"
+                          danger
+                        />
+                      </Popconfirm>
+                    </Space>
+                  )}
                 </div>
                 <div className="space-y-2 pl-2">
                   {group.promptGuide?.map((item) => {
@@ -160,19 +166,21 @@ const PromptGuideComponent: FC<props> = ({
                           {item.title}
                         </span>
                         <div className="flex items-center gap-1 md:gap-2">
-                          <Popconfirm
-                            title="Delete this prompt?"
-                            onConfirm={(e) => {
-                              e?.stopPropagation();
-                              onDeletePromptGuide(item.id!);
-                            }}
-                            onCancel={(e) => e?.stopPropagation()}
-                          >
-                            <DeleteOutlined
-                              className="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </Popconfirm>
+                          {canManage && (
+                            <Popconfirm
+                              title="Delete this prompt?"
+                              onConfirm={(e) => {
+                                e?.stopPropagation();
+                                onDeletePromptGuide(item.id!);
+                              }}
+                              onCancel={(e) => e?.stopPropagation()}
+                            >
+                              <DeleteOutlined
+                                className="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </Popconfirm>
+                          )}
                           <ArrowRightOutlined
                             className={`text-base transition-colors duration-300 ${
                               isActive
@@ -193,20 +201,24 @@ const PromptGuideComponent: FC<props> = ({
           {selectedPromptGuide && (
             <Card>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                <div className="font-bold text-lg">Edit Prompt</div>
-                <Popconfirm
-                  title="Delete this prompt?"
-                  description="Are you sure you want to delete this prompt guide? This action cannot be undone."
-                  onConfirm={() => onDeletePromptGuide(selectedPromptGuide.id!)}
-                >
-                  <Button
-                    danger
-                    type="primary"
-                    size="small"
+                <div className="font-bold text-lg">
+                  {canManage ? "Edit Prompt" : "View Prompt"}
+                </div>
+                {canManage && (
+                  <Popconfirm
+                    title="Delete this prompt?"
+                    description="Are you sure you want to delete this prompt guide? This action cannot be undone."
+                    onConfirm={() => onDeletePromptGuide(selectedPromptGuide.id!)}
                   >
-                    Delete
-                  </Button>
-                </Popconfirm>
+                    <Button
+                      danger
+                      type="primary"
+                      size="small"
+                    >
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                )}
               </div>
               <Form
                 layout="vertical"
@@ -218,14 +230,20 @@ const PromptGuideComponent: FC<props> = ({
                   <Input />
                 </Form.Item>
                 <Form.Item name={"title"} label="Title">
-                  <Input />
+                  <Input readOnly={!canManage} />
                 </Form.Item>
                 <Form.Item name={"textPrompt"} label="Text Prompt">
-                  <Input.TextArea rows={6} className="md:!min-h-[200px]" />
+                  <Input.TextArea 
+                    rows={6} 
+                    className="md:!min-h-[200px]" 
+                    readOnly={!canManage}
+                  />
                 </Form.Item>
-                <Button type="primary" htmlType="submit">
-                  Save Changes
-                </Button>
+                {canManage && (
+                  <Button type="primary" htmlType="submit">
+                    Save Changes
+                  </Button>
+                )}
               </Form>
             </Card>
           )}

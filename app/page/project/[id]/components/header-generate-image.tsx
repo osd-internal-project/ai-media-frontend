@@ -1,4 +1,4 @@
-import { Button, Drawer, Select, Tooltip } from "antd";
+import { Button, Drawer, Select, Tooltip, Space } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, type FC } from "react";
 import { LightbulbIcon } from "lucide-react";
@@ -13,6 +13,8 @@ export interface props {
   onAIModelChange?: (value: string) => void;
   promptGuideOpenStatus?: boolean;
   onPromptGuideToggle?: () => void;
+  promptGuideTypes?: any[];
+  onSetPromptText?: (id: number) => void;
 }
 
 const HeaderGenerateImagePage: FC<props> = ({
@@ -23,8 +25,11 @@ const HeaderGenerateImagePage: FC<props> = ({
   onAIModelChange,
   promptGuideOpenStatus,
   onPromptGuideToggle,
+  promptGuideTypes = [],
+  onSetPromptText,
 }) => {
   const [open, setOpen] = useState(false);
+  const [promptBuilderOpen, setPromptBuilderOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
@@ -46,6 +51,14 @@ const HeaderGenerateImagePage: FC<props> = ({
 
   const onClose = () => {
     setOpen(false);
+  };
+
+  const showPromptBuilderDrawer = () => {
+    setPromptBuilderOpen(true);
+  };
+
+  const onPromptBuilderClose = () => {
+    setPromptBuilderOpen(false);
   };
 
   const TitleSection = () => (
@@ -355,14 +368,14 @@ const HeaderGenerateImagePage: FC<props> = ({
                 <Button
                   type={promptGuideOpenStatus ? "primary" : "default"}
                   ghost={promptGuideOpenStatus}
-                  onClick={onPromptGuideToggle}
+                  onClick={isMobile ? showPromptBuilderDrawer : onPromptGuideToggle}
                   size="middle"
                 >
                   {isMobile
-                    ? "Examples"
+                    ? "Builder"
                     : isTablet
-                    ? "Examples"
-                    : "Prompt Examples"}
+                    ? "Builder"
+                    : "Prompt Builder"}
                 </Button>
                 <Tooltip title={isMobile ? "Prompt Guide" : undefined} placement="top">
                   <Button
@@ -379,6 +392,58 @@ const HeaderGenerateImagePage: FC<props> = ({
             )}
         </div>
       </div>
+
+      {/* Prompt Builder Drawer - Mobile Only */}
+      <Drawer
+        title="Prompt Builder"
+        closable={{ "aria-label": "Close Builder" }}
+        onClose={onPromptBuilderClose}
+        open={promptBuilderOpen}
+        width={isMobile ? "90%" : "80%"}
+        placement={isMobile ? "bottom" : "right"}
+        height={isMobile ? "80%" : undefined}
+        styles={{
+          body: { backgroundColor: "#18181b", color: "white", padding: 0 },
+          header: { backgroundColor: "#18181b", borderBottom: "1px solid rgba(255,255,255,0.1)" },
+          mask: { backgroundColor: "rgba(0,0,0,0.8)" }
+        }}
+      >
+        <div className="h-full bg-[#18181b] text-white overflow-hidden relative">
+          <div className="p-4">
+            <div className="text-sm h-full">
+              <div className="flex-1 h-[calc(100vh-270px)] overflow-y-auto">
+                {promptGuideTypes.map((type: any) => (
+                  <div key={type.id}>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
+                      {type.title}
+                    </h3>
+                    <div className="space-y-3 w-full">
+                      {type.promptGuide?.map(
+                        (item: any, index: number) => (
+                          <Button
+                            htmlType="button"
+                            key={item.id || index}
+                            size="large"
+                            onClick={() => {
+                              if (item.id && onSetPromptText) {
+                                onSetPromptText(item.id);
+                                onPromptBuilderClose(); // Close drawer after selection
+                              }
+                            }}
+                            className="w-full !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center transition-all duration-300 !border-none"
+                          >
+                            <Space className="">{item.title}</Space>
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Drawer>
 
       <Drawer
         title={

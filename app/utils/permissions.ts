@@ -7,8 +7,6 @@ export const checkRole = (
 ): boolean => {
   if (!userRole) return false;
 
-  if (userRole === 'ADMIN') return true;
-
   return allowedRoles.includes(userRole as any);
 };
 
@@ -17,6 +15,9 @@ export const organizationPermissions = {
   manageMembers: ['OWNER', 'ADMIN'] as OrganizationRole[],
   manageOrganization: ['OWNER'] as OrganizationRole[],
   viewProjects: ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'] as OrganizationRole[],
+  viewDashboard: ['OWNER'] as OrganizationRole[],
+  viewTemplates: ['OWNER', 'ADMIN', 'MEMBER'] as OrganizationRole[],
+  manageTemplates: ['OWNER', 'ADMIN'] as OrganizationRole[],
 };
 
 export const projectPermissions = {
@@ -41,3 +42,12 @@ export const canManageProject = (projectRole: string) =>
 
 export const canEditContent = (projectRole: string) =>
   checkRole(projectPermissions.editContent, projectRole);
+
+export const canViewDashboard = (organizationRole: string) =>
+  checkRole(organizationPermissions.viewDashboard, organizationRole);
+
+export const canViewTemplates = (organizationRole: string) =>
+  checkRole(organizationPermissions.viewTemplates, organizationRole);
+
+export const canManageTemplates = (organizationRole: string) =>
+  checkRole(organizationPermissions.manageTemplates, organizationRole);

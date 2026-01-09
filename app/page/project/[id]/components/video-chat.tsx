@@ -52,6 +52,9 @@ interface VideoChatProps {
   username?: string; // Added username
   selectedAIModel?: TAIModel | null; // Add selectedAIModel prop
   setDisableTab: (disable: boolean) => void;
+  onSetPromptTextRef?: React.MutableRefObject<
+    ((id: number) => Promise<void>) | null
+  >;
 }
 
 interface VideoConfigurationCardProps {
@@ -94,6 +97,19 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   duration,
   isMultiImage,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "480p":
@@ -111,7 +127,9 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
     <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-3 flex-1 text-sm">
-          <span className="text-white font-medium">Smart Reference</span>
+          {isMobile ? null : (
+            <span className="text-white font-medium">Smart Reference</span>
+          )}
           <span className="text-purple-400 font-medium">
             {getResolutionLabel(resolution)}
           </span>{" "}
@@ -234,6 +252,7 @@ const VideoChat: FC<VideoChatProps> = ({
   username,
   selectedAIModel,
   setDisableTab,
+  onSetPromptTextRef,
 }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -259,6 +278,19 @@ const VideoChat: FC<VideoChatProps> = ({
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   // Removed lastScrollTop as it's not used in the new handleScroll logic from image-chat
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Fetch Data (Pagination)
   const fetchMessages = useCallback(
@@ -608,6 +640,17 @@ const VideoChat: FC<VideoChatProps> = ({
       text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt
     );
   }
+
+  useEffect(() => {
+    if (activeKey === "vdo" && onSetPromptTextRef) {
+      onSetPromptTextRef.current = onSetPromptText;
+    }
+    return () => {
+      if (onSetPromptTextRef && activeKey === "vdo") {
+        onSetPromptTextRef.current = null;
+      }
+    };
+  }, [activeKey, onSetPromptTextRef]);
 
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
     "16:9": { width: 1280, height: 720 },
@@ -1082,43 +1125,47 @@ const VideoChat: FC<VideoChatProps> = ({
           </div>
         </div>
       </div>
-      <div
-        className={`${
-          promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
-        }`}
-      >
-        <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-          <div className="p-4 ">
-            <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
-            <div className="text-sm h-full ">
-              <div className="flex-1 h-[calc(100vh-270px)] overflow-y-auto">
-                {promptGuideTypes.map((type) => (
-                  <div key={type.id}>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
-                      {type.title}
-                    </h3>
-                    <div className="space-y-3 w-full">
-                      {type.promptGuide?.map(
-                        (item: TPromptGuide, index: number) => (
-                          <Button
-                            htmlType="button"
-                            key={item.id || index}
-                            size="large"
-                            onClick={() => item.id && onSetPromptText(item.id)}
-                            className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
-                          >
-                            <Space className=" ">{item.title}</Space>
-                          </Button>
-                        )
-                      )}
+      {!isMobile && (
+        <div
+          className={`${
+            promptGuideOpenStatus ? " h-[calc(100vh-200px)]  block" : "hidden"
+          }`}
+        >
+          <div className=" h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
+            <div className="p-4 ">
+              <h2 className="text-lg font-semibold mb-2">Prompt Guide</h2>
+              <div className="text-sm h-full ">
+                <div className="flex-1 h-[calc(100vh-270px)] overflow-y-auto">
+                  {promptGuideTypes.map((type) => (
+                    <div key={type.id}>
+                      <h3 className="text-sm font-semibold text-gray-400 mb-3 mt-2">
+                        {type.title}
+                      </h3>
+                      <div className="space-y-3 w-full">
+                        {type.promptGuide?.map(
+                          (item: TPromptGuide, index: number) => (
+                            <Button
+                              htmlType="button"
+                              key={item.id || index}
+                              size="large"
+                              onClick={() =>
+                                item.id && onSetPromptText(item.id)
+                              }
+                              className="w-full  !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center  transition-all duration-300 !border-none"
+                            >
+                              <Space className=" ">{item.title}</Space>
+                            </Button>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
