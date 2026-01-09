@@ -388,7 +388,6 @@ export default function OrganizationDetailPage() {
               <Select.Option value="OWNER">OWNER</Select.Option>
               <Select.Option value="ADMIN">ADMIN</Select.Option>
               <Select.Option value="MEMBER">MEMBER</Select.Option>
-              <Select.Option value="VIEWER">VIEWER</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item name="maxToken" label="Max Token">

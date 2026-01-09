@@ -32,7 +32,7 @@ export const MenuSider = [
       },
       {
         key: `settings/template-setting`,
-        role: ["OWNER", "ADMIN"],
+        role: ["OWNER", "ADMIN", "MEMBER"],
         icon: <LayoutTemplate size={22} />,
         label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>TEMPLATE</span>,
       },
@@ -44,7 +44,7 @@ export const MenuSider = [
       },
       {
         key: `dashboard`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        role: ["OWNER"],
         icon: <ChartPie size={22} />,
         label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>BOARD</span>,
       },
@@ -203,22 +203,29 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
 };
 
 export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
-  // ADMIN has super user access to all menus
-  if (role === "ADMIN" || role === "OWNER") {
-    return menuList;
-  }
+  const hasAccess = (itemRole: string[] | string) => {
+    if (!itemRole || itemRole === "") return true; // public access
+    
+    // Handle array of roles
+    if (Array.isArray(itemRole)) {
+      return itemRole.includes(role);
+    }
+    
+    // Handle single role
+    return itemRole === role;
+  };
 
   return menuList
     .map((menu) => {
-      // filter children ตาม role
+      // filter children based on role
       const children = menu.children
-        ? menu.children.filter((child: any) => role.includes(menu.role))
+        ? menu.children.filter((child: any) => hasAccess(child.role))
         : null;
 
-      // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
-      const canAccessMenu = role.includes(menu.role);
+      // Check if current user can access this menu
+      const canAccessMenu = hasAccess(menu.role);
 
-      // ถ้าเมนูหลักไม่มีสิทธิ์ และไม่มี child เลย → ไม่ให้ผ่าน
+      // If main menu has no access and no accessible children, exclude it
       if (!canAccessMenu && (!children || children.length === 0)) return null;
 
       return {
@@ -226,5 +233,5 @@ export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
         children: children || menu.children,
       };
     })
-    .filter(Boolean); // ลบ null ออก
+    .filter(Boolean); // Remove null entries
 };
