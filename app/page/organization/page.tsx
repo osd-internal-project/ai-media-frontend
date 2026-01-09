@@ -24,6 +24,7 @@ import { IOrganization } from "@/app/common/organization.type";
 import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
+import { formatNumber } from "@/app/utils/format";
 
 export default function OrganizationDetailPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -313,6 +314,7 @@ export default function OrganizationDetailPage() {
             </Button>
           </div>
           <div>Created At: {organization?.createdAt}</div>
+
           <div className=" text-sm text-gray-500 min-h-4">
             {organization?.description}
           </div>
@@ -334,7 +336,34 @@ export default function OrganizationDetailPage() {
         </Descriptions> */}
         </Card>
       </div>
-
+      <div className="grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+          <div className=" text-[#99a1af]"> Used Total Token : </div>
+          <div className=" text-xl">
+            {formatNumber(
+              (organization?.packageTokenAmount || 0) -
+                (organization?.remainTokenAmount || 0)
+            )}
+            /{formatNumber(organization?.packageTokenAmount || 0)}
+          </div>
+        </Card>
+        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+          <div className=" text-[#99a1af]">Used Total Image : </div>
+          <div className=" text-xl">
+            {formatNumber(
+              (organization?.packageImageAmount || 0) -
+                (organization?.remainImageAmount || 0)
+            )}
+            /{formatNumber(organization?.packageImageAmount || 0)}
+          </div>
+        </Card>
+        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+          <div className=" text-[#99a1af]">Total Users : </div>
+          <div className=" text-xl">
+            {members.length || 0}/{organization?.maxUserAccess || 0}
+          </div>
+        </Card>
+      </div>
       <Card
         title="Members"
         className="mt-4"

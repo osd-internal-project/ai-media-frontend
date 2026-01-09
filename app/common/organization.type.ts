@@ -13,4 +13,9 @@ export interface IOrganization {
   createdById: string;
   updatedById: string;
   organizationMember?: IOrganizationMember[];
+  packageTokenAmount?: number;
+  packageImageAmount?: number;
+  remainTokenAmount?: number;
+  remainImageAmount?: number;
+  maxUserAccess?: number;
 }

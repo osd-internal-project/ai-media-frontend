@@ -2,7 +2,7 @@ export type ProjectMember = {
   id: string;
   projectId: string;
   userId: string;
-  role: 'OWNER' | 'ADMIN' | 'USER' | 'VIEWER';
+  role: "OWNER" | "ADMIN" | "USER" | "VIEWER";
   joinedAt: string;
   users?: {
     userId: string;
@@ -14,7 +14,7 @@ export type ProjectMember = {
 
 export type ProjectMemberInput = {
   userId: string;
-  role: 'OWNER' | 'ADMIN' | 'USER' | 'VIEWER';
+  role: "OWNER" | "ADMIN" | "USER" | "VIEWER";
 };
 
 export type IProject = {
@@ -24,4 +24,8 @@ export type IProject = {
   status: string;
   members: ProjectMember[];
   name: string;
+  accessImageAmount: number;
+  remainImageAmount: number;
+  accessTokenAmount: number;
+  remainTokenAmount: number;
 };

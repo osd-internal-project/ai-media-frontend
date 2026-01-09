@@ -12,6 +12,7 @@ import {
   Dropdown,
   Tooltip,
   Select,
+  InputNumber,
 } from "antd";
 import {
   PlusOutlined,
@@ -29,17 +30,24 @@ import UserServices from "@/app/services/users.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import { checkRole } from "../../utils/checkRole";
+import OrganizationServices from "@/app/services/organization.service";
+import { IOrganization } from "@/app/common/organization.type";
+import { formatNumber } from "@/app/utils/format";
 
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const { organizationId, organizationRole } = useOrganization();
-
+  const [messageApi, contextMessageHolder] = message.useMessage();
+  const projectService = ProjectService(axiosCore);
+  const userServices = UserServices(axiosUser);
+  const organizationService = OrganizationServices(axiosUser);
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [organizationMembers, setOrganizationMembers] = useState<any[]>([]);
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
@@ -48,12 +56,12 @@ const ProjectsPage = () => {
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
     "USER"
   );
+  const [organization, setOrganization] = useState<IOrganization | undefined>(
+    undefined
+  );
   const [form] = Form.useForm();
   const [modal, contextHolder] = Modal.useModal();
   const [editForm] = Form.useForm();
-
-  const projectService = ProjectService(axiosCore);
-  const userServices = UserServices(axiosUser);
   const [isMobile, setIsMobile] = useState(false);
 
   const projectActionItems = [
@@ -80,6 +88,7 @@ const ProjectsPage = () => {
 
   const onClickProjectAction = (action: string, project: IProject) => {
     console.log("click", action, project);
+    setSelectedProject(project);
     if (action === "edit") {
       console.log(
         "Opening edit for project:",
@@ -93,6 +102,8 @@ const ProjectsPage = () => {
         project.members?.map((member: any) => ({
           userId: member.userId,
           role: member.role || "USER",
+          maxToken: member.maxToken,
+          maxImages: member.maxImages,
         })) || [];
       console.log("Setting project members:", members);
       setProjectMembers(members);
@@ -117,7 +128,7 @@ const ProjectsPage = () => {
         onOk: () => {
           async function deleteProject() {
             await projectService.update(project.id, { status: "deleted" });
-            message.success("Project deleted successfully");
+            messageApi.success("Project deleted successfully");
             fetchProjects();
           }
           deleteProject();
@@ -161,11 +172,36 @@ const ProjectsPage = () => {
     setSearchTexts({});
   };
 
-  const onFinish = async (values: any) => {
+  const onFinishAdd = async (values: any) => {
     try {
       setLoading(true);
+      if (!organization) {
+        messageApi.error("Organization not found");
+        setLoading(false);
+        return;
+      }
+      const maxTokenAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxToken),
+        0
+      );
+      const maxImageAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxImages),
+        0
+      );
+      if (maxTokenAll > values.accessTokenAmount) {
+        messageApi.error("Max token  is too high");
+        setLoading(false);
+        return;
+      }
+      if (maxImageAll > values.accessImageAmount) {
+        messageApi.error(" Max image is too high");
+        setLoading(false);
+        return;
+      }
       const projectData = {
         ...values,
+        remainImageAmount: values.accessImageAmount - maxImageAll,
+        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
         members: projectMembers.filter((m) => m.userId),
         organizationId: organizationId,
       };
@@ -176,42 +212,91 @@ const ProjectsPage = () => {
       });
 
       if (response) {
-        message.success("Project created successfully");
+        const remainImageAmount =
+          (organization?.remainImageAmount || 0) - response.accessImageAmount;
+        const remainTokenAmount =
+          (organization?.remainTokenAmount || 0) - response.accessTokenAmount;
+        await organizationService.update(organization.organizationId, {
+          remainImageAmount,
+          remainTokenAmount,
+        });
+        messageApi.success("Project created successfully");
         setOpen(false);
         setProjectMembers([]);
         form.resetFields();
+        fetchOrganizationMembers();
         fetchProjects();
       }
     } catch (error) {
       console.error("Failed to create project:", error);
-      message.error("Failed to create project");
+      messageApi.error("Failed to create project");
     } finally {
       setLoading(false);
     }
   };
 
   const onFinishEdit = async (values: any) => {
+    setLoading(true);
     try {
+      if (!organization) {
+        messageApi.error("Organization not found");
+        setLoading(false);
+        return;
+      }
+      const maxTokenAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxToken),
+        0
+      );
+      const maxImageAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxImages),
+        0
+      );
+      if (maxTokenAll > values.accessTokenAmount) {
+        messageApi.error("Max token  is too high");
+        setLoading(false);
+        return;
+      }
+      if (maxImageAll > values.accessImageAmount) {
+        messageApi.error(" Max image is too high");
+        setLoading(false);
+        return;
+      }
       const projectData = {
         name: values.name,
         description: values.description,
+        accessTokenAmount: values.accessTokenAmount,
+        accessImageAmount: values.accessImageAmount,
+        remainImageAmount: values.accessImageAmount - maxImageAll,
+        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
         members: projectMembers.filter((m) => m.userId),
       };
-      console.log("Sending project update with members:", projectData.members);
-      console.log("Original projectMembers array:", projectMembers);
 
       const updateResponse = await projectService.update(
         values.id,
         projectData
       );
-      console.log("Backend update response:", updateResponse);
-      message.success("Project updated successfully");
+      if (updateResponse) {
+        const remainImageAmount =
+          (organization?.remainImageAmount || 0) +
+          (selectedProject?.accessImageAmount || 0) -
+          updateResponse.accessImageAmount;
+        const remainTokenAmount =
+          (organization?.remainTokenAmount || 0) +
+          (selectedProject?.accessTokenAmount || 0) -
+          updateResponse.accessTokenAmount;
+        await organizationService.update(organization.organizationId, {
+          remainImageAmount,
+          remainTokenAmount,
+        });
+        messageApi.success("Project updated successfully");
+      }
       setOpenEdit(false);
       setProjectMembers([]);
       fetchProjects();
+      fetchOrganizationMembers();
     } catch (error) {
       console.error("Failed to update project:", error);
-      message.error("Failed to update project");
+      messageApi.error("Failed to update project");
     }
   };
 
@@ -229,6 +314,15 @@ const ProjectsPage = () => {
   }, [organizationId]);
 
   const fetchOrganizationMembers = async () => {
+    try {
+      if (organizationId) {
+        const organization = await organizationService.findById(organizationId);
+        console.log(organization);
+        setOrganization(organization);
+      }
+    } catch (error) {
+      console.error("Failed to fetch organization :", error);
+    }
     try {
       if (organizationId) {
         const response = await userServices.findOrganizationUserDetails(
@@ -264,7 +358,7 @@ const ProjectsPage = () => {
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
-      message.error("Failed to load projects");
+      messageApi.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
@@ -280,7 +374,14 @@ const ProjectsPage = () => {
 
   return (
     <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
-      <div className={`flex ${isMobile ? 'flex-row' : 'flex-col sm:flex-row'} justify-between items-center mb-6 sm:mb-8 ${isMobile ? 'gap-3' : 'gap-4 sm:gap-0'}`}>
+      {contextMessageHolder}
+      <div
+        className={`flex ${
+          isMobile ? "flex-row" : "flex-col sm:flex-row"
+        } justify-between items-center mb-6 sm:mb-8 ${
+          isMobile ? "gap-3" : "gap-4 sm:gap-0"
+        }`}
+      >
         <div className="flex items-center gap-3">
           <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
             Projects
@@ -292,7 +393,9 @@ const ProjectsPage = () => {
             icon={<PlusOutlined />}
             onClick={handleOpen}
             style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? 'w-auto' : 'w-full sm:w-auto'}`}
+            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
+              isMobile ? "w-auto" : "w-full sm:w-auto"
+            }`}
           >
             Create Project
           </Button>
@@ -386,8 +489,15 @@ const ProjectsPage = () => {
                     </div>
                     <div className="flex items-center space-x-1">
                       <CalendarOutlined className="text-xs" />
-                      <span className="hidden sm:inline">{formatDate(project.createdAt)}</span>
-                      <span className="sm:hidden">{new Date(project.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                      <span className="hidden sm:inline">
+                        {formatDate(project.createdAt)}
+                      </span>
+                      <span className="sm:hidden">
+                        {new Date(project.createdAt).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric" }
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -404,13 +514,15 @@ const ProjectsPage = () => {
           onCancel={handleClose}
           footer={false}
           okText="Submit"
-          width={isMobile ? "75%" : 500}
+          width={isMobile ? "90%" : 700}
         >
           <Form
+            size="small"
             form={form}
             layout="vertical"
             name="create_project_form"
-            onFinish={onFinish}
+            onFinish={onFinishAdd}
+            onFinishFailed={(e) => console.log(e)}
           >
             <Form.Item
               label="Project Name"
@@ -419,10 +531,47 @@ const ProjectsPage = () => {
             >
               <Input placeholder="Enter project name" />
             </Form.Item>
+            <Row gutter={[4, 0]}>
+              <Col span={12}>
+                <Form.Item
+                  label={`จำนวน Image (Max:${formatNumber(
+                    organization?.remainImageAmount
+                  )})`}
+                  name="accessImageAmount"
+                  rules={[
+                    { required: true, message: "Please enter image amount" },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter image amount"
+                    min={0}
+                    width={300}
+                    max={organization?.remainImageAmount || 0}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={`จำนวน Token (Max:${formatNumber(
+                    organization?.remainTokenAmount
+                  )})`}
+                  name="accessTokenAmount"
+                  rules={[
+                    { required: true, message: "Please enter token amount" },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter token amount"
+                    min={0}
+                    max={organization?.remainTokenAmount || 0}
+                    width={300}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
             <Form.Item label="Description" name="description">
               <Input.TextArea rows={3} placeholder="Optional description" />
             </Form.Item>
-
             <div
               style={{
                 display: "flex",
@@ -467,18 +616,24 @@ const ProjectsPage = () => {
                       Team Members (
                       {projectMembers.filter((m) => m.userId).length})
                     </div>
+                    <div className=" grid grid-cols-6 gap-2">
+                      <div className=" col-span-2">User</div>
+                      <div>Role</div>
+                      <div>จำนวน Image</div>
+                      <div>จำนวน Token</div>
+                    </div>
                     {projectMembers.map((member, index) => {
                       return (
                         <div
                           key={index}
+                          className=" grid grid-cols-6 gap-2"
                           style={{
-                            display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            marginBottom: "8px",
                           }}
                         >
                           <Select
+                            className=" col-span-2"
                             showSearch
                             placeholder="Type to search users..."
                             value={member.userId || undefined}
@@ -527,7 +682,7 @@ const ProjectsPage = () => {
                           />
                           <Select
                             value={member.role}
-                            style={{ width: 80, marginRight: "8px" }}
+                            style={{ width: 80 }}
                             onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                               const newMembers = [...projectMembers];
                               newMembers[index].role = role;
@@ -538,6 +693,30 @@ const ProjectsPage = () => {
                               { value: "USER", label: "User" },
                               { value: "VIEWER", label: "Viewer" },
                             ]}
+                          />
+                          <InputNumber
+                            value={member.maxImages}
+                            style={{ width: 80 }}
+                            onChange={(value: number | null) => {
+                              const newMembers = [...projectMembers];
+                              newMembers[index].maxImages = value;
+                              setProjectMembers(newMembers);
+                            }}
+                            min={0}
+                            defaultValue={0}
+                            placeholder="Image"
+                          />
+                          <InputNumber
+                            value={member.maxToken}
+                            style={{ width: 80, marginRight: "8px" }}
+                            onChange={(value: number | null) => {
+                              const newMembers = [...projectMembers];
+                              newMembers[index].maxToken = value;
+                              setProjectMembers(newMembers);
+                            }}
+                            min={0}
+                            defaultValue={0}
+                            placeholder="Token"
                           />
                           <Button
                             size="small"
@@ -582,7 +761,7 @@ const ProjectsPage = () => {
           open={openEdit}
           onCancel={handleCloseEdit}
           footer={false}
-          width={isMobile ? "75%" : 500}
+          width={isMobile ? "20%" : 700}
         >
           <Form
             form={editForm}
@@ -604,7 +783,45 @@ const ProjectsPage = () => {
               rules={[{ required: true, message: "Please enter project name" }]}
             >
               <Input placeholder="Enter project name" />
-            </Form.Item>
+            </Form.Item>{" "}
+            <Row gutter={[4, 0]}>
+              <Col span={12}>
+                <Form.Item
+                  label={`จำนวน Image (Max:${formatNumber(
+                    organization?.remainImageAmount
+                  )})`}
+                  name="accessImageAmount"
+                  rules={[
+                    { required: true, message: "Please enter image amount" },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter image amount"
+                    min={0}
+                    width={300}
+                    max={organization?.remainImageAmount || 0}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label={`จำนวน Token (Max:${formatNumber(
+                    organization?.remainTokenAmount
+                  )})`}
+                  name="accessTokenAmount"
+                  rules={[
+                    { required: true, message: "Please enter token amount" },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter token amount"
+                    min={0}
+                    max={organization?.remainTokenAmount || 0}
+                    width={300}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
             <Form.Item label="Description" name="description">
               <Input.TextArea rows={3} placeholder="Optional description" />
             </Form.Item>
@@ -638,23 +855,38 @@ const ProjectsPage = () => {
                 Add Member
               </Button>
             </div>
-
             <Form.Item>
               <div>
-                {/* Selected Members List */}
                 {projectMembers.length > 0 && (
                   <div>
-                    <div className="text-xs text-gray-400 mb-2">
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#666",
+                        marginBottom: "8px",
+                      }}
+                    >
                       Team Members (
                       {projectMembers.filter((m) => m.userId).length})
+                    </div>
+                    <div className=" grid grid-cols-6 gap-2">
+                      <div className=" col-span-2">User</div>
+                      <div>Role</div>
+                      <div>จำนวน Image</div>
+                      <div>จำนวน Token</div>
                     </div>
                     {projectMembers.map((member, index) => {
                       return (
                         <div
                           key={index}
-                          className="flex items-center justify-between mb-2"
+                          className=" grid grid-cols-6 gap-2"
+                          style={{
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
                         >
                           <Select
+                            className=" col-span-2"
                             showSearch
                             placeholder="Type to search users..."
                             value={member.userId || undefined}
@@ -703,7 +935,7 @@ const ProjectsPage = () => {
                           />
                           <Select
                             value={member.role}
-                            style={{ width: 80, marginRight: "8px" }}
+                            style={{ width: 80 }}
                             onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                               const newMembers = [...projectMembers];
                               newMembers[index].role = role;
@@ -714,6 +946,30 @@ const ProjectsPage = () => {
                               { value: "USER", label: "User" },
                               { value: "VIEWER", label: "Viewer" },
                             ]}
+                          />
+                          <InputNumber
+                            value={member.maxImages}
+                            style={{ width: 80 }}
+                            onChange={(value: number | null) => {
+                              const newMembers = [...projectMembers];
+                              newMembers[index].maxImages = value;
+                              setProjectMembers(newMembers);
+                            }}
+                            min={0}
+                            defaultValue={0}
+                            placeholder="Image"
+                          />
+                          <InputNumber
+                            value={member.maxToken}
+                            style={{ width: 80, marginRight: "8px" }}
+                            onChange={(value: number | null) => {
+                              const newMembers = [...projectMembers];
+                              newMembers[index].maxToken = value;
+                              setProjectMembers(newMembers);
+                            }}
+                            min={0}
+                            defaultValue={0}
+                            placeholder="Token"
                           />
                           <Button
                             size="small"

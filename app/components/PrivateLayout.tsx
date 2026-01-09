@@ -11,6 +11,9 @@ import {
   Select,
   theme,
   Spin,
+  InputNumber,
+  Row,
+  Col,
 } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -405,6 +408,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             width={500}
           >
             <Form
+              size="small"
               form={createOrgForm}
               layout="vertical"
               name="create_org_form"
@@ -419,6 +423,66 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               >
                 <Input placeholder="Enter organization name" />
               </Form.Item>
+              <Row gutter={[6, 0]}>
+                <Col span={12}>
+                  <Form.Item
+                    rules={[
+                      {
+                        message: "Please enter package token amount",
+                        required: true,
+                      },
+                    ]}
+                    label="จำนวน Package Token"
+                    name="packageTokenAmount"
+                  >
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Enter package token amount"
+                      defaultValue={0}
+                      min={0}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    rules={[
+                      {
+                        message: "Please enter package image amount",
+                        required: true,
+                      },
+                    ]}
+                    label="จำนวน Package Image"
+                    name="packageImageAmount"
+                  >
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Enter package image amount"
+                      defaultValue={0}
+                      min={0}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    rules={[
+                      {
+                        message: "Please enter max user access",
+                        required: true,
+                      },
+                    ]}
+                    label="จำนวน User"
+                    name="maxUserAccess"
+                  >
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Enter max user access"
+                      defaultValue={1}
+                      min={1}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
               <Form.Item label="Description" name="description">
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
@@ -539,25 +603,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase()
+                                            )
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
@@ -737,25 +801,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase()
+                                            )
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
@@ -863,7 +927,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                  // inlineCollapsed={true}
+                    // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
