@@ -773,7 +773,9 @@ const VideoChat: FC<VideoChatProps> = ({
                       {msg.genneratedStatus === "SUCCESS" &&
                         msg.images &&
                         msg.images.length > 0 && (
-                          <div className={`grid gap-2 mt-2  w-full`}>
+                          <div
+                            className={`grid gap-2 mt-2  w-full max-w-[200px]`}
+                          >
                             {msg.images.map((videoData, i) => (
                               <VideoItem
                                 key={i}

@@ -789,7 +789,7 @@ const ImageChat: FC<ImageChatProps> = ({
             )}
 
             {messages.map((msg, index) => (
-              <div key={msg.id}>
+              <div key={`${msg.id}-${index}`}>
                 <div
                   key={`${msg.id}-${index}`}
                   className={`flex gap-4 ${
@@ -861,6 +861,7 @@ const ImageChat: FC<ImageChatProps> = ({
                             </span>
                           </div>
                         )}
+
                         {(msg.genneratedStatus === "FAIL" ||
                           (msg.genneratedStatus === "SUCCESS" &&
                             !msg.images)) && (
@@ -877,12 +878,12 @@ const ImageChat: FC<ImageChatProps> = ({
                               //     ? "grid-cols-3"
                               //     : "grid-cols-3"
                               // }`}
-                              className=" w-full"
+                              className=" w-full flex gap-2"
                             >
                               {msg.images.map((img, i) => (
                                 <div
                                   key={i}
-                                  className=" min-w-[100px] w-1/6 relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
+                                  className=" min-w-[100px] w-1/6 max-w-[200px] relative group rounded-xl overflow-hidden border border-white/10 bg-black/50 cursor-pointer"
                                   onClick={() => handleImageClick(img.imageUrl)}
                                 >
                                   <Image
