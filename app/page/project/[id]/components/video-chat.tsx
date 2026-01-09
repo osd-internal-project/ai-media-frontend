@@ -565,7 +565,11 @@ const VideoChat: FC<VideoChatProps> = ({
         setTimeout(() => {
           bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
-        form.resetFields();
+        const currentValues = form.getFieldsValue();
+        form.setFieldsValue({
+          ...currentValues,
+          text: undefined,
+        });
         setFiles([]);
         console.log("galleryItem", galleryItem);
         // setCurrentPrompt("");
@@ -587,7 +591,11 @@ const VideoChat: FC<VideoChatProps> = ({
       // Don't set submitting false here immediately if we want to show loading
       // But since we added an AI PENDING message, we can stop "Submitting" state in form
       setSubmitting(false);
-      form.resetFields();
+      const currentValues = form.getFieldsValue();
+      form.setFieldsValue({
+        ...currentValues,
+        text: undefined,
+      });
       setFiles([]);
     }
   };
