@@ -147,6 +147,14 @@ export default function OrganizationDetailPage() {
 
   // Invite User
   const handleInvite = () => {
+    if (!organization) {
+      showMessage("error", "Fail to load data");
+      return;
+    }
+    if (members.length >= (organization?.maxUserAccess || 0)) {
+      showMessage("error", "Max user access reached");
+      return;
+    }
     inviteForm.resetFields();
     setIsInviteModalOpen(true);
   };
