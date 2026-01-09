@@ -553,7 +553,11 @@ const ImageChat: FC<ImageChatProps> = ({
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    form.resetFields();
+    const currentValues = form.getFieldsValue();
+    form.setFieldsValue({
+      ...currentValues,
+      text: undefined,
+    });
     setFiles([]);
 
     setTimeout(() => {
