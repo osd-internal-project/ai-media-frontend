@@ -244,7 +244,7 @@ const NavbarUser: React.FC<Props> = ({
           {/* User Section */}
           {user && (
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-              {checkRole(["ADMIN"], organizationRole) && (
+              {checkRole(["ADMIN", "OWNER"], organizationRole) && (
                 <Button
                   type="primary"
                   onClick={() => setPackageModalOpen(true)}
