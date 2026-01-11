@@ -215,16 +215,20 @@ const NavbarUser: React.FC<Props> = ({
                   <div className="p-2">{menu}</div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent mx-3" />
                   <div className="p-2 space-y-1">
-                    <Button
-                      type="text"
-                      size="large"
-                      onClick={handleOpenCreateOrg}
-                      icon={<PlusCircleOutlined className="text-blue-400" />}
-                      className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <span className="font-medium">Add new organization</span>
-                    </Button>
-                    {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                    {checkRole(["OWNER"], organizationRole) && (
+                      <Button
+                        type="text"
+                        size="large"
+                        onClick={handleOpenCreateOrg}
+                        icon={<PlusCircleOutlined className="text-blue-400" />}
+                        className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                      >
+                        <span className="font-medium">
+                          Add new organization
+                        </span>
+                      </Button>
+                    )}
+                    {checkRole(["OWNER", "ADMIN"], organizationRole) && (
                       <Button
                         type="text"
                         size="large"

@@ -11,11 +11,13 @@ export const checkRole = (
 };
 
 export const organizationPermissions = {
+  createOrganization: ['OWNER'] as OrganizationRole[], // Only OWNER can create new organizations
   createProjects: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  manageMembers: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  manageOrganization: ['OWNER'] as OrganizationRole[],
+  manageMembers: ['OWNER'] as OrganizationRole[], // Only OWNER can invite/edit/remove users
+  editOrganization: ['OWNER'] as OrganizationRole[], // Only OWNER can edit organization settings
+  viewOrganization: ['OWNER', 'ADMIN'] as OrganizationRole[], // OWNER and ADMIN can view organization page
   viewProjects: ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'] as OrganizationRole[],
-  viewDashboard: ['OWNER'] as OrganizationRole[],
+  viewDashboard: ['OWNER', 'ADMIN'] as OrganizationRole[],
   viewTemplates: ['OWNER', 'ADMIN', 'MEMBER'] as OrganizationRole[],
   manageTemplates: ['OWNER', 'ADMIN'] as OrganizationRole[],
 };
@@ -28,26 +30,35 @@ export const projectPermissions = {
   viewAll: ['OWNER', 'ADMIN', 'USER', 'VIEWER'] as ProjectRole[],
 };
 
-export const canCreateProjects = (organizationRole: string) =>
+export const canCreateOrganization = (organizationRole: string | undefined) =>
+  checkRole(organizationPermissions.createOrganization, organizationRole);
+
+export const canCreateProjects = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.createProjects, organizationRole);
 
-export const canManageMembers = (organizationRole: string) =>
+export const canManageMembers = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.manageMembers, organizationRole);
 
-export const canUseChat = (projectRole: string) =>
+export const canEditOrganization = (organizationRole: string | undefined) =>
+  checkRole(organizationPermissions.editOrganization, organizationRole);
+
+export const canViewOrganization = (organizationRole: string | undefined) =>
+  checkRole(organizationPermissions.viewOrganization, organizationRole);
+
+export const canUseChat = (projectRole: string | null | undefined) =>
   checkRole(projectPermissions.useChat, projectRole);
 
-export const canManageProject = (projectRole: string) =>
+export const canManageProject = (projectRole: string | null | undefined) =>
   checkRole(projectPermissions.manageProject, projectRole);
 
-export const canEditContent = (projectRole: string) =>
+export const canEditContent = (projectRole: string | null | undefined) =>
   checkRole(projectPermissions.editContent, projectRole);
 
-export const canViewDashboard = (organizationRole: string) =>
+export const canViewDashboard = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.viewDashboard, organizationRole);
 
-export const canViewTemplates = (organizationRole: string) =>
+export const canViewTemplates = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.viewTemplates, organizationRole);
 
-export const canManageTemplates = (organizationRole: string) =>
+export const canManageTemplates = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.manageTemplates, organizationRole);

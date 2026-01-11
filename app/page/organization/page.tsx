@@ -25,10 +25,11 @@ import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 import { formatNumber } from "@/app/utils/format";
+import { canEditOrganization, canManageMembers } from "@/app/utils/permissions";
 
 export default function OrganizationDetailPage() {
   const [messageApi, contextHolder] = message.useMessage();
-  const { organizationId } = useOrganization();
+  const { organizationId, organizationRole } = useOrganization();
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -280,19 +281,23 @@ export default function OrganizationDetailPage() {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space>
-          <Button type="link" onClick={() => handleEditMember(record)}>
-            Edit
-          </Button>
-          <Popconfirm
-            title="Remove Member?"
-            onConfirm={() => handleRemoveMember(record.id)}
-          >
-            <Button type="link" danger>
-              Remove
+        canManageMembers(organizationRole) ? (
+          <Space>
+            <Button type="link" onClick={() => handleEditMember(record)}>
+              Edit
             </Button>
-          </Popconfirm>
-        </Space>
+            <Popconfirm
+              title="Remove Member?"
+              onConfirm={() => handleRemoveMember(record.id)}
+            >
+              <Button type="link" danger>
+                Remove
+              </Button>
+            </Popconfirm>
+          </Space>
+        ) : (
+          <span className="text-gray-400">View only</span>
+        )
       ),
     },
   ];
@@ -317,9 +322,11 @@ export default function OrganizationDetailPage() {
                 )}
               </div>
             </div>
-            <Button type="link" onClick={handleEdit}>
-              Edit
-            </Button>
+            {canEditOrganization(organizationRole) && (
+              <Button type="link" onClick={handleEdit}>
+                Edit
+              </Button>
+            )}
           </div>
           <div>Created At: {organization?.createdAt}</div>
 
@@ -376,11 +383,13 @@ export default function OrganizationDetailPage() {
         title="Members"
         className="mt-4"
         extra={
-          <Space>
-            <Button type="primary" onClick={handleInvite}>
-              Invite User
-            </Button>
-          </Space>
+          canManageMembers(organizationRole) && (
+            <Space>
+              <Button type="primary" onClick={handleInvite}>
+                Invite User
+              </Button>
+            </Space>
+          )
         }
       >
         <Table

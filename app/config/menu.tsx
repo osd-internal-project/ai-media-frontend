@@ -44,7 +44,7 @@ export const MenuSider = [
       },
       {
         key: `dashboard`,
-        role: ["OWNER"],
+        role: ["OWNER", "ADMIN"],
         icon: <ChartPie size={22} />,
         label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>BOARD</span>,
       },

@@ -6,7 +6,5 @@ export const checkRole = (
 ) => {
   if (!userRole) return false;
   
-  if (userRole === 'ADMIN') return true;
-  
   return roles.includes(userRole as any);
 };
