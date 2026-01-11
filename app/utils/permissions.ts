@@ -11,11 +11,11 @@ export const checkRole = (
 };
 
 export const organizationPermissions = {
-  createOrganization: ['OWNER'] as OrganizationRole[], // Only OWNER can create new organizations
+  createOrganization: ['OWNER'] as OrganizationRole[],
   createProjects: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  manageMembers: ['OWNER'] as OrganizationRole[], // Only OWNER can invite/edit/remove users
-  editOrganization: ['OWNER'] as OrganizationRole[], // Only OWNER can edit organization settings
-  viewOrganization: ['OWNER', 'ADMIN'] as OrganizationRole[], // OWNER and ADMIN can view organization page
+  manageMembers: ['OWNER'] as OrganizationRole[],
+  editOrganization: ['OWNER'] as OrganizationRole[],
+  viewOrganization: ['OWNER', 'ADMIN'] as OrganizationRole[],
   viewProjects: ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'] as OrganizationRole[],
   viewDashboard: ['OWNER', 'ADMIN'] as OrganizationRole[],
   viewTemplates: ['OWNER', 'ADMIN', 'MEMBER'] as OrganizationRole[],
