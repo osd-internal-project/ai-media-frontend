@@ -26,7 +26,7 @@ import {
 import { User, LogOut, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
-import { checkRole } from "../utils/checkRole";
+import { canCreateOrganization, canViewOrganization, canViewDashboard } from "../utils/permissions";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -215,7 +215,7 @@ const NavbarUser: React.FC<Props> = ({
                   <div className="p-2">{menu}</div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent mx-3" />
                   <div className="p-2 space-y-1">
-                    {checkRole(["OWNER"], organizationRole) && (
+                    {canCreateOrganization(organizationRole) && (
                       <Button
                         type="text"
                         size="large"
@@ -228,7 +228,7 @@ const NavbarUser: React.FC<Props> = ({
                         </span>
                       </Button>
                     )}
-                    {checkRole(["OWNER", "ADMIN"], organizationRole) && (
+                    {canViewOrganization(organizationRole) && (
                       <Button
                         type="text"
                         size="large"
@@ -248,7 +248,7 @@ const NavbarUser: React.FC<Props> = ({
           {/* User Section */}
           {user && (
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-              {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+              {canViewDashboard(organizationRole) && (
                 <Button
                   type="primary"
                   onClick={() => setPackageModalOpen(true)}

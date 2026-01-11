@@ -29,7 +29,7 @@ import ProjectService from "@/app/services/project.service";
 import UserServices from "@/app/services/users.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
-import { checkRole } from "../../utils/checkRole";
+import { canCreateProjects } from "../../utils/permissions";
 import OrganizationServices from "@/app/services/organization.service";
 import { IOrganization } from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
@@ -387,7 +387,7 @@ const ProjectsPage = () => {
             Projects
           </h1>
         </div>
-        {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+        {canCreateProjects(organizationRole) && (
           <Button
             size={isMobile ? "middle" : "large"}
             icon={<PlusOutlined />}
@@ -449,7 +449,7 @@ const ProjectsPage = () => {
                     </div>
                   </div>
 
-                  {checkRole(["ADMIN", "OWNER"], organizationRole) && (
+                  {canCreateProjects(organizationRole) && (
                     <div className="flex-shrink-0">
                       <Dropdown
                         menu={{
