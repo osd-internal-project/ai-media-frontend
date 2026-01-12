@@ -1,50 +1,64 @@
-import { Button, DatePicker, Form, FormInstance, Select } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  DatePicker,
+  Form,
+  FormInstance,
+  Select,
+} from "antd";
 import { FC, ReactElement } from "react";
-import { SettingOutlined } from "@ant-design/icons";
 
 interface props {
-  agentSearchForm: FormInstance;
-  onSearchAgent: (value: any) => void;
+  searchForm: FormInstance;
+  onSearch: (value: any) => void;
+  projectOptions: { value: string; label: string }[];
+  exportcsv: () => void;
 }
 
-const TableFilterComponent: FC<props> = ({
-  agentSearchForm,
-  onSearchAgent,
+const TableFilter: FC<props> = ({
+  searchForm,
+  onSearch,
+  projectOptions,
+  exportcsv,
 }): ReactElement => {
-  function onClickFilterSubmit(): void {
-    agentSearchForm.submit();
-  }
-
   return (
-    <div className=" flex justify-between">
-      <Form layout="inline" form={agentSearchForm} onFinish={onSearchAgent}>
-        <Form.Item name={"owner"}>
-          <Select placeholder="Owner" style={{ width: "150px" }} />
-        </Form.Item>
-        <Form.Item name={"product"}>
-          <Select placeholder="Product" style={{ width: "150px" }} />
-        </Form.Item>
-        <Form.Item name={"region"}>
-          <Select placeholder="Region" style={{ width: "150px" }} />
-        </Form.Item>
-        <Form.Item name={"billingUnit"}>
-          <Select placeholder="Billing Unit" style={{ width: "150px" }} />
-        </Form.Item>
+    <ConfigProvider theme={{ components: { Form: { itemMarginBottom: 0 } } }}>
+      <Form className="flex justify-end" form={searchForm} onFinish={onSearch}>
+        <div className=" flex flex-row gap-5 items-center">
+          <div className="col col-span-1">
+            <Form.Item name={"createdAt"} label={"Billing Cycle"}>
+              <DatePicker
+                picker="month"
+                format="YYYY-MM"
+                onChange={() => searchForm.submit()}
+              />
+            </Form.Item>
+          </div>
+          <div className="col col-span-1 ">
+            <Form.Item name={"projectId"} label={"Project"} className="w-full">
+              <Select
+                options={projectOptions}
+                placeholder={`Project`}
+                allowClear
+                optionFilterProp="label"
+                showSearch
+                onChange={() => searchForm.submit()}
+                className="w-full"
+              />
+            </Form.Item>
+          </div>
+          <div>
+            <Button
+              // size={"small"}
+              className="!border-[#6366F1] !text-[#6366F1]"
+              onClick={exportcsv}
+            >
+              Export CSV
+            </Button>
+          </div>
+        </div>
       </Form>
-      <div className=" flex space-x-2">
-        <Button>
-          <SettingOutlined />
-        </Button>{" "}
-        <Button
-          type="primary"
-          ghost
-          className=" ml-2"
-          onClick={onClickFilterSubmit}
-        >
-          Export
-        </Button>
-      </div>
-    </div>
+    </ConfigProvider>
   );
 };
-export default TableFilterComponent;
+export default TableFilter;

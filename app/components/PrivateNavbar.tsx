@@ -29,6 +29,8 @@ import {
   CreditCard,
   FileImage,
   FileVideoCamera,
+  Coins,
+  CircleQuestionMark,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
@@ -193,14 +195,14 @@ const NavbarUser: React.FC<Props> = ({
               onChange={handleOrganizationChange}
               value={organizationId}
               getPopupContainer={isMobile ? () => document.body : undefined}
-              dropdownStyle={
-                isMobile
-                  ? {
-                      zIndex: 9999,
-                      position: "fixed",
-                    }
-                  : undefined
-              }
+              // dropdownStyle={
+              //   isMobile
+              //     ? {
+              //         zIndex: 9999,
+              //         position: "fixed",
+              //       }
+              //     : undefined
+              // }
               popupMatchSelectWidth={!isMobile}
               options={[
                 {
@@ -285,6 +287,7 @@ const NavbarUser: React.FC<Props> = ({
                   Upgrade
                 </Button>
               )}
+
               <Tag
                 style={{
                   // background:
@@ -305,16 +308,22 @@ const NavbarUser: React.FC<Props> = ({
                 onMouseOver={(e) => setIsHoldTokenAmountTag(true)}
                 onMouseOut={(e) => setIsHoldTokenAmountTag(false)}
               >
-                <div className=" flex flex-row gap-2">
+                <div className=" flex flex-row gap-2  w-[130px]">
                   {isHoldTokenAmountTag ? (
-                    <div className=" flex flex-row gap-2">
-                      <FileVideoCamera size={15} />
-                      {formatNumber(currentOrganization?.packageTokenAmount)}
+                    <div className=" flex flex-row gap-2 items-center justify-between">
+                      <div className=" flex gap-2 items-center">
+                        <Coins size={15} />
+                        {formatNumber(currentOrganization?.packageTokenAmount)}
+                      </div>
+                      <CircleQuestionMark size={13} />
                     </div>
                   ) : (
-                    <div className=" flex flex-row gap-2">
-                      <FileImage size={15} />
-                      {formatNumber(currentOrganization?.packageImageAmount)}
+                    <div className=" flex flex-row gap-2 items-center w-[130px] justify-between">
+                      <div className=" flex gap-2 items-center">
+                        <FileImage size={15} />
+                        {formatNumber(currentOrganization?.packageImageAmount)}
+                      </div>
+                      <CircleQuestionMark size={13} />
                     </div>
                   )}
                 </div>

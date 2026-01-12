@@ -6,7 +6,7 @@ interface props {
   data: ProductSummary[];
 }
 
-const TableProductComponent: FC<props> = ({ data }): ReactElement => {
+const TableUserComponent: FC<props> = ({ data }): ReactElement => {
   const ParentColumns = [
     {
       title: "Product",
@@ -73,4 +73,4 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
     </div>
   );
 };
-export default TableProductComponent;
+export default TableUserComponent;

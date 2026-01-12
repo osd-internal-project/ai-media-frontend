@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
-import SummaryFilterComponent from "./components/summary-filter";
+import SummaryFilterComponent from "./components/table-filter";
 import { useForm } from "antd/es/form/Form";
-import SummaryCardComponent from "./components/summary-card";
+import SummaryCardComponent from "./components/card-orgnization";
 import {
   Button,
   Col,
@@ -12,33 +12,41 @@ import {
   Tabs,
   type TabsProps,
   Result,
+  Space,
 } from "antd";
-import TableOwnerComponent from "./components/table-owner";
-import { axiosCore, axiosReport } from "@/app/lib/axios/axios";
+import { axiosCore, axiosReport, axiosUser } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
 import { useSession } from "next-auth/react";
 import type {
+  IDashboardProject,
+  IDashboardUser,
   ITDashboard,
   ITDashboardOwner,
   ProductSummary,
 } from "@/app/common/dashbaord";
-import TableProductComponent from "./components/table-product";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
 import ReportServices from "@/app/services/report.service";
 import { canViewDashboard } from "@/app/utils/permissions";
 import { useOrganization } from "@/app/context/OrganizationContext";
+import { IOrganization } from "@/app/common/organization.type";
+import OrganizationServices from "@/app/services/organization.service";
+import CardOrganization from "./components/card-orgnization";
+import TableFilter from "./components/table-filter";
+import TableProjectComponent from "./components/table-project";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
   const { organizationRole, organizationId } = useOrganization();
   const dashboardServices = DashboardServices(axiosCore);
+  const organizationServices = OrganizationServices(axiosUser);
   const projectServices = ProjectService(axiosCore);
-  const [getdata, setData] = useState<ITDashboard>();
   const [loading, setLoading] = useState<boolean>(true);
   const [summaryByOwner, setSummaryByOwner] = useState<ITDashboardOwner[]>([]);
-  const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>(
+
+  const [summaryByProject, setSummaryByProject] = useState<IDashboardProject[]>(
     []
   );
+  const [organization, setOrganization] = useState<IOrganization>();
   const [projectOptions, setProjectOptions] = useState<
     { value: string; label: string }[]
   >([]);
@@ -63,37 +71,28 @@ const DashboardPage: FC = () => {
   useEffect(() => {
     if (loading) fecthdata();
   }, [loading, session, params]);
-
+  useEffect(() => {
+    if (organizationId) fecthOrganizationDetail(organizationId);
+  }, [organizationId]);
   const fecthdata = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummary(
-        session?.user.id as string,
-        params
-      );
-      setData(response);
-      fectdataTableOwner();
-      fectdataTableProduct();
+    if (organizationId) {
+      fectdataTableProject(organizationId);
       setLoading(false);
     }
   };
-  const fectdataTableOwner = async () => {
+
+  const fecthOrganizationDetail = async (organizationId: string) => {
+    const response = await organizationServices.findById(organizationId);
+    setOrganization(response);
+    console.log(response);
+  };
+  const fectdataTableUser = async () => {
     if (session?.user) {
       const response = await dashboardServices.findDashboardSummaryOwner(
         session?.user.id as string,
         params
       );
       setSummaryByOwner(response);
-      setLoading(false);
-    }
-  };
-
-  const fectdataTableProduct = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryProduct(
-        session?.user.id as string,
-        params
-      );
-      setSummaryByProduct(response);
       setLoading(false);
     }
   };
@@ -112,6 +111,7 @@ const DashboardPage: FC = () => {
         return { value: project.id, label: project.name };
       });
       setProjectOptions(mapOptions || []);
+      fectdataTableProject(organizationId);
     }
   };
 
@@ -124,7 +124,14 @@ const DashboardPage: FC = () => {
       setLoading(true);
     }
   }
-
+  const fectdataTableProject = async (organizationId: string) => {
+    const response = await dashboardServices.findDashboardSummaryProject(
+      organizationId,
+      params
+    );
+    setSummaryByProject(response);
+    setLoading(false);
+  };
   const exportcsv = async () => {
     try {
       const blob = await ReportServices(axiosReport).reportcsvDashboard(
@@ -157,21 +164,29 @@ const DashboardPage: FC = () => {
       label: "Owner",
       children: (
         <>
-          <TableOwnerComponent data={summaryByOwner} />
+          <TableProjectComponent
+            data={summaryByProject}
+            getSummaryUsers={getSummaryUsers}
+          />
         </>
       ),
     },
     {
       key: "2",
       label: "Product",
-      children: (
-        <>
-          <TableProductComponent data={summaryByProduct} />
-        </>
-      ),
+      children: <></>,
     },
   ];
-
+  async function getSummaryUsers(projectId: string): Promise<IDashboardUser[]> {
+    if (organizationId) {
+      const response = await dashboardServices.findDashboardSummaryUser(
+        organizationId,
+        { ...params, projectId }
+      );
+      return response || [];
+    }
+    return [];
+  }
   // Check if user has permission to view dashboard
   if (!canViewDashboard(organizationRole || "")) {
     return (
@@ -198,29 +213,20 @@ const DashboardPage: FC = () => {
       }}
     >
       <div className={`w-full ${isMobile ? "pt-3 px-3" : "pt-6"}`}>
+        <div className="text-[#99a1af] text-lg">Package Overview</div>
+        <CardOrganization organization={organization} session={session} />
         <Row gutter={[isMobile ? 4 : 8, isMobile ? 4 : 8]} className="">
-          <Col span={24}>
-            <SummaryFilterComponent
-              searchForm={searchForm}
-              onSearch={onSearch}
-              projectOptions={projectOptions}
-            />
-          </Col>
-          <Col span={24}>
-            <SummaryCardComponent getdata={getdata} session={session} />
-          </Col>
           <Col span={24}>
             <Tabs
               defaultActiveKey="1"
               items={items}
               tabBarExtraContent={
-                <Button
-                  size={isMobile ? "small" : "middle"}
-                  className="!border-[#6366F1] !text-[#6366F1]"
-                  onClick={exportcsv}
-                >
-                  {isMobile ? "Export" : "Export CSV"}
-                </Button>
+                <TableFilter
+                  searchForm={searchForm}
+                  onSearch={onSearch}
+                  projectOptions={projectOptions}
+                  exportcsv={exportcsv}
+                />
               }
             />
           </Col>

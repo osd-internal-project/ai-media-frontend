@@ -130,7 +130,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         organizationId,
         session?.user?.id as string
       );
-    console.log("organizationDetail", organizationDetail);
     setOrganizationRole(organizationDetail?.role || "");
     const projects = await projectService.findByOrganizationId(
       organizationId,

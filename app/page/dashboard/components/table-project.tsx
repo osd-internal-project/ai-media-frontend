@@ -1,76 +1,119 @@
 import { Table } from "antd";
-import { FC, ReactElement } from "react";
-import type { ITDashboardOwner, ProductSummary } from "@/app/common/dashbaord";
+import { FC, ReactElement, useState } from "react";
+import type {
+  IDashboardProject,
+  IDashboardProjectLogs,
+  IDashboardUser,
+  ITDashboardOwner,
+  ProductSummary,
+} from "@/app/common/dashbaord";
+import { formatNumber, formatStringToNumber } from "@/app/utils/format";
+import { ColumnType } from "antd/es/table";
 
 interface props {
-  data: ProductSummary[];
+  getSummaryUsers: (projectId: string) => Promise<IDashboardUser[]>;
+  data: IDashboardProject[];
 }
 
-const TableProductComponent: FC<props> = ({ data }): ReactElement => {
-  const ParentColumns = [
+const TableProjectComponent: FC<props> = ({
+  data,
+  getSummaryUsers,
+}): ReactElement => {
+  const [expandedData, setExpandedData] = useState<
+    Record<string, IDashboardUser[]>
+  >({});
+  const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+
+  const ParentColumns: ColumnType<IDashboardProject>[] = [
     {
-      title: "Product",
-      dataIndex: "type",
-      render: (e: string) => (e === "image" ? "Seedream" : "Seedance"),
+      title: "Team",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Token Usage",
+      dataIndex: ["logs"],
+      render: (v: IDashboardProjectLogs[]) =>
+        formatNumber(v.reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
+      key: "projectId",
+      width: "250px",
+      align: "right",
+    },
+    {
+      title: "Image Usage",
+      dataIndex: ["logs"],
+      render: (v: IDashboardProjectLogs[]) =>
+        formatNumber(v.reduce((sum, log) => sum + (log?.ImageUsed || 0), 0)),
+      key: "projectId",
+      width: "250px",
+      align: "right",
     },
   ];
 
-  const ChildColumns: any = [
+  const ChildColumns: ColumnType<IDashboardUser>[] = [
     {
-      title: "Unit Price",
-      dataIndex: "unitPrice",
-      render: (v: number, record: any) =>
-        `$ ${v} ${record.type === "image" ? "USD/piece" : "USD/K Token"}`,
+      title: "Name",
+      dataIndex: ["users", "fullname"],
+      key: "userId",
     },
     {
-      title: "Usage",
-      dataIndex: "totalUsed",
-      render: (_: any, record: any) => {
-        const used =
-          record.type === "image"
-            ? record.totalImageUsed
-            : record.totalTokenUsed;
-        const unit = record.type === "image" ? "piece" : "Token";
-        return `${used.toLocaleString()} ${unit}`;
-      },
-    },
-    {
-      title: "Post-tax amount (payment currency)",
+      title: "Token Usage",
+      dataIndex: ["project", "logs"],
+      render: (v: IDashboardProjectLogs[]) =>
+        formatNumber(v.reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
+      width: "250px",
       align: "right",
-      dataIndex: "id",
-      render(e: string, records: any, index: number) {
-        const used =
-          records.type === "image"
-            ? records.totalImageUsed
-            : records.totalTokenUsed / 1000;
-        const cost = used * records.unitPrice;
-        return <div>{`$ ${cost.toFixed(2)}`}</div>;
-      },
+    },
+    {
+      title: "Image Usage",
+      dataIndex: ["project", "logs"],
+      render: (v: IDashboardProjectLogs[]) =>
+        formatNumber(v.reduce((sum, log) => sum + (log?.ImageUsed || 0), 0)),
+      width: "250px",
+      align: "right",
     },
   ];
+
+  // const handleExpand = (expanded: boolean, record: IDashboardProject) => {
+  //   if (expanded) {
+  //     setLoadingMap((prev) => ({ ...prev, [record.projectId]: true }));
+  //     getSummaryUsers(record.projectId)
+  //       .then((users) => {
+  //         setExpandedData((prev) => ({ ...prev, [record.projectId]: users }));
+  //       })
+  //       .finally(() => {
+  //         setLoadingMap((prev) => ({ ...prev, [record.projectId]: false }));
+  //       });
+  //   }
+  // };
+
+  const expandedRowRender = (record: IDashboardProject) => {
+    return (
+      <Table
+        bordered
+        rowKey={(record) => record.users.userId}
+        columns={ChildColumns}
+        dataSource={record.members || []}
+        pagination={false}
+        size="small"
+      />
+    );
+  };
 
   return (
     <div className="w-full">
-      <Table
-        bordered
+      <Table<IDashboardProject>
         columns={ParentColumns}
         dataSource={data}
-        rowKey="type"
+        scroll={{ x: "max-content" }}
+        rowKey="id"
         expandable={{
-          expandedRowRender: (record) => (
-            <Table
-              bordered
-              rowKey="type"
-              columns={ChildColumns}
-              dataSource={[record]}
-              pagination={false}
-              size="small"
-            />
-          ),
+          expandedRowRender: expandedRowRender,
+          // onExpand: handleExpand,
         }}
         size="large"
       />
     </div>
   );
 };
-export default TableProductComponent;
+export default TableProjectComponent;
