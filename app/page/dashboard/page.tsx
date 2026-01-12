@@ -30,7 +30,7 @@ import { canViewDashboard } from "@/app/utils/permissions";
 import { useOrganization } from "@/app/context/OrganizationContext";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
-  const { organizationRole } = useOrganization();
+  const { organizationRole, organizationId } = useOrganization();
   const dashboardServices = DashboardServices(axiosCore);
   const projectServices = ProjectService(axiosCore);
   const [getdata, setData] = useState<ITDashboard>();
@@ -39,7 +39,7 @@ const DashboardPage: FC = () => {
   const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>(
     []
   );
-  const [projectName, setProjectName] = useState<
+  const [projectOptions, setProjectOptions] = useState<
     { value: string; label: string }[]
   >([]);
   const [params, setParams] = useState<{
@@ -100,17 +100,18 @@ const DashboardPage: FC = () => {
 
   useEffect(() => {
     masterData();
-  }, [session]);
+  }, [organizationId]);
 
   const masterData = async () => {
-    if (session?.user) {
-      const response = await projectServices.findOneUserId(
+    if (organizationId) {
+      const response = await projectServices.findByOrganizationId(
+        organizationId as string,
         session?.user.id as string
       );
-      const mapOptions = await response?.map((events: IProject) => {
-        return { value: events.id, label: events.name };
+      const mapOptions = await response?.map((project: IProject) => {
+        return { value: project.id, label: project.name };
       });
-      setProjectName(mapOptions || []);
+      setProjectOptions(mapOptions || []);
     }
   };
 
@@ -196,13 +197,13 @@ const DashboardPage: FC = () => {
         token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
       }}
     >
-      <div className={`w-full ${isMobile ? 'pt-3 px-3' : 'pt-6'}`}>
+      <div className={`w-full ${isMobile ? "pt-3 px-3" : "pt-6"}`}>
         <Row gutter={[isMobile ? 4 : 8, isMobile ? 4 : 8]} className="">
           <Col span={24}>
             <SummaryFilterComponent
               searchForm={searchForm}
               onSearch={onSearch}
-              projectName={projectName}
+              projectOptions={projectOptions}
             />
           </Col>
           <Col span={24}>

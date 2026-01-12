@@ -1,15 +1,28 @@
-import { Button, Card, Col, ConfigProvider, DatePicker, Form, FormInstance, Row } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  ConfigProvider,
+  DatePicker,
+  Form,
+  FormInstance,
+  Row,
+} from "antd";
 import { FC, ReactElement, useEffect, useState } from "react";
 import { DollarOutlined } from "@ant-design/icons";
 import type { ITDashboard } from "@/app/common/dashbaord";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
+import { FileVideoCamera } from "lucide-react";
 interface props {
   getdata?: ITDashboard;
   session: any;
 }
 
-const SummaryCardComponent: FC<props> = ({ getdata, session }): ReactElement => {
+const SummaryCardComponent: FC<props> = ({
+  getdata,
+  session,
+}): ReactElement => {
   const navigate = useRouter();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -27,83 +40,95 @@ const SummaryCardComponent: FC<props> = ({ getdata, session }): ReactElement => 
   return (
     <Row gutter={[isMobile ? 6 : 12, isMobile ? 3 : 4]}>
       <Col xs={24} sm={24} md={12}>
-        <Row gutter={[isMobile ? 6 : 12, isMobile ? 4 : 6]}>
-          <Col xs={24} sm={isMobile ? 24 : 12} md={12}>
-            <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
-              <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">
-                <Card size="small">
-                  <div className=" flex justify-between">
-                    <div className={isMobile ? "text-sm" : ""}>Unpaid amount</div>
-                    <DollarOutlined size={isMobile ? 20 : 24} />
-                  </div>
-                  <div>
-                    <div className={`inline font-bold text-white ${isMobile ? "text-[16px]" : "text-[20px]"}`}>COMING SOON</div>
-                  </div>
-                </Card>
+        <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
+          <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">
+            <Card size="small">
+              <div className=" flex justify-between">
+                <FileVideoCamera size={isMobile ? 20 : 24} />
+                <div className={isMobile ? "text-sm" : ""}>
+                  Video Token Used
+                </div>
               </div>
-            </div>
-          </Col>
-
-          <Col xs={24} sm={isMobile ? 24 : 12} md={12}>
-            <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
-              <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">
-                <Card size={isMobile ? "small" : "small"}>
-                  <div className=" flex justify-between">
-                    <div className={isMobile ? "text-sm" : ""}>Quota</div>
-                    <DollarOutlined size={isMobile ? 20 : 24} />
+              <div className=" grid grid-cols-3">
+                <div>
+                  <div className={isMobile ? "text-sm" : ""}>Pagekage</div>
+                  <div
+                    className={`inline font-bold text-white ${
+                      isMobile ? "text-[16px]" : "text-[20px]"
+                    }`}
+                  >
+                    111
                   </div>
-                  <div>
-                    <div className={`inline font-bold text-white ${isMobile ? "text-[16px]" : "text-[20px]"}`}>$ {getdata?.quota?.toFixed(2)}</div> 
-                    <span className={isMobile ? "text-sm" : ""}>USD</span>
+                </div>
+                <div>
+                  <div className={isMobile ? "text-sm" : ""}>Pagekage</div>
+                  <div
+                    className={`inline font-bold text-white ${
+                      isMobile ? "text-[16px]" : "text-[20px]"
+                    }`}
+                  >
+                    111
                   </div>
-                </Card>
+                </div>
               </div>
-            </div>
-          </Col>
-          <Col xs={24} sm={24} md={24}>
-            <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
-              <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">
-                <Card size="small">
-                  <div className=" flex justify-between">
-                    <div className={isMobile ? "text-sm" : ""}>Post-tax amount (Payment currency)</div>
-                    <DollarOutlined size={isMobile ? 20 : 24} />
-                  </div>
-                  <div className=" inline">
-                    <div className={`inline font-bold text-white ${isMobile ? "text-[16px]" : "text-[20px]"}`}>$ {`${Number(getdata?.summaryUsed).toFixed(2)} `}</div>
-                    <div className=" inline">
-                      {` USD | `}
-                      <div className={`${isMobile ? "text-[8px]" : "text-[10px]"} inline-flex`}>
-                        Pre-tax amount (payment currency): {<div className=" text-blue-700 font-bold">$3.67</div>}+ Tax(payment currency):{" "}
-                        {<div className=" text-blue-700 font-bold">$3.67</div>}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </Col>
-        </Row>
+            </Card>
+          </div>
+        </div>
       </Col>
       <Col xs={24} sm={24} md={12}>
         <div className="p-0 hover:p-[1px] bg-gradient-to-r from-[#87DDDE] via-[#6366F1] to-[#87DDDE] rounded-lg !transition-all duration-300  ">
           <div className="bg-black hover:bg-black rounded-lg transition-all duration-300 h-full">
-            <Card size="small" title={"Bill summary"} extra={<DollarOutlined size={24} />}>
+            <Card
+              size="small"
+              title={"Bill summary"}
+              extra={<DollarOutlined size={24} />}
+            >
               <div className=" grid md:grid-cols-2">
                 <div>
-                  <div className={isMobile ? "text-sm" : ""}>Month to date cost ({dayjs().format("MMM YY")})</div>
+                  <div className={isMobile ? "text-sm" : ""}>
+                    Month to date cost ({dayjs().format("MMM YY")})
+                  </div>
                   <div className=" inline">
-                    <div className={`inline font-bold text-white ${isMobile ? "text-[16px]" : "text-[20px]"}`}>$ {`${Number(getdata?.sumPriceTokenUsedDateNow).toFixed(2)} `}</div> USD
+                    <div
+                      className={`inline font-bold text-white ${
+                        isMobile ? "text-[16px]" : "text-[20px]"
+                      }`}
+                    >
+                      ${" "}
+                      {`${Number(getdata?.sumPriceTokenUsedDateNow).toFixed(
+                        2
+                      )} `}
+                    </div>{" "}
+                    USD
                   </div>
                 </div>
                 <div>
-                  <div className={isMobile ? "text-sm" : ""}>Last month’s total cost</div>
+                  <div className={isMobile ? "text-sm" : ""}>
+                    Last month’s total cost
+                  </div>
                   <div className=" inline">
-                    <div className={`inline font-bold text-white ${isMobile ? "text-[16px]" : "text-[20px]"}`}>$ {`${Number(getdata?.sumPriceTokenUsedDateLast).toFixed(2)} `}</div>
+                    <div
+                      className={`inline font-bold text-white ${
+                        isMobile ? "text-[16px]" : "text-[20px]"
+                      }`}
+                    >
+                      ${" "}
+                      {`${Number(getdata?.sumPriceTokenUsedDateLast).toFixed(
+                        2
+                      )} `}
+                    </div>
                     USD
                   </div>
                 </div>
                 <div className=" md:col-span-2 mt-2">
-                  <Button type="primary" className=" w-full " size={isMobile ? "middle" : "large"} onClick={() => navigate.push(`dashboard/${session.user.id}`)}>
+                  <Button
+                    type="primary"
+                    className=" w-full "
+                    size={isMobile ? "middle" : "large"}
+                    onClick={() =>
+                      navigate.push(`dashboard/${session.user.id}`)
+                    }
+                  >
                     Bill details
                   </Button>
                 </div>

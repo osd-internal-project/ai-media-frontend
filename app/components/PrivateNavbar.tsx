@@ -23,14 +23,25 @@ import {
   PlusCircleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { User, LogOut, CreditCard } from "lucide-react";
+import {
+  User,
+  LogOut,
+  CreditCard,
+  FileImage,
+  FileVideoCamera,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
-import { canCreateOrganization, canViewOrganization, canViewDashboard } from "../utils/permissions";
+import {
+  canCreateOrganization,
+  canViewOrganization,
+  canViewDashboard,
+} from "../utils/permissions";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import PackageModal from "./PackageModal";
+import { formatNumber } from "../utils/format";
 
 const { Header } = Layout;
 
@@ -44,11 +55,13 @@ interface Props {
   handleOpenCreateOrg: () => void;
   handleManageOrg: () => void;
   organizationRole?: string;
+  currentOrganization: IOrganization | undefined;
 }
 const NavbarUser: React.FC<Props> = ({
   user,
   pageTitle,
   organizationId,
+  currentOrganization,
   personalOrganizations,
   teamOrganizations,
   handleOrganizationChange,
@@ -61,6 +74,7 @@ const NavbarUser: React.FC<Props> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [packageModalOpen, setPackageModalOpen] = useState(false);
+  const [isHoldTokenAmountTag, setIsHoldTokenAmountTag] = useState(false);
 
   const currentPath = pathname.split("/")[2];
   const mappedPath = currentPath === "project" ? "project" : currentPath;
@@ -273,8 +287,11 @@ const NavbarUser: React.FC<Props> = ({
               )}
               <Tag
                 style={{
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  // background:
+                  //   "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: isHoldTokenAmountTag
+                    ? "linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)"
+                    : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   border: "none",
                   color: "white",
                   fontSize: isMobile ? "10px" : "13px",
@@ -285,8 +302,22 @@ const NavbarUser: React.FC<Props> = ({
                   letterSpacing: "0.5px",
                   textTransform: "uppercase",
                 }}
+                onMouseOver={(e) => setIsHoldTokenAmountTag(true)}
+                onMouseOut={(e) => setIsHoldTokenAmountTag(false)}
               >
-                {"1,000 Tokens"}
+                <div className=" flex flex-row gap-2">
+                  {isHoldTokenAmountTag ? (
+                    <div className=" flex flex-row gap-2">
+                      <FileVideoCamera size={15} />
+                      {formatNumber(currentOrganization?.packageTokenAmount)}
+                    </div>
+                  ) : (
+                    <div className=" flex flex-row gap-2">
+                      <FileImage size={15} />
+                      {formatNumber(currentOrganization?.packageImageAmount)}
+                    </div>
+                  )}
+                </div>
               </Tag>
               <div
                 className={`flex items-center ${
