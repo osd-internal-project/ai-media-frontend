@@ -2,6 +2,7 @@ import KeycloakProvider from "next-auth/providers/keycloak";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt";
 import config from "../../../config";
+import { decryptPassword } from "../../../utils/crypto";
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
@@ -65,6 +66,8 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
+          const decryptedPassword = decryptPassword(credentials?.password || "");
+
           // Call the backend service for login
           const url = `${config.backendUserUrl}/auth/login`;
           const response = await fetch(url, {
@@ -74,7 +77,7 @@ export const authOptions = {
             },
             body: JSON.stringify({
               username: credentials?.username,
-              password: credentials?.password,
+              password: decryptedPassword,
             }),
           });
 

@@ -4,6 +4,7 @@ import { Form, Input, Button, Checkbox, message } from "antd";
 import { User, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { encryptPassword } from "../utils/crypto";
 const Page: FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [mounted, setMounted] = useState(false);
@@ -26,11 +27,13 @@ const Page: FC = () => {
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
+      const encryptedPassword = encryptPassword(values.password);
+
       // Local Login: Sends credentials to Keycloak via NextAuth CredentialsProvider
       const result = await signIn("credentials", {
         redirect: false,
         username: values.email,
-        password: values.password,
+        password: encryptedPassword,
         callbackUrl: "/page/project",
       });
       if (result?.error) {
@@ -244,19 +247,18 @@ const Page: FC = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#374151]"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
+              {/* <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-[#1c2027] text-gray-400">
                   Or continue with
                 </span>
-              </div>
+              </div> */}
             </div>
 
             <div className="mt-6">
-              <button
+              {/* <button
                 onClick={handleGoogleLogin}
                 className="w-full h-10 bg-white text-black hover:bg-gray-100 border-none font-medium flex items-center justify-center rounded-lg cursor-pointer"
               >
-                {/* Google Icon SVG */}
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -276,7 +278,7 @@ const Page: FC = () => {
                   />
                 </svg>
                 Continue with Google
-              </button>
+              </button> */}
             </div>
           </div>
           <div className="text-center mt-6">

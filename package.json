@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.6' -f ./Dockerfile ."
+    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.7' -f ./Dockerfile ."
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",
@@ -15,6 +15,7 @@
     "@types/axios": "^0.14.4",
     "antd": "^5.27.4",
     "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.19",
     "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/crypto-js": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
