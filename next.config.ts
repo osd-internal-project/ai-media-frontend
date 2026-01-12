@@ -5,13 +5,14 @@ const nextConfig = {
   env: {
     NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
     VERSION: "2.0.0",
-    AUTH_BACKEND_URL: "https://www.aicave.ai/public/api/user",
-    NEXT_PUBLIC_API_BASE_URL_REPORT: "https://www.aicave.ai/public/api/report",
-    NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/core",
+    AUTH_BACKEND_URL: "https://www.aicave.ai/public/api/v1/user",
+    NEXT_PUBLIC_API_BASE_URL_REPORT: "https://www.aicave.ai/public/api/v1/report",
+    NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/v1/core",
     NEXTAUTH_URL: "https://www.aicave.ai",
     KEYCLOAK_CLIENT_ID: "eportal-client-id",
     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
     KEYCLOAK_ISSUER: "https://id24.aicave.ai/realms/eportal",
+    AUTH_TRUST_HOST: true,
   },
   webpack: (config: any) => {
     config.externals = [...config.externals, "jsdom"];
@@ -20,18 +21,6 @@ const nextConfig = {
       use: "raw-loader",
     });
     return config;
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/api/images/:imageName",
-        destination: "https://www.aicave.ai/public/api/core/public/image-minio/:imageName",
-      },
-      {
-        source: "/api/vdo/:vdoName",
-        destination: "https://www.aicave.ai/public/api/core/public/vdo-minio/:vdoName",
-      },
-    ];
   },
   reactStrictMode: false,
   output: "standalone",
@@ -62,17 +51,5 @@ const nextConfig = {
 //   },
 //   reactStrictMode: false,
 //   output: "standalone",
-//   async rewrites() {
-//     return [
-//       {
-//         source: "/api/images/:imageName",
-//         destination: "http://localhost:4002/api/public/image-minio/:imageName",
-//       },
-//       {
-//         source: "/api/vdo/:vdoName",
-//         destination: "http://localhost:4002/api/public/vdo-minio/:vdoName",
-//       },
-//     ];
-//   },
 // };
 module.exports = nextConfig;
