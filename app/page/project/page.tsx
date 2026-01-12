@@ -34,6 +34,8 @@ import OrganizationServices from "@/app/services/organization.service";
 import { IOrganization } from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
 
+const MAX_MEMBERS = 5;
+
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
@@ -462,10 +464,9 @@ const ProjectsPage = () => {
                         placement="bottomRight"
                       >
                         <Button
-                          className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !p-1 sm:!p-2"
+                          className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !px-2 !py-2 sm:!px-3 sm:!py-2"
                           type="text"
-                          size="small"
-                          icon={<EllipsisVertical size={14} />}
+                          icon={<EllipsisVertical size={18} />}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </Dropdown>
@@ -517,7 +518,6 @@ const ProjectsPage = () => {
           width={isMobile ? "90%" : 700}
         >
           <Form
-            size="small"
             form={form}
             layout="vertical"
             name="create_project_form"
@@ -531,12 +531,17 @@ const ProjectsPage = () => {
             >
               <Input placeholder="Enter project name" />
             </Form.Item>
-            <Row gutter={[4, 0]}>
-              <Col span={12}>
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
                 <Form.Item
-                  label={`จำนวน Image (Max:${formatNumber(
-                    organization?.remainImageAmount
-                  )})`}
+                  label={
+                    <span>
+                      จำนวน Image{" "}
+                      <span style={{ color: "#888", fontSize: "12px" }}>
+                        (Max: {formatNumber(organization?.remainImageAmount)})
+                      </span>
+                    </span>
+                  }
                   name="accessImageAmount"
                   rules={[
                     { required: true, message: "Please enter image amount" },
@@ -545,16 +550,22 @@ const ProjectsPage = () => {
                   <InputNumber
                     placeholder="Enter image amount"
                     min={0}
-                    width={300}
                     max={organization?.remainImageAmount || 0}
+                    className="w-full"
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <Form.Item
-                  label={`จำนวน Token (Max:${formatNumber(
-                    organization?.remainTokenAmount
-                  )})`}
+                  label={
+                    <span>
+                      จำนวน Token{" "}
+                      <span style={{ color: "#888", fontSize: "12px" }}>
+                        (Max: {formatNumber(organization?.remainTokenAmount)})
+                      </span>
+                    </span>
+                  }
                   name="accessTokenAmount"
                   rules={[
                     { required: true, message: "Please enter token amount" },
@@ -564,7 +575,8 @@ const ProjectsPage = () => {
                     placeholder="Enter token amount"
                     min={0}
                     max={organization?.remainTokenAmount || 0}
-                    width={300}
+                    className="w-full"
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
@@ -588,19 +600,22 @@ const ProjectsPage = () => {
               >
                 Team Members
               </span>
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusCircleOutlined />}
-                onClick={() => {
-                  setProjectMembers([
-                    ...projectMembers,
-                    { userId: "", role: "USER" },
-                  ]);
-                }}
-              >
-                Add Member
-              </Button>
+              <Tooltip title={projectMembers.length >= MAX_MEMBERS ? `Maximum ${MAX_MEMBERS} members allowed` : ""}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusCircleOutlined />}
+                  disabled={projectMembers.length >= MAX_MEMBERS}
+                  onClick={() => {
+                    setProjectMembers([
+                      ...projectMembers,
+                      { userId: "", role: "USER" },
+                    ]);
+                  }}
+                >
+                  Add Member
+                </Button>
+              </Tooltip>
             </div>
             <Form.Item>
               <div>
@@ -616,17 +631,18 @@ const ProjectsPage = () => {
                       Team Members (
                       {projectMembers.filter((m) => m.userId).length})
                     </div>
-                    <div className=" grid grid-cols-6 gap-2">
-                      <div className=" col-span-2">User</div>
-                      <div>Role</div>
-                      <div>จำนวน Image</div>
-                      <div>จำนวน Token</div>
+                    <div className="grid grid-cols-12 gap-3 px-3 mb-3">
+                      <div className="col-span-4" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>User</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Role</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Images</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Tokens</div>
+                      <div className="col-span-2 text-center" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Action</div>
                     </div>
                     {projectMembers.map((member, index) => {
                       return (
                         <div
                           key={index}
-                          className=" grid grid-cols-6 gap-2"
+                          className=" grid grid-cols-6 gap-2 mb-2"
                           style={{
                             alignItems: "center",
                             justifyContent: "space-between",
@@ -682,7 +698,6 @@ const ProjectsPage = () => {
                           />
                           <Select
                             value={member.role}
-                            style={{ width: 80 }}
                             onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                               const newMembers = [...projectMembers];
                               newMembers[index].role = role;
@@ -696,7 +711,6 @@ const ProjectsPage = () => {
                           />
                           <InputNumber
                             value={member.maxImages}
-                            style={{ width: 80 }}
                             onChange={(value: number | null) => {
                               const newMembers = [...projectMembers];
                               newMembers[index].maxImages = value;
@@ -708,7 +722,6 @@ const ProjectsPage = () => {
                           />
                           <InputNumber
                             value={member.maxToken}
-                            style={{ width: 80, marginRight: "8px" }}
                             onChange={(value: number | null) => {
                               const newMembers = [...projectMembers];
                               newMembers[index].maxToken = value;
@@ -784,12 +797,17 @@ const ProjectsPage = () => {
             >
               <Input placeholder="Enter project name" />
             </Form.Item>{" "}
-            <Row gutter={[4, 0]}>
-              <Col span={12}>
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
                 <Form.Item
-                  label={`จำนวน Image (Max:${formatNumber(
-                    organization?.remainImageAmount
-                  )})`}
+                  label={
+                    <span>
+                      จำนวน Image{" "}
+                      <span style={{ color: "#888", fontSize: "12px" }}>
+                        (Max: {formatNumber(organization?.remainImageAmount)})
+                      </span>
+                    </span>
+                  }
                   name="accessImageAmount"
                   rules={[
                     { required: true, message: "Please enter image amount" },
@@ -798,16 +816,22 @@ const ProjectsPage = () => {
                   <InputNumber
                     placeholder="Enter image amount"
                     min={0}
-                    width={300}
                     max={organization?.remainImageAmount || 0}
+                    className="w-full"
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <Form.Item
-                  label={`จำนวน Token (Max:${formatNumber(
-                    organization?.remainTokenAmount
-                  )})`}
+                  label={
+                    <span>
+                      จำนวน Token{" "}
+                      <span style={{ color: "#888", fontSize: "12px" }}>
+                        (Max: {formatNumber(organization?.remainTokenAmount)})
+                      </span>
+                    </span>
+                  }
                   name="accessTokenAmount"
                   rules={[
                     { required: true, message: "Please enter token amount" },
@@ -817,7 +841,8 @@ const ProjectsPage = () => {
                     placeholder="Enter token amount"
                     min={0}
                     max={organization?.remainTokenAmount || 0}
-                    width={300}
+                    className="w-full"
+                    style={{ width: "100%" }}
                   />
                 </Form.Item>
               </Col>
@@ -841,19 +866,22 @@ const ProjectsPage = () => {
               >
                 Team Members
               </span>
-              <Button
-                type="primary"
-                size="small"
-                icon={<PlusCircleOutlined />}
-                onClick={() => {
-                  setProjectMembers([
-                    ...projectMembers,
-                    { userId: "", role: "USER" },
-                  ]);
-                }}
-              >
-                Add Member
-              </Button>
+              <Tooltip title={projectMembers.length >= MAX_MEMBERS ? `Maximum ${MAX_MEMBERS} members allowed` : ""}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusCircleOutlined />}
+                  disabled={projectMembers.length >= MAX_MEMBERS}
+                  onClick={() => {
+                    setProjectMembers([
+                      ...projectMembers,
+                      { userId: "", role: "USER" },
+                    ]);
+                  }}
+                >
+                  Add Member
+                </Button>
+              </Tooltip>
             </div>
             <Form.Item>
               <div>
@@ -869,17 +897,18 @@ const ProjectsPage = () => {
                       Team Members (
                       {projectMembers.filter((m) => m.userId).length})
                     </div>
-                    <div className=" grid grid-cols-6 gap-2">
-                      <div className=" col-span-2">User</div>
-                      <div>Role</div>
-                      <div>จำนวน Image</div>
-                      <div>จำนวน Token</div>
+                    <div className="grid grid-cols-12 gap-3 px-3 mb-3">
+                      <div className="col-span-4" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>User</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Role</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Images</div>
+                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Tokens</div>
+                      <div className="col-span-2 text-center" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Action</div>
                     </div>
                     {projectMembers.map((member, index) => {
                       return (
                         <div
                           key={index}
-                          className=" grid grid-cols-6 gap-2"
+                          className=" grid grid-cols-6 gap-2 mb-2"
                           style={{
                             alignItems: "center",
                             justifyContent: "space-between",
@@ -935,7 +964,7 @@ const ProjectsPage = () => {
                           />
                           <Select
                             value={member.role}
-                            style={{ width: 80 }}
+                            // style={{ width: 80 }}
                             onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
                               const newMembers = [...projectMembers];
                               newMembers[index].role = role;
@@ -949,7 +978,7 @@ const ProjectsPage = () => {
                           />
                           <InputNumber
                             value={member.maxImages}
-                            style={{ width: 80 }}
+                            // style={{ width: 80 }}
                             onChange={(value: number | null) => {
                               const newMembers = [...projectMembers];
                               newMembers[index].maxImages = value;
@@ -961,7 +990,6 @@ const ProjectsPage = () => {
                           />
                           <InputNumber
                             value={member.maxToken}
-                            style={{ width: 80, marginRight: "8px" }}
                             onChange={(value: number | null) => {
                               const newMembers = [...projectMembers];
                               newMembers[index].maxToken = value;
