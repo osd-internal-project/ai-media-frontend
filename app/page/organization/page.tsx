@@ -265,22 +265,22 @@ export default function OrganizationDetailPage() {
       key: "joinedAt",
       render: (text) => new Date(text).toLocaleDateString(),
     },
-    {
-      title: "Max Token",
-      dataIndex: "maxToken",
-      key: "maxToken",
-      render: (val) => val?.toLocaleString() || 0,
-    },
-    {
-      title: "Max Images",
-      dataIndex: "maxImages",
-      key: "maxImages",
-      render: (val) => val?.toLocaleString() || 0,
-    },
+    // {
+    //   title: "Max Token",
+    //   dataIndex: "maxToken",
+    //   key: "maxToken",
+    //   render: (val) => val?.toLocaleString() || 0,
+    // },
+    // {
+    //   title: "Max Images",
+    //   dataIndex: "maxImages",
+    //   key: "maxImages",
+    //   render: (val) => val?.toLocaleString() || 0,
+    // },
     {
       title: "Action",
       key: "action",
-      render: (_, record) => (
+      render: (_, record) =>
         canManageMembers(organizationRole) ? (
           <Space>
             <Button type="link" onClick={() => handleEditMember(record)}>
@@ -297,8 +297,7 @@ export default function OrganizationDetailPage() {
           </Space>
         ) : (
           <span className="text-gray-400">View only</span>
-        )
-      ),
+        ),
     },
   ];
 
@@ -436,12 +435,12 @@ export default function OrganizationDetailPage() {
               <Select.Option value="MEMBER">MEMBER</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="maxToken" label="Max Token">
+          {/* <Form.Item name="maxToken" label="Max Token">
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="maxImages" label="Max Images">
             <InputNumber style={{ width: "100%" }} />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item name="apiKeys" label="API Keys">
             <Input.TextArea rows={3} />
           </Form.Item>
