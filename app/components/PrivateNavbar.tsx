@@ -26,7 +26,11 @@ import {
 import { User, LogOut, CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
-import { canCreateOrganization, canViewOrganization, canViewDashboard } from "../utils/permissions";
+import {
+  canCreateOrganization,
+  canViewOrganization,
+  canViewDashboard,
+} from "../utils/permissions";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -217,9 +221,23 @@ const NavbarUser: React.FC<Props> = ({
                   <div className="p-2 space-y-1">
                     {canCreateOrganization(organizationRole) && (
                       <Button
+                        hidden
                         type="text"
                         size="large"
                         onClick={handleOpenCreateOrg}
+                        icon={<PlusCircleOutlined className="text-blue-400" />}
+                        className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                      >
+                        <span className="font-medium">
+                          Add new organization system admin
+                        </span>
+                      </Button>
+                    )}
+                    {canCreateOrganization(organizationRole) && (
+                      <Button
+                        type="text"
+                        size="large"
+                        onClick={() => setPackageModalOpen(true)}
                         icon={<PlusCircleOutlined className="text-blue-400" />}
                         className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
                       >
