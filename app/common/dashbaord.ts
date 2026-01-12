@@ -43,3 +43,22 @@ export interface LogsData {
   tokenUsed: number;
   createdAt: string;
 }
+export interface IDashboardProject {
+  id: string;
+  name: string;
+  logs: IDashboardProjectLogs[];
+  members: IDashboardUser[];
+}
+export interface IDashboardUser {
+  users: {
+    userId: string;
+    fullname: string;
+  };
+  project: {
+    logs: IDashboardProjectLogs[];
+  };
+}
+export interface IDashboardProjectLogs {
+  tokenUsed: number;
+  ImageUsed: number;
+}

@@ -48,9 +48,11 @@ const GenerateImagePage: FC = () => {
   const { id } = params as { id: string };
   const { organizationId } = useOrganization();
   const [projectRole, setProjectRole] = useState<string | null>(null);
-  
-  const onSetPromptTextRef = React.useRef<((id: number) => Promise<void>) | null>(null);
-  
+
+  const onSetPromptTextRef = React.useRef<
+    ((id: number) => Promise<void>) | null
+  >(null);
+
   const handleSetPromptText = async (id: number) => {
     if (onSetPromptTextRef.current) {
       await onSetPromptTextRef.current(id);
@@ -284,20 +286,20 @@ const GenerateImagePage: FC = () => {
         <div className="space-y-6">
           {/* Introduction */}
           <p className="text-gray-300 leading-relaxed">
-            This article introduces prompt usage tips for Seedream 4.0's
+            {`This article introduces prompt usage tips for Seedream 4.0's
             text-to-image generation, image editing, reference-based generation
             and multi-image creation, helping you quickly get started with video
-            creation and turn ideas into image creations.
+            creation and turn ideas into image creations.`}
           </p>
 
           {/* General Guidelines Section */}
           <div>
             <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
             <p className="text-gray-300 leading-relaxed">
-              Seedream 4.0 supports a wide range of tasks such as text-to-image
+              {`Seedream 4.0 supports a wide range of tasks such as text-to-image
               generation, image editing, reference-based generation and
               multi-image creation. For optimal image creation results, consider
-              the following best practices when crafting prompts:
+              the following best practices when crafting prompts:`}
             </p>
           </div>
 

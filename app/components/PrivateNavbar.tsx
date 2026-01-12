@@ -23,7 +23,15 @@ import {
   PlusCircleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { User, LogOut, CreditCard } from "lucide-react";
+import {
+  User,
+  LogOut,
+  CreditCard,
+  FileImage,
+  FileVideoCamera,
+  Coins,
+  CircleQuestionMark,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { IOrganization } from "../common/organization.type";
 import {
@@ -35,6 +43,7 @@ import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import PackageModal from "./PackageModal";
+import { formatNumber } from "../utils/format";
 
 const { Header } = Layout;
 
@@ -48,11 +57,13 @@ interface Props {
   handleOpenCreateOrg: () => void;
   handleManageOrg: () => void;
   organizationRole?: string;
+  currentOrganization: IOrganization | undefined;
 }
 const NavbarUser: React.FC<Props> = ({
   user,
   pageTitle,
   organizationId,
+  currentOrganization,
   personalOrganizations,
   teamOrganizations,
   handleOrganizationChange,
@@ -65,6 +76,7 @@ const NavbarUser: React.FC<Props> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [packageModalOpen, setPackageModalOpen] = useState(false);
+  const [isHoldTokenAmountTag, setIsHoldTokenAmountTag] = useState(false);
 
   const currentPath = pathname.split("/")[2];
   const mappedPath = currentPath === "project" ? "project" : currentPath;
@@ -183,14 +195,14 @@ const NavbarUser: React.FC<Props> = ({
               onChange={handleOrganizationChange}
               value={organizationId}
               getPopupContainer={isMobile ? () => document.body : undefined}
-              dropdownStyle={
-                isMobile
-                  ? {
-                      zIndex: 9999,
-                      position: "fixed",
-                    }
-                  : undefined
-              }
+              // dropdownStyle={
+              //   isMobile
+              //     ? {
+              //         zIndex: 9999,
+              //         position: "fixed",
+              //       }
+              //     : undefined
+              // }
               popupMatchSelectWidth={!isMobile}
               options={[
                 {
@@ -289,10 +301,14 @@ const NavbarUser: React.FC<Props> = ({
                   Upgrade
                 </Button>
               )}
+
               <Tag
                 style={{
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  // background:
+                  //   "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: isHoldTokenAmountTag
+                    ? "linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)"
+                    : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   border: "none",
                   color: "white",
                   fontSize: isMobile ? "10px" : "13px",
@@ -303,8 +319,28 @@ const NavbarUser: React.FC<Props> = ({
                   letterSpacing: "0.5px",
                   textTransform: "uppercase",
                 }}
+                onMouseOver={(e) => setIsHoldTokenAmountTag(true)}
+                onMouseOut={(e) => setIsHoldTokenAmountTag(false)}
               >
-                {"1,000 Tokens"}
+                <div className=" flex flex-row gap-2  w-[130px]">
+                  {isHoldTokenAmountTag ? (
+                    <div className=" flex flex-row gap-2 items-center justify-between">
+                      <div className=" flex gap-2 items-center">
+                        <Coins size={15} />
+                        {formatNumber(currentOrganization?.packageTokenAmount)}
+                      </div>
+                      <CircleQuestionMark size={13} />
+                    </div>
+                  ) : (
+                    <div className=" flex flex-row gap-2 items-center w-[130px] justify-between">
+                      <div className=" flex gap-2 items-center">
+                        <FileImage size={15} />
+                        {formatNumber(currentOrganization?.packageImageAmount)}
+                      </div>
+                      <CircleQuestionMark size={13} />
+                    </div>
+                  )}
+                </div>
               </Tag>
               <div
                 className={`flex items-center ${

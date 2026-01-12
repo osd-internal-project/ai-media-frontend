@@ -58,6 +58,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const organizationMemberService = OrganizationMembersServices(axiosUser);
   const projectService = ProjectService(axiosCore);
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
+  const [currentOrganization, setCurrentOrganization] = useState<
+    IOrganization | undefined
+  >();
+
   const [getProject, setProject] = useState<IProject[]>([]);
   // const [groupName, setGroupName] = useState<string>("");
   // const [roles, setRoles] = useState<string[]>([]);
@@ -155,29 +159,37 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       { type: "team" }
     );
     setTeamOrganizations(teamOrganizations || []);
+
     // const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
 
     // setRoles(userRoles || []);
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
+      const organization = [
+        ...personalOrganizations,
+        ...teamOrganizations,
+      ].find((org) => org.organizationId === userDetail?.recentOrganizationId);
+      if (organization) {
+        setCurrentOrganization(organization);
+      }
       fecthdataByOrganization(userDetail?.recentOrganizationId);
     }
   };
 
-  const handleOpen = () => {
-    setOpen(true);
-    if (userProfile) {
-      setSearchTexts((prev) => ({ 0: userProfile.fullname }));
-      console.log(searchTexts);
-      setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
-    } else {
-      setProjectMembers([]);
-      setSearchTexts({});
-    }
+  // const handleOpen = () => {
+  //   setOpen(true);
+  //   if (userProfile) {
+  //     setSearchTexts((prev) => ({ 0: userProfile.fullname }));
+  //     console.log(searchTexts);
+  //     setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
+  //   } else {
+  //     setProjectMembers([]);
+  //     setSearchTexts({});
+  //   }
 
-    form.resetFields();
-  };
+  //   form.resetFields();
+  // };
   const handleClose = () => {
     setOpen(false);
     form.resetFields();
@@ -188,18 +200,18 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     setSearchTexts({});
   };
 
-  const handleRemoveMember = (userId: string) => {
-    setProjectMembers(projectMembers.filter((m) => m.userId !== userId));
-  };
+  // const handleRemoveMember = (userId: string) => {
+  //   setProjectMembers(projectMembers.filter((m) => m.userId !== userId));
+  // };
 
-  const handleRoleChange = (
-    userId: string,
-    role: "ADMIN" | "USER" | "VIEWER"
-  ) => {
-    setProjectMembers(
-      projectMembers.map((m) => (m.userId === userId ? { ...m, role } : m))
-    );
-  };
+  // const handleRoleChange = (
+  //   userId: string,
+  //   role: "ADMIN" | "USER" | "VIEWER"
+  // ) => {
+  //   setProjectMembers(
+  //     projectMembers.map((m) => (m.userId === userId ? { ...m, role } : m))
+  //   );
+  // };
   const handleCloseEdit = () => {
     setOpenEdit(false);
     editForm.resetFields();
@@ -238,41 +250,41 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       setProjectMembers([]);
     }
   };
-  const onClickProjectAction = (action: string, project: IProject) => {
-    console.log("click", action, project);
-    if (action === "edit") {
-      setOpenEdit(true);
-      const members =
-        project.members.map((member: any) => ({
-          userId: member.userId,
-          role: member.role || "USER",
-        })) || [];
-      setProjectMembers(members);
+  // const onClickProjectAction = (action: string, project: IProject) => {
+  //   console.log("click", action, project);
+  //   if (action === "edit") {
+  //     setOpenEdit(true);
+  //     const members =
+  //       project.members.map((member: any) => ({
+  //         userId: member.userId,
+  //         role: member.role || "USER",
+  //       })) || [];
+  //     setProjectMembers(members);
 
-      // Pre-populate search texts with user names for existing members
-      const initialSearchTexts: { [key: number]: string } = {};
-      members.forEach((member: any, index: number) => {
-        const user = organizationMember.find((u) => u.userId === member.userId);
-        if (user) {
-          initialSearchTexts[index] = user.fullname;
-        }
-      });
-      setSearchTexts(initialSearchTexts);
+  //     // Pre-populate search texts with user names for existing members
+  //     const initialSearchTexts: { [key: number]: string } = {};
+  //     members.forEach((member: any, index: number) => {
+  //       const user = organizationMember.find((u) => u.userId === member.userId);
+  //       if (user) {
+  //         initialSearchTexts[index] = user.fullname;
+  //       }
+  //     });
+  //     setSearchTexts(initialSearchTexts);
 
-      editForm.setFieldsValue({ ...project });
-    }
-    if (action === "delete") {
-      // router.push(`/page/project/${project.id}`);
-      modal.confirm({
-        title: "Delete Project",
-        content: "Are you sure you want to delete this project?",
-        onOk: () => {
-          projectService.update(project.id, { status: "deleted" });
-          setLoading(true);
-        },
-      });
-    }
-  };
+  //     editForm.setFieldsValue({ ...project });
+  //   }
+  //   if (action === "delete") {
+  //     // router.push(`/page/project/${project.id}`);
+  //     modal.confirm({
+  //       title: "Delete Project",
+  //       content: "Are you sure you want to delete this project?",
+  //       onOk: () => {
+  //         projectService.update(project.id, { status: "deleted" });
+  //         setLoading(true);
+  //       },
+  //     });
+  //   }
+  // };
   const content = (
     <div className="flex flex-col gap-2">
       <p style={{ marginBottom: 8 }}></p>
@@ -299,6 +311,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const onFinishCreateOrg = async (values: any) => {
     const payload = {
       ...values,
+      remainTokenAmount: values.packageTokenAmount,
+      remainImageAmount: values.packageImageAmount,
       type: "team",
       createdById: userProfile?.userId || "",
       slug: values.name.toLowerCase().replace(/ /g, "-"),
@@ -315,6 +329,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     organizationId: string
   ): Promise<void> {
     // console.log(organizationId);
+
     const response = await userServices.updateDetailByToken(
       session?.user?.id as string,
       {
@@ -1051,6 +1066,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOrganizationChange={handleOrganizationChange}
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
+              currentOrganization={currentOrganization}
             />
             <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>

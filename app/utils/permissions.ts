@@ -1,5 +1,5 @@
-export type OrganizationRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
-export type ProjectRole = 'ADMIN' | 'USER' | 'VIEWER';
+export type OrganizationRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type ProjectRole = "ADMIN" | "USER" | "VIEWER";
 
 export const checkRole = (
   allowedRoles: (OrganizationRole | ProjectRole | string)[],
@@ -11,23 +11,23 @@ export const checkRole = (
 };
 
 export const organizationPermissions = {
-  createOrganization: ['OWNER'] as OrganizationRole[],
-  createProjects: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  manageMembers: ['OWNER'] as OrganizationRole[],
-  editOrganization: ['OWNER'] as OrganizationRole[],
-  viewOrganization: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  viewProjects: ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'] as OrganizationRole[],
-  viewDashboard: ['OWNER', 'ADMIN'] as OrganizationRole[],
-  viewTemplates: ['OWNER', 'ADMIN', 'MEMBER'] as OrganizationRole[],
-  manageTemplates: ['OWNER', 'ADMIN'] as OrganizationRole[],
+  createOrganization: ["OWNER"] as OrganizationRole[],
+  createProjects: ["OWNER", "ADMIN"] as OrganizationRole[],
+  manageMembers: ["OWNER"] as OrganizationRole[],
+  editOrganization: ["OWNER"] as OrganizationRole[],
+  viewOrganization: ["OWNER", "ADMIN"] as OrganizationRole[],
+  viewProjects: ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as OrganizationRole[],
+  viewDashboard: ["OWNER", "ADMIN"] as OrganizationRole[],
+  viewTemplates: ["OWNER", "ADMIN", "MEMBER"] as OrganizationRole[],
+  manageTemplates: ["OWNER", "ADMIN"] as OrganizationRole[],
 };
 
 export const projectPermissions = {
-  manageProject: ['OWNER', 'ADMIN'] as ProjectRole[],
-  useChat: ['OWNER', 'ADMIN', 'USER'] as ProjectRole[],
-  editContent: ['OWNER', 'ADMIN', 'USER'] as ProjectRole[],
-  viewOnly: ['VIEWER'] as ProjectRole[],
-  viewAll: ['OWNER', 'ADMIN', 'USER', 'VIEWER'] as ProjectRole[],
+  manageProject: ["OWNER", "ADMIN"] as ProjectRole[],
+  useChat: ["OWNER", "ADMIN", "USER"] as ProjectRole[],
+  editContent: ["OWNER", "ADMIN", "USER"] as ProjectRole[],
+  viewOnly: ["VIEWER"] as ProjectRole[],
+  viewAll: ["OWNER", "ADMIN", "USER", "VIEWER"] as ProjectRole[],
 };
 
 export const canCreateOrganization = (organizationRole: string | undefined) =>

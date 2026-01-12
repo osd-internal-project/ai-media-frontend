@@ -6,7 +6,7 @@ interface props {
   data: ProductSummary[];
 }
 
-const TableProductComponent: FC<props> = ({ data }): ReactElement => {
+const TableUserComponent: FC<props> = ({ data }): ReactElement => {
   const ParentColumns = [
     {
       title: "Product",
@@ -19,13 +19,17 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
     {
       title: "Unit Price",
       dataIndex: "unitPrice",
-      render: (v: number, record: any) => `$ ${v} ${record.type === "image" ? "USD/piece" : "USD/K Token"}`,
+      render: (v: number, record: any) =>
+        `$ ${v} ${record.type === "image" ? "USD/piece" : "USD/K Token"}`,
     },
     {
       title: "Usage",
       dataIndex: "totalUsed",
       render: (_: any, record: any) => {
-        const used = record.type === "image" ? record.totalImageUsed : record.totalTokenUsed;
+        const used =
+          record.type === "image"
+            ? record.totalImageUsed
+            : record.totalTokenUsed;
         const unit = record.type === "image" ? "piece" : "Token";
         return `${used.toLocaleString()} ${unit}`;
       },
@@ -35,7 +39,10 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
       align: "right",
       dataIndex: "id",
       render(e: string, records: any, index: number) {
-        const used = records.type === "image" ? records.totalImageUsed : records.totalTokenUsed / 1000;
+        const used =
+          records.type === "image"
+            ? records.totalImageUsed
+            : records.totalTokenUsed / 1000;
         const cost = used * records.unitPrice;
         return <div>{`$ ${cost.toFixed(2)}`}</div>;
       },
@@ -51,7 +58,14 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
         rowKey="type"
         expandable={{
           expandedRowRender: (record) => (
-            <Table bordered rowKey="type" columns={ChildColumns} dataSource={[record]} pagination={false} size="small" />
+            <Table
+              bordered
+              rowKey="type"
+              columns={ChildColumns}
+              dataSource={[record]}
+              pagination={false}
+              size="small"
+            />
           ),
         }}
         size="large"
@@ -59,4 +73,4 @@ const TableProductComponent: FC<props> = ({ data }): ReactElement => {
     </div>
   );
 };
-export default TableProductComponent;
+export default TableUserComponent;
