@@ -16,7 +16,7 @@ import {
   Col,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useNavigate } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
@@ -329,18 +329,13 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     organizationId: string
   ): Promise<void> {
     // console.log(organizationId);
-
-    const response = await userServices.updateDetailByToken(
-      session?.user?.id as string,
-      {
-        recentOrganizationId: organizationId,
-      }
-    );
-    fecthdataByOrganization(organizationId);
-    if (response) {
-      router.push(`/page/project`);
-    }
+    await userServices.updateDetailByToken(session?.user?.id as string, {
+      recentOrganizationId: organizationId,
+    });
+    router.push("/page/project");
+    router.refresh();
   }
+
   if (!session?.user.id) {
     return (
       <ConfigProvider
@@ -501,9 +496,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <Form.Item label="Description" name="description">
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
-              <Button type="primary" htmlType="submit">
+              {/* <Button type="primary" htmlType="submit">
                 Create Organization
-              </Button>
+              </Button> */}
             </Form>
           </Modal>
         ) : null}
