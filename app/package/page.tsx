@@ -20,17 +20,25 @@ const PackagePage = () => {
 
   const planService = useMemo(() => PlanServices(axiosCore), []);
 
+  // Sort plans by price whenever plans state changes
+  const sortedPlans = useMemo(() => {
+    return [...plans].sort((a, b) => a.price.monthly - b.price.monthly);
+  }, [plans]);
+
   const handleGetStarted = () => {
-    router.push("/login");
+    router.push("/signup");
   };
 
   const fetchPlans = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await planService.findAllFormatted();
-      console.log(data);
 
-      setPlans(data);
+      const sortedPlans = [...data].sort((a: Plan, b: Plan) =>
+        a.price.monthly - b.price.monthly
+      );
+
+      setPlans(sortedPlans);
     } catch (error) {
       console.error("Failed to fetch plans:", error);
       setPlans([]);
@@ -186,14 +194,14 @@ const PackagePage = () => {
 
         {/* Pricing Cards */}
         <PricingCards
-          plans={plans}
+          plans={sortedPlans}
           billingPeriod={billingPeriod}
           onGetStarted={handleGetStarted}
         />
 
         {/* Detailed Comparison Table */}
         <div ref={featureRef}>
-          <DetailedComparisonTable plans={plans} />
+          <DetailedComparisonTable plans={sortedPlans} />
         </div>
       </div>
     </div>

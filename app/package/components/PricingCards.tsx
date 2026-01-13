@@ -13,13 +13,32 @@ const PricingCards: React.FC<PricingCardsProps> = ({
   billingPeriod,
   onGetStarted,
 }) => {
+  const getBorderClass = (borderColor: string | undefined) => {
+    const classMap: Record<string, string> = {
+      'border-blue-500': 'border-t-blue-500',
+      'border-purple-500': 'border-t-purple-500',
+      'border-pink-500': 'border-t-pink-500',
+      'border-green-500': 'border-t-green-500',
+      'border-yellow-500': 'border-t-yellow-500',
+      'border-red-500': 'border-t-red-500',
+      'border-indigo-500': 'border-t-indigo-500',
+      'border-cyan-500': 'border-t-cyan-500',
+      'border-orange-500': 'border-t-orange-500',
+      'border-teal-500': 'border-t-teal-500',
+    };
+    return classMap[borderColor || ''] || 'border-t-blue-500';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      {plans.map((plan, index) => (
-        <div
-          key={index}
-          className={`bg-[#171717] rounded-lg overflow-hidden border-t-4 ${plan.borderColor} relative`}
-        >
+      {plans.map((plan, index) => {
+        const borderClass = getBorderClass(plan.borderColor);
+
+        return (
+          <div
+            key={index}
+            className={`bg-[#171717] rounded-lg overflow-hidden border-t-4 ${borderClass} relative`}
+          >
           <div className="p-6 pb-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-white mb-2">
@@ -38,7 +57,9 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                   ? plan.price.monthly
                   : plan.price.annually}
               </span>
-              <span className="text-gray-400 text-sm">/Seat/mo</span>
+              <span className="text-gray-400 text-sm">
+                /Seat/{billingPeriod === "monthly" ? "mo" : "yr"}
+              </span>
             </div>
             <button
               onClick={() => onGetStarted(plan)}
@@ -93,7 +114,8 @@ const PricingCards: React.FC<PricingCardsProps> = ({
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

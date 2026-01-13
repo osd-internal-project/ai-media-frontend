@@ -20,6 +20,11 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
 
   const planService = useMemo(() => PlanServices(axiosCore), []);
 
+  // Sort plans by price whenever plans state changes
+  const sortedPlans = useMemo(() => {
+    return [...plans].sort((a, b) => a.price.monthly - b.price.monthly);
+  }, [plans]);
+
   const fetchPlans = React.useCallback(async () => {
     try {
       setLoading(true);
@@ -124,15 +129,15 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
 
         {!loading && (
           <div className="max-h-[70vh] overflow-y-auto px-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-            <PricingCards 
-              plans={plans}
+            <PricingCards
+              plans={sortedPlans}
               billingPeriod={billingPeriod}
               onGetStarted={handleGetStarted}
             />
-            
-            {plans.length > 0 && (
+
+            {sortedPlans.length > 0 && (
               <div className="mt-12">
-                <DetailedComparisonTable plans={plans} />
+                <DetailedComparisonTable plans={sortedPlans} />
               </div>
             )}
           </div>
