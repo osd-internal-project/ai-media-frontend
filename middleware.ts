@@ -25,6 +25,7 @@ export const config = {
      * - signin (signin page)
      * - package (package page)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|images|error|add-user|signup|login|signin|package).*)",
+    "/page/:path*",
+    // "/((?!api|_next/static|_next/image|favicon.ico|images|error|add-user|signup|login|signin|package).*)",
   ],
 };

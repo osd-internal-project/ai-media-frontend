@@ -28,25 +28,31 @@ export const MenuSider = [
         key: `project`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
         icon: <Bot size={22} />,
-        label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>PROJECTS</span>,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>PROJECTS</span>
+        ),
       },
       {
         key: `settings/template-setting`,
         role: ["OWNER", "ADMIN", "MEMBER"],
         icon: <LayoutTemplate size={22} />,
-        label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>TEMPLATE</span>,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>TEMPLATE</span>
+        ),
       },
-      {
-        key: `admin-management`,
-        role: ["OWNER", "ADMIN"],
-        icon: <Settings size={22} />,
-        label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
-      },
+      // {
+      //   key: `admin-management`,
+      //   role: ["OWNER", "ADMIN"],
+      //   icon: <Settings size={22} />,
+      //   label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
+      // },
       {
         key: `dashboard`,
         role: ["OWNER", "ADMIN"],
         icon: <ChartPie size={22} />,
-        label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>BOARD</span>,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>BOARD</span>
+        ),
       },
     ],
   },
@@ -205,12 +211,12 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
 export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
   const hasAccess = (itemRole: string[] | string) => {
     if (!itemRole || itemRole === "") return true; // public access
-    
+
     // Handle array of roles
     if (Array.isArray(itemRole)) {
       return itemRole.includes(role);
     }
-    
+
     // Handle single role
     return itemRole === role;
   };

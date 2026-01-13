@@ -496,9 +496,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <Form.Item label="Description" name="description">
                 <Input.TextArea rows={3} placeholder="Optional description" />
               </Form.Item>
-              <Button type="primary" htmlType="submit">
+              {/* <Button type="primary" htmlType="submit">
                 Create Organization
-              </Button>
+              </Button> */}
             </Form>
           </Modal>
         ) : null}
