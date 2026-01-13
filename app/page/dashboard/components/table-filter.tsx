@@ -43,11 +43,11 @@ const TableFilter: FC<props> = ({
                 optionFilterProp="label"
                 showSearch
                 onChange={() => searchForm.submit()}
-                className="w-full"
+                className="w-full min-w-[200px]"
               />
             </Form.Item>
           </div>
-          <div>
+          {/* <div>
             <Button
               // size={"small"}
               className="!border-[#6366F1] !text-[#6366F1]"
@@ -55,7 +55,7 @@ const TableFilter: FC<props> = ({
             >
               Export CSV
             </Button>
-          </div>
+          </div> */}
         </div>
       </Form>
     </ConfigProvider>

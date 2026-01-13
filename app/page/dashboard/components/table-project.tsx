@@ -11,14 +11,10 @@ import { formatNumber, formatStringToNumber } from "@/app/utils/format";
 import { ColumnType } from "antd/es/table";
 
 interface props {
-  getSummaryUsers: (projectId: string) => Promise<IDashboardUser[]>;
   data: IDashboardProject[];
 }
 
-const TableProjectComponent: FC<props> = ({
-  data,
-  getSummaryUsers,
-}): ReactElement => {
+const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
   const [expandedData, setExpandedData] = useState<
     Record<string, IDashboardUser[]>
   >({});
@@ -54,6 +50,11 @@ const TableProjectComponent: FC<props> = ({
     {
       title: "Name",
       dataIndex: ["users", "fullname"],
+      key: "userId",
+    },
+    {
+      title: "Role",
+      dataIndex: ["role"],
       key: "userId",
     },
     {

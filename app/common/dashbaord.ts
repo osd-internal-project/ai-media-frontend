@@ -50,6 +50,7 @@ export interface IDashboardProject {
   members: IDashboardUser[];
 }
 export interface IDashboardUser {
+  userId: string;
   users: {
     userId: string;
     fullname: string;
