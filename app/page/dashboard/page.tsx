@@ -1,28 +1,14 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
-import SummaryFilterComponent from "./components/table-filter";
 import { useForm } from "antd/es/form/Form";
-import SummaryCardComponent from "./components/card-orgnization";
-import {
-  Button,
-  Col,
-  ConfigProvider,
-  message,
-  Row,
-  Tabs,
-  type TabsProps,
-  Result,
-  Space,
-} from "antd";
+import { Col, ConfigProvider, Row, Tabs, type TabsProps, Result } from "antd";
 import { axiosCore, axiosReport, axiosUser } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
 import { useSession } from "next-auth/react";
 import type {
   IDashboardProject,
   IDashboardUser,
-  ITDashboard,
   ITDashboardOwner,
-  ProductSummary,
 } from "@/app/common/dashbaord";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
@@ -34,6 +20,7 @@ import OrganizationServices from "@/app/services/organization.service";
 import CardOrganization from "./components/card-orgnization";
 import TableFilter from "./components/table-filter";
 import TableProjectComponent from "./components/table-project";
+import TableUserComponent from "./components/table-user";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
   const { organizationRole, organizationId } = useOrganization();
@@ -41,11 +28,11 @@ const DashboardPage: FC = () => {
   const organizationServices = OrganizationServices(axiosUser);
   const projectServices = ProjectService(axiosCore);
   const [loading, setLoading] = useState<boolean>(true);
-  const [summaryByOwner, setSummaryByOwner] = useState<ITDashboardOwner[]>([]);
 
   const [summaryByProject, setSummaryByProject] = useState<IDashboardProject[]>(
     []
   );
+  const [summaryByUser, setSummaryByUser] = useState<IDashboardUser[]>([]);
   const [organization, setOrganization] = useState<IOrganization>();
   const [projectOptions, setProjectOptions] = useState<
     { value: string; label: string }[]
@@ -77,6 +64,7 @@ const DashboardPage: FC = () => {
   const fecthdata = async () => {
     if (organizationId) {
       fectdataTableProject(organizationId);
+      fectdataTableUser(organizationId);
       setLoading(false);
     }
   };
@@ -85,16 +73,6 @@ const DashboardPage: FC = () => {
     const response = await organizationServices.findById(organizationId);
     setOrganization(response);
     console.log(response);
-  };
-  const fectdataTableUser = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryOwner(
-        session?.user.id as string,
-        params
-      );
-      setSummaryByOwner(response);
-      setLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -112,6 +90,7 @@ const DashboardPage: FC = () => {
       });
       setProjectOptions(mapOptions || []);
       fectdataTableProject(organizationId);
+      fectdataTableUser(organizationId);
     }
   };
 
@@ -157,36 +136,34 @@ const DashboardPage: FC = () => {
       alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
     }
   };
-
-  const items: TabsProps["items"] = [
+  async function fectdataTableUser(organizationId: string) {
+    const response = await dashboardServices.findDashboardSummaryUser(
+      organizationId,
+      params
+    );
+    setSummaryByUser(response);
+  }
+  const tableTabs: TabsProps["items"] = [
     {
       key: "1",
-      label: "Owner",
+      label: "Team",
       children: (
         <>
-          <TableProjectComponent
-            data={summaryByProject}
-            getSummaryUsers={getSummaryUsers}
-          />
+          <TableProjectComponent data={summaryByProject} />
         </>
       ),
     },
     {
       key: "2",
-      label: "Product",
-      children: <></>,
+      label: "Users",
+      children: (
+        <>
+          <TableUserComponent data={summaryByUser} />
+        </>
+      ),
     },
   ];
-  async function getSummaryUsers(projectId: string): Promise<IDashboardUser[]> {
-    if (organizationId) {
-      const response = await dashboardServices.findDashboardSummaryUser(
-        organizationId,
-        { ...params, projectId }
-      );
-      return response || [];
-    }
-    return [];
-  }
+
   // Check if user has permission to view dashboard
   if (!canViewDashboard(organizationRole || "")) {
     return (
@@ -212,14 +189,15 @@ const DashboardPage: FC = () => {
         token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
       }}
     >
-      <div className={`w-full ${isMobile ? "pt-3 px-3" : "pt-6"}`}>
-        <div className="text-[#99a1af] text-lg">Package Overview</div>
+      <div className={`w-full space-y-3 ${isMobile ? "pt-3 px-3" : "pt-6"}`}>
         <CardOrganization organization={organization} session={session} />
         <Row gutter={[isMobile ? 4 : 8, isMobile ? 4 : 8]} className="">
           <Col span={24}>
+            <div className="text-[#99a1af] text-lg">Usage Summary</div>
             <Tabs
+              size="small"
               defaultActiveKey="1"
-              items={items}
+              items={tableTabs}
               tabBarExtraContent={
                 <TableFilter
                   searchForm={searchForm}

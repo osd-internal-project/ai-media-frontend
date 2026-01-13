@@ -134,7 +134,11 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
             {getResolutionLabel(resolution)}
           </span>{" "}
           <span className="text-gray-400">
-            {generateAudio ? <Volume2 /> : <VolumeX />}
+            {generateAudio ? (
+              <Volume2 className=" text-green-500" />
+            ) : (
+              <VolumeX />
+            )}
           </span>
           <span className="text-gray-400">{ratio}</span>
           <span className="text-gray-400">{duration}s</span>
@@ -316,7 +320,6 @@ const VideoChat: FC<VideoChatProps> = ({
           if (response.length < pageSize) {
             setHasMore(false);
           }
-
           // Process response into ChatMessage format
           const formattedMessages: ChatMessage[] = [];
           const itemsToProcess = [...response].reverse();
@@ -356,7 +359,6 @@ const VideoChat: FC<VideoChatProps> = ({
               referenceImages: item.referenceImages || [],
             });
           });
-
           if (isLoadMore) {
             setMessages((prev) => {
               const existingTaskIds = new Set(prev.map((m) => m.id));
@@ -410,7 +412,6 @@ const VideoChat: FC<VideoChatProps> = ({
         const data = JSON.parse(event.data);
 
         if (data.galleryId) {
-          console.log("start messages");
           fetchMessages(page, false, currentId);
         }
       } catch (e) {
@@ -593,6 +594,7 @@ const VideoChat: FC<VideoChatProps> = ({
           duration: values.duration || "10",
           genneratedStatus: galleryItem.genneratedStatus,
         };
+
         setMessages((prev) => [...prev, userMessage, aiMessage]);
         setTimeout(() => {
           bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -603,7 +605,6 @@ const VideoChat: FC<VideoChatProps> = ({
           text: undefined,
         });
         setFiles([]);
-        console.log("galleryItem", galleryItem);
         // setCurrentPrompt("");
       } else {
         messageApi.error(
@@ -795,6 +796,7 @@ const VideoChat: FC<VideoChatProps> = ({
                         isMultiImage={
                           msg.images ? msg.images.length > 1 : false
                         }
+                        generateAudio={msg.generateAudio}
                       />
                       {(msg.genneratedStatus === "PENDING" ||
                         msg.genneratedStatus === "PROCESSING") && (
@@ -1001,8 +1003,8 @@ const VideoChat: FC<VideoChatProps> = ({
                           valuePropName="checked"
                         >
                           <Switch
-                            checkedChildren={<Volume2 />}
-                            unCheckedChildren={<VolumeX />}
+                            checkedChildren={<Volume2 className=" p-[3px]" />}
+                            unCheckedChildren={<VolumeX className="p-[3px]" />}
                           />
                         </Form.Item>
                         <Form.Item

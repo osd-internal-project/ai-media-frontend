@@ -600,7 +600,13 @@ const ProjectsPage = () => {
               >
                 Team Members
               </span>
-              <Tooltip title={projectMembers.length >= MAX_MEMBERS ? `Maximum ${MAX_MEMBERS} members allowed` : ""}>
+              <Tooltip
+                title={
+                  projectMembers.length >= MAX_MEMBERS
+                    ? `Maximum ${MAX_MEMBERS} members allowed`
+                    : ""
+                }
+              >
                 <Button
                   type="primary"
                   size="small"
@@ -632,11 +638,61 @@ const ProjectsPage = () => {
                       {projectMembers.filter((m) => m.userId).length})
                     </div>
                     <div className="grid grid-cols-12 gap-3 px-3 mb-3">
-                      <div className="col-span-4" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>User</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Role</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Images</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Tokens</div>
-                      <div className="col-span-2 text-center" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Action</div>
+                      <div
+                        className="col-span-4"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        User
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Role
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Images
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Tokens
+                      </div>
+                      <div
+                        className="col-span-2 text-center"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Action
+                      </div>
                     </div>
                     {projectMembers.map((member, index) => {
                       return (
@@ -804,7 +860,12 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Image{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainImageAmount)})
+                        (Max:{" "}
+                        {formatNumber(
+                          (organization?.remainImageAmount || 0) +
+                            (selectedProject?.accessImageAmount || 0)
+                        )}
+                        )
                       </span>
                     </span>
                   }
@@ -816,7 +877,10 @@ const ProjectsPage = () => {
                   <InputNumber
                     placeholder="Enter image amount"
                     min={0}
-                    max={organization?.remainImageAmount || 0}
+                    max={
+                      (organization?.remainImageAmount || 0) +
+                      (selectedProject?.accessImageAmount || 0)
+                    }
                     className="w-full"
                     style={{ width: "100%" }}
                   />
@@ -828,7 +892,12 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Token{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainTokenAmount)})
+                        (Max:{" "}
+                        {formatNumber(
+                          (organization?.remainTokenAmount || 0) +
+                            (selectedProject?.accessTokenAmount || 0)
+                        )}
+                        )
                       </span>
                     </span>
                   }
@@ -840,7 +909,10 @@ const ProjectsPage = () => {
                   <InputNumber
                     placeholder="Enter token amount"
                     min={0}
-                    max={organization?.remainTokenAmount || 0}
+                    max={
+                      (organization?.remainTokenAmount || 0) +
+                      (selectedProject?.accessTokenAmount || 0)
+                    }
                     className="w-full"
                     style={{ width: "100%" }}
                   />
@@ -866,7 +938,13 @@ const ProjectsPage = () => {
               >
                 Team Members
               </span>
-              <Tooltip title={projectMembers.length >= MAX_MEMBERS ? `Maximum ${MAX_MEMBERS} members allowed` : ""}>
+              <Tooltip
+                title={
+                  projectMembers.length >= MAX_MEMBERS
+                    ? `Maximum ${MAX_MEMBERS} members allowed`
+                    : ""
+                }
+              >
                 <Button
                   type="primary"
                   size="small"
@@ -898,11 +976,61 @@ const ProjectsPage = () => {
                       {projectMembers.filter((m) => m.userId).length})
                     </div>
                     <div className="grid grid-cols-12 gap-3 px-3 mb-3">
-                      <div className="col-span-4" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>User</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Role</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Images</div>
-                      <div className="col-span-2" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Tokens</div>
-                      <div className="col-span-2 text-center" style={{ fontSize: "12px", fontWeight: 600, color: "#8c8c8c", textTransform: "uppercase" }}>Action</div>
+                      <div
+                        className="col-span-4"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        User
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Role
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Images
+                      </div>
+                      <div
+                        className="col-span-2"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Tokens
+                      </div>
+                      <div
+                        className="col-span-2 text-center"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#8c8c8c",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Action
+                      </div>
                     </div>
                     {projectMembers.map((member, index) => {
                       return (
