@@ -51,7 +51,7 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                   return allCategories.map((category) => (
                     <div key={category} className="mb-4">
                       <h4 className="text-gray-400 text-xs font-semibold tracking-wider uppercase mb-3 border-b border-gray-700 pb-2">
-                        {category.toUpperCase()}
+                        {/* {category.toUpperCase()} */}
                       </h4>
 
                       {(() => {
@@ -112,16 +112,18 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
       )}
 
       {!isMobile && (
-        <div>
-          <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className="w-1/4"></th>
-                {plans.slice(0, 3).map((plan, index) => (
+                <th className="sticky left-0 z-20 bg-[#0f0f0f] w-[320px] min-w-[320px] p-6 text-left border-r border-[#171717]"></th>
+                {plans.map((plan, index) => (
                   <th
                     key={index}
-                    className={`text-center p-6 ${
-                      index < 2 ? "border-r border-[#171717]" : ""
+                    className={`min-w-[320px] w-[320px] text-center p-6 ${
+                      index < plans.length - 1
+                        ? "border-r border-[#171717]"
+                        : ""
                     }`}
                   >
                     <div className="text-white">
@@ -151,9 +153,12 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                   return allCategories.map((category) => (
                     <React.Fragment key={category}>
                       <tr className="border-t border-[#171717]">
-                        <td colSpan={4} className="p-4 bg-[#171717]">
+                        <td
+                          colSpan={plans.length + 1}
+                          className="sticky left-0 z-10 bg-[#171717] p-4"
+                        >
                           <h4 className="text-gray-400 text-sm font-semibold tracking-wider uppercase">
-                            {category.toUpperCase()}
+                            {/* {category.toUpperCase()} */}
                           </h4>
                         </td>
                       </tr>
@@ -178,10 +183,10 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                             key={featureText}
                             className="border-t border-[#171717]"
                           >
-                            <td className="p-4 text-white font-medium border-r border-[#171717]">
+                            <td className="sticky left-0 z-20 bg-[#0f0f0f] p-4 text-white font-medium border-r border-[#171717]">
                               {featureText}
                             </td>
-                            {plans.slice(0, 3).map((plan, planIndex) => {
+                            {plans.map((plan, planIndex) => {
                               const hasFeature = plan.features?.some(
                                 (f) =>
                                   f.text === featureText &&
@@ -197,7 +202,7 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                                 <td
                                   key={planIndex}
                                   className={`p-4 text-center ${
-                                    planIndex < 2
+                                    planIndex < plans.length - 1
                                       ? "border-r border-[#171717]"
                                       : ""
                                   }`}

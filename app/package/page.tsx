@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Image } from "antd";
+import { Button, Image } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "../lib/axios/axios";
 import PlanServices, { Plan } from "../services/plan.service";
@@ -28,14 +28,16 @@ const PackagePage = () => {
   const handleGetStarted = () => {
     router.push("/signup");
   };
-
+  const handleToLoginPage = () => {
+    router.push("/login");
+  };
   const fetchPlans = React.useCallback(async () => {
     try {
       setLoading(true);
       const data = await planService.findAllFormatted();
 
-      const sortedPlans = [...data].sort((a: Plan, b: Plan) =>
-        a.price.monthly - b.price.monthly
+      const sortedPlans = [...data].sort(
+        (a: Plan, b: Plan) => a.price.monthly - b.price.monthly
       );
 
       setPlans(sortedPlans);
@@ -83,12 +85,6 @@ const PackagePage = () => {
               </div>
               <div className="flex items-center space-x-2 md:space-x-4">
                 <a
-                  onClick={handleGetStarted}
-                  className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
-                >
-                  Sign In
-                </a>
-                <a
                   onClick={() => {
                     pricingRef.current?.scrollIntoView({
                       behavior: "smooth",
@@ -110,6 +106,13 @@ const PackagePage = () => {
                 >
                   Features
                 </a>
+                <Button
+                  onClick={handleToLoginPage}
+                  type="primary"
+                  // className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
+                >
+                  Sign In
+                </Button>
               </div>
             </div>
           </div>

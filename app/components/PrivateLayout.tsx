@@ -16,13 +16,13 @@ import {
   Col,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useNavigate } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
 import { signOut, useSession } from "next-auth/react";
-import { PlusCircleOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import { PlusCircleOutlined } from "@ant-design/icons";
 import UserServices from "../services/users.service";
 import ProjectService from "../services/project.service";
 import { axiosCore, axiosUser } from "../lib/axios/axios";
@@ -32,7 +32,6 @@ import OrganizationService from "../services/organization.service";
 import { IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
 import OrganizationMembersServices from "../services/organization-members.service";
-import { checkRole } from "../utils/checkRole";
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
