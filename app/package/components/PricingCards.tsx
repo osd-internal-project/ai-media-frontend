@@ -5,7 +5,7 @@ import { Plan } from "../../services/plan.service";
 interface PricingCardsProps {
   plans: Plan[];
   billingPeriod: "monthly" | "annually";
-  onGetStarted: () => void;
+  onGetStarted: (plan: Plan) => void;
 }
 
 const PricingCards: React.FC<PricingCardsProps> = ({
@@ -41,7 +41,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
               <span className="text-gray-400 text-sm">/Seat/mo</span>
             </div>
             <button
-              onClick={onGetStarted}
+              onClick={() => onGetStarted(plan)}
               className="w-full bg-[#6c6c6c] hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4"
             >
               Get Started

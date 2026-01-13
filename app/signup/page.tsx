@@ -91,7 +91,7 @@ export default function SignupPage() {
           </div>
 
           {/* Social Buttons */}
-          <div className="space-y-3 mb-6">
+          {/* <div className="space-y-3 mb-6">
             <Button
               className="w-full h-10 bg-white text-black hover:bg-gray-100 border-none font-medium flex items-center justify-center rounded-lg"
               icon={<GoogleOutlined />}
@@ -110,13 +110,13 @@ export default function SignupPage() {
             >
               Continue with Twitter
             </Button>
-          </div>
+          </div> */}
 
-          <div className="relative mb-6">
+          {/* <div className="relative mb-6">
             <Divider>
               <p className="text-gray-400">OR</p>
             </Divider>
-          </div>
+          </div> */}
 
           {/* Signup Form */}
           <Form

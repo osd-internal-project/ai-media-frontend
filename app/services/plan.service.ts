@@ -19,6 +19,11 @@ export interface Plan {
   };
   features: PlanFeature[];
   featuresByCategory?: { [category: string]: PlanFeature[] };
+  detailJson?: {
+    maxUserAccess: string;
+    packageTokenAmount: string;
+    packageImageAmount: string;
+  };
 }
 
 const PlanServices = (axiosInstance: AxiosInstance) => {

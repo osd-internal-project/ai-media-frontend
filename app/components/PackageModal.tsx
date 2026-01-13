@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Modal, Image } from "antd";
+import { useRouter } from "next/navigation";
 import { axiosCore } from "../lib/axios/axios";
 import PlanServices, { Plan } from "../services/plan.service";
 import PricingCards from "../package/components/PricingCards";
@@ -8,9 +9,11 @@ import DetailedComparisonTable from "../package/components/DetailedComparisonTab
 interface PackageModalProps {
   open: boolean;
   onClose: () => void;
+  onPlanSelect?: (plan: Plan) => void;
 }
 
-const PackageModal: React.FC<PackageModalProps> = ({ open, onClose }) => {
+const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect }) => {
+  const router = useRouter();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly");
@@ -37,9 +40,14 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose }) => {
     }
   }, [open, fetchPlans]);
 
-  const handleGetStarted = () => {
-    console.log("Getting started with plan...");
-    onClose();
+  const handleGetStarted = (plan: Plan) => {
+    if (onPlanSelect) {
+      onPlanSelect(plan);
+      onClose();
+    } else {
+      onClose();
+      router.push(`/page/organization/create?plan=${encodeURIComponent(plan.name)}`);
+    }
   };
 
   return (
