@@ -159,9 +159,19 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
-    verifyEmail: async (token: string) => {
+    checkVerifyEmail: async (token: string) => {
       return await axiosInstance
-        .get(`${baseUsersUrl}/verify-email/${token}`)
+        .get(`${baseUsersUrl}/verify-email/check/${token}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    confirmEmail: async (token: string, password: string) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/verify-email/${token}`, { password })
         .then((res) => {
           return res.data;
         })
