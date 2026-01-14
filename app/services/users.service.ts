@@ -129,6 +129,36 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    requestChangePassword: async (email: string) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/request-change-password`, { email })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    checkResetPassword: async (token: string) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/check-reset-password`, { token })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    confirmChangePassword: async (value: any) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/confirm-change-password`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
     verifyEmail: async (token: string) => {
       return await axiosInstance
         .get(`${baseUsersUrl}/verify-email/${token}`)
