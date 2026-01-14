@@ -552,7 +552,6 @@ const ImageChat: FC<ImageChatProps> = ({
     currentStatus?: boolean
   ) => {
     try {
-      console.log("currentStatus", currentStatus);
       const nextStatus = currentStatus && currentStatus == true ? false : true;
       const success = await GalleryServices(axiosCore).updateStatus(
         id,
@@ -851,14 +850,14 @@ const ImageChat: FC<ImageChatProps> = ({
                   key={`${msg.id}-${index}`}
                   className={`flex gap-4 ${
                     msg.type === "user"
-                      ? "justify-end border-t-2 pt-2 border-white/10"
+                      ? "justify-end border-t-2 pt-2 border-white/10 "
                       : "justify-start"
                   }`}
                 >
                   {msg.type === "ai" && <Avatar src={Avatars.src} size={40} />}
                   <div
                     className={`flex flex-col  ${
-                      msg.type === "user" ? " items-end" : "items-start"
+                      msg.type === "user" ? "flex-1 items-end" : "items-start"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
@@ -981,7 +980,7 @@ const ImageChat: FC<ImageChatProps> = ({
                                           onShareImage(
                                             msg.taskId,
                                             img.id,
-                                            img?.status
+                                            msg?.status
                                           );
                                         }
                                       }}
