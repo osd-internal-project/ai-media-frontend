@@ -28,18 +28,16 @@ const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
     },
     {
       title: "Token Usage",
-      dataIndex: ["logs"],
-      render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
+      dataIndex: ["tokenUsed"],
+      render: (v: number) => formatNumber(v),
       key: "projectId",
       width: "250px",
       align: "right",
     },
     {
       title: "Image Usage",
-      dataIndex: ["logs"],
-      render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.reduce((sum, log) => sum + (log?.ImageUsed || 0), 0)),
+      dataIndex: ["imageUsed"],
+      render: (v: number) => formatNumber(v),
       key: "projectId",
       width: "250px",
       align: "right",
