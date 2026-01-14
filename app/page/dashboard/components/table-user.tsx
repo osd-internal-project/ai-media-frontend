@@ -3,6 +3,7 @@ import { FC, ReactElement, useState } from "react";
 import type {
   IDashboardProject,
   IDashboardProjectLogs,
+  IDashboardTableUser,
   IDashboardUser,
   ITDashboardOwner,
   ProductSummary,
@@ -11,36 +12,39 @@ import { formatNumber, formatStringToNumber } from "@/app/utils/format";
 import { ColumnType } from "antd/es/table";
 
 interface props {
-  data: IDashboardUser[];
+  data: IDashboardTableUser[];
 }
 
 const TableUserComponent: FC<props> = ({ data }): ReactElement => {
-  const Columns: ColumnType<IDashboardUser>[] = [
+  const Columns: ColumnType<IDashboardTableUser>[] = [
     {
       title: "Name",
-      dataIndex: ["users", "fullname"],
+      dataIndex: "fullname",
+      key: "userId",
+    },
+    {
+      title: "Use Name",
+      dataIndex: "username",
       key: "userId",
     },
     {
       title: "Role",
-      dataIndex: ["role"],
+      dataIndex: "role",
       key: "userId",
     },
     {
       title: "Token Usage",
-      dataIndex: ["project", "logs"],
-      render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
-      width: "250px",
+      dataIndex: "tokenUsed",
+      render: (text: number) => formatStringToNumber(text),
       align: "right",
+      sorter: (a, b) => a.tokenUsed - b.tokenUsed,
     },
     {
       title: "Image Usage",
-      dataIndex: ["project", "logs"],
-      render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.reduce((sum, log) => sum + (log?.ImageUsed || 0), 0)),
-      width: "250px",
+      dataIndex: "imageUsed",
+      render: (text: number) => formatStringToNumber(text),
       align: "right",
+      sorter: (a, b) => a.imageUsed - b.imageUsed,
     },
   ];
 
@@ -59,7 +63,7 @@ const TableUserComponent: FC<props> = ({ data }): ReactElement => {
 
   return (
     <div className="w-full">
-      <Table<IDashboardUser>
+      <Table<IDashboardTableUser>
         columns={Columns}
         dataSource={data}
         scroll={{ x: "max-content" }}

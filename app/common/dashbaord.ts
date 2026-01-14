@@ -63,3 +63,20 @@ export interface IDashboardProjectLogs {
   tokenUsed: number;
   ImageUsed: number;
 }
+export interface IDashboardUser {
+  userId: string;
+  users: {
+    userId: string;
+    fullname: string;
+  };
+  project: {
+    logs: IDashboardProjectLogs[];
+  };
+}
+export interface IDashboardTableUser {
+  userId: string;
+  fullname: string;
+  role: string;
+  imageUsed: number;
+  tokenUsed: number;
+}
