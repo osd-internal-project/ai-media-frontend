@@ -336,11 +336,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       .updateDetailByToken(session?.user?.id as string, {
         recentOrganizationId: organizationId,
       })
-      .then((data) => {
-        setLoading(true);
-      })
       .finally(() => {
         setReload(false);
+        window.location.href = "/page/project";
       });
   }
 
