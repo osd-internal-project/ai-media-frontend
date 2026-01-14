@@ -14,9 +14,15 @@ const Page: FC = () => {
   const [form] = Form.useForm();
   const [nodes, setNodes] = useState<
     | {
-      circles: Array<{ cx: number; cy: number; delay: number }>;
-      lines: Array<{ x1: number; y1: number; x2: number; y2: number; delay: number }>;
-    }
+        circles: Array<{ cx: number; cy: number; delay: number }>;
+        lines: Array<{
+          x1: number;
+          y1: number;
+          x2: number;
+          y2: number;
+          delay: number;
+        }>;
+      }
     | { circles: []; lines: [] }
   >({ circles: [], lines: [] });
 
@@ -109,8 +115,14 @@ const Page: FC = () => {
             <svg className="w-full h-full opacity-30" viewBox="0 0 400 400">
               <defs>
                 <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: "#8b5cf6", stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: "#6366f1", stopOpacity: 1 }} />
+                  <stop
+                    offset="0%"
+                    style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
+                  />
+                  <stop
+                    offset="100%"
+                    style={{ stopColor: "#6366f1", stopOpacity: 1 }}
+                  />
                 </linearGradient>
               </defs>
               {nodes.circles.map((node, i) => (
@@ -143,7 +155,12 @@ const Page: FC = () => {
           <div className="relative z-10 text-center">
             <div className="mb-8 animate-float">
               <div className="w-32 h-32 mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-16 h-16 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -156,7 +173,9 @@ const Page: FC = () => {
             <h2 className="text-4xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
               Ai Cave
             </h2>
-            <p className="text-purple-200 text-lg">Experience the future of intelligent automation</p>
+            <p className="text-purple-200 text-lg">
+              Experience the future of intelligent automation
+            </p>
           </div>
         </div>
 
@@ -166,8 +185,18 @@ const Page: FC = () => {
           <div className="text-center mb-8">
             <div className="inline-block mb-4 animate-pulse">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
               </div>
             </div>
@@ -221,7 +250,7 @@ const Page: FC = () => {
                 </Checkbox>
               </Form.Item>
               <a
-                href="#"
+                href="/forget-password"
                 className="text-[#3b82f6] hover:text-[#2563eb] text-sm"
               >
                 Forgot Password?
