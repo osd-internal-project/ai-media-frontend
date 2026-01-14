@@ -129,6 +129,16 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    verifyEmail: async (token: string) => {
+      return await axiosInstance
+        .get(`${baseUsersUrl}/verify-email/${token}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
   };
 };
 
