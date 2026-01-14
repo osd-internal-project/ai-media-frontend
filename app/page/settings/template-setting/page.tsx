@@ -1,7 +1,7 @@
 "use client";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
-import { Form, Modal, Tabs } from "antd";
-import React, { useEffect, useState, type FC, type ReactElement } from "react";
+import { Form, Modal, Spin, Tabs } from "antd";
+import React, { useCallback, useEffect, useMemo, useState, type FC, type ReactElement } from "react";
 
 import PromptGuideComponent from "./components/prompt-guide";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -13,8 +13,8 @@ import { canManageTemplates } from "@/app/utils/permissions";
 
 const TemplateSettingPage: FC = (): ReactElement => {
   const [modal, contextHolder] = Modal.useModal();
-  const promptguideServices = PromptGuideServices(axiosCore);
-  const promptguideTypeServices = PromptGuideTypeServices(axiosCore);
+  const promptguideServices = useMemo(() => PromptGuideServices(axiosCore), []);
+  const promptguideTypeServices = useMemo(() => PromptGuideTypeServices(axiosCore), []);
   const { organizationId, organizationRole } = useOrganization();
   
   const canManage = canManageTemplates(organizationRole || "");
@@ -25,14 +25,37 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     []
   );
-  useEffect(() => {
-    fetchPromptGuideTypes();
-  }, []);
+  const [loading, setLoading] = useState(false);
 
-  const fetchPromptGuideTypes = async () => {
-    const promptGuideTypes = await promptguideTypeServices.findAll();
-    setPromptGuideTypes(promptGuideTypes);
-  };
+  const fetchPromptGuideTypes = useCallback(async () => {
+    if (!organizationId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const promptGuideTypes = await promptguideTypeServices.findAll(organizationId);
+      setPromptGuideTypes(promptGuideTypes || []);
+    } catch (error) {
+      console.error('Error fetching prompt guide types:', error);
+      setPromptGuideTypes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [organizationId, promptguideTypeServices]);
+
+  useEffect(() => {
+    setSelectedPromptGuide(null);
+    promptGuideForm.resetFields();
+
+    if (organizationId) {
+      fetchPromptGuideTypes();
+    } else {
+      setPromptGuideTypes([]);
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId, fetchPromptGuideTypes]);
 
   const onSelectPromptGuide = async (id: number) => {
     const promptGuide = await promptguideServices.findById(String(id));
@@ -112,18 +135,20 @@ const TemplateSettingPage: FC = (): ReactElement => {
       key: "prompt-templates",
       label: "Prompt Templates",
       children: (
-        <PromptGuideComponent
-          promptGuideTypes={promptGuideTypes}
-          promptGuideForm={promptGuideForm}
-          onSelectPromptGuide={onSelectPromptGuide}
-          selectedPromptGuide={selectedPromptGuide}
-          onUpdatePromptGuide={onUpdatePromptGuide}
-          onCreatePromptGuideType={onCreatePromptGuideType}
-          onDeletePromptGuideType={onDeletePromptGuideType}
-          onCreatePromptGuide={onCreatePromptGuide}
-          onDeletePromptGuide={onDeletePromptGuide}
-          canManage={canManage}
-        />
+        <Spin spinning={loading}>
+          <PromptGuideComponent
+            promptGuideTypes={promptGuideTypes}
+            promptGuideForm={promptGuideForm}
+            onSelectPromptGuide={onSelectPromptGuide}
+            selectedPromptGuide={selectedPromptGuide}
+            onUpdatePromptGuide={onUpdatePromptGuide}
+            onCreatePromptGuideType={onCreatePromptGuideType}
+            onDeletePromptGuideType={onDeletePromptGuideType}
+            onCreatePromptGuide={onCreatePromptGuide}
+            onDeletePromptGuide={onDeletePromptGuide}
+            canManage={canManage}
+          />
+        </Spin>
       ),
     },
   ];

@@ -882,7 +882,7 @@ const VideoChat: FC<VideoChatProps> = ({
                     height: 720,
                     images: 1,
                     ratio: "16:9",
-                    resolution: "1080p",
+                    resolution: "720p",
                     duration: "10",
                   }}
                 >
@@ -1010,7 +1010,7 @@ const VideoChat: FC<VideoChatProps> = ({
                         <Form.Item
                           name="resolution"
                           className="w-full m-0"
-                          initialValue={"1080p"}
+                          initialValue={"720p"}
                           style={{ marginBottom: 0, lineHeight: 1 }}
                         >
                           <Select
@@ -1030,7 +1030,7 @@ const VideoChat: FC<VideoChatProps> = ({
                             options={[
                               { value: "480p", label: "480p - Standard" },
                               { value: "720p", label: "720p - HD" },
-                              { value: "1080p", label: "1080p - Full HD" },
+                              // { value: "1080p", label: "1080p - Full HD" },
                             ]}
                           />
                         </Form.Item>
