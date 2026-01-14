@@ -1,55 +1,24 @@
 "use client";
 import React, { useEffect, useState, type FC, Suspense } from "react";
-import { Form, Input, Button, message, Spin } from "antd";
-import { Lock, User, ArrowLeft, CheckCircle } from "lucide-react";
+import { Form, Input, Button, message, Spin, ConfigProvider } from "antd";
+import { Lock, User, CheckCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import UserServices from "../services/users.service";
-import { axiosCore, axiosUser } from "../lib/axios/axios";
-import { encryptPassword } from "../utils/crypto";
+import { axiosUser } from "../lib/axios/axios";
 
 const ChangePasswordForm = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
-  const [userData, setUserData] = useState<any>(null);
+  const [, setUserData] = useState<any>(null); // Kept for potential future use or debugging
   const [isValidToken, setIsValidToken] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [form] = Form.useForm();
-  const [nodes, setNodes] = useState<
-    | {
-        circles: Array<{ cx: number; cy: number; delay: number }>;
-        lines: Array<{
-          x1: number;
-          y1: number;
-          x2: number;
-          y2: number;
-          delay: number;
-        }>;
-      }
-    | { circles: []; lines: [] }
-  >({ circles: [], lines: [] });
 
   const userService = UserServices(axiosUser);
-
-  useEffect(() => {
-    // Generate random positions only on client
-    setNodes({
-      circles: [...Array(20)].map(() => ({
-        cx: Math.random() * 400,
-        cy: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-      lines: [...Array(15)].map(() => ({
-        x1: Math.random() * 400,
-        y1: Math.random() * 400,
-        x2: Math.random() * 400,
-        y2: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-    });
-  }, []);
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -83,22 +52,9 @@ const ChangePasswordForm = () => {
     }
     setLoading(true);
     try {
-      // Usually we encrypt password before sending if the backend expects it,
-      // but here UsersService.confirmChangePassword sends it as is in 'newPassword'.
-      // The Login page used encryptPassword, let's check backend...
-      // Backend KeycloakService just takes the value.
-      // If the Login page encrypts it for 'credentials' provider, that provider likely decrypts it?
-      // Wait, Keycloak usually expects plain text unless configured otherwise.
-      // The encryptPassword utility in frontend likely just hashes it or something?
-      // Let's assume sending the password as entered is fine for now, or match Login page pattern if Keycloak expects hashed.
-      // Checking Login page... `const encryptedPassword = encryptPassword(values.password);`
-      // But KeycloakService `createUser` just takes `userDto.password`.
-      // Let's stick to what createUser does. If Login page does extra encryption, it might be for a custom provider,
-      // but here we are calling Keycloak Admin API via our backend. The Admin API expects plain text to set credentials.
-
       await userService.confirmChangePassword({
         token,
-        newPassword: values.password, // Sending plain text as Keycloak needs to hash it
+        newPassword: values.password,
       });
 
       messageApi.success("Password changed successfully!");
@@ -139,221 +95,173 @@ const ChangePasswordForm = () => {
   return (
     <div className="w-full">
       {contextHolder}
-      {/* Logo/Header */}
-      <div className="text-center mb-8">
+      {/* Header */}
+      <div className="text-left mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Change Password</h1>
         <p className="text-gray-400">Create a new password for your account</p>
       </div>
 
       {/* Form */}
-      <Form
-        form={form}
-        name="change-password"
-        onFinish={onFinish}
-        layout="vertical"
-        className="space-y-4"
+      <ConfigProvider
+        theme={{
+          components: {
+            Input: {
+              colorBgContainer: "#18181b",
+              colorBorder: "#27272a",
+              colorText: "#ffffff",
+              colorTextPlaceholder: "#6b7280",
+              colorBgContainerDisabled: "#27272a", // Darker background for disabled
+              colorTextDisabled: "#9ca3af", // Lighter text for disabled
+              hoverBorderColor: "#6b7280",
+              activeBorderColor: "#6b7280",
+              controlHeightLG: 44,
+              borderRadiusLG: 8,
+            },
+            Button: {
+              colorPrimary: "#6366F1",
+              colorPrimaryHover: "#5558DD",
+              controlHeightLG: 44,
+              borderRadiusLG: 8,
+              contentFontSizeLG: 16,
+              fontWeight: 500,
+              primaryShadow:
+                "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+              lineWidth: 0,
+            },
+            Form: {
+              labelColor: "white",
+            },
+          },
+        }}
       >
-        <Form.Item
-          name="username"
-          label={<span className="text-white">Username</span>}
+        <Form
+          form={form}
+          name="change-password"
+          onFinish={onFinish}
+          layout="vertical"
+          className="space-y-4"
         >
-          <Input
-            prefix={<User className="text-gray-500 w-4 h-4" />}
-            disabled
-            className="bg-[#2a2f38] border-[#374151] text-white disabled:bg-[#1f242c] disabled:text-gray-400 rounded-lg"
-          />
-        </Form.Item>
+          <Form.Item name="username" label="Username">
+            <Input
+              prefix={<User className="text-gray-500 w-4 h-4" />}
+              disabled
+              size="large"
+            />
+          </Form.Item>
 
-        <Form.Item
-          name="email"
-          label={<span className="text-white">Email</span>}
-        >
-          <Input
-            prefix={<User className="text-gray-500 w-4 h-4" />}
-            disabled
-            className="bg-[#2a2f38] border-[#374151] text-white disabled:bg-[#1f242c] disabled:text-gray-400 rounded-lg"
-          />
-        </Form.Item>
+          <Form.Item name="email" label="Email">
+            <Input
+              prefix={<User className="text-gray-500 w-4 h-4" />}
+              disabled
+              size="large"
+            />
+          </Form.Item>
 
-        <Form.Item
-          name="password"
-          label={<span className="text-white">New Password</span>}
-          rules={[
-            { required: true, message: "Please input your new password!" },
-            { min: 6, message: "Password must be at least 6 characters" },
-          ]}
-        >
-          <Input.Password
-            prefix={<Lock className="text-gray-500 w-4 h-4" />}
-            placeholder="New Password"
-            size="large"
-            className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38] [&>input]:bg-transparent [&>input]:text-white"
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="confirmPassword"
-          label={<span className="text-white">Confirm Password</span>}
-          dependencies={["password"]}
-          rules={[
-            { required: true, message: "Please confirm your password!" },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("The passwords do not match!"));
-              },
-            }),
-          ]}
-        >
-          <Input.Password
-            prefix={<CheckCircle className="text-gray-500 w-4 h-4" />}
-            placeholder="Confirm Password"
-            size="large"
-            className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38] [&>input]:bg-transparent [&>input]:text-white"
-          />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            loading={loading}
-            className="w-full h-11 bg-[#4b5563] hover:bg-[#586170] text-white border-none font-medium text-base rounded-lg shadow-lg"
+          <Form.Item
+            name="password"
+            label="New Password"
+            rules={[
+              { required: true, message: "Please input your new password!" },
+              { min: 6, message: "Password must be at least 6 characters" },
+            ]}
           >
-            RESET PASSWORD
-          </Button>
-        </Form.Item>
-      </Form>
+            <Input.Password
+              prefix={<Lock className="text-gray-500 w-4 h-4" />}
+              placeholder="New Password"
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="confirmPassword"
+            label="Confirm Password"
+            dependencies={["password"]}
+            rules={[
+              { required: true, message: "Please confirm your password!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("The passwords do not match!")
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password
+              prefix={<CheckCircle className="text-gray-500 w-4 h-4" />}
+              placeholder="Confirm Password"
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              loading={loading}
+              block
+              className="mt-2"
+            >
+              RESET PASSWORD
+            </Button>
+          </Form.Item>
+        </Form>
+      </ConfigProvider>
     </div>
   );
 };
 
 const Page: FC = () => {
-  const [nodes, setNodes] = useState<
-    | {
-        circles: Array<{ cx: number; cy: number; delay: number }>;
-        lines: Array<{
-          x1: number;
-          y1: number;
-          x2: number;
-          y2: number;
-          delay: number;
-        }>;
-      }
-    | { circles: []; lines: [] }
-  >({ circles: [], lines: [] });
-
-  useEffect(() => {
-    // Generate random positions only on client
-    setNodes({
-      circles: [...Array(20)].map(() => ({
-        cx: Math.random() * 400,
-        cy: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-      lines: [...Array(15)].map(() => ({
-        x1: Math.random() * 400,
-        y1: Math.random() * 400,
-        x2: Math.random() * 400,
-        y2: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-    });
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Background Gradients/Effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-20"></div>
-        <div className="absolute w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-20"></div>
-        <div className="absolute w-96 h-96 bg-purple-800 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 bottom-0 left-1/2"></div>
+    <div className=" h-screen relative z-10 w-full flex bg-black ">
+      {/* Left Side - Form (2 spans) */}
+      <div className="w-full lg:w-2/3 p-8 lg:p-12 flex flex-col justify-between relative min-h-[600px]">
+        {/* Top: Logo */}
+        <div className="flex items-center">
+          <Image
+            src="/images/Logo.png"
+            alt="Ai Cave Logo"
+            width={100}
+            height={32}
+            className="h-8 w-auto"
+            priority
+          />
+        </div>
+
+        {/* Middle: Content */}
+        <div className="flex flex-col justify-center grow py-12">
+          <div className="max-w-[800px] mx-auto w-full">
+            <Suspense fallback={<Spin />}>
+              <ChangePasswordForm />
+            </Suspense>
+          </div>
+        </div>
+
+        {/* Bottom: Footer */}
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>aicave.ai @ 2026</span>
+          <a href="#" className="hover:text-gray-400">
+            Privacy Policy
+          </a>
+        </div>
       </div>
 
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-      <div className="relative z-10 w-full max-w-6xl flex bg-[#1c2027] rounded-3xl shadow-2xl overflow-hidden border border-[#2a2f38]">
-        {/* Left Side - AI Visualization */}
-        <div className="hidden lg:flex lg:w-1/2 bg-[#15191f] p-12 items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0">
-            {/* Neural Network Animation */}
-            <svg className="w-full h-full opacity-30" viewBox="0 0 400 400">
-              <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop
-                    offset="0%"
-                    style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{ stopColor: "#6366f1", stopOpacity: 1 }}
-                  />
-                </linearGradient>
-              </defs>
-              {nodes.circles.map((node, i) => (
-                <circle
-                  key={i}
-                  cx={node.cx}
-                  cy={node.cy}
-                  r="2"
-                  fill="url(#grad1)"
-                  className="animate-pulse"
-                  style={{ animationDelay: `${node.delay}s` }}
-                />
-              ))}
-              {nodes.lines.map((line, i) => (
-                <line
-                  key={i}
-                  x1={line.x1}
-                  y1={line.y1}
-                  x2={line.x2}
-                  y2={line.y2}
-                  stroke="url(#grad1)"
-                  strokeWidth="0.5"
-                  className="animate-pulse"
-                  style={{ animationDelay: `${line.delay}s` }}
-                />
-              ))}
-            </svg>
-          </div>
-
-          <div className="relative z-10 text-center">
-            <div className="mb-8 animate-float">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                <svg
-                  className="w-16 h-16 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
-              Security First
-            </h2>
-            <p className="text-purple-200 text-lg">
-              Your account security is our priority.
-            </p>
-          </div>
-        </div>
-
-        {/* Right Side - Form */}
-        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-          <Suspense fallback={<Spin />}>
-            <ChangePasswordForm />
-          </Suspense>
-        </div>
+      {/* Right Side - Image Illustration (1 span) */}
+      <div className="hidden lg:block lg:w-1/3 relative bg-[#1c2027]">
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: "url('/images/Illustration.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        {/* Optional: Add overlay if needed */}
+        <div className="absolute inset-0 bg-black/10" />
       </div>
     </div>
   );
