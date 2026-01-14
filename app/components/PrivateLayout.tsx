@@ -41,6 +41,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState<boolean>(false);
+  const [reload, setReload] = useState<boolean>(false);
+
   const pathname = usePathname();
   const currentPath = pathname.split("/")[2];
   const mappedPath = currentPath === "project" ? "project" : currentPath;
@@ -328,11 +330,18 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     organizationId: string
   ): Promise<void> {
     // console.log(organizationId);
-    await userServices.updateDetailByToken(session?.user?.id as string, {
-      recentOrganizationId: organizationId,
-    });
-    router.push("/page/project");
-    router.refresh();
+    setReload(true);
+
+    await userServices
+      .updateDetailByToken(session?.user?.id as string, {
+        recentOrganizationId: organizationId,
+      })
+      .then((data) => {
+        setLoading(true);
+      })
+      .finally(() => {
+        setReload(false);
+      });
   }
 
   if (!session?.user.id) {
@@ -406,7 +415,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         },
       }}
     >
-      <Spin spinning={loading}>
+      <Spin spinning={loading || reload}>
         {contextHolder}
         {openCreateOrg ? (
           <Modal
