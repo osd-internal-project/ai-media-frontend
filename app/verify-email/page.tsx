@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Button, Spin, message } from "antd";
+import { Button, Form, Input, Spin, message } from "antd";
 import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { axiosUser } from "../lib/axios/axios";
 const userService = UserServices(axiosUser);
 
 const VerifyEmailContent = () => {
+    const [form] = Form.useForm();
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get("token");
@@ -28,13 +29,35 @@ const VerifyEmailContent = () => {
 
     const handleVerify = async (token: string) => {
         try {
-            await userService.verifyEmail(token);
-            setStatus("success");
-            messageApi.success("Email verified successfully!");
-            router.push("/login");
+            if (token) {
+                await userService.checkVerifyEmail(token);
+                setStatus("success");
+            }
         } catch (error) {
             console.error("Error verifying email:", error);
             setStatus("error");
+        }
+    };
+
+    const onFinish = async (values: { password: string; confirmPassword: string }) => {
+        try {
+            if (token) {
+                await userService.confirmEmail(token, values.password);
+                setStatus("success");
+                messageApi.success("Email verified successfully!");
+                router.push("/login");
+            }
+        } catch (error: any) {
+            console.error("Error accepting invitation:", error);
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ) {
+                messageApi.error(`${error.response.data.message}`);
+            } else {
+                messageApi.error(`${error.message}`);
+            }
         }
     };
 
@@ -69,9 +92,69 @@ const VerifyEmailContent = () => {
                                 <p className="text-gray-400 mb-8">
                                     Your email has been successfully verified. You can now access your account.
                                 </p>
-                                <Link href="/login" className="w-full">
+                                <Form
+                                    form={form}
+                                    onFinish={onFinish}
+                                    layout="vertical"
+                                    requiredMark={false}
+                                    style={{ width: "100%" }}>
+                                    <Form.Item
+                                        name="password"
+                                        label={
+                                            <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                                                Password
+                                            </span>
+                                        }
+                                        rules={[{ required: true, message: "Required" }]}
+                                        style={{ marginBottom: "16px" }}
+                                    >
+                                        <Input.Password
+                                            placeholder="*************"
+                                            style={{
+                                                backgroundColor: "#1A1D21",
+                                                border: "1px solid #333",
+                                                color: "white",
+                                                borderRadius: "0.5rem",
+                                                height: "44px",
+                                            }}
+                                        />
+                                    </Form.Item>
+
+                                    <Form.Item
+                                        name="confirmPassword"
+                                        label={
+                                            <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                                                Confirm password
+                                            </span>
+                                        }
+                                        dependencies={["password"]}
+                                        rules={[
+                                            { required: true, message: "Required" },
+                                            ({ getFieldValue }) => ({
+                                                validator(_, value) {
+                                                    if (!value || getFieldValue("password") === value) {
+                                                        return Promise.resolve();
+                                                    }
+                                                    return Promise.reject(new Error("Passwords do not match!"));
+                                                },
+                                            }),
+                                        ]}
+                                        style={{ marginBottom: "16px" }}
+                                    >
+                                        <Input.Password
+                                            placeholder="*************"
+                                            style={{
+                                                backgroundColor: "#1A1D21",
+                                                border: "1px solid #333",
+                                                color: "white",
+                                                borderRadius: "0.5rem",
+                                                height: "44px",
+                                            }}
+                                        />
+                                    </Form.Item>
                                     <Button
                                         type="primary"
+                                        htmlType="submit"
                                         size="large"
                                         style={{
                                             backgroundColor: "#5465FF",
@@ -83,9 +166,9 @@ const VerifyEmailContent = () => {
                                             fontSize: "16px",
                                         }}
                                     >
-                                        Back to Login
+                                        Confirm
                                     </Button>
-                                </Link>
+                                </Form>
                             </div>
                         )}
 

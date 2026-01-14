@@ -34,24 +34,21 @@ export default function SignupPage() {
     try {
       // Remove confirmPassword from payload
       const { confirmPassword, ...registerData } = values;
-
-      // Basic password validation
-      if (registerData.password.length < 6) {
-        showMessage("error", "Password must be at least 6 characters long");
-        setLoading(false);
-        return;
-      }
-
       await userService.register(registerData);
       setRegistrationSuccess(true);
       showMessage("success", "Registration successful! Please check your email.");
       // router.push("/login");
     } catch (error: any) {
-      console.error("Registration failed:", error);
-      const msg =
-        error?.response?.data?.message ||
-        "Registration failed. Please try again.";
-      showMessage("error", Array.isArray(msg) ? msg.join(", ") : msg);
+      console.error("Error accepting invitation:", error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        showMessage("error", `${error.response.data.message}`);
+      } else {
+        showMessage("error", `${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -332,7 +329,7 @@ export default function SignupPage() {
                     />
                   </Form.Item>
 
-                  <Form.Item
+                  {/* <Form.Item
                     name="password"
                     label={
                       <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
@@ -385,7 +382,7 @@ export default function SignupPage() {
                         height: "44px",
                       }}
                     />
-                  </Form.Item>
+                  </Form.Item> */}
                 </div>
 
                 <Form.Item
