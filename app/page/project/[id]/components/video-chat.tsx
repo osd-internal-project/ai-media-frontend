@@ -778,7 +778,7 @@ const VideoChat: FC<VideoChatProps> = ({
                 key={`${msg.id}-${index}`}
                 className={`flex gap-4 ${
                   msg.type === "user"
-                    ? "justify-end  border-t-2 pt-2 border-white/10"
+                    ? " flex w-full justify-end  border-t-2 pt-2 border-white/10"
                     : "justify-start"
                 }`}
               >
@@ -790,9 +790,9 @@ const VideoChat: FC<VideoChatProps> = ({
                   />
                 )}
                 <div
-                  className={`flex flex-col ${
+                  className={`${
                     msg.type === "user"
-                      ? "max-w-[80%] items-end"
+                      ? "flex-1  max-w-[80%] items-end"
                       : "max-w-full items-start min-w-[480px]"
                   }`}
                 >
