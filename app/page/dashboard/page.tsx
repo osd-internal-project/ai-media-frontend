@@ -7,6 +7,7 @@ import DashboardServices from "@/app/services/dashboard.service";
 import { useSession } from "next-auth/react";
 import type {
   IDashboardProject,
+  IDashboardTableUser,
   IDashboardUser,
   ITDashboardOwner,
 } from "@/app/common/dashbaord";
@@ -32,7 +33,7 @@ const DashboardPage: FC = () => {
   const [summaryByProject, setSummaryByProject] = useState<IDashboardProject[]>(
     []
   );
-  const [summaryByUser, setSummaryByUser] = useState<IDashboardUser[]>([]);
+  const [summaryByUser, setSummaryByUser] = useState<IDashboardTableUser[]>([]);
   const [organization, setOrganization] = useState<IOrganization>();
   const [projectOptions, setProjectOptions] = useState<
     { value: string; label: string }[]

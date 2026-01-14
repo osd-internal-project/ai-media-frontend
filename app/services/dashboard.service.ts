@@ -1,5 +1,9 @@
 import { AxiosInstance } from "axios";
-import { IDashboardProject, IDashboardUser } from "../common/dashbaord";
+import {
+  IDashboardProject,
+  IDashboardTableUser,
+  IDashboardUser,
+} from "../common/dashbaord";
 
 const DashboardServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/dashboard";
@@ -21,7 +25,7 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
     findDashboardSummaryUser: async (
       organizationId: string,
       params: any
-    ): Promise<IDashboardUser[]> => {
+    ): Promise<IDashboardTableUser[]> => {
       return await axiosInstance
         .get(`${baseUrl}/summary-user/${organizationId}`, { params: params })
         .then((res) => {
