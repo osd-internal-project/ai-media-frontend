@@ -1,34 +1,18 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
 import { Form, Input, Button, Checkbox, message } from "antd";
-import { User, Lock } from "lucide-react";
+import { User, Lock, Mail } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { encryptPassword } from "../utils/crypto";
+import Link from "next/link";
+import Image from "next/image";
+
 const Page: FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
-  const [mounted, setMounted] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [form] = Form.useForm();
-  const [nodes, setNodes] = useState<
-    | {
-        circles: Array<{ cx: number; cy: number; delay: number }>;
-        lines: Array<{
-          x1: number;
-          y1: number;
-          x2: number;
-          y2: number;
-          delay: number;
-        }>;
-      }
-    | { circles: []; lines: [] }
-  >({ circles: [], lines: [] });
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -57,7 +41,6 @@ const Page: FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    // Google Login: Redirects to Google via Keycloak
     signIn(
       "keycloak",
       { callbackUrl: "/page/project" },
@@ -77,218 +60,39 @@ const Page: FC = () => {
       }
     }
   }, [messageApi, router]);
-  useEffect(() => {
-    // Generate random positions only on client
-    setNodes({
-      circles: [...Array(20)].map(() => ({
-        cx: Math.random() * 400,
-        cy: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-      lines: [...Array(15)].map(() => ({
-        x1: Math.random() * 400,
-        y1: Math.random() * 400,
-        x2: Math.random() * 400,
-        y2: Math.random() * 400,
-        delay: Math.random() * 2,
-      })),
-    });
-  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black flex items-center justify-center p-4 overflow-hidden relative">
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       {contextHolder}
-      {/* Background Gradients/Effects - generic dark theme vibe */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-20"></div>
-        <div className="absolute w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-20"></div>
-        <div className="absolute w-96 h-96 bg-purple-800 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 bottom-0 left-1/2"></div>
-      </div>
 
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-
-      <div className="relative z-10 w-full max-w-6xl flex bg-[#1c2027] rounded-3xl shadow-2xl overflow-hidden border border-[#2a2f38]">
-        {/* Left Side - AI Visualization */}
-        <div className="hidden lg:flex lg:w-1/2 bg-[#15191f] p-12 items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0">
-            {/* Neural Network Animation */}
-            <svg className="w-full h-full opacity-30" viewBox="0 0 400 400">
-              <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop
-                    offset="0%"
-                    style={{ stopColor: "#8b5cf6", stopOpacity: 1 }}
-                  />
-                  <stop
-                    offset="100%"
-                    style={{ stopColor: "#6366f1", stopOpacity: 1 }}
-                  />
-                </linearGradient>
-              </defs>
-              {nodes.circles.map((node, i) => (
-                <circle
-                  key={i}
-                  cx={node.cx}
-                  cy={node.cy}
-                  r="2"
-                  fill="url(#grad1)"
-                  className="animate-pulse"
-                  style={{ animationDelay: `${node.delay}s` }}
-                />
-              ))}
-              {nodes.lines.map((line, i) => (
-                <line
-                  key={i}
-                  x1={line.x1}
-                  y1={line.y1}
-                  x2={line.x2}
-                  y2={line.y2}
-                  stroke="url(#grad1)"
-                  strokeWidth="0.5"
-                  className="animate-pulse"
-                  style={{ animationDelay: `${line.delay}s` }}
-                />
-              ))}
-            </svg>
-          </div>
-
-          <div className="relative z-10 text-center">
-            <div className="mb-8 animate-float">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                <svg
-                  className="w-16 h-16 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
+      <div className="w-full max-w-[1400px] h-[800px] bg-[#0E0E12] rounded-[30px] overflow-hidden flex shadow-2xl relative border border-[#1E1E24]">
+        {/* Left Side: Form */}
+        <div className="w-full lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center relative z-10 bg-[#0E0E12]">
+          {/* Logo Placeholder */}
+          <div className="absolute top-8 left-8 lg:left-12">
+            {/* Use a simple logo or icon here, or import Image if available */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-10 h-10">
+                <Image src="/images/logo-1.png" alt="Logo" fill className="object-contain" />
               </div>
             </div>
-            <h2 className="text-4xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">
-              Ai Cave
-            </h2>
-            <p className="text-purple-200 text-lg">
-              Experience the future of intelligent automation
-            </p>
-          </div>
-        </div>
-
-        {/* Right Side - Login Form */}
-        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-          {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="inline-block mb-4 animate-pulse">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-400">Sign in to continue to AI Cave</p>
           </div>
 
-          {/* Form */}
-          <Form
-            form={form}
-            name="login"
-            onFinish={onFinish}
-            layout="vertical"
-            className="space-y-4"
-          >
-            <Form.Item
-              name="email"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input your email or username!",
-                },
-              ]}
-            >
-              <Input
-                prefix={<User className="text-gray-500 w-4 h-4" />}
-                placeholder="Email or Username"
-                size="large"
-                className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38]"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: "Please input your password!" },
-              ]}
-            >
-              <Input.Password
-                prefix={<Lock className="text-gray-500 w-4 h-4" />}
-                placeholder="Password"
-                size="large"
-                className="bg-[#2a2f38] border-[#374151] text-white placeholder-gray-500 hover:border-gray-500 rounded-lg focus:bg-[#2a2f38] hover:bg-[#2a2f38] [&>input]:bg-transparent [&>input]:text-white"
-              />
-            </Form.Item>
-
-            <div className="flex justify-between items-center mb-4">
-              <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox className="text-white">
-                  <div className="text-white">Remember me</div>
-                </Checkbox>
-              </Form.Item>
-              <a
-                href="/forget-password"
-                className="text-[#3b82f6] hover:text-[#2563eb] text-sm"
-              >
-                Forgot Password?
-              </a>
+          <div className="max-w-md w-full mx-auto">
+            <div className="mb-10">
+              <h1 className="text-4xl font-bold mb-3 text-white">
+                Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5BC0EB] to-[#3B82F6]">Welcome to AI Cave!</span>
+              </h1>
+              <p className="text-gray-400 text-sm font-light">Log in to AI Cave to start creating magic.</p>
             </div>
 
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                size="large"
-                loading={loading}
-                className="w-full h-11 bg-[#4b5563] hover:bg-[#586170] text-white border-none font-medium text-base rounded-lg shadow-lg"
-              >
-                LOGIN
-              </Button>
-            </Form.Item>
-          </Form>
-
-          {/* Social Login */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#374151]"></div>
-              </div>
-              {/* <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[#1c2027] text-gray-400">
-                  Or continue with
-                </span>
-              </div> */}
-            </div>
-
-            <div className="mt-6">
-              {/* <button
+            {/* Socials */}
+            <div className="flex gap-4 mb-8">
+              <button
                 onClick={handleGoogleLogin}
-                className="w-full h-10 bg-white text-black hover:bg-gray-100 border-none font-medium flex items-center justify-center rounded-lg cursor-pointer"
+                className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -306,23 +110,168 @@ const Page: FC = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                Continue with Google
-              </button> */}
+                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Sign In with Google</span>
+              </button>
+
+              <button
+                type="button"
+                className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
+                onClick={() => messageApi.info('Microsoft login not implemented yet')}
+              >
+                <svg className="w-5 h-5" viewBox="0 0 23 23">
+                  <path fill="#f35325" d="M1 1h10v10H1z" />
+                  <path fill="#81bc06" d="M12 1h10v10H12z" />
+                  <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                  <path fill="#ffba08" d="M12 12h10v10H12z" />
+                </svg>
+                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Sign In with Microsoft</span>
+              </button>
+            </div>
+
+            <div className="relative mb-8 text-center flex items-center justify-center">
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-[#333]"></div>
+              <span className="relative bg-[#0E0E12] px-3 text-[10px] text-gray-500 font-medium tracking-wide">OR CONTINUE WITH E-MAIL</span>
+            </div>
+
+            {/* Form */}
+            <Form
+              form={form}
+              name="login"
+              onFinish={onFinish}
+              layout="vertical"
+              className="space-y-4"
+              requiredMark={false}
+            >
+              <Form.Item
+                name="email"
+                rules={[{ required: true, message: "Please input your email!" }]}
+              >
+                <Input
+                  prefix={<Mail style={{ color: "#6b7280", width: "16px", height: "16px", marginRight: "8px" }} />}
+                  placeholder="name.user@gmail.com"
+                  size="large"
+                  style={{
+                    backgroundColor: "#1A1D21",
+                    border: "1px solid #333",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    height: "48px",
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Please input your password!" }]}
+                className="mb-2"
+              >
+                <Input.Password
+                  prefix={<Lock style={{ color: "#6b7280", width: "16px", height: "16px", marginRight: "8px" }} />}
+                  placeholder="Password"
+                  size="large"
+                  style={{
+                    backgroundColor: "#1A1D21",
+                    border: "1px solid #333",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    height: "48px",
+                  }}
+                />
+              </Form.Item>
+
+              <div className="flex justify-between items-center mb-8">
+                <Form.Item name="remember" valuePropName="checked" noStyle>
+                  <Checkbox className="custom-checkbox">
+                    <span className="text-gray-400 hover:text-gray-300 text-xs">Remember me</span>
+                  </Checkbox>
+                </Form.Item>
+                <Link
+                  href="/forgot-password"
+                  className="text-[#5BC0EB] hover:text-[#3B82F6] text-xs font-medium"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <Form.Item className="mb-0">
+                <Button
+                  htmlType="submit"
+                  loading={loading}
+                  style={{
+                    backgroundColor: "#5465FF",
+                    color: "white",
+                    height: "48px",
+                    borderRadius: "12px",
+                    fontWeight: 600,
+                    border: "none",
+                    width: "100%",
+                    fontSize: "16px",
+                  }}
+                >
+                  Log in
+                </Button>
+              </Form.Item>
+            </Form>
+
+            <div className="mt-8 text-center text-xs text-gray-500">
+              Don't have an account?{" "}
+              <Link href="/signup" className="text-[#5BC0EB] hover:text-[#3B82F6] font-semibold transition-colors">
+                Sign Up
+              </Link>
             </div>
           </div>
-          <div className="text-center mt-6">
-            <span className="text-gray-400 text-sm">
-              {` Don't have an account? `}
-              <a
-                href="/signup"
-                className="text-[#3b82f6] hover:text-[#2563eb] font-semibold"
-              >
-                Sign Up
-              </a>
-            </span>
+        </div>
+
+        {/* Right Side: Visual */}
+        <div className="hidden lg:flex w-1/2 bg-[#050505] relative overflow-hidden items-center justify-center">
+          {/* Background effects */}
+          <div className="relative w-full h-full animate-float">
+            <Image
+              src="/images/login-visual.jpg"
+              alt="Login Visual"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
+
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) rotate(-12deg); }
+          50% { transform: translateY(-15px) rotate(-12deg); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+           animation: float-delayed 7s ease-in-out infinite;
+        }
+        .custom-checkbox .ant-checkbox-inner {
+            background-color: transparent;
+            border-color: #333;
+        }
+        .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+            background-color: #5465FF;
+            border-color: #5465FF;
+        }
+        .custom-checkbox .ant-checkbox-wrapper:hover .ant-checkbox-inner {
+            border-color: #5465FF;
+        }
+        input::placeholder {
+            color: #4b5563 !important;
+        }
+        .ant-input-password input {
+            background-color: transparent !important;
+            color: white !important;
+        }
+      `}</style>
     </div>
   );
 };
