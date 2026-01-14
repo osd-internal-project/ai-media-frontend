@@ -64,7 +64,9 @@ interface ImageChatProps {
   username?: string;
   selectedAIModel?: TAIModel | null;
   setDisableTab: (disable: boolean) => void;
-  onSetPromptTextRef?: React.MutableRefObject<((id: number) => Promise<void>) | null>;
+  onSetPromptTextRef?: React.MutableRefObject<
+    ((id: number) => Promise<void>) | null
+  >;
 }
 
 interface ChatMessage {
@@ -969,7 +971,7 @@ const ImageChat: FC<ImageChatProps> = ({
                                           onShareImage(
                                             msg.taskId,
                                             img.imageUrl,
-                                            msg.status || true
+                                            msg.status || false
                                           );
                                         }
                                       }}
