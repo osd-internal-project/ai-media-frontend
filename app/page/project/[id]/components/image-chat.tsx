@@ -707,7 +707,7 @@ const ImageChat: FC<ImageChatProps> = ({
     onClick: () => handleRatioChange(ratio),
   }));
 
-  const imageCountOptions = Array.from({ length: 10 }, (_, i) => i + 1).map(
+  const imageCountOptions = Array.from({ length: 2 }, (_, i) => i + 1).map(
     (count) => ({
       label: `${count} image${count > 1 ? "s" : ""}`,
       key: String(count),

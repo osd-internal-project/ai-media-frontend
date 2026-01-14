@@ -3,6 +3,7 @@ import {
   ArrowRightOutlined,
   PlusOutlined,
   DeleteOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -102,103 +103,115 @@ const PromptGuideComponent: FC<props> = ({
             )}
           </div>
           <div className="space-y-4">
-            {promptGuideTypes.map((group) => (
-              <div key={group.id}>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-[#888] font-medium">{group.title}</h3>
-                  {canManage && (
-                    <Space>
-                      <Button
-                        icon={<PlusOutlined />}
-                        size="small"
-                        type="text"
-                        className="text-[#888] hover:text-white"
-                        onClick={() => handleAddGuide(group.id)}
-                      />
-                      <Popconfirm
-                        title="Delete this type?"
-                        onConfirm={() => onDeletePromptGuideType(group.id)}
-                      >
+            {promptGuideTypes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileTextOutlined className="text-5xl text-[#555] mb-4" />
+                <p className="text-[#888] mb-2">No prompt types found</p>
+                {canManage && (
+                  <p className="text-[#666] text-sm">
+                    Click &quot;Add Type&quot; to create your first prompt category
+                  </p>
+                )}
+              </div>
+            ) : (
+              promptGuideTypes.map((group) => (
+                <div key={group.id}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-[#888] font-medium">{group.title}</h3>
+                    {canManage && (
+                      <Space>
                         <Button
-                          icon={<DeleteOutlined />}
+                          icon={<PlusOutlined />}
                           size="small"
                           type="text"
-                          danger
+                          className="text-[#888] hover:text-white"
+                          onClick={() => handleAddGuide(group.id)}
                         />
-                      </Popconfirm>
-                    </Space>
-                  )}
-                </div>
-                <div className="space-y-2 pl-2">
-                  {group.promptGuide?.map((item) => {
-                    const isActive = selectedPromptGuide?.id === item.id;
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => onSelectPromptGuide(item.id!)}
-                        className={`
-                          group flex items-center justify-between px-2 md:px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
-                          ${
-                            isActive
-                              ? "bg-[#1E1E1E]"
-                              : "bg-[#1E1E1E] hover:bg-[#252525]"
-                          }
-                        `}
-                        style={
-                          isActive
-                            ? {
-                                background:
-                                  "linear-gradient(#1E1E1E, #1E1E1E) padding-box, linear-gradient(90deg, #64E9FF, #9F55FF) border-box",
-                                border: "1px solid transparent",
-                                boxShadow: "0 0 20px rgba(100, 233, 255, 0.1)",
-                              }
-                            : {
-                                border: "1px solid transparent",
-                                borderColor: "transparent",
-                              }
-                        }
-                      >
-                        <span
-                          className={`text-sm md:text-base truncate ${
-                            isActive ? "text-white" : "text-[#CCC]"
-                          }`}
+                        <Popconfirm
+                          title="Delete this type?"
+                          onConfirm={() => onDeletePromptGuideType(group.id)}
                         >
-                          {item.title}
-                        </span>
-                        <div className="flex items-center gap-1 md:gap-2">
-                          {canManage && (
-                            <Popconfirm
-                              title="Delete this prompt?"
-                              onConfirm={(e) => {
-                                e?.stopPropagation();
-                                onDeletePromptGuide(item.id!);
-                              }}
-                              onCancel={(e) => e?.stopPropagation()}
-                            >
-                              <DeleteOutlined
-                                className="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </Popconfirm>
-                          )}
-                          <ArrowRightOutlined
-                            className={`text-base transition-colors duration-300 ${
-                              isActive
-                                ? "text-[#888]"
-                                : "text-[#555] group-hover:text-[#888]"
-                            }`}
+                          <Button
+                            icon={<DeleteOutlined />}
+                            size="small"
+                            type="text"
+                            danger
                           />
+                        </Popconfirm>
+                      </Space>
+                    )}
+                  </div>
+                  <div className="space-y-2 pl-2">
+                    {group.promptGuide?.map((item) => {
+                      const isActive = selectedPromptGuide?.id === item.id;
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => onSelectPromptGuide(item.id!)}
+                          className={`
+                            group flex items-center justify-between px-2 md:px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
+                            ${
+                              isActive
+                                ? "bg-[#1E1E1E]"
+                                : "bg-[#1E1E1E] hover:bg-[#252525]"
+                            }
+                          `}
+                          style={
+                            isActive
+                              ? {
+                                  background:
+                                    "linear-gradient(#1E1E1E, #1E1E1E) padding-box, linear-gradient(90deg, #64E9FF, #9F55FF) border-box",
+                                  border: "1px solid transparent",
+                                  boxShadow: "0 0 20px rgba(100, 233, 255, 0.1)",
+                                }
+                              : {
+                                  border: "1px solid transparent",
+                                  borderColor: "transparent",
+                                }
+                          }
+                        >
+                          <span
+                            className={`text-sm md:text-base truncate ${
+                              isActive ? "text-white" : "text-[#CCC]"
+                            }`}
+                          >
+                            {item.title}
+                          </span>
+                          <div className="flex items-center gap-1 md:gap-2">
+                            {canManage && (
+                              <Popconfirm
+                                title="Delete this prompt?"
+                                onConfirm={(e) => {
+                                  e?.stopPropagation();
+                                  onDeletePromptGuide(item.id!);
+                                }}
+                                onCancel={(e) => e?.stopPropagation()}
+                              >
+                                <DeleteOutlined
+                                  className="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </Popconfirm>
+                            )}
+                            <ArrowRightOutlined
+                              className={`text-base transition-colors duration-300 ${
+                                isActive
+                                  ? "text-[#888]"
+                                  : "text-[#555] group-hover:text-[#888]"
+                              }`}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Col>
         <Col xs={24} md={16} lg={18}>
-          {selectedPromptGuide && (
+          {selectedPromptGuide ? (
             <Card>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <div className="font-bold text-lg">
@@ -233,9 +246,9 @@ const PromptGuideComponent: FC<props> = ({
                   <Input readOnly={!canManage} />
                 </Form.Item>
                 <Form.Item name={"textPrompt"} label="Text Prompt">
-                  <Input.TextArea 
-                    rows={6} 
-                    className="md:!min-h-[200px]" 
+                  <Input.TextArea
+                    rows={6}
+                    className="md:!min-h-[200px]"
                     readOnly={!canManage}
                   />
                 </Form.Item>
@@ -245,6 +258,20 @@ const PromptGuideComponent: FC<props> = ({
                   </Button>
                 )}
               </Form>
+            </Card>
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <FileTextOutlined className="text-6xl text-[#555] mb-4" />
+                <h3 className="text-xl text-[#888] mb-2">No Prompt Selected</h3>
+                <p className="text-[#666] text-sm">
+                  {promptGuideTypes.length === 0
+                    ? canManage
+                      ? "Create a prompt type and add your first prompt template"
+                      : "No prompts available yet"
+                    : "Select a prompt from the list to view or edit"}
+                </p>
+              </div>
             </Card>
           )}
         </Col>
