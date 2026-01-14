@@ -38,6 +38,7 @@ import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { RcFile } from "antd/es/upload";
 import { Trash, Volume2, VolumeX } from "lucide-react";
+import GalleryServices from "@/app/services/gellory.service";
 import VideoItem from "./video-player";
 import { TAIModel } from "@/app/common/ai-model.type";
 import config from "@/app/config";
@@ -73,7 +74,12 @@ interface ChatMessage {
   galleryId?: string;
   type: "user" | "ai";
   content?: string;
-  images?: { imageUrl: string; thumbnailUrl: string }[]; // We'll store video URLs here for consistency
+  images?: {
+    id?: string;
+    imageUrl: string;
+    thumbnailUrl: string;
+    status?: boolean;
+  }[]; // We'll store video URLs here for consistency
   username?: string;
   time: string;
   taskId?: string;
@@ -520,6 +526,40 @@ const VideoChat: FC<VideoChatProps> = ({
     }
   };
 
+  const onShareVideo = async (
+    taskId: string,
+    id: string,
+    currentStatus: boolean
+  ) => {
+    try {
+      const nextStatus = currentStatus && currentStatus == true ? false : true;
+      const success = await GalleryServices(axiosCore).updateStatus(
+        id,
+        nextStatus
+      );
+
+      if (success) {
+        message.success("Share status updated");
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.taskId === taskId) {
+              return {
+                ...msg,
+                images: msg.images?.map((video) =>
+                  video.id === id ? { ...video, status: nextStatus } : video
+                ),
+              };
+            }
+            return msg;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Share update failed", error);
+      message.error("Failed to update status");
+    }
+  };
+
   const handleUploadChange: UploadProps["onChange"] = ({ fileList }) => {
     setFiles(fileList);
   };
@@ -834,6 +874,12 @@ const VideoChat: FC<VideoChatProps> = ({
                                 key={i}
                                 videoData={videoData}
                                 onDownloadVideo={onDownloadVideo}
+                                onShareVideo={(id, status) => {
+                                  if (msg.taskId) {
+                                    onShareVideo(msg.taskId, id, status);
+                                  }
+                                }}
+                                shareStatus={true}
                               />
                             ))}
                           </div>

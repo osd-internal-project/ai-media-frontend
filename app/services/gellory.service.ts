@@ -67,6 +67,20 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
         status,
       };
       return await axiosInstance
+        .patch(`${baseUrl}/task/${taskId}`, { body: base })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    updateStatus: async (taskId: string, status: boolean) => {
+      const base = {
+        status,
+      };
+      return await axiosInstance
         .patch(`${baseUrl}/${taskId}`, { body: base })
         .then((res) => {
           return res.data;

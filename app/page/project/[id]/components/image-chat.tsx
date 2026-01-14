@@ -74,7 +74,7 @@ interface ChatMessage {
   galleryId?: string;
   type: "user" | "ai";
   content?: string;
-  images?: { imageUrl: string }[];
+  images?: { id?: string; imageUrl: string; status?: boolean }[];
   username?: string;
   time: string;
   taskId?: string;
@@ -548,21 +548,31 @@ const ImageChat: FC<ImageChatProps> = ({
 
   const onShareImage = async (
     taskId: string,
-    imageUrl: string,
-    currentStatus: boolean
+    id: string,
+    currentStatus?: boolean
   ) => {
     try {
-      const success = await GalleryServices(axiosCore).updateShareOptions(
-        taskId,
-        imageUrl,
-        currentStatus
+      console.log("currentStatus", currentStatus);
+      const nextStatus = currentStatus && currentStatus == true ? false : true;
+      const success = await GalleryServices(axiosCore).updateStatus(
+        id,
+        nextStatus
       );
+      console.log("status", nextStatus);
+      console.log("success", success);
+      // fetchMessages(page, false, currentId);
+
       if (success) {
         message.success("Share status updated");
         setMessages((prev) =>
           prev.map((msg) => {
             if (msg.taskId === taskId)
-              return { ...msg, status: !currentStatus };
+              return {
+                ...msg,
+                images: msg.images?.map((image) =>
+                  image.id === id ? { ...image, status: nextStatus } : image
+                ),
+              };
             return msg;
           })
         );
@@ -957,7 +967,7 @@ const ImageChat: FC<ImageChatProps> = ({
                                     <Button
                                       size="small"
                                       icon={
-                                        msg.status === true ? ( // status is flexible
+                                        img.status === true ? ( // status is flexible
                                           <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
                                         ) : (
                                           <LikeOutlined />
@@ -967,11 +977,11 @@ const ImageChat: FC<ImageChatProps> = ({
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        if (msg.taskId) {
+                                        if (img.id && msg.taskId) {
                                           onShareImage(
                                             msg.taskId,
-                                            img.imageUrl,
-                                            msg.status || false
+                                            img.id,
+                                            img?.status
                                           );
                                         }
                                       }}

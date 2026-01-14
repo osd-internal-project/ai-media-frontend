@@ -66,15 +66,20 @@ const PromptLibrary: FC<props> = ({
   const handleOpenImage = async (imageUrl: string, types: string) => {
     try {
       // Extract filename from URL (before query parameters)
-      const urlWithoutParams = imageUrl.split('?')[0];
-      const filename = urlWithoutParams.split('/').pop() || (types === 'vdo' ? 'video.mp4' : 'image.jpg');
+      const urlWithoutParams = imageUrl.split("?")[0];
+      const filename =
+        urlWithoutParams.split("/").pop() ||
+        (types === "vdo" ? "video.mp4" : "image.jpg");
 
       // Show loading message
-      const hide = message.loading(`Downloading ${types === 'vdo' ? 'video' : 'image'}...`, 0);
+      const hide = message.loading(
+        `Downloading ${types === "vdo" ? "video" : "image"}...`,
+        0
+      );
 
       // Fetch the file directly from the URL
       const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) throw new Error("Download failed");
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -85,9 +90,11 @@ const PromptLibrary: FC<props> = ({
       URL.revokeObjectURL(url);
 
       hide();
-      message.success(`${types === 'vdo' ? 'Video' : 'Image'} downloaded successfully`);
+      message.success(
+        `${types === "vdo" ? "Video" : "Image"} downloaded successfully`
+      );
     } catch (error) {
-      console.error('Download error:', error);
+      console.error("Download error:", error);
       message.error("Download failed");
     }
   };
@@ -95,15 +102,15 @@ const PromptLibrary: FC<props> = ({
   const onDownloadVideo = async (videoUrl: string) => {
     try {
       // Extract filename from URL (before query parameters)
-      const urlWithoutParams = videoUrl.split('?')[0];
-      const filename = urlWithoutParams.split('/').pop() || 'video.mp4';
+      const urlWithoutParams = videoUrl.split("?")[0];
+      const filename = urlWithoutParams.split("/").pop() || "video.mp4";
 
       // Show loading message for larger files
-      const hide = message.loading('Downloading video...', 0);
+      const hide = message.loading("Downloading video...", 0);
 
       // Fetch the video directly from the URL
       const response = await fetch(videoUrl);
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) throw new Error("Download failed");
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -114,9 +121,9 @@ const PromptLibrary: FC<props> = ({
       URL.revokeObjectURL(url);
 
       hide();
-      message.success('Video downloaded successfully');
+      message.success("Video downloaded successfully");
     } catch (error) {
-      console.error('Download error:', error);
+      console.error("Download error:", error);
       message.error("Download failed");
     }
   };
@@ -142,6 +149,13 @@ const PromptLibrary: FC<props> = ({
                         key={imgIndex}
                         videoData={image}
                         onDownloadVideo={onDownloadVideo}
+                        onShareVideo={function (
+                          taskId: string,
+                          status: boolean
+                        ): void {
+                          throw new Error("Function not implemented.");
+                        }}
+                        shareStatus={false}
                       />
                     ) : (
                       <img
@@ -168,7 +182,7 @@ const PromptLibrary: FC<props> = ({
               );
             })}
           </div>
-          
+
           <div className="flex justify-center items-center mt-4 pt-4">
             <Pagination
               current={page}
