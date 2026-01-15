@@ -100,6 +100,12 @@ const GenerateImagePage: FC = () => {
     }
   }, [loadingData]);
 
+  useEffect(() => {
+    if (organizationId) {
+      masterdata();
+    }
+  }, [organizationId]);
+
   const fecthdata = async () => {
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
     if (!id) {
@@ -118,7 +124,12 @@ const GenerateImagePage: FC = () => {
 
   const masterdata = async () => {
     const res = await promptguideTypeService.findAll();
-    setPromptGuideTypes(res || []);
+    
+    const filteredTypes = (res || []).filter(
+      (type) => type.organizationId === organizationId
+    );
+    
+    setPromptGuideTypes(filteredTypes);
 
     const models = await aiModelService.findAll();
 

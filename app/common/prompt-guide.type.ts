@@ -23,6 +23,7 @@ export type TPromptGuideType = {
   id: number;
   title: string;
   status: boolean;
+  organizationId?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
   promptGuide?: TPromptGuide[];

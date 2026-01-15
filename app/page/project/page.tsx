@@ -729,28 +729,23 @@ const ProjectsPage = () => {
                                 setProjectMembers(newMembers);
                               }
                             }}
-                            options={
-                              searchTexts[index] &&
-                              searchTexts[index].length > 0
-                                ? organizationMembers
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId && i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
-                                : []
+                            options={organizationMembers
+                              .filter(
+                                (u) =>
+                                  !projectMembers.find(
+                                    (m, i) => m.userId === u.userId && i !== index
+                                  ) &&
+                                  (!searchTexts[index] ||
+                                    u.fullname
+                                      .toLowerCase()
+                                      .includes(searchTexts[index].toLowerCase()))
+                              )
+                              .map((e) => ({
+                                value: e.userId,
+                                label: e.fullname,
+                              }))
                             }
+                            notFoundContent="No users found"
                           />
                           <Select
                             value={member.role}
@@ -1067,28 +1062,23 @@ const ProjectsPage = () => {
                                 setProjectMembers(newMembers);
                               }
                             }}
-                            options={
-                              searchTexts[index] &&
-                              searchTexts[index].length > 0
-                                ? organizationMembers
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId && i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
-                                : []
+                            options={organizationMembers
+                              .filter(
+                                (u) =>
+                                  !projectMembers.find(
+                                    (m, i) => m.userId === u.userId && i !== index
+                                  ) &&
+                                  (!searchTexts[index] ||
+                                    u.fullname
+                                      .toLowerCase()
+                                      .includes(searchTexts[index].toLowerCase()))
+                              )
+                              .map((e) => ({
+                                value: e.userId,
+                                label: e.fullname,
+                              }))
                             }
+                            notFoundContent="No users found"
                           />
                           <Select
                             value={member.role}
