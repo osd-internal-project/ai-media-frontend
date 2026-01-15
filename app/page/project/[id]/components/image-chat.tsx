@@ -299,7 +299,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
   useEffect(() => {
     if (!projectId) return; // Changed from userId to projectId
-    const url = `${config.backendCoreSse}/generate-image/sse/project/${projectId}`;
+    const url = `${config.backendCoreUrl}/generate-image/sse/project/${projectId}`;
     const eventSource = new EventSource(url);
 
     eventSource.onmessage = (event) => {
