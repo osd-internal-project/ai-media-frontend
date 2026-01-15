@@ -730,8 +730,7 @@ const ProjectsPage = () => {
                               }
                             }}
                             options={
-                              searchTexts[index] &&
-                              searchTexts[index].length > 0
+                              searchTexts[index] && searchTexts[index].length > 0
                                 ? organizationMembers
                                     .filter(
                                       (u) =>
@@ -750,6 +749,11 @@ const ProjectsPage = () => {
                                       label: e.fullname,
                                     }))
                                 : []
+                            }
+                            notFoundContent={
+                              searchTexts[index] && searchTexts[index].length > 0
+                                ? "No users found"
+                                : "Type to search users..."
                             }
                           />
                           <Select
@@ -1068,8 +1072,7 @@ const ProjectsPage = () => {
                               }
                             }}
                             options={
-                              searchTexts[index] &&
-                              searchTexts[index].length > 0
+                              searchTexts[index] && searchTexts[index].length > 0
                                 ? organizationMembers
                                     .filter(
                                       (u) =>
@@ -1088,6 +1091,11 @@ const ProjectsPage = () => {
                                       label: e.fullname,
                                     }))
                                 : []
+                            }
+                            notFoundContent={
+                              searchTexts[index] && searchTexts[index].length > 0
+                                ? "No users found"
+                                : "Type to search users..."
                             }
                           />
                           <Select

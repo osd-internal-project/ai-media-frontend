@@ -135,7 +135,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                     optionLabelProp="label"
                   >
                     {filteredAIModels
-                      .filter((model) => model && model.name)
+                      .filter((model) => model && model.name && model.modelDetails?.status === "Activated")
                       .map((model) => (
                         <Select.Option
                           key={model.id}

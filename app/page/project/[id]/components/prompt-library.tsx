@@ -131,8 +131,8 @@ const PromptLibrary: FC<props> = ({
   return (
     <div className="h-[calc(100vh-160px)]">
       {contextHolders}
-      <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4">
-        <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full">
+      <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4 gap-6">
+        <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full pr-6 border-r border-gray-700/50"> 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto">
             {getData.data.map((image, imgIndex) => {
               return (
@@ -197,7 +197,7 @@ const PromptLibrary: FC<props> = ({
         </div>
 
         {/* RIGHT: Info sidebar */}
-        <div>
+        <div className="pl-2">
           {selected ? (
             <ConfigProvider
               theme={{
@@ -213,7 +213,7 @@ const PromptLibrary: FC<props> = ({
             >
               <Form layout="vertical">
                 <div>
-                  <div className="text-[24px] font-bold p-4 flex justify-start gap-2 items-center">
+                  <div className="text-[24px] font-bold flex justify-start gap-2 items-center">
                     Info
                     <Button
                       htmlType="button"
@@ -228,7 +228,7 @@ const PromptLibrary: FC<props> = ({
                       className="!bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center !justify-between transition-all duration-300 !border-none"
                     >{`copied`}</Button>
                   </div>
-                  <div className="text-[16px] p-4 space-y-4">
+                  <div className="text-[16px] space-y-4">
                     <div>
                       <div>Prompt:</div>
                       <div>{selected.prompt}</div>
@@ -239,9 +239,20 @@ const PromptLibrary: FC<props> = ({
                       <div>{selected?.users?.fullname || "-"}</div>
                     </div>
 
-                    <div className="flex justify-between">
+                    <div>
                       <div>Create Date:</div>
-                      <div>{selected?.createdAt || "-"}</div>
+                      <div className="whitespace-pre-line">
+                        {selected?.createdAt
+                          ? `${new Date(selected.createdAt).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            })}`
+                          : "-"}
+                      </div>
                     </div>
                   </div>
                 </div>
