@@ -9,9 +9,8 @@ const nextConfig = {
     NEXT_PUBLIC_API_BASE_URL_REPORT:
       "https://www.aicave.ai/public/api/v1/report",
     NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/v1/core",
-    NEXT_PUBLIC_API_BASE_URL_SSE: "http://192.168.31.181:8971/api",
-    // NEXTAUTH_URL: "https://www.aicave.ai",
-    NEXTAUTH_URL: "http://localhost:3000",
+    // NEXT_PUBLIC_API_BASE_URL_SSE: "http://192.168.31.181:8971/api",
+    NEXTAUTH_URL: "https://www.aicave.ai",
     KEYCLOAK_CLIENT_ID: "eportal-client-id",
     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
     KEYCLOAK_ISSUER: "https://id24.aicave.ai/realms/eportal",
