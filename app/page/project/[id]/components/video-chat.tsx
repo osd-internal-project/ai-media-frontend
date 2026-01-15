@@ -410,7 +410,7 @@ const VideoChat: FC<VideoChatProps> = ({
   // SSE Integration
   useEffect(() => {
     if (!projectId) return; // Changed from userId to projectId
-    const url = `${config.backendCoreUrl}/generate-image/sse/project/${projectId}`;
+    const url = `${config.backendCoreSse}/generate-image/sse/project/${projectId}`;
     const eventSource = new EventSource(url);
 
     eventSource.onmessage = (event) => {
@@ -424,7 +424,9 @@ const VideoChat: FC<VideoChatProps> = ({
         console.error("SSE Error", e);
       }
     };
-
+    eventSource.onerror = (err) => {
+      console.warn("SSE error / reconnecting", err);
+    };
     return () => {
       eventSource.close();
     };

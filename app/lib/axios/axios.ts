@@ -15,3 +15,7 @@ export const axiosReport = axios.create({
   baseURL: config.backendReportUrl,
   headers: { "Content-Type": "application/json" },
 });
+export const axiosSse = axios.create({
+  baseURL: config.backendCoreSse,
+  headers: { "Content-Type": "application/json" },
+});
