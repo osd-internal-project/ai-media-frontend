@@ -780,22 +780,14 @@ const VideoChat: FC<VideoChatProps> = ({
                 key={`${msg.id}-${index}`}
                 className={`flex gap-4 ${
                   msg.type === "user"
-                    ? " flex w-full justify-end  border-t-2 pt-2 border-white/10"
+                    ? "justify-end border-t-2 pt-2 border-white/10 "
                     : "justify-start"
                 }`}
               >
-                {msg.type === "ai" && (
-                  <Avatar
-                    src={Avatars.src}
-                    size={40}
-                    className="border border-white/10"
-                  />
-                )}
+                {msg.type === "ai" && <Avatar src={Avatars.src} size={40} />}
                 <div
-                  className={`${
-                    msg.type === "user"
-                      ? "flex-1  max-w-[80%] items-end"
-                      : "max-w-full items-start min-w-[480px]"
+                  className={`flex flex-col  ${
+                    msg.type === "user" ? "flex-1 items-end" : "items-start"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
@@ -816,12 +808,12 @@ const VideoChat: FC<VideoChatProps> = ({
 
                   {msg.content && (
                     <div
-                      className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md
-                                        ${
-                                          msg.type === "user"
-                                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
-                                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
-                                        }`}
+                      className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md whitespace-pre-wrap
+                        ${
+                          msg.type === "user"
+                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
+                            : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"
+                        }`}
                     >
                       {msg.content}
                     </div>

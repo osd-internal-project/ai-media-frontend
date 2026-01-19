@@ -582,7 +582,26 @@ const ImageChat: FC<ImageChatProps> = ({
       console.error("Share update failed", error);
     }
   };
+  // const onFinish = async (values: ITFromGenerate) => {
+  //   const userMessage: ChatMessage = {
+  //     type: "user",
+  //     content: values.text,
+  //     username: username,
+  //     time: new Date().toISOString(),
+  //     genneratedStatus: "PENDING",
+  //   };
+  //   setMessages((prev) => [...prev, userMessage]);
+  //   const currentValues = form.getFieldsValue();
+  //   form.setFieldsValue({
+  //     ...currentValues,
+  //     text: undefined,
+  //   });
+  //   setFiles([]);
 
+  //   setTimeout(() => {
+  //     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  //   }, 100);
+  // };
   const onFinish = async (values: ITFromGenerate) => {
     setSubmitting(true);
     shouldAutoScrollRef.current = true;
@@ -880,7 +899,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
                     {msg.content && (
                       <div
-                        className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md
+                        className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md whitespace-pre-wrap
                         ${
                           msg.type === "user"
                             ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
