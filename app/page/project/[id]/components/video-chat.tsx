@@ -119,13 +119,13 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "480p":
-        return "HD";
+        return "480p";
       case "720p":
-        return "2K";
+        return "720p";
       case "1080p":
-        return "4K";
+        return "1080p";
       default:
-        return "4K";
+        return "Unknown";
     }
   };
 
@@ -198,7 +198,7 @@ const VideoConfigurationCard: React.FC<VideoConfigurationCardProps> = ({
                     onError={() => {
                       console.error(
                         `Reference image ${index + 1} failed to load:`,
-                        imageUrl
+                        imageUrl,
                       );
                     }}
                   />
@@ -319,7 +319,7 @@ const VideoChat: FC<VideoChatProps> = ({
           : await LogsServices(axiosCore).findVdoByPage(
               projectId,
               skip,
-              pageSize
+              pageSize,
             );
         if (Array.isArray(response)) {
           // Check if we got less than pageSize, meaning no more data
@@ -369,7 +369,7 @@ const VideoChat: FC<VideoChatProps> = ({
             setMessages((prev) => {
               const existingTaskIds = new Set(prev.map((m) => m.id));
               const uniqueNewMessages = formattedMessages.filter(
-                (m) => !existingTaskIds.has(m.id)
+                (m) => !existingTaskIds.has(m.id),
               );
 
               if (uniqueNewMessages.length === 0) {
@@ -404,7 +404,7 @@ const VideoChat: FC<VideoChatProps> = ({
         }
       }
     },
-    [projectId, hasMore, loading, setDisableTab]
+    [projectId, hasMore, loading, setDisableTab],
   );
 
   // SSE Integration
@@ -531,13 +531,13 @@ const VideoChat: FC<VideoChatProps> = ({
   const onShareVideo = async (
     taskId: string,
     id: string,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     try {
       const nextStatus = currentStatus && currentStatus == true ? false : true;
       const success = await GalleryServices(axiosCore).updateStatus(
         id,
-        nextStatus
+        nextStatus,
       );
 
       if (success) {
@@ -548,12 +548,12 @@ const VideoChat: FC<VideoChatProps> = ({
               return {
                 ...msg,
                 images: msg.images?.map((video) =>
-                  video.id === id ? { ...video, status: nextStatus } : video
+                  video.id === id ? { ...video, status: nextStatus } : video,
                 ),
               };
             }
             return msg;
-          })
+          }),
         );
       }
     } catch (error) {
@@ -596,16 +596,16 @@ const VideoChat: FC<VideoChatProps> = ({
         type: "vdo",
         modelName: selectedAIModel?.name,
       };
+      console.log(payload);
 
       if (files.length > 0) {
         const formData = new FormData();
         formData.append("type", "create-attend");
         files.forEach((file) =>
-          formData.append("files", file.originFileObj as Blob)
+          formData.append("files", file.originFileObj as Blob),
         );
-        const uploadedImages = await GenerateImageServices(axiosCore).upload(
-          formData
-        );
+        const uploadedImages =
+          await GenerateImageServices(axiosCore).upload(formData);
         payload.image = uploadedImages;
       }
 
@@ -654,7 +654,7 @@ const VideoChat: FC<VideoChatProps> = ({
             typeof response.data === "string"
               ? response.data
               : "Error creation failed"
-          }`
+          }`,
         );
         setSubmitting(false);
       }
@@ -680,7 +680,7 @@ const VideoChat: FC<VideoChatProps> = ({
     const text = form.getFieldValue("text");
     form.setFieldValue(
       "text",
-      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt
+      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt,
     );
   }
 
@@ -766,7 +766,7 @@ const VideoChat: FC<VideoChatProps> = ({
                               </span>
                               <span className="ml-auto">→</span>
                             </Button>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -993,7 +993,7 @@ const VideoChat: FC<VideoChatProps> = ({
                               className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
                               onClick={() => {
                                 setFiles(
-                                  files.filter((f) => f.uid !== file.uid)
+                                  files.filter((f) => f.uid !== file.uid),
                                 );
                               }}
                             >
@@ -1007,7 +1007,7 @@ const VideoChat: FC<VideoChatProps> = ({
                     <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-2">
                         <Form.Item
-                          name="image"
+                          // name="image"
                           className="mb-0"
                           style={{ marginBottom: 0, lineHeight: 1 }}
                         >
@@ -1197,7 +1197,7 @@ const VideoChat: FC<VideoChatProps> = ({
                             >
                               <Space className=" ">{item.title}</Space>
                             </Button>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
