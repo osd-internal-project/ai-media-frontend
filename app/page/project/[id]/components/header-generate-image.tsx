@@ -93,8 +93,8 @@ const HeaderGenerateImagePage: FC<props> = ({
           isMobile
             ? "flex-col space-y-4"
             : isTablet
-            ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
-            : "justify-between items-center"
+              ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
+              : "justify-between items-center"
         }`}
       >
         {/* Desktop/Tablet: Title on left */}
@@ -110,33 +110,31 @@ const HeaderGenerateImagePage: FC<props> = ({
             isMobile
               ? "items-center gap-1 justify-end flex-nowrap"
               : isTablet
-              ? "flex-wrap gap-3 justify-end"
-              : "items-center gap-4"
+                ? "flex-wrap gap-3 justify-end"
+                : "items-center gap-4"
           }`}
         >
-          {(activeKey === "image" || activeKey === "vdo") &&
-            filteredAIModels && (
-              <>
-                {/* AI Model Selection */}
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-medium text-gray-600">
-                    AI Model:
-                  </span>
-                  <Select
-                    size="middle"
-                    style={{
-                      minWidth: isMobile ? 160 : isTablet ? 250 : 280,
-                      width: "auto",
-                    }}
-                    className="dark-select"
-                    placeholder="Choose an AI model"
-                    value={selectedAIModel?.id?.toString()}
-                    onChange={onAIModelChange}
-                    optionLabelProp="label"
-                  >
-                    {filteredAIModels
-                      .filter((model) => model && model.name && model.modelDetails?.status === "Activated")
-                      .map((model) => (
+          {(activeKey === "image" || activeKey === "vdo") && (
+            <>
+              {/* AI Model Selection */}
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-medium text-gray-600">
+                  AI Model:
+                </span>
+                <Select
+                  size="middle"
+                  style={{
+                    minWidth: isMobile ? 160 : isTablet ? 250 : 280,
+                    width: "auto",
+                  }}
+                  className="dark-select"
+                  placeholder="Choose an AI model"
+                  value={selectedAIModel?.id?.toString()}
+                  onChange={onAIModelChange}
+                  optionLabelProp="label"
+                >
+                  {filteredAIModels
+                    ? filteredAIModels.map((model) => (
                         <Select.Option
                           key={model.id}
                           value={model.id.toString()}
@@ -265,7 +263,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                                             Resolution:
                                           </span>{" "}
                                           {model.modelDetails.limitations.resolution.join(
-                                            ", "
+                                            ", ",
                                           )}
                                         </div>
                                       )}
@@ -344,7 +342,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                                       >
                                         {capability.replace("-", " ")}
                                       </span>
-                                    )
+                                    ),
                                   )}
                                 </div>
                               </div>
@@ -360,36 +358,38 @@ const HeaderGenerateImagePage: FC<props> = ({
                             </div>
                           </Tooltip>
                         </Select.Option>
-                      ))}
-                  </Select>
-                </div>
+                      ))
+                    : []}
+                </Select>
+              </div>
 
-                {/* Action Buttons - Inline with AI Model */}
+              {/* Action Buttons - Inline with AI Model */}
+              <Button
+                type={promptGuideOpenStatus ? "primary" : "default"}
+                ghost={promptGuideOpenStatus}
+                onClick={
+                  isMobile ? showPromptBuilderDrawer : onPromptGuideToggle
+                }
+                size="middle"
+              >
+                {isMobile ? "Builder" : isTablet ? "Builder" : "Prompt Builder"}
+              </Button>
+              <Tooltip
+                title={isMobile ? "Prompt Guide" : undefined}
+                placement="top"
+              >
                 <Button
-                  type={promptGuideOpenStatus ? "primary" : "default"}
-                  ghost={promptGuideOpenStatus}
-                  onClick={isMobile ? showPromptBuilderDrawer : onPromptGuideToggle}
-                  size="middle"
+                  size={isMobile ? "small" : "middle"}
+                  type="link"
+                  className="!text-[#686B6E]"
+                  icon={<LightbulbIcon className="w-4 h-4" />}
+                  onClick={showDrawer}
                 >
-                  {isMobile
-                    ? "Builder"
-                    : isTablet
-                    ? "Builder"
-                    : "Prompt Builder"}
+                  {isMobile ? "" : isTablet ? "Guide" : "Prompt Guide"}
                 </Button>
-                <Tooltip title={isMobile ? "Prompt Guide" : undefined} placement="top">
-                  <Button
-                    size={isMobile ? "small" : "middle"}
-                    type="link"
-                    className="!text-[#686B6E]"
-                    icon={<LightbulbIcon className="w-4 h-4" />}
-                    onClick={showDrawer}
-                  >
-                    {isMobile ? "" : isTablet ? "Guide" : "Prompt Guide"}
-                  </Button>
-                </Tooltip>
-              </>
-            )}
+              </Tooltip>
+            </>
+          )}
         </div>
       </div>
 
@@ -404,8 +404,11 @@ const HeaderGenerateImagePage: FC<props> = ({
         height={isMobile ? "80%" : undefined}
         styles={{
           body: { backgroundColor: "#18181b", color: "white", padding: 0 },
-          header: { backgroundColor: "#18181b", borderBottom: "1px solid rgba(255,255,255,0.1)" },
-          mask: { backgroundColor: "rgba(0,0,0,0.8)" }
+          header: {
+            backgroundColor: "#18181b",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+          },
+          mask: { backgroundColor: "rgba(0,0,0,0.8)" },
         }}
       >
         <div className="h-full bg-[#18181b] text-white overflow-hidden relative">
@@ -418,24 +421,22 @@ const HeaderGenerateImagePage: FC<props> = ({
                       {type.title}
                     </h3>
                     <div className="space-y-3 w-full">
-                      {type.promptGuide?.map(
-                        (item: any, index: number) => (
-                          <Button
-                            htmlType="button"
-                            key={item.id || index}
-                            size="large"
-                            onClick={() => {
-                              if (item.id && onSetPromptText) {
-                                onSetPromptText(item.id);
-                                onPromptBuilderClose(); // Close drawer after selection
-                              }
-                            }}
-                            className="w-full !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center transition-all duration-300 !border-none"
-                          >
-                            <Space className="">{item.title}</Space>
-                          </Button>
-                        )
-                      )}
+                      {type.promptGuide?.map((item: any, index: number) => (
+                        <Button
+                          htmlType="button"
+                          key={item.id || index}
+                          size="large"
+                          onClick={() => {
+                            if (item.id && onSetPromptText) {
+                              onSetPromptText(item.id);
+                              onPromptBuilderClose(); // Close drawer after selection
+                            }
+                          }}
+                          className="w-full !whitespace-normal !break-words !h-auto !p-2 !bg-gradient-to-r !from-zinc-700 !to-zinc-900 hover:!from-zinc-600 hover:!to-zinc-800 !text-white py-3 px-4 rounded-lg !flex !items-center transition-all duration-300 !border-none"
+                        >
+                          <Space className="">{item.title}</Space>
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -462,20 +463,20 @@ const HeaderGenerateImagePage: FC<props> = ({
         <div className="space-y-6">
           {/* Introduction */}
           <p className="text-gray-300 leading-relaxed">
-            This article introduces prompt usage tips for Seedream 4.0's
+            {`This article introduces prompt usage tips for Seedream 4.0's
             text-to-image generation, image editing, reference-based generation
             and multi-image creation, helping you quickly get started with video
-            creation and turn ideas into image creations.
+            creation and turn ideas into image creations.`}
           </p>
 
           {/* General Guidelines Section */}
           <div>
             <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
             <p className="text-gray-300 leading-relaxed">
-              Seedream 4.0 supports a wide range of tasks such as text-to-image
+              {`Seedream 4.0 supports a wide range of tasks such as text-to-image
               generation, image editing, reference-based generation and
               multi-image creation. For optimal image creation results, consider
-              the following best practices when crafting prompts:
+              the following best practices when crafting prompts:`}
             </p>
           </div>
 
@@ -515,10 +516,11 @@ const HeaderGenerateImagePage: FC<props> = ({
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> Design
+                  <span className="text-green-400">• Recommended:</span>
+                  {` Design
                   a logo for a gaming company. The logo features a dog playing
                   with a game controller. The company name "PITBULL" is written
-                  on it.
+                  on it.`}
                 </li>
                 <li className="text-gray-300">
                   <span className="text-red-400">• Avoid:</span> An abstract
@@ -551,7 +553,7 @@ const HeaderGenerateImagePage: FC<props> = ({
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
                   <span className="text-green-400">• Recommended:</span>{" "}
-                  Generate a poster with the title "Seedream 4.0".
+                  {`Generate a poster with the title "Seedream 4.0".`}
                 </li>
                 <li className="text-gray-300">
                   <span className="text-red-400">• Avoid:</span> Generate a
