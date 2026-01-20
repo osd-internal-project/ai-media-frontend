@@ -195,7 +195,7 @@ const ImageConfigurationCard: React.FC<ImageConfigurationCardProps> = ({
                       onError={(e) => {
                         console.error(
                           `Reference image ${index + 1} failed to load:`,
-                          imageUrl
+                          imageUrl,
                         );
                       }}
                     />
@@ -364,12 +364,12 @@ const ImageChat: FC<ImageChatProps> = ({
         const response = currentId
           ? await LogsServices(axiosCore).findImageByFristId(
               projectId,
-              currentId
+              currentId,
             )
           : await LogsServices(axiosCore).findImageByPage(
               projectId,
               skip,
-              pageSize
+              pageSize,
             );
 
         if (Array.isArray(response)) {
@@ -417,7 +417,7 @@ const ImageChat: FC<ImageChatProps> = ({
             setMessages((prev) => {
               const existingTaskIds = new Set(prev.map((m) => m.id));
               const uniqueNewMessages = formattedMessages.filter(
-                (m) => !existingTaskIds.has(m.id)
+                (m) => !existingTaskIds.has(m.id),
               );
 
               if (uniqueNewMessages.length === 0) {
@@ -451,7 +451,7 @@ const ImageChat: FC<ImageChatProps> = ({
         }
       }
     },
-    [projectId, hasMore, loading]
+    [projectId, hasMore, loading],
   );
 
   useEffect(() => {
@@ -551,13 +551,13 @@ const ImageChat: FC<ImageChatProps> = ({
   const onShareImage = async (
     taskId: string,
     id: string,
-    currentStatus?: boolean
+    currentStatus?: boolean,
   ) => {
     try {
       const nextStatus = currentStatus && currentStatus == true ? false : true;
       const success = await GalleryServices(axiosCore).updateStatus(
         id,
-        nextStatus
+        nextStatus,
       );
       console.log("status", nextStatus);
       console.log("success", success);
@@ -571,18 +571,37 @@ const ImageChat: FC<ImageChatProps> = ({
               return {
                 ...msg,
                 images: msg.images?.map((image) =>
-                  image.id === id ? { ...image, status: nextStatus } : image
+                  image.id === id ? { ...image, status: nextStatus } : image,
                 ),
               };
             return msg;
-          })
+          }),
         );
       }
     } catch (error) {
       console.error("Share update failed", error);
     }
   };
+  // const onFinish = async (values: ITFromGenerate) => {
+  //   const userMessage: ChatMessage = {
+  //     type: "user",
+  //     content: values.text,
+  //     username: username,
+  //     time: new Date().toISOString(),
+  //     genneratedStatus: "PENDING",
+  //   };
+  //   setMessages((prev) => [...prev, userMessage]);
+  //   const currentValues = form.getFieldsValue();
+  //   form.setFieldsValue({
+  //     ...currentValues,
+  //     text: undefined,
+  //   });
+  //   setFiles([]);
 
+  //   setTimeout(() => {
+  //     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  //   }, 100);
+  // };
   const onFinish = async (values: ITFromGenerate) => {
     setSubmitting(true);
     shouldAutoScrollRef.current = true;
@@ -619,11 +638,10 @@ const ImageChat: FC<ImageChatProps> = ({
         const formData = new FormData();
         formData.append("type", "create-attend");
         files.forEach((file) =>
-          formData.append("files", file.originFileObj as Blob)
+          formData.append("files", file.originFileObj as Blob),
         );
-        const uploadedImages = await GenerateImageServices(axiosCore).upload(
-          formData
-        );
+        const uploadedImages =
+          await GenerateImageServices(axiosCore).upload(formData);
         payload.image = uploadedImages;
       }
 
@@ -653,7 +671,7 @@ const ImageChat: FC<ImageChatProps> = ({
             typeof response.data === "string"
               ? response.data
               : "Error creation failed"
-          }`
+          }`,
         );
         setMessages((prev) => prev.slice(0, -1));
         shouldAutoScrollRef.current = false;
@@ -728,7 +746,7 @@ const ImageChat: FC<ImageChatProps> = ({
         setSelectedImageCount(count);
         form.setFieldValue("images", count);
       },
-    })
+    }),
   );
 
   async function onSetPromptText(id: number): Promise<void> {
@@ -736,7 +754,7 @@ const ImageChat: FC<ImageChatProps> = ({
     const text = form.getFieldValue("text");
     form.setFieldValue(
       "text",
-      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt
+      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt,
     );
   }
 
@@ -829,7 +847,7 @@ const ImageChat: FC<ImageChatProps> = ({
                               </span>
                               <span className="ml-auto">→</span>
                             </Button>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -880,7 +898,7 @@ const ImageChat: FC<ImageChatProps> = ({
 
                     {msg.content && (
                       <div
-                        className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md
+                        className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md whitespace-pre-wrap
                         ${
                           msg.type === "user"
                             ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm"
@@ -982,7 +1000,7 @@ const ImageChat: FC<ImageChatProps> = ({
                                           onShareImage(
                                             msg.taskId,
                                             img.id,
-                                            msg?.status
+                                            msg?.status,
                                           );
                                         }
                                       }}
@@ -1106,7 +1124,7 @@ const ImageChat: FC<ImageChatProps> = ({
                               className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
                               onClick={() => {
                                 setFiles(
-                                  files.filter((f) => f.uid !== file.uid)
+                                  files.filter((f) => f.uid !== file.uid),
                                 );
                               }}
                             >
@@ -1119,7 +1137,7 @@ const ImageChat: FC<ImageChatProps> = ({
                     <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-2">
                         <Form.Item
-                          name="image"
+                          // name="image"
                           className="mb-0"
                           style={{ marginBottom: 0, lineHeight: 1 }}
                         >
@@ -1129,12 +1147,12 @@ const ImageChat: FC<ImageChatProps> = ({
                             onChange={handleUploadChange}
                             beforeUpload={beforeUpload}
                             multiple={true}
-                            maxCount={10}
+                            maxCount={2}
                             showUploadList={false}
                             disabled={submitting}
                           >
                             <Tooltip
-                              title={`Upload files (${files.length}/10)`}
+                              title={`Upload files (${files.length}/2)`}
                               placement="top"
                             >
                               <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
@@ -1279,7 +1297,7 @@ const ImageChat: FC<ImageChatProps> = ({
                             >
                               <Space className=" ">{item.title}</Space>
                             </Button>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
