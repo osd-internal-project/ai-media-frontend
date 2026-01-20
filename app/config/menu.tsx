@@ -29,7 +29,7 @@ export const MenuSider = [
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
         icon: <Bot size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>PROJECTS</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>TEAMS</span>
         ),
       },
       {
