@@ -62,6 +62,7 @@ export interface IDashboardUser {
 export interface IDashboardProjectLogs {
   tokenUsed: number;
   ImageUsed: number;
+  typeGenerate: "image" | "vdo";
 }
 export interface IDashboardUser {
   userId: string;
