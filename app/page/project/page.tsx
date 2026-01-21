@@ -538,19 +538,30 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Image{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainImageAmount)})
+                        (Max: {formatNumber(organization?.remainImageAmount || 0)})
                       </span>
                     </span>
                   }
                   name="accessImageAmount"
+                  validateTrigger={["onChange", "onBlur"]}
                   rules={[
                     { required: true, message: "Please enter image amount" },
+                    {
+                      type: "number",
+                      max: organization?.remainImageAmount || 0,
+                      message: `Cannot exceed available token (${formatNumber(
+                        organization?.remainImageAmount || 0
+                      )})`,
+                    },
                   ]}
                 >
                   <InputNumber
-                    placeholder="Enter image amount"
+                    placeholder={
+                      (organization?.remainImageAmount || 0) === 0
+                        ? "No token available"
+                        : "Enter image amount"
+                    }
                     min={0}
-                    max={organization?.remainImageAmount || 0}
                     className="w-full"
                     style={{ width: "100%" }}
                   />
@@ -562,19 +573,30 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Token{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainTokenAmount)})
+                        (Max: {formatNumber(organization?.remainTokenAmount || 0)})
                       </span>
                     </span>
                   }
                   name="accessTokenAmount"
+                  validateTrigger={["onChange", "onBlur"]}
                   rules={[
                     { required: true, message: "Please enter token amount" },
+                    {
+                      type: "number",
+                      max: organization?.remainTokenAmount || 0,
+                      message: `Cannot exceed available token (${formatNumber(
+                        organization?.remainTokenAmount || 0
+                      )})`,
+                    },
                   ]}
                 >
                   <InputNumber
-                    placeholder="Enter token amount"
+                    placeholder={
+                      (organization?.remainTokenAmount || 0) === 0
+                        ? "No token available"
+                        : "Enter token amount"
+                    }
                     min={0}
-                    max={organization?.remainTokenAmount || 0}
                     className="w-full"
                     style={{ width: "100%" }}
                   />
@@ -874,17 +896,30 @@ const ProjectsPage = () => {
                     </span>
                   }
                   name="accessImageAmount"
+                  validateTrigger={["onChange", "onBlur"]}
                   rules={[
                     { required: true, message: "Please enter image amount" },
+                    {
+                      type: "number",
+                      max:
+                        (organization?.remainImageAmount || 0) +
+                        (selectedProject?.accessImageAmount || 0),
+                      message: `Cannot exceed available token (${formatNumber(
+                        (organization?.remainImageAmount || 0) +
+                          (selectedProject?.accessImageAmount || 0)
+                      )})`,
+                    },
                   ]}
                 >
                   <InputNumber
-                    placeholder="Enter image amount"
-                    min={0}
-                    max={
+                    placeholder={
                       (organization?.remainImageAmount || 0) +
-                      (selectedProject?.accessImageAmount || 0)
+                        (selectedProject?.accessImageAmount || 0) ===
+                      0
+                        ? "No token available"
+                        : "Enter image amount"
                     }
+                    min={0}
                     className="w-full"
                     style={{ width: "100%" }}
                   />
@@ -906,17 +941,30 @@ const ProjectsPage = () => {
                     </span>
                   }
                   name="accessTokenAmount"
+                  validateTrigger={["onChange", "onBlur"]}
                   rules={[
                     { required: true, message: "Please enter token amount" },
+                    {
+                      type: "number",
+                      max:
+                        (organization?.remainTokenAmount || 0) +
+                        (selectedProject?.accessTokenAmount || 0),
+                      message: `Cannot exceed available token (${formatNumber(
+                        (organization?.remainTokenAmount || 0) +
+                          (selectedProject?.accessTokenAmount || 0)
+                      )})`,
+                    },
                   ]}
                 >
                   <InputNumber
-                    placeholder="Enter token amount"
-                    min={0}
-                    max={
+                    placeholder={
                       (organization?.remainTokenAmount || 0) +
-                      (selectedProject?.accessTokenAmount || 0)
+                        (selectedProject?.accessTokenAmount || 0) ===
+                      0
+                        ? "No token available"
+                        : "Enter token amount"
                     }
+                    min={0}
                     className="w-full"
                     style={{ width: "100%" }}
                   />
