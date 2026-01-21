@@ -4,6 +4,7 @@ import { useForm } from "antd/es/form/Form";
 import { Col, ConfigProvider, Row, Tabs, type TabsProps, Result } from "antd";
 import { axiosCore, axiosReport, axiosUser } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
+import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
 import type {
   IDashboardProject,
@@ -41,7 +42,7 @@ const DashboardPage: FC = () => {
   const [params, setParams] = useState<{
     projectId: string;
     createdAt: Date | string;
-  }>({ projectId: "", createdAt: "" });
+  }>({ projectId: "", createdAt: dayjs().format("YYYY-MM") });
   const [searchForm] = useForm();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -54,6 +55,12 @@ const DashboardPage: FC = () => {
     window.addEventListener("resize", checkScreenSize);
 
     return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  useEffect(() => {
+    searchForm.setFieldsValue({
+      createdAt: dayjs(),
+    });
   }, []);
 
   useEffect(() => {
