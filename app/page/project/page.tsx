@@ -549,7 +549,7 @@ const ProjectsPage = () => {
                     {
                       type: "number",
                       max: organization?.remainImageAmount || 0,
-                      message: `Cannot exceed available token (${formatNumber(
+                      message: `Cannot exceed available image (${formatNumber(
                         organization?.remainImageAmount || 0
                       )})`,
                     },
@@ -558,7 +558,7 @@ const ProjectsPage = () => {
                   <InputNumber
                     placeholder={
                       (organization?.remainImageAmount || 0) === 0
-                        ? "No token available"
+                        ? "No image available"
                         : "Enter image amount"
                     }
                     min={0}
@@ -904,7 +904,7 @@ const ProjectsPage = () => {
                       max:
                         (organization?.remainImageAmount || 0) +
                         (selectedProject?.accessImageAmount || 0),
-                      message: `Cannot exceed available token (${formatNumber(
+                      message: `Cannot exceed available image (${formatNumber(
                         (organization?.remainImageAmount || 0) +
                           (selectedProject?.accessImageAmount || 0)
                       )})`,
@@ -916,7 +916,7 @@ const ProjectsPage = () => {
                       (organization?.remainImageAmount || 0) +
                         (selectedProject?.accessImageAmount || 0) ===
                       0
-                        ? "No token available"
+                        ? "No image available"
                         : "Enter image amount"
                     }
                     min={0}
