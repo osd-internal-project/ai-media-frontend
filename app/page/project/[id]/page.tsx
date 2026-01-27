@@ -83,6 +83,8 @@ const GenerateImagePage: FC = () => {
 
           const userRole = await projectService.checkUserRole(id, actualUserId);
 
+          console.log("userRole", userRole);
+
           setProjectRole(userRole);
         } catch (error) {
           console.error("Failed to fetch project role:", error);
@@ -124,11 +126,11 @@ const GenerateImagePage: FC = () => {
 
   const masterdata = async () => {
     const res = await promptguideTypeService.findAll();
-    
+
     const filteredTypes = (res || []).filter(
       (type) => type.organizationId === organizationId
     );
-    
+
     setPromptGuideTypes(filteredTypes);
 
     const models = await aiModelService.findAll();
