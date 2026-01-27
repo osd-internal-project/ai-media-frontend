@@ -16,6 +16,8 @@ import {
   notification,
   Spin,
   Space,
+  Progress,
+  ProgressProps,
 } from "antd";
 import {
   UserOutlined,
@@ -64,26 +66,29 @@ interface ImageChatProps {
     ((id: number) => Promise<void>) | null
   >;
 }
-
+const conicColors: ProgressProps['strokeColor'] = {
+  '0%': '#5B6BF9',
+  '100%': '#9D5BF9',
+};
 interface UserMessage {
-  id: number,
-  userId: string,
+  id?: number,
+  userId?: string,
   username: string,
   fullname: string,
-  email: string,
-  tier: string,
-  description: string,
-  phoneNumber: string,
-  status: string,
-  lastOn: string,
-  maxToken: number,
-  maxImages: number,
-  apiKeys: string,
-  token: string,
-  createdAt: string,
-  updatedAt: string,
-  agreement: boolean,
-  recentOrganizationId: string
+  email?: string,
+  tier?: string,
+  description?: string,
+  phoneNumber?: string,
+  status?: string,
+  lastOn?: string,
+  maxToken?: number,
+  maxImages?: number,
+  apiKeys?: string,
+  token?: string,
+  createdAt?: string,
+  updatedAt?: string,
+  agreement?: boolean,
+  recentOrganizationId?: string
 }
 
 interface ImageMessage {
@@ -94,7 +99,6 @@ interface ImageMessage {
 
 interface Message {
   id: string,
-  type: "user" | "ai";
   taskId: string,
   projectId: string,
   userId: string,
@@ -113,6 +117,7 @@ interface Message {
     imageCount: number,
     resolution: string
   },
+  percentage?: number,
   users: UserMessage
   referenceImages: string[],
   resolution: string,
@@ -154,7 +159,7 @@ const ImageChat: FC<ImageChatProps> = ({
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
-  const { socket, isConnected, sendMessage } = useWebSocket();
+  const { socket, isConnected } = useWebSocket();
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -173,7 +178,7 @@ const ImageChat: FC<ImageChatProps> = ({
   const [selectedResolution, setSelectedResolution] = useState<string>("2k");
   const [selectedWidth, setSelectedWidth] = useState<number>(2048);
   const [selectedHeight, setSelectedHeight] = useState<number>(2048);
-  const [refImage, setRefImage] = useState<{ name: string; status: string; uid: string; url: string; }[]>([]);
+  const [refImage, setRefImage] = useState<{ name: string; status: string; uid: string; url: string; imagePath: string }[]>([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
 
   useEffect(() => {
@@ -218,7 +223,6 @@ const ImageChat: FC<ImageChatProps> = ({
         if (messageData.length < pageSize) {
           setHasMore(false);
         }
-        // const formattedMessages: Message[] = [];
         const itemsToProcess = [...messageData].reverse();
         const topId = itemsToProcess[0].id;
         if (topId) {
@@ -228,7 +232,7 @@ const ImageChat: FC<ImageChatProps> = ({
         if (isFetchingHistory) {
           setMessages((prev) => {
             const existingTaskIds = new Set(prev.map((m) => m.id));
-            const uniqueNewMessages = messageData.filter(
+            const uniqueNewMessages = itemsToProcess.filter(
               (m: Message) => !existingTaskIds.has(m.id),
             );
 
@@ -241,7 +245,7 @@ const ImageChat: FC<ImageChatProps> = ({
           isFirstLoad.current = false;
           setLoading(false);
         } else {
-          setMessages(messageData);
+          setMessages(itemsToProcess);
           if (
             isFirstLoad.current ||
             isAtBottomRef.current ||
@@ -259,48 +263,204 @@ const ImageChat: FC<ImageChatProps> = ({
       }
     });
 
-    socket.on('chat:message-saved', (data) => {
-      // if (data.success && currentConversation) {
-      //   setCurrentConversation(prev => {
-      //     if (!prev) return null;
-      //     return {
-      //       ...prev,
-      //       messages: [...prev.messages, data.data]
-      //     };
-      //   });
+    // 1. Event เมื่อ task ถูกสร้างสำเร็จ
+    const handleTaskCreated = (data: {
+      taskId: string;
+      jobId: string;
+      estimatedImages: number;
+      message: string;
+    }) => {
+      console.log('✅ Task created:', data);
+      setSubmitting(false);
+    };
 
-      //   // Scroll to bottom when new message is sent/received
-      //   setTimeout(() => scrollToBottom(), 100);
-      // }
-    });
+    // 2. Event เมื่อ task เริ่มต้น processing
+    const handleTaskStarted = (data: {
+      taskId: string;
+      status: string;
+    }) => {
+      console.log('🚀 Task started:', data);
 
-    socket.on('chat:new-message', (data) => {
-      // if (currentConversation && data.data.conversationId === currentConversation.id) {
-      //   setCurrentConversation(prev => {
-      //     if (!prev) return null;
-      //     return {
-      //       ...prev,
-      //       messages: [...prev.messages, data.data]
-      //     };
-      //   });
-      //   // Scroll to bottom when new message received
-      //   setTimeout(() => scrollToBottom(), 100);
-      // }
-    });
+      // อัพเดท message ใน state
+      setMessages(prev => prev.map(msg =>
+        msg.taskId === data.taskId
+          ? { ...msg, genneratedStatus: 'PROCESSING' }
+          : msg
+      ));
+    };
 
-    // Listen to generation complete
-    socket.on('generate:complete', async (data) => {
-      // บันทึก assistant message
-      // await saveAssistantMessage(data);
-    });
+    // 3. Event เมื่อมีความคืบหน้าในการสร้างภาพ
+    const handleProgress = (data: {
+      taskId: string;
+      currentImage: number;
+      totalImages: number;
+      progress: number;
+      percentage: number;
+    }) => {
+      console.log('📊 Progress:', data);
+
+      // อัพเดท progress ใน UI
+      setMessages(prev => prev.map(msg =>
+        msg.taskId === data.taskId
+          ? {
+            ...msg,
+            genneratedStatus: 'PROCESSING',
+            percentage: data.percentage
+          }
+          : msg
+      ));
+    };
+
+    // 4. Event เมื่อสร้างภาพแต่ละรูปเสร็จ
+    const handleImageComplete = (data: {
+      taskId: string;
+      imageIndex: number;
+      imageUrl: string;
+      imageId: string;
+    }) => {
+      console.log('🖼️ Image complete:', data);
+
+      // เพิ่มรูปภาพที่สร้างเสร็จแล้วเข้าไปใน message
+      setMessages(prev => prev.map(msg => {
+        if (msg.taskId === data.taskId) {
+          const newImageUrls = [...(msg.imageUrls || [])];
+          newImageUrls.push({
+            id: data.imageId,
+            imageUrl: data.imageUrl,
+            status: false,
+          });
+
+          return {
+            ...msg,
+            imageUrls: newImageUrls,
+            genneratedStatus: 'PROCESSING',
+          };
+        }
+        return msg;
+      }));
+    };
+
+    // 5. Event เมื่อ task เสร็จสมบูรณ์
+    const handleTaskComplete = (data: {
+      taskId: string,
+      success: boolean,
+      imageCount: number,
+      images: string[],
+      timestamp: string,
+      data: {
+        projectId: string,
+        userId: string,
+        prompt: string,
+        imageUrl: string[],
+        typeGenerate: string,
+        genneratedStatus: string,
+        status: boolean,
+        generateConfig: {
+          width: number,
+          height: number,
+          ratio: string,
+          imageCount: number,
+          resolution: string,
+          modelName: string,
+          content: string
+        }
+      }
+    }) => {
+      console.log('✅ Task complete:', data);
+
+      // อัพเดท message เป็น SUCCESS
+      setMessages(prev => prev.map(msg => {
+        if (msg.taskId === data.taskId) {
+          return {
+            ...msg,
+            genneratedStatus: 'SUCCESS',
+            imageUrls: data.data.imageUrl.map(img => ({
+              id: img,
+              imageUrl: img,
+              status: false,
+            })),
+          };
+        }
+        return msg;
+      }));
+    };
+
+    // 6. Event เมื่อเกิด error
+    const handleError = (error: {
+      taskId?: string;
+      message: string;
+      details?: any;
+    }) => {
+      console.error('❌ Error:', error);
+
+      messageApi.error(error.message || 'Generation failed');
+      setSubmitting(false);
+
+      if (error.taskId) {
+        // อัพเดท message เป็น FAIL
+        setMessages(prev => prev.map(msg =>
+          msg.taskId === error.taskId
+            ? { ...msg, genneratedStatus: 'FAIL' }
+            : msg
+        ));
+      }
+    };
+
+    // Register event listeners
+    socket.on('task:created', handleTaskCreated);
+    socket.on('task:started', handleTaskStarted);
+    socket.on('worker:progress', handleProgress);
+    socket.on('worker:image-complete', handleImageComplete);
+    socket.on('worker:complete', handleTaskComplete);
+    socket.on('worker:error', handleError);
+    socket.on('generate:error', handleError);
+    socket.on('generate:complete', handleTaskComplete);
+
+    // socket.on('chat:message-saved', (data) => {
+    //   if (data.success && currentConversation) {
+    //     setCurrentConversation(prev => {
+    //       if (!prev) return null;
+    //       return {
+    //         ...prev,
+    //         messages: [...prev.messages, data.data]
+    //       };
+    //     });
+
+    //     // Scroll to bottom when new message is sent/received
+    //     setTimeout(() => scrollToBottom(), 100);
+    //   }
+    // });
+
+    // socket.on('chat:new-message', (data) => {
+    //   if (currentConversation && data.data.conversationId === currentConversation.id) {
+    //     setCurrentConversation(prev => {
+    //       if (!prev) return null;
+    //       return {
+    //         ...prev,
+    //         messages: [...prev.messages, data.data]
+    //       };
+    //     });
+    //     // Scroll to bottom when new message received
+    //     setTimeout(() => scrollToBottom(), 100);
+    //   }
+    // });
+
+    // // Listen to generation complete
 
     return () => {
+      socket.off('task:created', handleTaskCreated);
+      socket.off('task:started', handleTaskStarted);
+      socket.off('worker:progress', handleProgress);
+      socket.off('worker:image-complete', handleImageComplete);
+      socket.off('worker:complete', handleTaskComplete);
+      socket.off('worker:error', handleError);
+      socket.off('generate:error', handleError);
       socket.off('chat:history');
       socket.off('chat:message-saved');
       socket.off('chat:new-message');
       socket.off('generate:complete');
     };
-  }, [socket, projectId, page]);
+  }, [socket, page, projectId]);
 
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -346,7 +506,6 @@ const ImageChat: FC<ImageChatProps> = ({
   }, [messages.length]);
 
   const handleUploadChange: UploadProps["onChange"] = async ({ file, fileList: newFileList }) => {
-    console.log(`newFileList`, newFileList)
     if (newFileList.length >= 1 && file.status !== "removed") {
       setIsLoadingUpload(true);
       const formData = new FormData();
@@ -443,24 +602,165 @@ const ImageChat: FC<ImageChatProps> = ({
     }
   };
 
-  const handleSendMessage = (values: any) => {
+  // const handleSendMessage = (values: any) => {
+  //   setSubmitting(true);
+  //   const message = {
+  //     model: selectedAIModel.name,
+  //     prompt: values.prompt,
+  //     image: refImage.map((image) => image.imagePath),
+  //     sequentialImageGeneration: 'auto',
+  //     size: selectedResolution,
+  //     maxImages: selectedMaximumImage,
+  //     watermark: false,
+  //     type: 'image',
+  //     ratio: selectedRatio,
+  //     projectId: projectId,
+  //     userId: userId,
+  //     width: selectedWidth,
+  //     height: selectedHeight,
+  //     imageGenerateType: groupMode
+  //   };
+
+  //   const tempMessage = {
+  //     id: `temp-${Date.now()}`,
+  //     type: "user",
+  //     taskId: `temp-${Date.now()}`,
+  //     projectId: projectId,
+  //     userId: userId,
+  //     prompt: values.prompt,
+  //     typeGenerate: "image",
+  //     createdAt: new Date().toISOString(),
+  //     status: true,
+  //     genneratedStatus: "SUCCESS",
+  //     generateConfig: {
+  //       ratio: selectedRatio,
+  //       width: selectedWidth,
+  //       height: selectedHeight,
+  //       content: values.prompt,
+  //       duration: "0s",
+  //       modelName: selectedAIModel.name,
+  //       imageCount: selectedMaximumImage,
+  //       resolution: selectedResolution
+  //     },
+  //     users: {
+  //       id: 1,
+  //       fullname: username,
+  //       userId: userId,
+  //       username: username
+  //     },
+  //     referenceImages: refImage.map((image) => image.imagePath),
+  //     resolution: selectedResolution,
+  //     ratio: selectedRatio,
+  //     imageUrls: []
+  //   } as Message;
+  //   setMessages((prev) => [...prev, tempMessage]);
+
+  //   // sendMessage('generate', message);
+  //   if (socket) {
+  //     //   socket.emit('generate', message, (response: any) => {
+  //     //     setSubmitting(false);
+  //     //     if (response && response.success) {
+  //     //       messageApi.success('Task created successfully');
+  //     //     } else {
+  //     //       messageApi.error(response?.message || 'Failed to create task');
+  //     //     }
+  //     //   });
+  //     // } else {
+  //     //   setSubmitting(false);
+  //     //   messageApi.error('Socket not connected');
+  //     // }
+  //     socket.emit('generate', message, (response: any) => {
+  //       // This callback receives the FIRST emission from the stream (the processing status)
+  //       if (response && response.status === 'processing') {
+  //         console.log('✅ Server accepted request: ', response.message);
+  //         // Show "Processing..." UI state
+  //       } else if (response && !response.success) {
+  //         console.error('❌ Request failed:', response.message);
+  //       }
+  //       setSubmitting(false);
+  //     });
+  //     // 2. Listen for the specific success event (Final Chunk)
+  //     socket.on('task:created', (data) => {
+  //       setSubmitting(false);
+  //       console.log('🎉 Task created successfully:', data);
+  //       console.log('Task ID:', data.taskId);
+  //       setPage(0);
+  //       loadMoreMessages(0, true);
+  //     });
+  //     // 3. Listen for errors
+  //     socket.on('generate:error', (error) => {
+  //       console.error('⚠️ Generation error:', error);
+  //     });
+  //   }
+  // }
+
+  const handleFormSubmit = async (values: any) => {
+    // สร้าง temporary message สำหรับแสดงใน UI ทันที
     const message = {
+      taskId: `temp-${Date.now()}`,
       model: selectedAIModel.name,
       prompt: values.prompt,
-      image: refImage.map((image) => image.url),
-      sequentialImageGeneration: groupMode,
+      image: refImage.map((image) => image.imagePath),
+      sequentialImageGeneration: 'auto',
       size: selectedResolution,
       maxImages: selectedMaximumImage,
       watermark: false,
-      type: 'image',
       ratio: selectedRatio,
       projectId: projectId,
       userId: userId,
       width: selectedWidth,
       height: selectedHeight,
+      imageGenerateType: groupMode,
+      typeGenerate: "image",
     };
-    sendMessage('generate', message);
-  }
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      taskId: `temp-${Date.now()}`,
+      projectId: projectId,
+      userId: userId,
+      prompt: values.prompt,
+      typeGenerate: "image",
+      createdAt: new Date().toISOString(),
+      status: true,
+      genneratedStatus: "PROCESSING",
+      generateConfig: {
+        ratio: selectedRatio,
+        width: selectedWidth,
+        height: selectedHeight,
+        content: values.prompt,
+        duration: "0s",
+        modelName: selectedAIModel.name,
+        imageCount: selectedMaximumImage,
+        resolution: selectedResolution
+      },
+      users: {
+        fullname: username,
+        userId: userId,
+        username: username
+      },
+      referenceImages: refImage.map((image) => image.url),
+      resolution: selectedResolution,
+      ratio: selectedRatio,
+      imageUrls: []
+    } as Message;
+
+    setMessages(prev => [...prev, tempMessage]);
+    shouldAutoScrollRef.current = true;
+    if (!socket || !isConnected) {
+      messageApi.error('WebSocket is not connected. Please refresh the page.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      console.log('📤 Sending generate request:', message);
+      socket.emit('generate', message);
+    } catch (error: any) {
+      console.error('Error in handleSendMessage:', error);
+      messageApi.error(error.message || 'An unexpected error occurred');
+      setSubmitting(false);
+    }
+  };
 
   async function onSetPromptText(id: number): Promise<void> {
     const prompt = await promptguideService.findById(String(id));
@@ -517,9 +817,11 @@ const ImageChat: FC<ImageChatProps> = ({
               <div key={`${message.id}-${index}`}>
                 <div
                   key={`${message.id}-${index}`}
-                  className={`flex gap-4 ${message.type === "user" ? "justify-end border-t-2 pt-2 border-white/10 " : "justify-start"}`}>
-                  {message.type === "ai" && <Avatar src={Avatars.src} size={40} />}
-                  <div className={`flex flex-col  ${message.type === "user" ? "flex-1 items-end" : "items-start"}`}>
+                  // className={`flex gap-4 ${message.type === "user" ? "justify-end border-t-2 pt-2 border-white/10 " : "justify-start"}`}
+                  className={`flex gap-4 justify-start`}
+                >
+                  <Avatar src={Avatars.src} size={40} />
+                  <div className={`flex flex-col items-start`}>
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
                       <span>{message.users.username}</span>
                       <span>•</span>
@@ -537,24 +839,14 @@ const ImageChat: FC<ImageChatProps> = ({
                     </div>
 
                     {message.prompt && (
-                      <div className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md whitespace-pre-wrap ${message.type === "user" ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-sm" : "bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm"}`}>
+                      <div className={`px-3 py-1 rounded-2xl text-sm leading-relaxed shadow-md whitespace-pre-wrap bg-[#27272a] text-gray-200 border border-white/5 rounded-tl-sm`}>
                         {message.prompt}
                       </div>
                     )}
                     <ImageConfigurationCard generateConfig={message.generateConfig} referenceImages={message.referenceImages} />
                     {(message.genneratedStatus === "PENDING" || message.genneratedStatus === "PROCESSING") && (
                       <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                        <Spin
-                          indicator={
-                            <LoadingOutlined
-                              style={{ fontSize: 24 }}
-                              spin
-                            />
-                          }
-                        />
-                        <span className="text-gray-300">
-                          Generating images... ({message.genneratedStatus})
-                        </span>
+                        <Progress size={260} type="circle" percent={message.percentage} strokeColor={conicColors} />
                       </div>
                     )}
 
@@ -579,8 +871,8 @@ const ImageChat: FC<ImageChatProps> = ({
                                 <Image
                                   src={imgUrl.imageUrl}
                                   alt={`Generated ${i + 1}`}
-                                  width={400}
-                                  height={700}
+                                  width={message.generateConfig.width}
+                                  height={message.generateConfig.height}
                                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                   unoptimized
                                 />
@@ -624,13 +916,6 @@ const ImageChat: FC<ImageChatProps> = ({
                         </div>
                       )}
                   </div>
-                  {message.type === "user" && (
-                    <Avatar
-                      icon={<UserOutlined />}
-                      size={40}
-                      className="bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10"
-                    />
-                  )}
                 </div>
               </div>
             ))}
@@ -668,7 +953,7 @@ const ImageChat: FC<ImageChatProps> = ({
               beforeUpload={beforeUpload}
               onRemoveFile={onRemoveFile}
               submitting={submitting}
-              handleSendMessage={handleSendMessage}
+              handleSendMessage={handleFormSubmit}
               isLoadingUpload={isLoadingUpload}
               setSelectedWidth={setSelectedWidth}
               setSelectedHeight={setSelectedHeight}
