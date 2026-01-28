@@ -18,13 +18,14 @@ import {
   Space,
   Progress,
   ProgressProps,
+  Image
 } from "antd";
 import {
   LikeOutlined,
   LoadingOutlined,
   LikeFilled,
 } from "@ant-design/icons";
-import Image from "next/image";
+// import Image from "next/image";
 import { Download } from "lucide-react";
 import type { RcFile } from "antd/es/upload";
 
@@ -128,6 +129,8 @@ interface Message {
   imageUrls: ImageMessage[]
 }
 
+type NotificationType = 'success' | 'info' | 'warning' | 'error';
+
 const ChatGenerateImage: FC<ImageChatProps> = ({
   projectId,
   userId,
@@ -141,7 +144,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   onSetPromptTextRef,
 }) => {
   const pageSize = 3;
-  const notificationApi = notification.useNotification()[0];
+  const [api, contextHolderNoti] = notification.useNotification();
   const promptguideService = PromptGuideServices(axiosCore);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -201,6 +204,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }
   };
 
+  const openNotificationWithIcon = (type: NotificationType, message: string) => {
+    api[type]({
+      message: type,
+      description: message,
+    });
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -222,11 +232,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       status: string;
     }) => {
       console.log('🚀 Task started:', data);
-
       // อัพเดท message ใน state
       setMessages(prev => prev.map(msg =>
         msg.taskId === data.taskId
-          ? { ...msg, genneratedStatus: 'PROCESSING' }
+          ? {
+            ...msg, genneratedStatus: 'PROCESSING',
+            percentage: 10,
+          }
           : msg
       ));
     };
@@ -276,6 +288,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             ...msg,
             imageUrls: newImageUrls,
             genneratedStatus: 'PROCESSING',
+            percentage: 90,
           };
         }
         return msg;
@@ -335,16 +348,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }) => {
       console.error('❌ Error:', error);
 
-      messageApi.error(error.message || 'Generation failed');
+      openNotificationWithIcon('error', error.message || 'Generation failed');
       setSubmitting(false);
 
       if (error.taskId) {
         // อัพเดท message เป็น FAIL
-        setMessages(prev => prev.map(msg =>
-          msg.taskId === error.taskId
-            ? { ...msg, genneratedStatus: 'FAIL' }
-            : msg
-        ));
+        setMessages(prev => prev.filter(msg => msg.taskId !== error.taskId));
       }
     };
 
@@ -403,31 +412,35 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }
 
     }
-
+    // 'worker:started',
+    // 'worker:progress',
+    // 'worker:image-complete',
+    // 'worker:error',
+    // 'worker:complete',
     // Register event listeners
-    socket.on('task:created', handleTaskCreated);
     socket.on('task:started', handleTaskStarted);
+    socket.on('task:created', handleTaskCreated);
+    socket.on('worker:started', handleTaskStarted);
     socket.on('worker:progress', handleProgress);
     socket.on('worker:image-complete', handleImageComplete);
-    socket.on('worker:complete', handleTaskComplete);
     socket.on('worker:error', handleError);
+    socket.on('worker:complete', handleTaskComplete);
     socket.on('generate:error', handleError);
-    socket.on('generate:complete', handleTaskComplete);
     socket.on('chat:history', handleHistory);
 
 
     return () => {
-      socket.off('task:created', handleTaskCreated);
       socket.off('task:started', handleTaskStarted);
+      socket.off('task:created', handleTaskCreated);
+      socket.off('worker:started', handleTaskStarted);
       socket.off('worker:progress', handleProgress);
       socket.off('worker:image-complete', handleImageComplete);
-      socket.off('worker:complete', handleTaskComplete);
       socket.off('worker:error', handleError);
+      socket.off('worker:complete', handleTaskComplete);
       socket.off('generate:error', handleError);
       socket.off('chat:history', handleHistory);
       socket.off('chat:message-saved');
       socket.off('chat:new-message');
-      socket.off('generate:complete');
     };
   }, [socket, page, projectId]);
 
@@ -541,28 +554,33 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const onShareImage = async (
     taskId: string,
     id: string,
-    currentStatus?: boolean,
+    currentStatus: boolean,
   ) => {
     try {
-      const nextStatus = currentStatus && currentStatus == true ? false : true;
+      const nextStatus = currentStatus ? false : true;
       const success = await GalleryServices(axiosCore).updateStatus(
         id,
         nextStatus,
       );
-      // fetchMessages(page, false, currentId);
-
-      if (success) {
+      if (success.id) {
         message.success("Share status updated");
         setMessages((prev) =>
           prev.map((msg: Message) => {
-            if (msg.taskId === taskId)
+            if (msg.taskId === taskId) {
               return {
                 ...msg,
-                imageUrls: msg.imageUrls?.map((image) =>
+                imageUrls: msg.imageUrls?.map((image: {
+                  id: string,
+                  imageUrl: string,
+                  status: boolean,
+                  thumbnailUrl?: string
+                }) =>
                   image.id === id ? { ...image, status: nextStatus } : image,
                 ),
               };
-            return msg;
+            } else {
+              return msg;
+            }
           }),
         );
       }
@@ -672,6 +690,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     <div className={promptGuideOpenStatus ? "grid md:grid-cols-4 sm:grid-cols-1 gap-2" : ""}>
       <div className={`h-[calc(100vh-160px)] ${promptGuideOpenStatus ? "col-span-3" : ""}`}>
         {contextHolder}
+        {contextHolderNoti}
         {previewImage && (
           <PreviewImage closePreview={closePreview} previewImage={previewImage} />
         )}
@@ -698,7 +717,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                   // className={`flex gap-4 ${message.type === "user" ? "justify-end border-t-2 pt-2 border-white/10 " : "justify-start"}`}
                   className={`flex gap-4 justify-start`}
                 >
-                  <Avatar src={Avatars.src} size={40} />
+                  {/* <Avatar src={Avatars.src} size={40} /> */}
                   <div className={`flex flex-col items-start`}>
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
                       <span>{message.users.username}</span>
@@ -737,24 +756,22 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2 overflow-hidden">
-                          {message.imageUrls.map((imgUrl: ImageMessage, i) => (
-                            <div
-                              key={message.id}
-                              className={`flex ${message.userId === userId ? 'justify-end' : 'justify-start'}`}
-                            >
+                          <Image.PreviewGroup>
+                            {message.imageUrls.map((imgUrl: ImageMessage, i) => (
                               <div
-                                className="relative group aspect-[9/16] bg-black/40 cursor-pointer overflow-hidden"
-                                onClick={() => handleImageClick(imgUrl.imageUrl)}
+                                key={imgUrl.id}
+                                className="relative group w-full h-full overflow-hidden bg-black/40 rounded-lg"
+                                style={{ aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}` }}
                               >
                                 <Image
                                   src={imgUrl.imageUrl}
                                   alt={`Generated ${i + 1}`}
-                                  width={message.generateConfig.width}
-                                  height={message.generateConfig.height}
-                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                  unoptimized
+                                  width="100%"
+                                  height="100%"
+                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
-                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                                   <Button
                                     size="small"
                                     icon={<Download size={14} />}
@@ -782,16 +799,17 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                                         onShareImage(
                                           message.taskId,
                                           imgUrl.id,
-                                          message?.status,
+                                          imgUrl.status,
                                         );
                                       }
                                     }}
                                   />
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </Image.PreviewGroup>
                         </div>
+
                       )}
                   </div>
                 </div>
