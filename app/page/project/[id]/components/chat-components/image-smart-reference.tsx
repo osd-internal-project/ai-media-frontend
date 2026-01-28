@@ -1,7 +1,7 @@
 import React, { useEffect, useState, } from "react";
-import { GenerateConfig } from "../image-chat";
 import { Tooltip } from "antd";
 import Image from "next/image";
+import { GenerateConfig } from "../chat-generate-image";
 
 type Props = {
     generateConfig: GenerateConfig

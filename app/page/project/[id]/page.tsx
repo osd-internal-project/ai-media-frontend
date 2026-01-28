@@ -20,6 +20,7 @@ import PromptActivity from "./components/prompt-activity";
 import VideoChat from "./components/video-chat";
 import AIModelServices from "@/app/services/ai-model.service";
 import { TAIModel } from "@/app/common/ai-model.type";
+import ChatGenerateImage from "./components/chat-generate-image";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -42,9 +43,7 @@ const GenerateImagePage: FC = () => {
     []
   );
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
-  const [selectedAIModel, setSelectedAIModel] = useState<
-    (TAIModel & { capabilities?: string[] }) | null
-  >(null);
+  const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
   const { id } = params as { id: string };
   const { organizationId } = useOrganization();
   const [projectRole, setProjectRole] = useState<string | null>(null);
@@ -250,7 +249,7 @@ const GenerateImagePage: FC = () => {
             const model = filteredAIModels.find(
               (m) => m.id === parseInt(value)
             );
-            setSelectedAIModel(model || null);
+            setSelectedAIModel(model);
             if (model) {
               localStorage.setItem(
                 `selectedAIModel_${activeKey}_${id}`,
@@ -711,7 +710,7 @@ const GenerateImagePage: FC = () => {
                 </div>
               ),
               children: (
-                <ImageChat
+                <ChatGenerateImage
                   promptGuideOpenStatus={promptGuideOpenStatus}
                   key={`image`}
                   activeKey={activeKey}
