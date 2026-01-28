@@ -406,6 +406,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               });
             }, 100);
           }
+          if (isFirstLoad.current) {
+            shouldAutoScrollRef.current = true;
+          }
           isFirstLoad.current = false;
           setLoading(false);
         }
@@ -460,23 +463,24 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (isLoadingMoreRef.current && chatContainerRef.current) {
-      const newScrollHeight = chatContainerRef.current.scrollHeight;
-      const scrollDiff = newScrollHeight - scrollHeightRef.current;
+  // useEffect(() => {
+  //   console.log("aa")
+  //   if (isLoadingMoreRef.current && chatContainerRef.current) {
+  //     const newScrollHeight = chatContainerRef.current.scrollHeight;
+  //     const scrollDiff = newScrollHeight - scrollHeightRef.current;
 
-      chatContainerRef.current.style.scrollBehavior = "auto";
-      chatContainerRef.current.scrollTop = scrollDiff;
+  //     chatContainerRef.current.style.scrollBehavior = "auto";
+  //     chatContainerRef.current.scrollTop = scrollDiff;
 
-      requestAnimationFrame(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.style.scrollBehavior = "smooth";
-        }
-      });
+  //     requestAnimationFrame(() => {
+  //       if (chatContainerRef.current) {
+  //         chatContainerRef.current.style.scrollBehavior = "smooth";
+  //       }
+  //     });
 
-      isLoadingMoreRef.current = false;
-    }
-  }, [messages]);
+  //     isLoadingMoreRef.current = false;
+  //   }
+  // }, [messages]);
 
   useEffect(() => {
     if (shouldAutoScrollRef.current && messages.length > 0) {
