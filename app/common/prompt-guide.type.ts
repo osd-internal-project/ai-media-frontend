@@ -18,6 +18,8 @@ export type TPromptGuide = {
   organizationId?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+  generateType: TGenerateType;
+  promptGuideImages?: string[];
 };
 export type TPromptGuideType = {
   id: number;
@@ -27,4 +29,22 @@ export type TPromptGuideType = {
   createdAt?: string | Date;
   updatedAt?: string | Date;
   promptGuide?: TPromptGuide[];
+  generateType: TGenerateType;
+};
+export type TGenerateType = "image" | "video";
+
+export type TPromptGuideImage = {
+  id?: number;
+  uid?: string;
+  userId?: string;
+  index?: number;
+  imageName?: string;
+  imagePath?: string;
+  imageType?: string;
+  imageSize?: number;
+  generateType?: TGenerateType;
+  status?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  promptGuideId?: number;
 };

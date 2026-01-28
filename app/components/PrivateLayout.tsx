@@ -67,7 +67,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   // const [groupName, setGroupName] = useState<string>("");
   // const [roles, setRoles] = useState<string[]>([]);
   const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
-    []
+    [],
   );
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
@@ -79,7 +79,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
-    []
+    [],
   );
   const [personalOrganizations, setPersonalOrganizations] = useState<
     IOrganization[]
@@ -129,35 +129,34 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     const organizationDetail =
       await organizationMemberService.findUserMemberByOrganization(
         organizationId,
-        session?.user?.id as string
+        session?.user?.id as string,
       );
     setOrganizationRole(organizationDetail?.role || "");
     const projects = await projectService.findByOrganizationId(
       organizationId,
-      session?.user?.id as string
+      session?.user?.id as string,
     );
     setProject(projects);
-    const members = await userServices.findOrganizationUserDetails(
-      organizationId
-    );
+    const members =
+      await userServices.findOrganizationUserDetails(organizationId);
     setOrganizationMember(members);
     setLoading(false);
   }
 
   const fetchdataUser = async () => {
     const userDetail = await userServices.findDetailByToken(
-      session?.user?.id as string
+      session?.user?.id as string,
     );
     setUserProfile(userDetail);
     const personalOrganizations = await organizationService.findManyByUserId(
       userDetail?.userId || "",
-      { type: "personal" }
+      { type: "personal" },
     );
     setPersonalOrganizations(personalOrganizations || []);
 
     const teamOrganizations = await organizationService.findManyByUserId(
       userDetail?.userId || "",
-      { type: "team" }
+      { type: "team" },
     );
     setTeamOrganizations(teamOrganizations || []);
 
@@ -327,7 +326,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   };
 
   async function handleOrganizationChange(
-    organizationId: string
+    organizationId: string,
   ): Promise<void> {
     // console.log(organizationId);
     setReload(true);
@@ -609,7 +608,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                 if (
                                   userId &&
                                   !projectMembers.find(
-                                    (m, i) => m.userId === userId && i !== index
+                                    (m, i) =>
+                                      m.userId === userId && i !== index,
                                   )
                                 ) {
                                   const newMembers = [...projectMembers];
@@ -626,13 +626,13 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                           !projectMembers.find(
                                             (m, i) =>
                                               m.userId === u.userId &&
-                                              i !== index
+                                              i !== index,
                                           ) &&
                                           u.fullname
                                             .toLowerCase()
                                             .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
+                                              searchTexts[index].toLowerCase(),
+                                            ),
                                       )
                                       .map((e) => ({
                                         value: e.userId,
@@ -645,7 +645,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
                               onChange={(
-                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER"
+                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER",
                               ) => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
@@ -664,7 +664,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               danger
                               onClick={() => {
                                 setProjectMembers(
-                                  projectMembers.filter((_, i) => i !== index)
+                                  projectMembers.filter((_, i) => i !== index),
                                 );
                                 const newSearchTexts: {
                                   [key: number]: string;
@@ -807,7 +807,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                 if (
                                   userId &&
                                   !projectMembers.find(
-                                    (m, i) => m.userId === userId && i !== index
+                                    (m, i) =>
+                                      m.userId === userId && i !== index,
                                   )
                                 ) {
                                   const newMembers = [...projectMembers];
@@ -824,13 +825,13 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                                           !projectMembers.find(
                                             (m, i) =>
                                               m.userId === u.userId &&
-                                              i !== index
+                                              i !== index,
                                           ) &&
                                           u.fullname
                                             .toLowerCase()
                                             .includes(
-                                              searchTexts[index].toLowerCase()
-                                            )
+                                              searchTexts[index].toLowerCase(),
+                                            ),
                                       )
                                       .map((e) => ({
                                         value: e.userId,
@@ -843,7 +844,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               value={member.role}
                               style={{ width: 80, marginRight: "8px" }}
                               onChange={(
-                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER"
+                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER",
                               ) => {
                                 const newMembers = [...projectMembers];
                                 newMembers[index].role = role;
@@ -862,7 +863,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               danger
                               onClick={() => {
                                 setProjectMembers(
-                                  projectMembers.filter((_, i) => i !== index)
+                                  projectMembers.filter((_, i) => i !== index),
                                 );
                                 const newSearchTexts: {
                                   [key: number]: string;
@@ -1072,7 +1073,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
-                  value={{ organizationId, organizationRole }}
+                  value={{
+                    organizationId,
+                    organizationRole,
+                    userId: userProfile?.userId,
+                  }}
                 >
                   {children}
                 </OrganizationProvider>

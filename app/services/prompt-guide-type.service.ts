@@ -4,10 +4,13 @@ import type { TPromptGuideType } from "../common/prompt-guide.type";
 const PromptGuideTypeServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide-type";
   return {
-    findAll: async (organizationId?: string): Promise<TPromptGuideType[]> => {
+    findAll: async (
+      organizationId?: string,
+      generateType?: string,
+    ): Promise<TPromptGuideType[]> => {
       const url = organizationId
-        ? `${baseUrl}?organizationId=${organizationId}`
-        : `${baseUrl}`;
+        ? `${baseUrl}?organizationId=${organizationId}&generateType=${generateType}`
+        : `${baseUrl}?generateType=${generateType}`;
       return await axiosInstance
         .get(url)
         .then((res) => {
