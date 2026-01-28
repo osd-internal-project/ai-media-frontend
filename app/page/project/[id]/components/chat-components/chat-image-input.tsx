@@ -561,7 +561,7 @@ export default function ChatImageInput({
                                 <Button
                                     htmlType="submit"
                                     // onClick={handleSendMessage}
-                                    // disabled={isLoading || !isConnected || !inputText.trim()}
+                                    disabled={submitting}
                                     style={{
                                         width: '36px',
                                         height: '36px',
@@ -576,6 +576,7 @@ export default function ChatImageInput({
                                     }}
                                     className="hover:!bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                     icon={<Zap size={18} fill="currentColor" />}
+                                    loading={submitting}
                                 >
 
                                     {/* {isLoading ? (
