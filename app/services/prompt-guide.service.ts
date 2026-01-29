@@ -59,9 +59,25 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findByOrganization: async (organizationId: string) => {
+    findByOrganization: async (
+      organizationId: string,
+    ): Promise<TPromptGuide[]> => {
       return await axiosInstance
         .get(`${baseUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findWithImageByTypes: async (
+      organizationId: string,
+      promptGuideTypeId: number,
+    ): Promise<TPromptGuide[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/type/${promptGuideTypeId}`)
         .then((res) => {
           return res.data;
         })

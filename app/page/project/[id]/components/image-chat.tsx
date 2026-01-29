@@ -376,7 +376,7 @@ const ImageChat: FC<ImageChatProps> = ({
           if (response.length < pageSize) {
             setHasMore(false);
           }
-
+          console.log("response", response);
           const formattedMessages: ChatMessage[] = [];
           const itemsToProcess = [...response].reverse();
           const topId = itemsToProcess?.[0]?.id;
@@ -444,6 +444,7 @@ const ImageChat: FC<ImageChatProps> = ({
       } catch (err) {
         console.error("Failed to fetch logs:", err);
       } finally {
+        console.log("fetchMessages finally");
         setLoading(false);
         setDisableTab(false);
         if (!isLoadMore) {
@@ -855,7 +856,6 @@ const ImageChat: FC<ImageChatProps> = ({
                 </div>
               </div>
             )}
-
             {loading && hasMore && (
               <div className="flex justify-center py-2">
                 <Spin
@@ -863,7 +863,6 @@ const ImageChat: FC<ImageChatProps> = ({
                 />
               </div>
             )}
-
             {messages.map((msg, index) => (
               <div key={`${msg.id}-${index}`}>
                 <div
@@ -1023,7 +1022,6 @@ const ImageChat: FC<ImageChatProps> = ({
                 </div>
               </div>
             ))}
-
             <div ref={bottomRef} />
           </div>
           <div className=" p-4 z-10 bg-gradient-to-t from-[#18181b] via-[#18181b] to-transparent pt-2">

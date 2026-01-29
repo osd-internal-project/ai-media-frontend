@@ -8,6 +8,9 @@ export type TPromptType = {
   createdAt?: string | Date;
   updatedAt?: string | Date;
 };
+export type TPromptGuideTemplate = TPromptType & {
+  promptGuides?: TPromptGuide[];
+};
 export type TPromptGuide = {
   id?: number;
   title?: string;
@@ -20,6 +23,14 @@ export type TPromptGuide = {
   updatedAt?: string | Date;
   generateType: TGenerateType;
   promptGuideImages?: string[];
+  images?: {
+    imagePath: string;
+    uid: string;
+    name: string;
+    url: string;
+    status: string;
+    index: number;
+  }[];
 };
 export type TPromptGuideType = {
   id: number;

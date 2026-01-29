@@ -159,6 +159,8 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const onUpdatePromptGuide = async (
     values: TPromptGuideType,
   ): Promise<void> => {
+    console.log("values", refImage.length);
+    console.log("values", refImage);
     const updatePromptGuide = await promptguideServices.update(values.id!, {
       ...values,
       promptGuideImages: refImage.map((image) => image.uid),
