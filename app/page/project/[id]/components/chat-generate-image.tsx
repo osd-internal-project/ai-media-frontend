@@ -199,7 +199,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   }, []);
 
   useEffect(() => {
-    console.log("projectId", projectId);
     setLoading(true);
     isFirstLoad.current = true;
     loadMoreMessages(0, false, currentId);
@@ -500,11 +499,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             organizationId,
             type.id,
           );
-          console.log("response", response);
           return { ...type, promptGuides: response || [] };
         }),
       );
-      console.log("templates", templates);
       setPromptGuideTemplates(templates);
     }
   }
@@ -546,6 +543,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       formData.append("userId", userId ? userId : "");
       formData.append("index", newFileList.length.toString());
       formData.append("projectId", projectId);
+      formData.append("name", file.name);
       formData.append("generateType", "image");
       formData.append("uid", file.uid);
       const fileToUpload = file.originFileObj || file;
@@ -731,35 +729,63 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     };
   }, [activeKey, onSetPromptTextRef]);
 
-  const handleImageClick = (url: string) => {
-    setPreviewImage(url);
-  };
+  // const handleImageClick = (url: string) => {
+  //   setPreviewImage(url);
+  // };
 
   const closePreview = () => {
     setPreviewImage(null);
   };
 
-  function handleUsePromptGuide(prompt: TPromptGuide) {
+  async function handleUsePromptGuide(prompt: TPromptGuide) {
     form.setFieldValue("prompt", prompt.textPrompt);
+    setFiles([]);
+    setRefImage([]);
+
     if (prompt.images && prompt.images.length > 0) {
-      const newFiles: UploadFile[] = prompt.images.map((img, index) => ({
-        uid: img.uid || String(Date.now() + index),
-        name: img.name || `image-${index}`,
-        status: "done",
-        url: img.url,
-        thumbUrl: img.url,
-      }));
+      setIsLoadingUpload(true);
+      try {
+        const uploadPromises = prompt.images.map(async (img, index) => {
+          try {
+            const no = index + 1;
+            const formData = new FormData();
+            formData.append("userId", userId ? userId : "");
+            formData.append("index", no.toString());
+            formData.append("projectId", projectId);
+            formData.append("generateType", "image");
+            formData.append("uid", `rc-upload-${Date.now()}-${no}`);
+            formData.append("refUid", img.uid);
+            formData.append("file", img.url);
+            // formData.append("file", file);
 
-      const newRefImages = prompt.images.map((img) => ({
-        uid: img.uid,
-        name: img.name,
-        status: "done",
-        url: img.url,
-        imagePath: img.imagePath,
-      }));
+            const result =
+              await UploadsServices(axiosWorker).uploadFromPrompt(formData);
+            return result;
+          } catch (err) {
+            console.error("Failed to process image:", img.name, err);
+            return null;
+          }
+        });
 
-      setFiles(newFiles);
-      setRefImage(newRefImages);
+        const results = await Promise.all(uploadPromises);
+        const successfulResults = results.filter((res: any) => res !== null);
+
+        setRefImage(successfulResults);
+
+        const newFiles = successfulResults.map((res: any, index: number) => ({
+          uid: res.uid || `rc-upload-${Date.now()}-${index}`,
+          name: res.name,
+          status: "done" as const,
+          url: res.url,
+          response: res, // Keep consistency with response mapping
+        }));
+
+        setFiles(newFiles);
+      } catch (error) {
+        console.error("Error in handleUsePromptGuide:", error);
+      } finally {
+        setIsLoadingUpload(false);
+      }
     }
   }
 

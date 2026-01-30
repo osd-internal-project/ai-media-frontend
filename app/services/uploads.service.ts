@@ -18,6 +18,16 @@ const UploadsServices = (axiosInstance: AxiosInstance) => {
         .then((result) => result.data)
         .catch((err) => err);
     },
+    uploadFromPrompt: async (formData: any) => {
+      return await axiosInstance
+        .post(`/upload/from-prompt`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((result) => result.data)
+        .catch((err) => err);
+    },
     //Prompt guide Images
     uploadPromptGuideImage: async (formData: any) => {
       return await axiosInstance
