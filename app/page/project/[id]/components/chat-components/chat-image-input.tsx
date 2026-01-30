@@ -1,20 +1,13 @@
-import React, { useEffect } from "react";
-import Image from "next/image";
-import {
-  CloseOutlined,
-  LoadingOutlined,
-  PaperClipOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import React from "react";
+import { LoadingOutlined } from "@ant-design/icons";
 import {
   Check,
   ChevronDown,
-  Expand,
   FileText,
   ImageIcon,
   ImagePlus,
-  Lightbulb,
   LinkIcon,
+  Presentation,
   RectangleHorizontal,
   RectangleVertical,
   Square,
@@ -179,7 +172,7 @@ export default function ChatImageInput({
 
   return (
     <div className=" bottom-6 left-0 right-0 px-4 flex justify-center z-20 pointer-events-none pb-4">
-      <div className="w-full max-w-4xl pointer-events-auto">
+      <div className="w-full  pointer-events-auto">
         <div className="bg-[#1a1b1e]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2">
           <Form
             name="basic"
@@ -267,7 +260,7 @@ export default function ChatImageInput({
                   <Popover
                     trigger="click"
                     placement="topLeft"
-                    onOpenChange={() => fetchImagePromptGuides()}
+                    onOpenChange={(open) => open && fetchImagePromptGuides()}
                     content={
                       <PromptPopover
                         promptGuideTemplates={promptGuideTemplates}
@@ -275,24 +268,28 @@ export default function ChatImageInput({
                       />
                     }
                   >
-                    <Button
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "4px 8px",
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                        borderRadius: "0.5rem",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        fontSize: "10px",
-                        color: "#9ca3af",
-                        fontWeight: 500,
-                      }}
-                      className="hover:!bg-white/10 transition-colors"
-                    >
-                      <Expand size={16} className="-scale-x-100" />
-                      Tpl
-                    </Button>
+                    <Tooltip title="Prompt Template" placement="top">
+                      <Button
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "4px 8px",
+                          backgroundColor: "rgba(255,255,255,0.05)",
+                          borderRadius: "0.5rem",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          fontSize: "10px",
+                          color: "#9ca3af",
+                          fontWeight: 500,
+                        }}
+                        className="hover:!bg-white/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Presentation size={16} />
+                          {/* <div className="text-xs">Template</div> */}
+                        </div>
+                      </Button>
+                    </Tooltip>
                   </Popover>
                 </div>
               </div>
