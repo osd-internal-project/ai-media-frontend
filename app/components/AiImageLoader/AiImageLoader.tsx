@@ -7,23 +7,25 @@ interface AiImageLoaderProps {
 
 const AiImageLoader: React.FC<AiImageLoaderProps> = ({ size = 1 }) => {
   return (
-    <div style={{ ["--size" as any]: size }} className=" p-4">
-      <div className="loader-wrapper">
-        <span className="loader-letter">G</span>
-        <span className="loader-letter">e</span>
-        <span className="loader-letter">n</span>
-        <span className="loader-letter">e</span>
-        <span className="loader-letter">r</span>
-        <span className="loader-letter">a</span>
-        <span className="loader-letter">t</span>
-        <span className="loader-letter">i</span>
-        <span className="loader-letter">n</span>
-        <span className="loader-letter">g</span>
-        <span className="loader-letter">.</span>
-        <span className="loader-letter">.</span>
-        <span className="loader-letter">.</span>
-        <div className="loader"></div>
+    <div className="ai-robot-loader" style={{ ["--scale" as any]: size }}>
+      <div className="robot-container">
+        <div className="robot-head">
+          <div className="robot-antenna">
+            <div className="antenna-ball"></div>
+          </div>
+          <div className="robot-eyes">
+            <span className="eye left"></span>
+            <span className="eye right"></span>
+          </div>
+          <div className="robot-mouth"></div>
+        </div>
+        <div className="message-bubble">
+          <span className="dot"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
+        </div>
       </div>
+      {/* <div className="loading-text">Generating...</div> */}
     </div>
   );
 };
