@@ -866,12 +866,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     {(message.genneratedStatus === "PENDING" ||
                       message.genneratedStatus === "PROCESSING") && (
                       <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                        <Progress
+                        {/* <Progress
                           size={260}
                           type="circle"
                           percent={message.percentage}
                           strokeColor={conicColors}
-                        />
+                        /> */}
+                        <AiImageLoader />
                       </div>
                     )}
 
@@ -885,70 +886,68 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     {message.genneratedStatus === "SUCCESS" &&
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (
-                        // <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2 overflow-hidden">
-                        //   <Image.PreviewGroup>
-                        //     {message.imageUrls.map(
-                        //       (imgUrl: ImageMessage, i) => (
-                        //         <div
-                        //           key={imgUrl.id}
-                        //           className="relative group w-full h-full overflow-hidden bg-black/40 rounded-lg"
-                        //           style={{
-                        //             aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
-                        //           }}
-                        //         >
-                        //           <Image
-                        //             src={imgUrl.imageUrl}
-                        //             alt={`Generated ${i + 1}`}
-                        //             width="100%"
-                        //             height="100%"
-                        //             className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        //             style={{
-                        //               width: "100%",
-                        //               height: "100%",
-                        //               objectFit: "cover",
-                        //             }}
-                        //           />
-                        //           <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                        //             <Button
-                        //               size="small"
-                        //               icon={<Download size={14} />}
-                        //               className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
-                        //               onClick={(e) => {
-                        //                 e.preventDefault();
-                        //                 e.stopPropagation();
-                        //                 onDownloadImage(imgUrl.imageUrl);
-                        //               }}
-                        //             />
-                        //             <Button
-                        //               size="small"
-                        //               icon={
-                        //                 imgUrl.status === true ? (
-                        //                   <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
-                        //                 ) : (
-                        //                   <LikeOutlined />
-                        //                 )
-                        //               }
-                        //               className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
-                        //               onClick={(e) => {
-                        //                 e.preventDefault();
-                        //                 e.stopPropagation();
-                        //                 if (imgUrl.id && message.taskId) {
-                        //                   onShareImage(
-                        //                     message.taskId,
-                        //                     imgUrl.id,
-                        //                     imgUrl.status,
-                        //                   );
-                        //                 }
-                        //               }}
-                        //             />
-                        //           </div>
-                        //         </div>
-                        //       ),
-                        //     )}
-                        //   </Image.PreviewGroup>
-                        // </div>
-
-                        <AiImageLoader />
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2 overflow-hidden">
+                          <Image.PreviewGroup>
+                            {message.imageUrls.map(
+                              (imgUrl: ImageMessage, i) => (
+                                <div
+                                  key={imgUrl.id}
+                                  className="relative group w-full h-full overflow-hidden bg-black/40 rounded-lg"
+                                  style={{
+                                    aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
+                                  }}
+                                >
+                                  <Image
+                                    src={imgUrl.imageUrl}
+                                    alt={`Generated ${i + 1}`}
+                                    width="100%"
+                                    height="100%"
+                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    style={{
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                                    <Button
+                                      size="small"
+                                      icon={<Download size={14} />}
+                                      className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onDownloadImage(imgUrl.imageUrl);
+                                      }}
+                                    />
+                                    <Button
+                                      size="small"
+                                      icon={
+                                        imgUrl.status === true ? (
+                                          <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
+                                        ) : (
+                                          <LikeOutlined />
+                                        )
+                                      }
+                                      className="!bg-black/60 !text-white !border-none  hover:!bg-black/80"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (imgUrl.id && message.taskId) {
+                                          onShareImage(
+                                            message.taskId,
+                                            imgUrl.id,
+                                            imgUrl.status,
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ),
+                            )}
+                          </Image.PreviewGroup>
+                        </div>
                       )}
                   </div>
                 </div>
