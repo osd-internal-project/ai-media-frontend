@@ -200,6 +200,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         projectId,
         skip: skip,
         take: pageSize,
+        type: 'image'
       });
     }
   };
@@ -372,6 +373,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         if (messageData.length < pageSize) {
           setHasMore(false);
         }
+        if (messageData.length === 0) return []
         const itemsToProcess = [...messageData].reverse();
         const topId = itemsToProcess[0].id;
         if (topId) {
@@ -413,6 +415,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           setLoading(false);
         }
       }
+      setDisableTab(false);
 
     }
     // 'worker:started',
@@ -493,6 +496,31 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
   const handleUploadChange: UploadProps["onChange"] = async ({ file, fileList: newFileList }) => {
     if (newFileList.length >= 1 && file.status !== "removed") {
+      const fileToUpload = file.originFileObj || file;
+      if (fileToUpload instanceof Blob) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const img = new window.Image();
+            img.src = URL.createObjectURL(fileToUpload as Blob);
+            img.onload = () => {
+              const minSide = Math.min(img.width, img.height);
+              URL.revokeObjectURL(img.src);
+              if (minSide < 300) {
+                reject("Image size is too small, minimum side length must not be less than 300 px");
+              } else {
+                resolve();
+              }
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
+          });
+        } catch (error) {
+          openNotificationWithIcon('error', String(error));
+          return;
+        }
+      }
       setIsLoadingUpload(true);
       const formData = new FormData();
       formData.append("userId", userId ? userId : "");
@@ -500,7 +528,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       formData.append("projectId", projectId);
       formData.append("generateType", "image");
       formData.append("uid", file.uid);
-      const fileToUpload = file.originFileObj || file;
       formData.append("file", fileToUpload as Blob);
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);

@@ -578,12 +578,6 @@ export default function ChatImageInput({
                                     icon={<Zap size={18} fill="currentColor" />}
                                     loading={submitting}
                                 >
-
-                                    {/* {isLoading ? (
-                        <span className="animate-spin text-lg">⟳</span>
-                      ) : (
-                        <Zap size={18} fill="currentColor" />
-                      )} */}
                                 </Button>
 
                             </div>

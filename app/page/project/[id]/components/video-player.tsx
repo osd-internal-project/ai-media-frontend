@@ -3,14 +3,10 @@ import ImagePlay from "@/public/images/1766053669808.jpg";
 import { Download, X, Maximize2, Play, Loader2 } from "lucide-react";
 import { LikeFilled, LikeOutlined } from "@ant-design/icons";
 import { StaticImageData } from "next/image";
+import { VideoMessage } from "./chat-generate-video";
 
 interface VideoItemProps {
-  videoData: {
-    id?: string;
-    imageUrl: string;
-    thumbnailUrl: string | StaticImageData;
-    status?: boolean;
-  };
+  videoData: VideoMessage
   onDownloadVideo: (url: string) => void;
   onShareVideo: (taskId: string, status: boolean) => void;
   shareStatus: boolean;
@@ -106,7 +102,7 @@ const VideoItem = memo(
       e.stopPropagation();
       setIsDownloading(true);
       try {
-        await onDownloadVideo(videoData.imageUrl);
+        onDownloadVideo(videoData.imageUrl);
       } finally {
         setIsDownloading(false);
       }
@@ -151,20 +147,18 @@ const VideoItem = memo(
             }
             loading="lazy"
             alt="Video thumbnail"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-              isHovered && videoLoaded && !videoLoading
-                ? "opacity-0"
-                : "opacity-100"
-            }`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading
+              ? "opacity-0"
+              : "opacity-100"
+              }`}
           />
 
           {/* Play icon overlay */}
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-              isHovered && videoLoaded && !videoLoading
-                ? "opacity-0"
-                : "opacity-100"
-            }`}
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading
+              ? "opacity-0"
+              : "opacity-100"
+              }`}
           >
             <div className="p-4 bg-black/50 rounded-full backdrop-blur-sm">
               <Play size={32} className="text-white fill-white" />
@@ -180,9 +174,8 @@ const VideoItem = memo(
               loop
               playsInline
               preload="metadata"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                isHovered && !videoLoading ? "opacity-100" : "opacity-0"
-              }`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && !videoLoading ? "opacity-100" : "opacity-0"
+                }`}
             />
           )}
 

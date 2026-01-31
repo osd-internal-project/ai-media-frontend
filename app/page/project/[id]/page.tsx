@@ -21,6 +21,7 @@ import VideoChat from "./components/video-chat";
 import AIModelServices from "@/app/services/ai-model.service";
 import { TAIModel } from "@/app/common/ai-model.type";
 import ChatGenerateImage from "./components/chat-generate-image";
+import ChatGenerateVideo from "./components/chat-generate-video";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -736,7 +737,7 @@ const GenerateImagePage: FC = () => {
                 </div>
               ),
               children: (
-                <VideoChat
+                <ChatGenerateVideo
                   key={`vdo`}
                   activeKey={activeKey}
                   projectId={id}
