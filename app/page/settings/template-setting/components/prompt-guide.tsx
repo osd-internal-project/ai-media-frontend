@@ -1,9 +1,14 @@
-import type { TPromptGuideType } from "@/app/common/prompt-guide.type";
+import type {
+  TGenerateType,
+  TPromptGuideType,
+} from "@/app/common/prompt-guide.type";
 import {
   ArrowRightOutlined,
   PlusOutlined,
   DeleteOutlined,
   FileTextOutlined,
+  LoadingOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -16,7 +21,14 @@ import {
   Modal,
   Popconfirm,
   Space,
+  Segmented,
+  Tooltip,
+  Upload,
+  UploadFile,
 } from "antd";
+
+import { RcFile, UploadChangeParam } from "antd/es/upload";
+import { ImagePlus } from "lucide-react";
 import React, { useState, type FC, type ReactElement, useEffect } from "react";
 
 export interface props {
@@ -30,8 +42,23 @@ export interface props {
   onCreatePromptGuide: (values: any) => void;
   onDeletePromptGuide: (id: number) => void;
   canManage: boolean;
+  generateType: TGenerateType;
+  handleSelectGenerateType: (value: TGenerateType) => void;
+  files: UploadFile[];
+  isLoadingUpload: boolean;
+  handleUploadChange: (info: UploadChangeParam) => void;
+  beforeUpload: (file: RcFile) => boolean;
+  onRemoveFile: (file: UploadFile) => void;
+  firstFrame: UploadFile[];
+  lastFrame: UploadFile[];
+  isLoadingFirstFrame: boolean;
+  isLoadingLastFrame: boolean;
+  handleVideoImageUploadChange: (
+    info: UploadChangeParam,
+    index: string,
+  ) => void;
+  // handleLastFrameUploadChange: (info: UploadChangeParam) => void;
 }
-
 const PromptGuideComponent: FC<props> = ({
   promptGuideTypes,
   promptGuideForm,
@@ -43,6 +70,18 @@ const PromptGuideComponent: FC<props> = ({
   onCreatePromptGuide,
   onDeletePromptGuide,
   canManage,
+  generateType,
+  handleSelectGenerateType,
+  files,
+  isLoadingUpload,
+  handleUploadChange,
+  beforeUpload,
+  onRemoveFile,
+  firstFrame,
+  lastFrame,
+  isLoadingFirstFrame,
+  isLoadingLastFrame,
+  handleVideoImageUploadChange,
 }): ReactElement => {
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
@@ -52,15 +91,15 @@ const PromptGuideComponent: FC<props> = ({
   const [guideForm] = Form.useForm();
 
   useEffect(() => {
-      const checkScreenSize = () => {
-        setIsMobile(window.innerWidth < 768);
-      };
-  
-      checkScreenSize();
-      window.addEventListener("resize", checkScreenSize);
-  
-      return () => window.removeEventListener("resize", checkScreenSize);
-    }, []);
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   const handleAddType = () => {
     typeForm.resetFields();
@@ -89,13 +128,22 @@ const PromptGuideComponent: FC<props> = ({
     <div className="min-h-screen p-4 md:p-8 text-white font-sans">
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8} lg={6}>
+          <Segmented
+            className=" mb-2"
+            options={["image", "video"]}
+            value={generateType}
+            onChange={handleSelectGenerateType}
+            block
+          />
           <div className="flex justify-between items-center mb-4 md:mb-8">
-            <h1 className="text-lg font-bold">Prompt Guide</h1>
+            <h1 className="text-lg font-bold">
+              {generateType === "image" ? "Image Prompt" : "Video Prompt"}
+            </h1>
             {canManage && (
               <Button
                 icon={<PlusOutlined />}
                 onClick={handleAddType}
-                type="primary"
+                type="link"
                 size="small"
               >
                 Add Type
@@ -109,7 +157,8 @@ const PromptGuideComponent: FC<props> = ({
                 <p className="text-[#888] mb-2">No prompt types found</p>
                 {canManage && (
                   <p className="text-[#666] text-sm">
-                    Click &quot;Add Type&quot; to create your first prompt category
+                    Click &quot;Add Type&quot; to create your first prompt
+                    category
                   </p>
                 )}
               </div>
@@ -149,23 +198,23 @@ const PromptGuideComponent: FC<props> = ({
                           key={item.id}
                           onClick={() => onSelectPromptGuide(item.id!)}
                           className={`
-                            group flex items-center justify-between px-2 md:px-4 py-3 rounded-xl cursor-pointer transition-all duration-300
-                            ${
-                              isActive
-                                ? "bg-[#1E1E1E]"
-                                : "bg-[#1E1E1E] hover:bg-[#252525]"
-                            }
+                            group flex items-center justify-between px-2 md:px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 bg-[#1E1E1E]
+                            ${isActive ? "" : " hover:bg-[#252525]"}
                           `}
                           style={
                             isActive
                               ? {
                                   background:
                                     "linear-gradient(#1E1E1E, #1E1E1E) padding-box, linear-gradient(90deg, #64E9FF, #9F55FF) border-box",
-                                  border: "1px solid transparent",
-                                  boxShadow: "0 0 20px rgba(100, 233, 255, 0.1)",
+                                  borderWidth: "1px",
+                                  borderStyle: "solid",
+                                  borderColor: "transparent",
+                                  boxShadow:
+                                    "0 0 20px rgba(100, 233, 255, 0.1)",
                                 }
                               : {
-                                  border: "1px solid transparent",
+                                  borderWidth: "1px",
+                                  borderStyle: "solid",
                                   borderColor: "transparent",
                                 }
                           }
@@ -221,13 +270,11 @@ const PromptGuideComponent: FC<props> = ({
                   <Popconfirm
                     title="Delete this prompt?"
                     description="Are you sure you want to delete this prompt guide? This action cannot be undone."
-                    onConfirm={() => onDeletePromptGuide(selectedPromptGuide.id!)}
+                    onConfirm={() =>
+                      onDeletePromptGuide(selectedPromptGuide.id!)
+                    }
                   >
-                    <Button
-                      danger
-                      type="primary"
-                      size="small"
-                    >
+                    <Button danger type="primary" size="small">
                       Delete
                     </Button>
                   </Popconfirm>
@@ -238,19 +285,148 @@ const PromptGuideComponent: FC<props> = ({
                 form={promptGuideForm}
                 onFinish={onUpdatePromptGuide}
               >
-                {" "}
                 <Form.Item name={"id"} label="id" hidden>
                   <Input />
                 </Form.Item>
                 <Form.Item name={"title"} label="Title">
                   <Input readOnly={!canManage} />
                 </Form.Item>
+                <Form.Item label="Images">
+                  {generateType === "image" ? (
+                    <Upload
+                      style={{
+                        // width: "40px",
+                        // height: "40px",
+                        border: "1px dashed #3f3f46",
+                        borderRadius: "0.5rem",
+                      }}
+                      listType="picture-card"
+                      fileList={files}
+                      onChange={handleUploadChange}
+                      beforeUpload={beforeUpload}
+                      onRemove={onRemoveFile}
+                      multiple={true}
+                      maxCount={3}
+                      showUploadList={true}
+                      disabled={isLoadingUpload}
+
+                      // style={{ width: '80px', height: "80px" }}
+                    >
+                      {files.length >= 3 ? null : (
+                        <Tooltip
+                          title={`Upload files (${files.length}/3)`}
+                          placement="top"
+                        >
+                          <div className="w-full h-full rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                            {isLoadingUpload ? (
+                              <LoadingOutlined />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center text-sm">
+                                <ImagePlus />
+                                <div>New Image</div>
+                              </div>
+                            )}
+                            {files.length > 0 && (
+                              <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                {files.length}
+                              </div>
+                            )}
+                          </div>
+                        </Tooltip>
+                      )}
+                    </Upload>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Upload
+                          listType="picture-card"
+                          fileList={firstFrame}
+                          onChange={(firstFrame) =>
+                            handleVideoImageUploadChange(firstFrame, "1")
+                          }
+                          style={{
+                            // width: "40px",
+                            // height: "40px",
+                            border: "1px dashed #3f3f46",
+                            borderRadius: "0.5rem",
+                          }}
+                          beforeUpload={beforeUpload}
+                          onRemove={onRemoveFile}
+                          maxCount={1}
+                          showUploadList={true}
+                          disabled={isLoadingFirstFrame}
+                        >
+                          {firstFrame.length >= 1 ? null : (
+                            <Tooltip
+                              title={`Upload first frame (${firstFrame.length}/1)`}
+                              placement="top"
+                            >
+                              <div className="w-full h-full rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                {isLoadingFirstFrame ? (
+                                  <LoadingOutlined />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-sm">
+                                    <ImagePlus />
+                                    <div>{`First Frame`}</div>
+                                  </div>
+                                )}
+                                {firstFrame.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {firstFrame.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          )}
+                        </Upload>
+                        <SwapOutlined />
+                        <Upload
+                          style={{
+                            // width: "100%",
+                            // height: "100%",
+                            border: "1px dashed #3f3f46",
+                            borderRadius: "0.5rem",
+                          }}
+                          listType="picture-card"
+                          fileList={lastFrame}
+                          onChange={(lastFrame) =>
+                            handleVideoImageUploadChange(lastFrame, "2")
+                          }
+                          beforeUpload={beforeUpload}
+                          onRemove={onRemoveFile}
+                          maxCount={1}
+                          showUploadList={true}
+                          disabled={isLoadingLastFrame}
+                        >
+                          {lastFrame.length >= 1 ? null : (
+                            <Tooltip
+                              title={`Upload last frame (${lastFrame.length}/1)`}
+                              placement="top"
+                            >
+                              <div className="w-full h-full rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                {isLoadingLastFrame ? (
+                                  <LoadingOutlined />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-sm">
+                                    <ImagePlus />
+                                    <div>{`Last Frame`}</div>
+                                  </div>
+                                )}
+                                {lastFrame.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {lastFrame.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          )}
+                        </Upload>
+                      </div>
+                    </div>
+                  )}
+                </Form.Item>
                 <Form.Item name={"textPrompt"} label="Text Prompt">
-                  <Input.TextArea
-                    rows={6}
-                    className="md:!min-h-[200px]"
-                    readOnly={!canManage}
-                  />
+                  <Input.TextArea rows={5} readOnly={!canManage} />
                 </Form.Item>
                 {canManage && (
                   <Button type="primary" htmlType="submit">

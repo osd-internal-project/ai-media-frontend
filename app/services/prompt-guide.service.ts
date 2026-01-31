@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import type { TPromptGuide, TPromptType } from "../common/prompt-guide.type";
+import type { TPromptGuide } from "../common/prompt-guide.type";
 
 const PromptGuideServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide";
@@ -59,9 +59,36 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findByOrganization: async (organizationId: string) => {
+    findByOrganization: async (
+      organizationId: string,
+    ): Promise<TPromptGuide[]> => {
       return await axiosInstance
         .get(`${baseUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findWithImageByTypes: async (
+      organizationId: string,
+      promptGuideTypeId: number,
+    ): Promise<TPromptGuide[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/type/${promptGuideTypeId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    getPromptGuideImages: async (promptGuideId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${promptGuideId}/images-with-urls`)
         .then((res) => {
           return res.data;
         })

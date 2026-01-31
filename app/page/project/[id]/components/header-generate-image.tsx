@@ -53,13 +53,13 @@ const HeaderGenerateImagePage: FC<props> = ({
     setOpen(false);
   };
 
-  const showPromptBuilderDrawer = () => {
-    setPromptBuilderOpen(true);
-  };
+  // const showPromptBuilderDrawer = () => {
+  //   setPromptBuilderOpen(true);
+  // };
 
-  const onPromptBuilderClose = () => {
-    setPromptBuilderOpen(false);
-  };
+  // const onPromptBuilderClose = () => {
+  //   setPromptBuilderOpen(false);
+  // };
 
   const TitleSection = () => (
     <div className="flex flex-col">
@@ -364,7 +364,7 @@ const HeaderGenerateImagePage: FC<props> = ({
               </div>
 
               {/* Action Buttons - Inline with AI Model */}
-              <Button
+              {/* <Button
                 type={promptGuideOpenStatus ? "primary" : "default"}
                 ghost={promptGuideOpenStatus}
                 onClick={
@@ -373,7 +373,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                 size="middle"
               >
                 {isMobile ? "Builder" : isTablet ? "Builder" : "Prompt Builder"}
-              </Button>
+              </Button> */}
               <Tooltip
                 title={isMobile ? "Prompt Guide" : undefined}
                 placement="top"
@@ -394,7 +394,7 @@ const HeaderGenerateImagePage: FC<props> = ({
       </div>
 
       {/* Prompt Builder Drawer - Mobile Only */}
-      <Drawer
+      {/* <Drawer
         title="Prompt Builder"
         closable={{ "aria-label": "Close Builder" }}
         onClose={onPromptBuilderClose}
@@ -444,7 +444,7 @@ const HeaderGenerateImagePage: FC<props> = ({
             </div>
           </div>
         </div>
-      </Drawer>
+      </Drawer> */}
 
       <Drawer
         title={
