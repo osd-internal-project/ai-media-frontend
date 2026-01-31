@@ -1147,12 +1147,12 @@ const ImageChat: FC<ImageChatProps> = ({
                             onChange={handleUploadChange}
                             beforeUpload={beforeUpload}
                             multiple={true}
-                            maxCount={2}
+                            maxCount={15}
                             showUploadList={false}
                             disabled={submitting}
                           >
                             <Tooltip
-                              title={`Upload files (${files.length}/2)`}
+                              title={`Upload files (${files.length}/15)`}
                               placement="top"
                             >
                               <div className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
