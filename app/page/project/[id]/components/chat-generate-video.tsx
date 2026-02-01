@@ -35,7 +35,7 @@ import LogsServices from "@/app/services/logs.service";
 import GenerateImageServices from "@/app/services/generate-image.service";
 import Avatars from "@/public/images/Avatar.jpg";
 import type { ITFromGenerate } from "@/app/common";
-import { TPromptGuideType, TPromptGuide } from "@/app/common/prompt-guide.type";
+import { TPromptGuideType, TPromptGuide, TPromptGuideTemplate } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import type { RcFile } from "antd/es/upload";
 import { Trash, Volume2, VolumeX } from "lucide-react";
@@ -47,11 +47,14 @@ import VideoSmartReference from "./chat-components/video-smart-reference";
 import ChatVideoInput from "./chat-components/chat-video-input";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
+import { useOrganization } from "@/app/context/OrganizationContext";
+import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
+import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 
 interface VideoChatProps {
     projectId: string;
     userId?: string;
-    activeKey: "image" | "vdo" | "library" | "activity";
+    activeKey: "image" | "video" | "library" | "activity";
     projectRole?: string | null;
     promptGuideTypes?: TPromptGuideType[];
     promptGuideOpenStatus: boolean;
@@ -137,10 +140,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     onSetPromptTextRef,
 }) => {
     const [form] = Form.useForm();
+    const { organizationId } = useOrganization();
     const { socket, isConnected } = useWebSocket();
     const [api, contextHolderNoti] = notification.useNotification();
     const [messageApi, contextHolder] = message.useMessage();
+    const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
     const promptguideService = PromptGuideServices(axiosCore);
+    const promptGuideService = PromptGuideServices(axiosCore);
     // State
     const [messages, setMessages] = useState<Message[]>([]);
     const [filesFirst, setFilesFirst] = useState<UploadFile[]>([]);
@@ -175,6 +181,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const [selectedWidth, setSelectedWidth] = useState<number>(1920);
     const [selectedHeight, setSelectedHeight] = useState<number>(1080);
     const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+    const [promptGuideTemplates, setPromptGuideTemplates] = useState<
+        TPromptGuideTemplate[]
+    >([]);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -444,6 +453,26 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         }
     };
 
+    async function fetchVideoPromptGuides() {
+        if (organizationId) {
+            const types = await promptGuideTypeService.findAll(
+                organizationId,
+                "video",
+            );
+
+            const templates = await Promise.all(
+                types.map(async (type) => {
+                    const response = await promptGuideService.findWithImageByTypes(
+                        organizationId,
+                        type.id,
+                    );
+                    return { ...type, promptGuides: response || [] };
+                }),
+            );
+            setPromptGuideTemplates(templates);
+        }
+    }
+
     // Restore scroll position after loading more
     // useEffect(() => {
     //     if (isLoadingMoreRef.current && chatContainerRef.current) {
@@ -600,6 +629,74 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         setIsLoadingUpload(false);
     };
 
+    async function handleUsePromptGuide(prompt: TPromptGuide) {
+        console.log("prompt", prompt);
+        form.setFieldValue("prompt", prompt.textPrompt);
+        // Clear both First and Last inputs
+        setFilesFirst([]);
+        setRefImageFrist([]);
+        setFilesLast([]);
+        setRefImageLast([]);
+
+        if (prompt.images && prompt.images.length > 0) {
+            setIsLoadingUpload(true);
+            try {
+                const uploadPromises = prompt.images.map(async (img) => {
+                    const newIndex = img.index - 1;
+                    const formData = new FormData();
+                    formData.append("userId", userId ? userId : "");
+                    formData.append("index", newIndex.toString());
+                    formData.append("projectId", projectId);
+                    formData.append("generateType", "video");
+                    formData.append("refUid", img.uid);
+                    formData.append("uid", `rc-upload-${Date.now()}-${newIndex}`);
+                    formData.append("file", img.url);
+                    try {
+                        const result = await UploadsServices(axiosWorker).uploadFromPrompt(formData);
+                        return { result, index: newIndex };
+                    } catch (error) {
+                        console.error("Upload failed:", error);
+                        return null;
+                    }
+                });
+
+                const results = await Promise.all(uploadPromises);
+                const successfulResults = results.filter((res): res is { result: any, index: number } => res !== null && res.result !== null);
+
+                const firstImage = successfulResults.find(r => r.index === 0);
+                const lastImage = successfulResults.find(r => r.index === 1);
+
+                if (firstImage) {
+                    setRefImageFrist([firstImage.result]);
+                    const newFile = {
+                        uid: firstImage.result.uid || `rc-upload-${Date.now()}-0`,
+                        name: firstImage.result.name,
+                        status: "done" as const,
+                        url: firstImage.result.url,
+                        response: firstImage.result,
+                    };
+                    setFilesFirst([newFile]);
+                }
+
+                if (lastImage) {
+                    setRefImageLast([lastImage.result]);
+                    const newFile = {
+                        uid: lastImage.result.uid || `rc-upload-${Date.now()}-1`,
+                        name: lastImage.result.name,
+                        status: "done" as const,
+                        url: lastImage.result.url,
+                        response: lastImage.result,
+                    };
+                    setFilesLast([newFile]);
+                }
+            } catch (error) {
+                console.error("Error in handleUsePromptGuide:", error);
+            } finally {
+                setIsLoadingUpload(false);
+            }
+        }
+    }
+
     const onRemoveFile = (file: UploadFile) => {
         // setRefImageFrist((prev) => prev.filter((f) => f.uid !== file.uid));
         // UploadsServices(axiosWorker).remove(file.uid);
@@ -607,12 +704,14 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
 
     const handleFormSubmit = (values: any) => {
         if (!selectedAIModel) return openNotificationWithIcon("error", "Please select an AI model");
+        const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
+        const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
         const tempTask = `temp-${Date.now()}`
         const message = {
             taskId: tempTask,
             model: selectedAIModel.name,
             prompt: values.prompt,
-            image: [refImageFrist[0].imagePath ? refImageFrist[0].imagePath : null, refImageLast[0].imagePath ? refImageLast[0].imagePath : null],
+            image: [firstImage?.imagePath ? firstImage.imagePath : null, lastImage?.imagePath ? lastImage.imagePath : null],
             sequentialImageGeneration: 'auto',
             size: selectedResolution,
             maxImages: 0,
@@ -674,6 +773,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
 
 
+
     return (
         <div className={promptGuideOpenStatus ? "grid md:grid-cols-4 sm:grid-cols-1 gap-2" : ""}>
             <div className={`h-[calc(100vh-160px)] ${promptGuideOpenStatus ? "col-span-3" : ""}`}>
@@ -691,7 +791,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                             </div>
                         )}
 
-                        {!loading && messages.length === 0 && (
+                        {/* {!loading && messages.length === 0 && (
                             <div className="text-white pt-10 px-5 flex-1 overflow-auto">
                                 <h1 className="text-4xl font-light text-center mb-4">{`AI Cave : Seedance`}</h1>
                                 <p className="text-gray-400 text-center mb-10">
@@ -728,7 +828,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {messages.map((massage: Message, index) => (
                             <div
@@ -772,16 +872,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                                         />
                                         {(massage.genneratedStatus === "PENDING" ||
                                             massage.genneratedStatus === "PROCESSING") && (
-                                                <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                                                    <Spin
-                                                        indicator={
-                                                            <LoadingOutlined style={{ fontSize: 24 }} spin />
-                                                        }
-                                                    />
-                                                    <span className="text-gray-300">
-                                                        Generating video... ({massage.genneratedStatus})
-                                                    </span>
-                                                </div>
+                                                <AiImageLoader />
                                             )}
                                         {massage.genneratedStatus === "FAIL" && (
                                             <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
@@ -864,6 +955,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                             onRemoveFile={onRemoveFile}
                             setSelectedWidth={setSelectedWidth}
                             setSelectedHeight={setSelectedHeight}
+                            promptGuideTemplates={promptGuideTemplates}
+                            fetchVideoPromptGuides={fetchVideoPromptGuides}
+                            handleUsePromptGuide={handleUsePromptGuide}
                         />
                     </PermissionGuard>
                 </div>

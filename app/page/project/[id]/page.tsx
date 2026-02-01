@@ -30,7 +30,7 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
-    "image" | "vdo" | "library" | "activity"
+    "image" | "video" | "library" | "activity"
   >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -133,7 +133,7 @@ const GenerateImagePage: FC = () => {
     setAIModels(models || []);
   };
 
-  const onChangeTab = (key: "image" | "vdo" | "library" | "activity") => {
+  const onChangeTab = (key: "image" | "video" | "library" | "activity") => {
     setActiveKey(key);
 
     if (processedModels.length > 0) {
@@ -144,7 +144,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (key === "image" ? m.type === "image" : m.type === "vdo")
+            (key === "image" ? m.type === "image" : m.type === "video")
         );
       }
 
@@ -153,13 +153,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (key === "image" ? m.type === "image" : m.type === "vdo")
+            (key === "image" ? m.type === "image" : m.type === "video")
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            key === "image" ? m.type === "image" : m.type === "vdo"
+            key === "image" ? m.type === "image" : m.type === "video"
           );
         }
       }
@@ -200,7 +200,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+            (activeKey === "image" ? m.type === "image" : m.type === "video")
         );
       }
 
@@ -209,13 +209,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+            (activeKey === "image" ? m.type === "image" : m.type === "video")
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            activeKey === "image" ? m.type === "image" : m.type === "vdo"
+            activeKey === "image" ? m.type === "image" : m.type === "video"
           );
         }
       }
@@ -227,7 +227,7 @@ const GenerateImagePage: FC = () => {
   }, [processedModels, activeKey, selectedAIModel, id]);
 
   const filteredAIModels = processedModels.filter((model) =>
-    activeKey === "image" ? model.type === "image" : model.type === "vdo"
+    activeKey === "image" ? model.type === "image" : model.type === "video"
   );
 
   return (
@@ -427,7 +427,7 @@ const GenerateImagePage: FC = () => {
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
           // tabBarExtraContent={
-          //   activeKey === "image" || activeKey === "vdo" ? (
+          //   activeKey === "image" || activeKey === "video" ? (
           //     <div className="flex gap-4 items-center relative">
           //       <div className="flex items-center gap-3">
           //         <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -692,7 +692,7 @@ const GenerateImagePage: FC = () => {
           //   )
           // }
           onChange={(key) =>
-            onChangeTab(key as "image" | "vdo" | "library" | "activity")
+            onChangeTab(key as "image" | "video" | "library" | "activity")
           }
           items={[
             {
@@ -724,7 +724,7 @@ const GenerateImagePage: FC = () => {
             {
               disabled: disableTab,
               forceRender: true,
-              key: "vdo",
+              key: "video",
               label: (
                 <div className="flex items-center gap-2 px-2 py-1 w-full">
                   <Video size={20} />
@@ -733,7 +733,7 @@ const GenerateImagePage: FC = () => {
               ),
               children: (
                 <ChatGenerateVideo
-                  key={`vdo`}
+                  key={"video"}
                   activeKey={activeKey}
                   projectId={id}
                   userId={session?.user?.id}

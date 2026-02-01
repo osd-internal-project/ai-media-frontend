@@ -2,7 +2,7 @@ export type LogHistory = {
   id: string;
   taskId?: string;
   status: "success" | "failed" | "pending"; // adjust if needed
-  typeGenerate: "image" | "vdo";
+  typeGenerate: "image" | "video";
   projectId?: string;
   userId: string;
   prompt: string;
@@ -36,7 +36,7 @@ export interface LogsData {
   userId: string;
   projectId: string;
   taskId: string;
-  typeGenerate: "image" | "vdo";
+  typeGenerate: "image" | "video";
   prompt: string;
   status: "success" | "pending";
   ImageUsed: number;
@@ -62,7 +62,7 @@ export interface IDashboardUser {
 export interface IDashboardProjectLogs {
   tokenUsed: number;
   ImageUsed: number;
-  typeGenerate: "image" | "vdo";
+  typeGenerate: "image" | "video";
 }
 export interface IDashboardUser {
   userId: string;

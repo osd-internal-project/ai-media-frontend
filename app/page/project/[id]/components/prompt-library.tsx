@@ -69,11 +69,11 @@ const PromptLibrary: FC<props> = ({
       const urlWithoutParams = imageUrl.split("?")[0];
       const filename =
         urlWithoutParams.split("/").pop() ||
-        (types === "vdo" ? "video.mp4" : "image.jpg");
+        (types === "video" ? "video.mp4" : "image.jpg");
 
       // Show loading message
       const hide = message.loading(
-        `Downloading ${types === "vdo" ? "video" : "image"}...`,
+        `Downloading ${types === "video" ? "video" : "image"}...`,
         0
       );
 
@@ -91,7 +91,7 @@ const PromptLibrary: FC<props> = ({
 
       hide();
       message.success(
-        `${types === "vdo" ? "Video" : "Image"} downloaded successfully`
+        `${types === "video" ? "Video" : "Image"} downloaded successfully`
       );
     } catch (error) {
       console.error("Download error:", error);
@@ -132,7 +132,7 @@ const PromptLibrary: FC<props> = ({
     <div className="h-[calc(100vh-160px)]">
       {contextHolders}
       <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4 gap-6">
-        <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full pr-6 border-r border-gray-700/50"> 
+        <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full pr-6 border-r border-gray-700/50">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto">
             {getData.data.map((image, imgIndex) => {
               return (
@@ -144,7 +144,7 @@ const PromptLibrary: FC<props> = ({
                     className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                     onClick={() => onSelectPrompt(image)}
                   >
-                    {image.typeGenerate === "vdo" ? (
+                    {image.typeGenerate === "video" ? (
                       <VideoItem
                         key={imgIndex}
                         videoData={image}
@@ -244,13 +244,13 @@ const PromptLibrary: FC<props> = ({
                       <div className="whitespace-pre-line">
                         {selected?.createdAt
                           ? `${new Date(selected.createdAt).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            })}`
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                          })}`
                           : "-"}
                       </div>
                     </div>

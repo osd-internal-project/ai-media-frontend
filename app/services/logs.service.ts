@@ -46,12 +46,12 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findVdoByPage: async (projectId: string, skip?: number, take?: number) => {
+    findvideoByPage: async (projectId: string, skip?: number, take?: number) => {
       const params: any = {};
       if (skip !== undefined) params.skip = skip;
       if (take !== undefined) params.take = take;
       return await axiosInstance
-        .get(`${baseUrl}/find-vdo/${projectId}`, { params })
+        .get(`${baseUrl}/find-video/${projectId}`, { params })
         .then((res) => {
           return res.data;
         })
@@ -60,11 +60,11 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findVdoByFristId: async (projectId: string, fristId: string) => {
+    findvideoByFristId: async (projectId: string, fristId: string) => {
       const params: any = {};
       if (fristId !== undefined) params.fristid = fristId;
       return await axiosInstance
-        .get(`${baseUrl}/find-vdo/${projectId}/frist`, { params })
+        .get(`${baseUrl}/find-video/${projectId}/frist`, { params })
         .then((res) => {
           return res.data;
         })
@@ -75,7 +75,7 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
     },
     findByTaskId: async (taskId: string, value: any) => {
       return await axiosInstance
-        .get(`${baseUrl}/generate-vdo-logs/${taskId}`, { params: value })
+        .get(`${baseUrl}/generate-video-logs/${taskId}`, { params: value })
         .then((res) => {
           return res.data;
         })

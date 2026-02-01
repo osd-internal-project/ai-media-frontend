@@ -1,5 +1,5 @@
 export interface ITFromGenerate {
-  type: "image" | "vdo";
+  type: "image" | "video";
   text: string;
   resolution: string;
   generateAudio: boolean;

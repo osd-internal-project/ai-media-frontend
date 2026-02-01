@@ -3,7 +3,7 @@ import {
   TGenerateType,
   TPromptGuideType,
 } from "@/app/common/prompt-guide.type";
-import { Form, message, Modal, Spin, Tabs, UploadFile } from "antd";
+import { Form, message, Modal, notification, Spin, Tabs, UploadFile } from "antd";
 import React, {
   useCallback,
   useEffect,
@@ -23,7 +23,10 @@ import { canManageTemplates } from "@/app/utils/permissions";
 import { RcFile, UploadChangeParam, UploadProps } from "antd/es/upload";
 import UploadsServices from "@/app/services/uploads.service";
 
+type NotificationType = 'success' | 'info' | 'warning' | 'error';
+
 const TemplateSettingPage: FC = (): ReactElement => {
+  const [api, contextHolderNoti] = notification.useNotification();
   const [modal, contextHolder] = Modal.useModal();
   const { userId } = useOrganization();
   const promptguideServices = useMemo(() => PromptGuideServices(axiosCore), []);
@@ -149,6 +152,13 @@ const TemplateSettingPage: FC = (): ReactElement => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, fetchPromptGuideTypes]);
 
+  const openNotificationWithIcon = (type: NotificationType, message: string) => {
+    api[type]({
+      message: type,
+      description: message,
+    });
+  };
+
   const onSelectPromptGuide = async (id: number) => {
     const promptGuide = await promptguideServices.findById(String(id));
     setSelectedPromptGuide(promptGuide);
@@ -237,8 +247,34 @@ const TemplateSettingPage: FC = (): ReactElement => {
     file,
     fileList: newFileList,
   }) => {
+
     if (newFileList.length >= 1 && file.status !== "removed") {
       setIsLoadingUpload(true);
+      const fileToUpload = file.originFileObj || file;
+      if (fileToUpload instanceof Blob) {
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const img = new window.Image();
+            img.src = URL.createObjectURL(fileToUpload as Blob);
+            img.onload = () => {
+              const minSide = Math.min(img.width, img.height);
+              URL.revokeObjectURL(img.src);
+              if (minSide < 300) {
+                reject("Image size is too small, minimum side length must not be less than 300 px");
+              } else {
+                resolve();
+              }
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
+          });
+        } catch (error) {
+          openNotificationWithIcon('error', String(error));
+          return;
+        }
+      }
       if (!selectedPromptGuide?.id) {
         message.warning("Please select a prompt guide");
         return;
@@ -251,7 +287,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
       formData.append("generateType", generateType);
       formData.append("uid", file.uid);
 
-      const fileToUpload = file.originFileObj || file;
+      // const fileToUpload = file.originFileObj || file;
       formData.append("file", fileToUpload as Blob);
       try {
         const result = await uploadsServices.uploadPromptGuideImage(formData);
@@ -290,6 +326,31 @@ const TemplateSettingPage: FC = (): ReactElement => {
   ) => {
     if (index === "1") {
       if (newFileList.length >= 1 && file.status !== "removed") {
+        const fileToUpload = file.originFileObj || file;
+        if (fileToUpload instanceof Blob) {
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const img = new window.Image();
+              img.src = URL.createObjectURL(fileToUpload as Blob);
+              img.onload = () => {
+                const minSide = Math.min(img.width, img.height);
+                URL.revokeObjectURL(img.src);
+                if (minSide < 300) {
+                  reject("Image size is too small, minimum side length must not be less than 300 px");
+                } else {
+                  resolve();
+                }
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                resolve();
+              };
+            });
+          } catch (error) {
+            openNotificationWithIcon('error', String(error));
+            return;
+          }
+        }
         setIsLoadingFirstFrame(true);
         if (!selectedPromptGuide?.id) {
           message.warning("Please select a prompt guide");
@@ -304,7 +365,6 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("generateType", generateType);
         formData.append("uid", file.uid);
 
-        const fileToUpload = file.originFileObj || file;
         formData.append("file", fileToUpload as Blob);
         try {
           const result = await uploadsServices.uploadPromptGuideImage(formData);
@@ -317,6 +377,31 @@ const TemplateSettingPage: FC = (): ReactElement => {
       setFirstFrame(newFileList);
     } else {
       if (newFileList.length >= 1 && file.status !== "removed") {
+        const fileToUpload = file.originFileObj || file;
+        if (fileToUpload instanceof Blob) {
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const img = new window.Image();
+              img.src = URL.createObjectURL(fileToUpload as Blob);
+              img.onload = () => {
+                const minSide = Math.min(img.width, img.height);
+                URL.revokeObjectURL(img.src);
+                if (minSide < 300) {
+                  reject("Image size is too small, minimum side length must not be less than 300 px");
+                } else {
+                  resolve();
+                }
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                resolve();
+              };
+            });
+          } catch (error) {
+            openNotificationWithIcon('error', String(error));
+            return;
+          }
+        }
         setIsLoadingLastFrame(true);
         if (!selectedPromptGuide?.id) {
           message.warning("Please select a prompt guide");
@@ -330,8 +415,6 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("promptGuideId", String(promptGuideId));
         formData.append("generateType", generateType);
         formData.append("uid", file.uid);
-
-        const fileToUpload = file.originFileObj || file;
         formData.append("file", fileToUpload as Blob);
         try {
           const result = await uploadsServices.uploadPromptGuideImage(formData);
@@ -388,6 +471,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
   return (
     <>
       {contextHolder}
+      {contextHolderNoti}
       <Tabs
         defaultActiveKey="prompt-templates"
         items={tabItems}

@@ -1,14 +1,16 @@
 import React, { useEffect } from "react";
-import Image from "next/image";
 import { CloseOutlined, LoadingOutlined, PaperClipOutlined, PlusOutlined } from "@ant-design/icons";
-import { ArrowRightLeft, ArrowUp, ArrowUpDown, Check, ChevronDown, Expand, Eye, FileText, ImageIcon, ImagePlus, Lightbulb, LinkIcon, RectangleHorizontal, RectangleVertical, RefreshCcw, SlidersHorizontal, Square, Trash2, Volume2, VolumeX, X, Zap } from "lucide-react";
+import { ArrowRightLeft, ArrowUp, ArrowUpDown, Check, ChevronDown, Expand, Eye, FileText, ImageIcon, ImagePlus, Lightbulb, LinkIcon, Presentation, RectangleHorizontal, RectangleVertical, RefreshCcw, SlidersHorizontal, Square, Trash2, Volume2, VolumeX, X, Zap } from "lucide-react";
 import {
     Button,
     Form,
     FormInstance, Input, InputNumber, Modal, Popover, Slider, Tooltip, Upload,
     type UploadFile,
+    Image
 } from "antd";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
+import { TPromptGuide, TPromptGuideTemplate } from "@/app/common/prompt-guide.type";
+import PromptPopover from "./prompt-popover";
 
 const { TextArea } = Input;
 type Props = {
@@ -32,6 +34,9 @@ type Props = {
     onRemoveFile: (file: UploadFile) => void,
     setSelectedWidth: (width: number) => void,
     setSelectedHeight: (height: number) => void,
+    promptGuideTemplates: TPromptGuideTemplate[];
+    fetchVideoPromptGuides: () => Promise<void>;
+    handleUsePromptGuide: (template: TPromptGuide) => void;
 }
 
 export default function ChatVideoInput({
@@ -54,7 +59,10 @@ export default function ChatVideoInput({
     selectedAudio,
     onRemoveFile,
     setSelectedWidth,
-    setSelectedHeight
+    setSelectedHeight,
+    promptGuideTemplates,
+    fetchVideoPromptGuides,
+    handleUsePromptGuide,
 }: Props) {
 
     const featuredTemplates = [
@@ -241,9 +249,8 @@ export default function ChatVideoInput({
                                                 className="group"
                                             >
                                                 <Image
-                                                    src={filesFirst[0].thumbUrl || (filesFirst[0].originFileObj ? URL.createObjectURL(filesFirst[0].originFileObj) : '')}
+                                                    src={filesFirst[0].url || filesFirst[0].thumbUrl || (filesFirst[0].originFileObj ? URL.createObjectURL(filesFirst[0].originFileObj) : '')}
                                                     alt="First frame"
-                                                    fill
                                                     style={{ objectFit: 'cover' }}
                                                 />
                                                 <div
@@ -333,9 +340,8 @@ export default function ChatVideoInput({
                                                 className="group"
                                             >
                                                 <Image
-                                                    src={filesLast[0].thumbUrl || (filesLast[0].originFileObj ? URL.createObjectURL(filesLast[0].originFileObj) : '')}
+                                                    src={filesLast[0].url || filesLast[0].thumbUrl || (filesLast[0].originFileObj ? URL.createObjectURL(filesLast[0].originFileObj) : '')}
                                                     alt="Last frame"
-                                                    fill
                                                     style={{ objectFit: 'cover' }}
                                                 />
                                                 <div
@@ -414,43 +420,36 @@ export default function ChatVideoInput({
                                     <Popover
                                         trigger="click"
                                         placement="topLeft"
+                                        onOpenChange={(open) => open && fetchVideoPromptGuides()}
                                         content={
-                                            <div className="w-[800px] bg-[#1a1b1e] text-gray-200 p-6 rounded-xl">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div></div>
-                                                    <Button
-                                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#6b7280', border: 'none', background: 'transparent', padding: 0 }}
-                                                        className="hover:!text-gray-800 transition-colors"
-                                                    >
-                                                        <Lightbulb size={14} />
-                                                        Prompt manual
-                                                    </Button>
-                                                </div>
-
-                                                <div className="grid grid-cols-4 gap-4">
-                                                    {featuredTemplates.map((template) => (
-                                                        <div
-                                                            key={template.id}
-                                                            className={`aspect-[3/4] rounded-xl overflow-hidden relative group cursor-pointer ${template.bg}`}
-                                                        >
-                                                            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-1 rounded-md italic">
-                                                                {template.label}
-                                                            </div>
-                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                            <PromptPopover
+                                                promptGuideTemplates={promptGuideTemplates}
+                                                handleUsePromptGuide={handleUsePromptGuide}
+                                            />
                                         }
                                     >
-                                        <Button
-                                            type="text"
-                                            style={{ color: '#9ca3af', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px' }}
-                                            className="hover:!text-gray-300 hover:!bg-white/5"
-                                        >
-                                            <Expand size={12} className="-scale-x-100" />
-                                            Tpl
-                                        </Button>
+                                        <Tooltip title="Prompt Template" placement="top">
+                                            <Button
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "6px",
+                                                    padding: "4px 8px",
+                                                    backgroundColor: "rgba(255,255,255,0.05)",
+                                                    borderRadius: "0.5rem",
+                                                    border: "1px solid rgba(255,255,255,0.1)",
+                                                    fontSize: "10px",
+                                                    color: "#9ca3af",
+                                                    fontWeight: 500,
+                                                }}
+                                                className="hover:!bg-white/10 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Presentation size={16} />
+                                                    {/* <div className="text-xs">Template</div> */}
+                                                </div>
+                                            </Button>
+                                        </Tooltip>
                                     </Popover>
                                 </div>
                             </div>

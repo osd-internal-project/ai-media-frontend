@@ -353,15 +353,15 @@ const PromptOmnihuman: FC<props> = ({
                         task?.filePath
                           ? "green"
                           : !task.status
-                          ? `blue`
-                          : `${"red"}`
+                            ? `blue`
+                            : `${"red"}`
                       }
                     >
                       {task?.filePath
                         ? "Completed"
                         : !task.status
-                        ? `Panding`
-                        : `${task?.taskMessage || ""}`}
+                          ? `Panding`
+                          : `${task?.taskMessage || ""}`}
                     </Tag>
                     {/* <div className=" !text-[12px] text-gray-500">
                     {dayjs(task.createdAt).format("DD/MM/YYYY HH:mm:ss")}
@@ -376,7 +376,7 @@ const PromptOmnihuman: FC<props> = ({
                       preload="metadata"
                     >
                       <source
-                        src={`/api/vdo/${encodeURIComponent(task?.filePath)}`}
+                        src={`/api/video/${encodeURIComponent(task?.filePath)}`}
                         type="video/mp4"
                       />
                       Your browser does not support the video tag.
