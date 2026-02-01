@@ -619,25 +619,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
@@ -818,25 +818,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                             />
@@ -905,8 +905,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             <div className="bg-black rounded-2xl h-full flex flex-col">
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
-                  width={"120px"}
-                  src="/images/Logo.png"
+                  // width={"120px"}
+                  src="/images/logo-1.png"
                   alt="OSD Logo"
                   preview={false}
                   className="mb-2"
@@ -944,7 +944,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                    // inlineCollapsed={true}
+                  // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>

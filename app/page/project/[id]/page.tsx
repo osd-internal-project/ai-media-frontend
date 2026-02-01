@@ -14,10 +14,8 @@ import { useSession } from "next-auth/react";
 import { Image, Video, Folders, Star, LightbulbIcon } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
-import ImageChat from "./components/image-chat";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
-import VideoChat from "./components/video-chat";
 import AIModelServices from "@/app/services/ai-model.service";
 import { TAIModel } from "@/app/common/ai-model.type";
 import ChatGenerateImage from "./components/chat-generate-image";
@@ -82,9 +80,6 @@ const GenerateImagePage: FC = () => {
           const actualUserId = userDetails?.userId || session.user.id;
 
           const userRole = await projectService.checkUserRole(id, actualUserId);
-
-          console.log("userRole", userRole);
-
           setProjectRole(userRole);
         } catch (error) {
           console.error("Failed to fetch project role:", error);

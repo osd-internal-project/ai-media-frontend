@@ -40,13 +40,14 @@ import UploadsServices from "@/app/services/uploads.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import PromptPopover from "./chat-components/prompt-popover";
 
 interface ImageChatProps {
   projectId: string;
   userId?: string;
   activeKey: "image" | "vdo" | "library" | "activity";
   projectRole?: string | null;
-  promptGuideTypes?: TPromptGuideType[];
+  promptGuideTypes: TPromptGuideTemplate[];
   promptGuideOpenStatus?: boolean;
   username?: string;
   selectedAIModel: (TAIModel & { capabilities?: string[] }) | undefined;
@@ -134,7 +135,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   userId,
   activeKey,
   projectRole,
-  promptGuideTypes = [],
+  promptGuideTypes,
   promptGuideOpenStatus,
   username,
   selectedAIModel,
@@ -212,6 +213,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     currentId?: string,
   ) => {
     if (socket) {
+      setDisableTab(true);
       const skip = page * pageSize;
       socket.emit("chat:get-history", {
         projectId,
@@ -391,9 +393,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         messages: Message[];
       };
     }) => {
+      setDisableTab(false);
       if (data.success) {
         const messageData = data.data.messages;
-        setDisableTab(true);
         if (isFetchingHistory) {
           isLoadingMoreRef.current = true;
         }
@@ -441,7 +443,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           isFirstLoad.current = false;
           setLoading(false);
         }
-        setDisableTab(false);
       }
     };
     socket.on("task:started", handleTaskStarted);
@@ -832,12 +833,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto px-4 scroll-smooth space-y-6"
           >
-            {!loading && messages.length === 0 && (
-              <PromptStart
-                promptGuideTypes={promptGuideTypes}
-                onSetPromptText={onSetPromptText}
+            {/* {messages.length === 0 && (
+              <PromptPopover
+                promptGuideTemplates={promptGuideTypes}
+                handleUsePromptGuide={handleUsePromptGuide}
               />
-            )}
+            )} */}
 
             {loading && hasMore && (
               <div className="flex justify-center py-2">

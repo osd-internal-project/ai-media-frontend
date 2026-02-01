@@ -333,9 +333,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                 messages: Message[];
             };
         }) => {
+            setDisableTab(false);
             if (data.success) {
                 const messageData = data.data.messages;
-                setDisableTab(true);
                 if (isFetchingHistory) {
                     isLoadingMoreRef.current = true;
                 }
@@ -384,7 +384,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                     setLoading(false);
                 }
             }
-            setDisableTab(false);
 
         }
         socket.on('video-task:created', handleTaskCreated);
@@ -417,6 +416,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
 
     const loadMoreMessages = (page: number, isLoadMore: boolean, currentId?: string) => {
         if (socket) {
+            setDisableTab(true);
             const skip = page * pageSize;
             socket.emit('chat:get-history', {
                 projectId,

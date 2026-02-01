@@ -77,8 +77,8 @@ const PackagePage = () => {
             <div className="flex flex-1 items-center justify-between">
               <div className="flex shrink-0 items-center">
                 <Image
-                  width="64px"
-                  src="/images/Logo.png"
+                  // width="64px"
+                  src="/images/logo-1.png"
                   alt="OSD Logo"
                   preview={false}
                 />
@@ -109,7 +109,7 @@ const PackagePage = () => {
                 <Button
                   onClick={handleToLoginPage}
                   type="primary"
-                  // className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
+                // className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
                 >
                   Sign In
                 </Button>
@@ -164,21 +164,19 @@ const PackagePage = () => {
           <div className="inline-flex bg-gray-800 rounded-lg p-1 mb-6">
             <button
               onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                billingPeriod === "monthly"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "monthly"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               MONTHLY
             </button>
             <button
               onClick={() => setBillingPeriod("annually")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                billingPeriod === "annually"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "annually"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               ANNUALLY
               <span className="ml-2 text-xs text-green-400">
