@@ -5,7 +5,46 @@ import config from "../../../config";
 import { decryptPassword } from "../../../utils/crypto";
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+  console.log("🔄 Starting token refresh process...");
+
   try {
+    // Check if refresh token exists
+    if (!token.refreshToken) {
+      console.error("❌ No refresh token available");
+      return {
+        ...token,
+        error: "RefreshAccessTokenError",
+      };
+    }
+
+    // Decode refresh token to check if it's expired
+    try {
+      const parts = String(token.refreshToken).split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+        const refreshTokenExp = payload.exp * 1000;
+
+        console.log(
+          "Refresh token expiration:",
+          new Date(refreshTokenExp).toISOString(),
+        );
+
+        // If refresh token is expired, don't attempt refresh
+        if (Date.now() >= refreshTokenExp) {
+          console.error("❌ Refresh token has expired");
+          return {
+            ...token,
+            error: "RefreshAccessTokenError",
+          };
+        }
+
+        console.log("✅ Refresh token is still valid");
+      }
+    } catch (decodeError) {
+      console.error("Error decoding refresh token", decodeError);
+    }
+
+    console.log("📡 Calling Keycloak token endpoint...");
     const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
     const response = await fetch(url, {
       method: "POST",
@@ -26,17 +65,24 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       : response;
 
     if (!response.ok) {
+      console.error("❌ Token refresh failed:", refreshedTokens);
       throw refreshedTokens;
     }
+
+    console.log("✅ Token refresh successful!");
+    console.log("New token expires in:", refreshedTokens.expires_in, "seconds");
+
+    const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
+    console.log("New expiration time:", new Date(newExpiresAt).toISOString());
 
     return {
       ...token,
       accessToken: refreshedTokens.access_token,
-      expiresAt: Date.now() + refreshedTokens.expires_in * 1000,
+      expiresAt: newExpiresAt,
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
     };
   } catch (error) {
-    console.error("Error refreshing access token", error);
+    console.error("❌ Error refreshing access token", error);
     return {
       ...token,
       error: "RefreshAccessTokenError",
@@ -66,7 +112,9 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          const decryptedPassword = decryptPassword(credentials?.password || "");
+          const decryptedPassword = decryptPassword(
+            credentials?.password || "",
+          );
 
           // Call the backend service for login
           const url = `${config.backendUserUrl}/auth/login`;
@@ -139,18 +187,18 @@ export const authOptions = {
     async jwt({ token, account, user, profile }: any) {
       // Initial sign in from Keycloak Provider (Google or standard Keycloak)
       if (account && profile) {
+        console.log("Initial Keycloak login - setting tokens");
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.idToken = account.id_token;
         token.expiresAt = account.expires_at! * 1000;
-
         // Extract roles safely
         if (account.access_token) {
           try {
             const parts = account.access_token.split(".");
             if (parts.length === 3) {
               const decodedToken = JSON.parse(
-                Buffer.from(parts[1], "base64").toString()
+                Buffer.from(parts[1], "base64").toString(),
               );
               token.roles = decodedToken.realm_access?.roles || [];
               token.groups = decodedToken.groups || [];
@@ -166,6 +214,7 @@ export const authOptions = {
 
       // Initial sign in from Credentials Provider (Backend Login)
       if (user) {
+        console.log("Initial credentials login - setting tokens");
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
         token.expiresAt = Date.now() + user.expiresIn * 1000;
@@ -177,7 +226,7 @@ export const authOptions = {
             const parts = user.accessToken.split(".");
             if (parts.length === 3) {
               const decodedToken = JSON.parse(
-                Buffer.from(parts[1], "base64").toString()
+                Buffer.from(parts[1], "base64").toString(),
               );
               token.roles = decodedToken.realm_access?.roles || [];
               token.groups = decodedToken.groups || [];
@@ -191,13 +240,28 @@ export const authOptions = {
         return token;
       }
 
-      // Return previous token if not expired
-      if (Date.now() < (token.expiresAt as number)) {
-        return token;
+      // Check if token needs refresh
+      const now = Date.now();
+      const expiresAt = token.expiresAt as number;
+      const timeUntilExpiry = expiresAt - now;
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+      // Log token status
+      console.log("Token check:", {
+        expiresAt: new Date(expiresAt).toISOString(),
+        timeUntilExpiry: Math.floor(timeUntilExpiry / 1000) + "s",
+        needsRefresh: timeUntilExpiry < fiveMinutes,
+      });
+
+      // Refresh token if it expires in less than 5 minutes
+      if (timeUntilExpiry < fiveMinutes) {
+        console.log("Token expiring soon, attempting refresh...");
+        return refreshAccessToken(token);
       }
 
-      // Access token has expired, try to refresh it
-      return refreshAccessToken(token);
+      // Token is still valid, return as is
+      console.log("Token still valid, no refresh needed");
+      return token;
     },
     async session({ session, token }: any) {
       session.accessToken = token.accessToken;

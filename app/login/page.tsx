@@ -44,7 +44,7 @@ const Page: FC = () => {
     signIn(
       "keycloak",
       { callbackUrl: "/page/project" },
-      { kc_idp_hint: "google" }
+      { kc_idp_hint: "google" },
     );
   };
 
@@ -55,6 +55,20 @@ const Page: FC = () => {
     if (error) {
       if (error === "403") {
         messageApi.error("Login failed! Please sign up first!");
+      } else if (error === "session_expired") {
+        messageApi.warning("Your session has expired. Please log in again.");
+      } else if (error === "token_expired") {
+        messageApi.warning(
+          "Your login session has expired. Please log in again.",
+        );
+      } else if (error === "no_token") {
+        messageApi.error("Authentication error. Please log in again.");
+      } else if (error === "sso_session_expired") {
+        messageApi.warning(
+          "Your session has expired due to inactivity or timeout. Please log in again.",
+        );
+      } else if (error === "validation_failed") {
+        messageApi.error("Session validation failed. Please log in again.");
       } else {
         messageApi.error(error);
       }
@@ -73,7 +87,12 @@ const Page: FC = () => {
             {/* Use a simple logo or icon here, or import Image if available */}
             <div className="flex items-center gap-2">
               <div className="relative w-10 h-10">
-                <Image src="/images/logo-1.png" alt="Logo" fill className="object-contain" />
+                <Image
+                  src="/images/logo-1.png"
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
           </div>
@@ -81,9 +100,14 @@ const Page: FC = () => {
           <div className="max-w-md w-full mx-auto">
             <div className="mb-10">
               <h1 className="text-4xl font-bold mb-3 text-white">
-                Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5BC0EB] to-[#3B82F6]">Welcome to AI Cave!</span>
+                Hello,{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5BC0EB] to-[#3B82F6]">
+                  Welcome to AI Cave!
+                </span>
               </h1>
-              <p className="text-gray-400 text-sm font-light">Log in to AI Cave to start creating magic.</p>
+              <p className="text-gray-400 text-sm font-light">
+                Log in to AI Cave to start creating magic.
+              </p>
             </div>
 
             {/* Socials */}
@@ -110,13 +134,17 @@ const Page: FC = () => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Sign In with Google</span>
+                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">
+                  Sign In with Google
+                </span>
               </button>
 
               <button
                 type="button"
                 className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
-                onClick={() => messageApi.info('Microsoft login not implemented yet')}
+                onClick={() =>
+                  messageApi.info("Microsoft login not implemented yet")
+                }
               >
                 <svg className="w-5 h-5" viewBox="0 0 23 23">
                   <path fill="#f35325" d="M1 1h10v10H1z" />
@@ -124,13 +152,17 @@ const Page: FC = () => {
                   <path fill="#05a6f0" d="M1 12h10v10H1z" />
                   <path fill="#ffba08" d="M12 12h10v10H12z" />
                 </svg>
-                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Sign In with Microsoft</span>
+                <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">
+                  Sign In with Microsoft
+                </span>
               </button>
             </div>
 
             <div className="relative mb-8 text-center flex items-center justify-center">
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-[#333]"></div>
-              <span className="relative bg-[#0E0E12] px-3 text-[10px] text-gray-500 font-medium tracking-wide">OR CONTINUE WITH E-MAIL</span>
+              <span className="relative bg-[#0E0E12] px-3 text-[10px] text-gray-500 font-medium tracking-wide">
+                OR CONTINUE WITH E-MAIL
+              </span>
             </div>
 
             {/* Form */}
@@ -144,10 +176,21 @@ const Page: FC = () => {
             >
               <Form.Item
                 name="email"
-                rules={[{ required: true, message: "Please input your email!" }]}
+                rules={[
+                  { required: true, message: "Please input your email!" },
+                ]}
               >
                 <Input
-                  prefix={<Mail style={{ color: "#6b7280", width: "16px", height: "16px", marginRight: "8px" }} />}
+                  prefix={
+                    <Mail
+                      style={{
+                        color: "#6b7280",
+                        width: "16px",
+                        height: "16px",
+                        marginRight: "8px",
+                      }}
+                    />
+                  }
                   placeholder="name.user@gmail.com"
                   size="large"
                   style={{
@@ -162,11 +205,22 @@ const Page: FC = () => {
 
               <Form.Item
                 name="password"
-                rules={[{ required: true, message: "Please input your password!" }]}
+                rules={[
+                  { required: true, message: "Please input your password!" },
+                ]}
                 className="mb-2"
               >
                 <Input.Password
-                  prefix={<Lock style={{ color: "#6b7280", width: "16px", height: "16px", marginRight: "8px" }} />}
+                  prefix={
+                    <Lock
+                      style={{
+                        color: "#6b7280",
+                        width: "16px",
+                        height: "16px",
+                        marginRight: "8px",
+                      }}
+                    />
+                  }
                   placeholder="Password"
                   size="large"
                   style={{
@@ -182,7 +236,9 @@ const Page: FC = () => {
               <div className="flex justify-between items-center mb-8">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                   <Checkbox className="custom-checkbox">
-                    <span className="text-gray-400 hover:text-gray-300 text-xs">Remember me</span>
+                    <span className="text-gray-400 hover:text-gray-300 text-xs">
+                      Remember me
+                    </span>
                   </Checkbox>
                 </Form.Item>
                 <Link
@@ -214,8 +270,11 @@ const Page: FC = () => {
             </Form>
 
             <div className="mt-8 text-center text-xs text-gray-500">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-[#5BC0EB] hover:text-[#3B82F6] font-semibold transition-colors">
+              {"Don't have an account? "}
+              <Link
+                href="/signup"
+                className="text-[#5BC0EB] hover:text-[#3B82F6] font-semibold transition-colors"
+              >
                 Sign Up
               </Link>
             </div>
@@ -234,42 +293,51 @@ const Page: FC = () => {
               priority
             />
           </div>
-
         </div>
       </div>
 
       <style jsx global>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
         }
         @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px) rotate(-12deg); }
-          50% { transform: translateY(-15px) rotate(-12deg); }
+          0%,
+          100% {
+            transform: translateY(0px) rotate(-12deg);
+          }
+          50% {
+            transform: translateY(-15px) rotate(-12deg);
+          }
         }
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
         .animate-float-delayed {
-           animation: float-delayed 7s ease-in-out infinite;
+          animation: float-delayed 7s ease-in-out infinite;
         }
         .custom-checkbox .ant-checkbox-inner {
-            background-color: transparent;
-            border-color: #333;
+          background-color: transparent;
+          border-color: #333;
         }
         .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
-            background-color: #5465FF;
-            border-color: #5465FF;
+          background-color: #5465ff;
+          border-color: #5465ff;
         }
         .custom-checkbox .ant-checkbox-wrapper:hover .ant-checkbox-inner {
-            border-color: #5465FF;
+          border-color: #5465ff;
         }
         input::placeholder {
-            color: #4b5563 !important;
+          color: #4b5563 !important;
         }
         .ant-input-password input {
-            background-color: transparent !important;
-            color: white !important;
+          background-color: transparent !important;
+          color: white !important;
         }
       `}</style>
     </div>
