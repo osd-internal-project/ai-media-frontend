@@ -11,6 +11,6 @@ export interface ITFromGenerate {
   modelName?: string;
   images?: any;
 }
-
+export type ISystemRole = "SUPER_ADMIN" | "USER";
 export type IOrganizationRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 export type IProjectRole = "ADMIN" | "USER" | "VIEWER";

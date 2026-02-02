@@ -64,8 +64,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   >();
 
   const [getProject, setProject] = useState<IProject[]>([]);
-  // const [groupName, setGroupName] = useState<string>("");
-  // const [roles, setRoles] = useState<string[]>([]);
   const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
     [],
   );
@@ -75,7 +73,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     "OWNER" | "ADMIN" | "USER" | "VIEWER"
   >("USER");
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
-  // const filteredMenu = filterMenuByRole(MenuSider, roles);
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
@@ -85,33 +82,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     IOrganization[]
   >([]);
   const [userProfile, setUserProfile] = useState<TUser | null>(null);
-  const projectActionItems = [
-    {
-      key: "edit",
-      label: "Edit",
-    },
-    {
-      key: "delete",
-      label: "Delete",
-    },
-  ];
-  // const searchParams = useSearchParams();
-  // const urlOrganizationId = searchParams.get("organizationId");
 
   useEffect(() => {
     if (session?.user?.id) setLoading(true);
   }, [session?.user?.id]);
 
-  // useEffect(() => {
-  //   if (
-  //     session?.user?.id &&
-  //     urlOrganizationId &&
-  //     userProfile &&
-  //     urlOrganizationId !== userProfile.recentOrganizationId
-  //   ) {
-  //     handleOrganizationChange(urlOrganizationId);
-  //   }
-  // }, [session?.user?.id, urlOrganizationId, userProfile]);
   useEffect(() => {
     if (loading) {
       fecthdata();
@@ -619,25 +594,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index,
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase(),
-                                          ),
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index,
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase(),
+                                            ),
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
@@ -818,25 +793,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                               }}
                               options={
                                 searchTexts[index] &&
-                                  searchTexts[index].length > 0
+                                searchTexts[index].length > 0
                                   ? organizationMember
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId &&
-                                            i !== index,
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase(),
-                                          ),
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index,
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase(),
+                                            ),
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
                                   : []
                               }
                             />
@@ -944,7 +919,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                  // inlineCollapsed={true}
+                    // inlineCollapsed={true}
                   />
                   {/* <div className="!text-gray-400 px-4 mt-2">
                     <div className="text-[12px]">{`PROJECT`}</div>
@@ -1069,7 +1044,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               handleOpenCreateOrg={handleOpenCreateOrg}
               handleManageOrg={handleManageOrg}
               currentOrganization={currentOrganization}
+              systemRole={userProfile?.role && userProfile.role}
             />
+            {userProfile?.role}
             <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
@@ -1077,6 +1054,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     organizationId,
                     organizationRole,
                     userId: userProfile?.userId,
+                    systemRole: userProfile?.role && userProfile.role,
                   }}
                 >
                   {children}

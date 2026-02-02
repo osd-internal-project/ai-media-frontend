@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import {
   ConfigProvider,
   Layout,
@@ -34,13 +34,13 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
 
   // Determine which menu item should be selected
   const getSelectedKey = () => {
-    if (pathname.includes('/admin-management/users-management')) {
+    if (pathname.includes("/admin-management/users-management")) {
       return "users-management";
     }
-    if (pathname.includes('/admin-management/group-permission')) {
-      return "group-permission";
+    if (pathname.includes("/admin-management/organization")) {
+      return "organization";
     }
-    return "users-management"; // default
+    return ""; // default
   };
 
   const menuItems = [
@@ -50,11 +50,17 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
       label: "User Management",
       onClick: () => router.push("/page/admin-management/users-management"),
     },
+    // {
+    //   key: "group-permission",
+    //   icon: <LockKeyholeOpen size={16} />,
+    //   label: "Group & Permissions",
+    //   onClick: () => router.push("/page/admin-management/group-permission"),
+    // },
     {
-      key: "group-permission",
+      key: "organization",
       icon: <LockKeyholeOpen size={16} />,
-      label: "Group & Permissions",
-      onClick: () => router.push("/page/admin-management/group-permission"),
+      label: "Organization",
+      onClick: () => router.push("/page/admin-management/organization"),
     },
   ];
 
@@ -155,7 +161,9 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
                 <Avatar />
               </Badge>
               <div className="grid grid-cols-1">
-                <span className="text-white text-sm">{session?.user?.name}</span>
+                <span className="text-white text-sm">
+                  {session?.user?.name}
+                </span>
                 <span className="text-[#6366F1]">Admin</span>
               </div>
               <Popover
@@ -176,9 +184,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
 
         {/* Content Area */}
         <Layout className="flex-1 w-full h-full overflow-hidden">
-          <div className="w-full h-screen p-2 overflow-y-auto">
-            {children}
-          </div>
+          <div className="w-full h-screen p-2 overflow-y-auto">{children}</div>
         </Layout>
       </Layout>
     </ConfigProvider>

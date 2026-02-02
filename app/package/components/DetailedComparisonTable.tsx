@@ -43,8 +43,8 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                       plans.flatMap(
                         (plan) =>
                           plan.features?.map((f) => f.category || "General") ||
-                          []
-                      )
+                          [],
+                      ),
                     ),
                   ];
 
@@ -62,10 +62,10 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                                 plan.features
                                   ?.filter(
                                     (f) =>
-                                      (f.category || "General") === category
+                                      (f.category || "General") === category,
                                   )
-                                  ?.map((f) => f.text) || []
-                            )
+                                  ?.map((f) => f.text) || [],
+                            ),
                           ),
                         ];
 
@@ -73,12 +73,12 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                           const hasFeature = plan.features?.some(
                             (f) =>
                               f.text === featureText &&
-                              (f.category || "General") === category
+                              (f.category || "General") === category,
                           );
                           const feature = plan.features?.find(
                             (f) =>
                               f.text === featureText &&
-                              (f.category || "General") === category
+                              (f.category || "General") === category,
                           );
 
                           return hasFeature ? (
@@ -145,8 +145,8 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                       plans.flatMap(
                         (plan) =>
                           plan.features?.map((f) => f.category || "General") ||
-                          []
-                      )
+                          [],
+                      ),
                     ),
                   ];
 
@@ -171,10 +171,10 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                                 plan.features
                                   ?.filter(
                                     (f) =>
-                                      (f.category || "General") === category
+                                      (f.category || "General") === category,
                                   )
-                                  ?.map((f) => f.text) || []
-                            )
+                                  ?.map((f) => f.text) || [],
+                            ),
                           ),
                         ];
 
@@ -190,12 +190,12 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                               const hasFeature = plan.features?.some(
                                 (f) =>
                                   f.text === featureText &&
-                                  (f.category || "General") === category
+                                  (f.category || "General") === category,
                               );
                               const feature = plan.features?.find(
                                 (f) =>
                                   f.text === featureText &&
-                                  (f.category || "General") === category
+                                  (f.category || "General") === category,
                               );
 
                               return (

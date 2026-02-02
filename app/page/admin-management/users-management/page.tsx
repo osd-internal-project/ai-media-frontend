@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { UsersSummaryPage } from "../../users-management/components/users-summary";
+import { UsersSummaryPage } from "./components/users-summary";
 import UserServices from "@/app/services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
-import UserFiltersPage from "../../users-management/components/user-filters";
+import UserFiltersPage from "./components/user-filters";
 import {
   Button,
   Form,
@@ -69,7 +69,7 @@ const AdminUsersManagementPage = () => {
   const fecthData = async () => {
     try {
       const response = await userServices.findBySearch(
-        searchText && searchText.trim()
+        searchText && searchText.trim(),
       );
       setData(response);
       setOpen({ status: false, type: "create" });
@@ -115,7 +115,7 @@ const AdminUsersManagementPage = () => {
             ...values,
             status: rest.status ? "active" : "unabled",
             groups,
-          }
+          },
         );
       }
       if (response) {
@@ -150,6 +150,8 @@ const AdminUsersManagementPage = () => {
       title: "Username/ID",
       dataIndex: "username",
       key: "username",
+      ellipsis: true,
+      width: 200,
       render: (text, record) => (
         <div className="flex items-center">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mr-3 flex items-center justify-center">
@@ -159,7 +161,7 @@ const AdminUsersManagementPage = () => {
           </div>
           <div>
             <div className="text-white font-medium">{text}</div>
-            <div className="text-gray-400 text-xs">{record.userId}</div>
+            {/* <div className="text-gray-400 text-xs">{record.userId}</div> */}
           </div>
         </div>
       ),
@@ -175,22 +177,28 @@ const AdminUsersManagementPage = () => {
       key: "description",
     },
     {
-      title: "User group",
-      dataIndex: ["groups"],
-      key: "groups",
-      render: (group: { group: TGroup }[]) => (
-        <div>
-          {group?.map((g) => (
-            <Tag
-              key={g.group.groupId}
-              className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3"
-            >
-              {g.group.name}
+      title: "Role",
+      dataIndex: ["role"],
+      key: "role",
+      render: (role: string) => {
+        if (!role) {
+          return "-";
+        } else if (role === "SUPER_ADMIN") {
+          return (
+            <Tag className={`rounded-full px-3  `} color="orange">
+              Super Admin
             </Tag>
-          )) || "-"}
-        </div>
-      ),
+          );
+        } else if (role === "USER") {
+          return (
+            <Tag className={`rounded-full px-3  `} color="blue">
+              User
+            </Tag>
+          );
+        }
+      },
     },
+
     {
       title: "Create time",
       dataIndex: "createdAt",
@@ -215,28 +223,8 @@ const AdminUsersManagementPage = () => {
       ),
     },
     {
-      title: "Create time",
-      dataIndex: "createTime",
-      key: "createTime",
-      sorter: true,
-    },
-    // {
-    //   title: "Max Token",
-    //   dataIndex: "maxToken",
-    //   key: "maxToken",
-    //   sorter: true,
-    //   render: (value) => value.toLocaleString(),
-    // },
-    // {
-    //   title: "Max Image",
-    //   dataIndex: "maxImages",
-    //   key: "maxImages",
-    //   sorter: true,
-    //   render: (value) => (value > 0 ? value.toLocaleString() : "-"),
-    // },
-    {
-      title: "Actions",
-      key: "actions",
+      title: "Action",
+      key: "id",
       render: (_, record) => {
         return (
           <Space>

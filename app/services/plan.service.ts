@@ -8,6 +8,7 @@ export interface PlanFeature {
 }
 
 export interface Plan {
+  id: string;
   name: string;
   description: string;
   badge: string | null;
@@ -41,7 +42,7 @@ const PlanServices = (axiosInstance: AxiosInstance) => {
           return [];
         });
     },
-    
+
     findAllFormatted: async (): Promise<Plan[]> => {
       return await axiosInstance
         .get(`${basePlansUrl}/formatted`)

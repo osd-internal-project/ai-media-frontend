@@ -5,9 +5,9 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/organization";
 
   return {
-    findAll: async () => {
+    findAll: async (search: { searchText?: string; type?: string }) => {
       return await axiosInstance
-        .get(`${baseUrl}`)
+        .get(`${baseUrl}`, { params: search })
         .then((res) => {
           return res.data;
         })
@@ -18,7 +18,7 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
     },
     findManyByUserId: async (
       userId: string,
-      search: { type: string }
+      search: { type: string },
     ): Promise<IOrganization[]> => {
       return await axiosInstance
         .get(`${baseUrl}/user/${userId}`, { params: search })
@@ -54,6 +54,16 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
     createOwner: async (value: any) => {
       return await axiosInstance
         .post(`${baseUrl}/owner`, value)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    createBySystemAdmin: async (value: any) => {
+      return await axiosInstance
+        .post(`${baseUrl}/system-admin`, value)
         .then((res) => {
           return res.data;
         })
