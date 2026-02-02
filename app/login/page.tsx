@@ -227,7 +227,7 @@ const Page: FC = () => {
         {/* Right Side: Visual */}
         <div className="hidden lg:flex w-1/2 bg-[#050505] relative overflow-hidden items-center justify-center">
           {/* Background effects */}
-          <div className="relative w-full h-full animate-float">
+          <div className="relative w-full h-[110%] animate-float">
             <Image
               src="/images/login-visual.jpg"
               alt="Login Visual"

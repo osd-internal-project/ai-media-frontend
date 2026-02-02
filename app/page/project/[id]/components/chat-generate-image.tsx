@@ -213,7 +213,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
-      const skip = page * pageSize;
+      const skip = page + pageSize;
       socket.emit("chat:get-history", {
         projectId,
         skip: skip,
@@ -476,7 +476,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
-    if (target.scrollTop === 0 && hasMore && !loading && !isFirstLoad.current) {
+    if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
       const nextPage = page + 1;

@@ -381,10 +381,15 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                         isAtBottomRef.current ||
                         shouldAutoScrollRef.current
                     ) {
+                        const isFirst = isFirstLoad.current;
                         setTimeout(() => {
-                            bottomRef.current?.scrollIntoView({
-                                behavior: isFirstLoad.current ? "instant" : "smooth",
-                            });
+                            if (isFirst && chatContainerRef.current) {
+                                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                            } else {
+                                bottomRef.current?.scrollIntoView({
+                                    behavior: "smooth",
+                                });
+                            }
                         }, 100);
                     }
                     if (isFirstLoad.current) {
@@ -427,7 +432,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const loadMoreMessages = (page: number, isLoadMore: boolean, currentId?: string) => {
         if (socket) {
             setDisableTab(true);
-            const skip = page * pageSize;
+            const skip = page + pageSize;
             socket.emit('chat:get-history', {
                 projectId,
                 skip: skip,
@@ -443,14 +448,14 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
             50;
         isAtBottomRef.current = isAtBottom;
+        console.log(target.scrollTop)
 
-        if (target.scrollTop === 0 && hasMore && !loading && !isFirstLoad.current) {
+        if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
             setIsFetchingHistory(true)
             scrollHeightRef.current = target.scrollHeight;
             const nextPage = page + 1;
             setPage(nextPage);
             loadMoreMessages(nextPage, true);
-            // fetchMessages(nextPage, true);
         }
     };
 
@@ -631,7 +636,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     };
 
     async function handleUsePromptGuide(prompt: TPromptGuide) {
-        console.log("prompt", prompt);
         form.setFieldValue("prompt", prompt.textPrompt);
         // Clear both First and Last inputs
         setFilesFirst([]);
