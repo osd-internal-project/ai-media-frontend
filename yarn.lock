@@ -687,7 +687,7 @@
 "@tailwindcss/oxide-linux-arm64-gnu@4.1.17":
   version "4.1.17"
   resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-arm64-gnu/-/oxide-linux-arm64-gnu-4.1.17.tgz#adc3c01cd73610870bfc21db5713571e08fb2210"
-  integrity sha512-HVDOm/mxK6+TbARwdW17WrgDYEGzmoYayrCgmLEw7FxTPLcp/glBisuyWkFz/jb7ZfiAXAXUACfyItn+nTgsdQ==
+  integrity sha512-Hvideom/mxK6+TbARwdW17WrgDYEGzmoYayrCgmLEw7FxTPLcp/glBisuyWkFz/jb7ZfiAXAXUACfyItn+nTgsdQ==
 
 "@tailwindcss/oxide-linux-arm64-musl@4.1.17":
   version "4.1.17"
@@ -2038,7 +2038,7 @@ flatted@^3.2.9:
 follow-redirects@^1.15.6:
   version "1.15.11"
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.11.tgz"
-  integrity sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==
+  integrity sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWvideolizcaaxZJnTS0QSMxvnsBQ==
 
 for-each@^0.3.3, for-each@^0.3.5:
   version "0.3.5"
@@ -4022,7 +4022,7 @@ throttle-debounce@^5.0.0, throttle-debounce@^5.0.2:
 tiktok-video-element@^0.1.1:
   version "0.1.1"
   resolved "https://registry.npmjs.org/tiktok-video-element/-/tiktok-video-element-0.1.1.tgz"
-  integrity sha512-BaiVzvNz2UXDKTdSrXzrNf4q6Ecc+/utYUh7zdEu2jzYcJVDoqYbVfUl0bCfMoOeeAqg28vD/yN63Y3E9jOrlA==
+  integrity sha512-BaiVzvNz2UXDKTdSrXzrNf4q6Ecc+/utYUh7zdEu2jzYcJvideoqYbVfUl0bCfMoOeeAqg28vD/yN63Y3E9jOrlA==
 
 tinyglobby@^0.2.13:
   version "0.2.15"
@@ -4088,7 +4088,7 @@ typed-array-buffer@^1.0.3:
 typed-array-byte-length@^1.0.3:
   version "1.0.3"
   resolved "https://registry.npmjs.org/typed-array-byte-length/-/typed-array-byte-length-1.0.3.tgz"
-  integrity sha512-BaXgOuIxz8n8pIq3e7Atg/7s+DpiYrxn4vdot3w9KbnBhcRQq6o3xemQdIfynqSeXeDrF32x+WvfzmOjPiY9lg==
+  integrity sha512-BaXgOuIxz8n8pIq3e7Atg/7s+DpiYrxn4videot3w9KbnBhcRQq6o3xemQdIfynqSeXeDrF32x+WvfzmOjPiY9lg==
   dependencies:
     call-bind "^1.0.8"
     for-each "^0.3.3"

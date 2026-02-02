@@ -14,12 +14,12 @@ import { useSession } from "next-auth/react";
 import { Image, Video, Folders, Star, LightbulbIcon } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
-import ImageChat from "./components/image-chat";
 import PromptLibrary from "./components/prompt-library";
 import PromptActivity from "./components/prompt-activity";
-import VideoChat from "./components/video-chat";
 import AIModelServices from "@/app/services/ai-model.service";
 import { TAIModel } from "@/app/common/ai-model.type";
+import ChatGenerateImage from "./components/chat-generate-image";
+import ChatGenerateVideo from "./components/chat-generate-video";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -30,7 +30,7 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
-    "image" | "vdo" | "library" | "activity"
+    "image" | "video" | "library" | "activity"
   >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -42,9 +42,7 @@ const GenerateImagePage: FC = () => {
     []
   );
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
-  const [selectedAIModel, setSelectedAIModel] = useState<
-    (TAIModel & { capabilities?: string[] }) | null
-  >(null);
+  const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
   const { id } = params as { id: string };
   const { organizationId } = useOrganization();
   const [projectRole, setProjectRole] = useState<string | null>(null);
@@ -82,7 +80,6 @@ const GenerateImagePage: FC = () => {
           const actualUserId = userDetails?.userId || session.user.id;
 
           const userRole = await projectService.checkUserRole(id, actualUserId);
-
           setProjectRole(userRole);
         } catch (error) {
           console.error("Failed to fetch project role:", error);
@@ -124,11 +121,11 @@ const GenerateImagePage: FC = () => {
 
   const masterdata = async () => {
     const res = await promptguideTypeService.findAll();
-    
+
     const filteredTypes = (res || []).filter(
       (type) => type.organizationId === organizationId
     );
-    
+
     setPromptGuideTypes(filteredTypes);
 
     const models = await aiModelService.findAll();
@@ -136,7 +133,7 @@ const GenerateImagePage: FC = () => {
     setAIModels(models || []);
   };
 
-  const onChangeTab = (key: "image" | "vdo" | "library" | "activity") => {
+  const onChangeTab = (key: "image" | "video" | "library" | "activity") => {
     setActiveKey(key);
 
     if (processedModels.length > 0) {
@@ -147,7 +144,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (key === "image" ? m.type === "image" : m.type === "vdo")
+            (key === "image" ? m.type === "image" : m.type === "video")
         );
       }
 
@@ -156,13 +153,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (key === "image" ? m.type === "image" : m.type === "vdo")
+            (key === "image" ? m.type === "image" : m.type === "video")
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            key === "image" ? m.type === "image" : m.type === "vdo"
+            key === "image" ? m.type === "image" : m.type === "video"
           );
         }
       }
@@ -203,7 +200,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+            (activeKey === "image" ? m.type === "image" : m.type === "video")
         );
       }
 
@@ -212,13 +209,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (activeKey === "image" ? m.type === "image" : m.type === "vdo")
+            (activeKey === "image" ? m.type === "image" : m.type === "video")
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            activeKey === "image" ? m.type === "image" : m.type === "vdo"
+            activeKey === "image" ? m.type === "image" : m.type === "video"
           );
         }
       }
@@ -230,7 +227,7 @@ const GenerateImagePage: FC = () => {
   }, [processedModels, activeKey, selectedAIModel, id]);
 
   const filteredAIModels = processedModels.filter((model) =>
-    activeKey === "image" ? model.type === "image" : model.type === "vdo"
+    activeKey === "image" ? model.type === "image" : model.type === "video"
   );
 
   return (
@@ -248,7 +245,7 @@ const GenerateImagePage: FC = () => {
             const model = filteredAIModels.find(
               (m) => m.id === parseInt(value)
             );
-            setSelectedAIModel(model || null);
+            setSelectedAIModel(model);
             if (model) {
               localStorage.setItem(
                 `selectedAIModel_${activeKey}_${id}`,
@@ -430,7 +427,7 @@ const GenerateImagePage: FC = () => {
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
           // tabBarExtraContent={
-          //   activeKey === "image" || activeKey === "vdo" ? (
+          //   activeKey === "image" || activeKey === "video" ? (
           //     <div className="flex gap-4 items-center relative">
           //       <div className="flex items-center gap-3">
           //         <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -695,7 +692,7 @@ const GenerateImagePage: FC = () => {
           //   )
           // }
           onChange={(key) =>
-            onChangeTab(key as "image" | "vdo" | "library" | "activity")
+            onChangeTab(key as "image" | "video" | "library" | "activity")
           }
           items={[
             {
@@ -709,7 +706,7 @@ const GenerateImagePage: FC = () => {
                 </div>
               ),
               children: (
-                <ImageChat
+                <ChatGenerateImage
                   promptGuideOpenStatus={promptGuideOpenStatus}
                   key={`image`}
                   activeKey={activeKey}
@@ -727,7 +724,7 @@ const GenerateImagePage: FC = () => {
             {
               disabled: disableTab,
               forceRender: true,
-              key: "vdo",
+              key: "video",
               label: (
                 <div className="flex items-center gap-2 px-2 py-1 w-full">
                   <Video size={20} />
@@ -735,8 +732,8 @@ const GenerateImagePage: FC = () => {
                 </div>
               ),
               children: (
-                <VideoChat
-                  key={`vdo`}
+                <ChatGenerateVideo
+                  key={"video"}
                   activeKey={activeKey}
                   projectId={id}
                   userId={session?.user?.id}

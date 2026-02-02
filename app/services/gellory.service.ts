@@ -87,7 +87,7 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
         })
         .catch((err) => {
           console.log(err);
-          return;
+          throw err
         });
     },
   };

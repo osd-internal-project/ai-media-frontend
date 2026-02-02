@@ -59,7 +59,7 @@ const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
       title: "Token Usage",
       dataIndex: ["project", "logs"],
       render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.filter(log => log.typeGenerate === 'vdo').reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
+        formatNumber(v.filter(log => log.typeGenerate === 'video').reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
       width: "250px",
       align: "right",
     },

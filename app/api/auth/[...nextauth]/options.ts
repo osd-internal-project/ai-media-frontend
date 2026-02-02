@@ -203,6 +203,8 @@ export const authOptions = {
               token.roles = decodedToken.realm_access?.roles || [];
               token.groups = decodedToken.groups || [];
               token.sub = decodedToken.sub;
+              token.name = decodedToken.name;
+              token.email = decodedToken.email;
             }
           } catch (e) {
             console.error("Failed to decode token", e);
@@ -231,6 +233,8 @@ export const authOptions = {
               token.roles = decodedToken.realm_access?.roles || [];
               token.groups = decodedToken.groups || [];
               token.sub = decodedToken.sub;
+              token.name = decodedToken.name;
+              token.email = decodedToken.email;
             }
           } catch (e) {
             console.error("Failed to decode user token from backend", e);

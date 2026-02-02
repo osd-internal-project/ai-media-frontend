@@ -80,8 +80,8 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
         <div className="text-center mb-8 p-6">
           <div className="flex justify-center mb-4">
             <Image
-              width="80px"
-              src="/images/Logo.png"
+              // width="80px"
+              src="/images/logo-1.png"
               alt="OSD Logo"
               preview={false}
             />
@@ -96,21 +96,19 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
           <div className="inline-flex bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                billingPeriod === "monthly"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "monthly"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               MONTHLY
             </button>
             <button
               onClick={() => setBillingPeriod("annually")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                billingPeriod === "annually"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "annually"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               ANNUALLY
               <span className="ml-2 text-xs text-green-400">

@@ -34,7 +34,7 @@ const Page: FC = () => {
         {/* Top: Logo */}
         <div className="flex items-center">
           <Image
-            src="/images/Logo.png"
+            src="/images/logo-1.png"
             alt="Ai Cave Logo"
             width={100}
             height={32}

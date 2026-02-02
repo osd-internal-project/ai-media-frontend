@@ -33,12 +33,14 @@ import { canCreateProjects } from "../../utils/permissions";
 import OrganizationServices from "@/app/services/organization.service";
 import { IOrganization } from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
+import { useWebSocket } from "@/app/hooks/useWebsocket";
 
 const MAX_MEMBERS = 5;
 
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { socket, isConnected } = useWebSocket();
   const { organizationId, organizationRole } = useOrganization();
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
@@ -374,15 +376,25 @@ const ProjectsPage = () => {
     });
   };
 
+
+  const onClickProject = (projectId: string) => {
+    if (socket) {
+      socket.emit('chat:get-history', {
+        projectId,
+        skip: 0,
+        pageSize: 3
+      });
+    }
+    router.push(`/page/project/${projectId}`);
+  };
+
   return (
     <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
       {contextMessageHolder}
       <div
-        className={`flex ${
-          isMobile ? "flex-row" : "flex-col sm:flex-row"
-        } justify-between items-center mb-6 sm:mb-8 ${
-          isMobile ? "gap-3" : "gap-4 sm:gap-0"
-        }`}
+        className={`flex ${isMobile ? "flex-row" : "flex-col sm:flex-row"
+          } justify-between items-center mb-6 sm:mb-8 ${isMobile ? "gap-3" : "gap-4 sm:gap-0"
+          }`}
       >
         <div className="flex items-center gap-3">
           <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -395,9 +407,8 @@ const ProjectsPage = () => {
             icon={<PlusOutlined />}
             onClick={handleOpen}
             style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
-              isMobile ? "w-auto" : "w-full sm:w-auto"
-            }`}
+            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
+              }`}
           >
             Create Team
           </Button>
@@ -418,7 +429,7 @@ const ProjectsPage = () => {
               <div
                 className="group relative rounded-xl p-3 sm:p-4 hover:bg-zinc-700/50 hover:scale-100 hover:shadow-lg hover:shadow-zinc-400/10 transition-all duration-300 cursor-pointer hover:border-zinc-500/60 h-full flex flex-col border border-zinc-700/50"
                 style={{ backgroundColor: "#18181B" }}
-                onClick={() => router.push(`/page/project/${project.id}`)}
+                onClick={() => onClickProject(project.id)}
               >
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="flex-grow min-w-0">
@@ -754,22 +765,22 @@ const ProjectsPage = () => {
                             options={
                               searchTexts[index] && searchTexts[index].length > 0
                                 ? organizationMembers
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId && i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                  .filter(
+                                    (u) =>
+                                      !projectMembers.find(
+                                        (m, i) =>
+                                          m.userId === u.userId && i !== index
+                                      ) &&
+                                      u.fullname
+                                        .toLowerCase()
+                                        .includes(
+                                          searchTexts[index].toLowerCase()
+                                        )
+                                  )
+                                  .map((e) => ({
+                                    value: e.userId,
+                                    label: e.fullname,
+                                  }))
                                 : []
                             }
                             notFoundContent={
@@ -889,7 +900,7 @@ const ProjectsPage = () => {
                         (Max:{" "}
                         {formatNumber(
                           (organization?.remainImageAmount || 0) +
-                            (selectedProject?.accessImageAmount || 0)
+                          (selectedProject?.accessImageAmount || 0)
                         )}
                         )
                       </span>
@@ -906,7 +917,7 @@ const ProjectsPage = () => {
                         (selectedProject?.accessImageAmount || 0),
                       message: `Cannot exceed available image (${formatNumber(
                         (organization?.remainImageAmount || 0) +
-                          (selectedProject?.accessImageAmount || 0)
+                        (selectedProject?.accessImageAmount || 0)
                       )})`,
                     },
                   ]}
@@ -915,7 +926,7 @@ const ProjectsPage = () => {
                     placeholder={
                       (organization?.remainImageAmount || 0) +
                         (selectedProject?.accessImageAmount || 0) ===
-                      0
+                        0
                         ? "No image available"
                         : "Enter image amount"
                     }
@@ -934,7 +945,7 @@ const ProjectsPage = () => {
                         (Max:{" "}
                         {formatNumber(
                           (organization?.remainTokenAmount || 0) +
-                            (selectedProject?.accessTokenAmount || 0)
+                          (selectedProject?.accessTokenAmount || 0)
                         )}
                         )
                       </span>
@@ -951,7 +962,7 @@ const ProjectsPage = () => {
                         (selectedProject?.accessTokenAmount || 0),
                       message: `Cannot exceed available token (${formatNumber(
                         (organization?.remainTokenAmount || 0) +
-                          (selectedProject?.accessTokenAmount || 0)
+                        (selectedProject?.accessTokenAmount || 0)
                       )})`,
                     },
                   ]}
@@ -960,7 +971,7 @@ const ProjectsPage = () => {
                     placeholder={
                       (organization?.remainTokenAmount || 0) +
                         (selectedProject?.accessTokenAmount || 0) ===
-                      0
+                        0
                         ? "No token available"
                         : "Enter token amount"
                     }
@@ -1122,22 +1133,22 @@ const ProjectsPage = () => {
                             options={
                               searchTexts[index] && searchTexts[index].length > 0
                                 ? organizationMembers
-                                    .filter(
-                                      (u) =>
-                                        !projectMembers.find(
-                                          (m, i) =>
-                                            m.userId === u.userId && i !== index
-                                        ) &&
-                                        u.fullname
-                                          .toLowerCase()
-                                          .includes(
-                                            searchTexts[index].toLowerCase()
-                                          )
-                                    )
-                                    .map((e) => ({
-                                      value: e.userId,
-                                      label: e.fullname,
-                                    }))
+                                  .filter(
+                                    (u) =>
+                                      !projectMembers.find(
+                                        (m, i) =>
+                                          m.userId === u.userId && i !== index
+                                      ) &&
+                                      u.fullname
+                                        .toLowerCase()
+                                        .includes(
+                                          searchTexts[index].toLowerCase()
+                                        )
+                                  )
+                                  .map((e) => ({
+                                    value: e.userId,
+                                    label: e.fullname,
+                                  }))
                                 : []
                             }
                             notFoundContent={

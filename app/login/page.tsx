@@ -113,6 +113,7 @@ const Page: FC = () => {
             {/* Socials */}
             <div className="flex gap-4 mb-8">
               <button
+                disabled
                 onClick={handleGoogleLogin}
                 className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
               >
@@ -145,6 +146,7 @@ const Page: FC = () => {
                 onClick={() =>
                   messageApi.info("Microsoft login not implemented yet")
                 }
+                disabled
               >
                 <svg className="w-5 h-5" viewBox="0 0 23 23">
                   <path fill="#f35325" d="M1 1h10v10H1z" />

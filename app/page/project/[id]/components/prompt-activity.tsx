@@ -8,9 +8,11 @@ import {
   notification,
   Button,
   message,
+  Typography,
+  Tooltip,
 } from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
-import { Download } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -31,7 +33,7 @@ const PromptActivity: FC<props> = ({
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const pageSize = 8;
+  const pageSize = 9;
   const [getData, setData] = useState<{ data: any[]; total: number }>({
     data: [],
     total: 0,
@@ -69,11 +71,11 @@ const PromptActivity: FC<props> = ({
       const urlWithoutParams = imageUrl.split("?")[0];
       const filename =
         urlWithoutParams.split("/").pop() ||
-        (types === "vdo" ? "video.mp4" : "image.jpg");
+        (types === "video" ? "video.mp4" : "image.jpg");
 
       // Show loading message
       const hide = message.loading(
-        `Downloading ${types === "vdo" ? "video" : "image"}...`,
+        `Downloading ${types === "video" ? "video" : "image"}...`,
         0
       );
 
@@ -91,7 +93,7 @@ const PromptActivity: FC<props> = ({
 
       hide();
       message.success(
-        `${types === "vdo" ? "Video" : "Image"} downloaded successfully`
+        `${types === "video" ? "Video" : "Image"} downloaded successfully`
       );
     } catch (error) {
       console.error("Download error:", error);
@@ -131,9 +133,9 @@ const PromptActivity: FC<props> = ({
   return (
     <div className="h-[calc(100vh-160px)]">
       {contextHolders}
-      <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4 gap-6"> 
+      <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4 gap-6">
         <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full pr-6 border-r border-gray-700/50">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 content-start overflow-y-auto">
             {getData.data.map((image, imgIndex) => {
               return (
                 <div
@@ -144,75 +146,40 @@ const PromptActivity: FC<props> = ({
                     className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                     onClick={() => onSelectPrompt(image)}
                   >
-                    {/* <img
-                src={typeof thumbnailSrc === 'string' ? thumbnailSrc : thumbnailSrc.src}
-                loading="lazy"
-                alt="Video thumbnail"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded ? 'opacity-0' : 'opacity-100'
-                    }`}
-            />
-
-            {videoLoaded && (
-                <video
-                    ref={videoRef}
-                    src={videoData.imageUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'
-                        }`}
-                />
-            )} */}
-                    {image.typeGenerate === "vdo" ? (
-                      <VideoItem
-                        key={imgIndex}
-                        videoData={image}
-                        onDownloadVideo={onDownloadVideo}
-                        onShareVideo={function (
-                          taskId: string,
-                          status: boolean
-                        ): void {
-                          throw new Error("Function not implemented.");
-                        }}
-                        shareStatus={false}
-                      />
+                    {image.typeGenerate === "video" ? (
+                      <div>
+                        <VideoItem
+                          key={imgIndex}
+                          videoData={image}
+                          onDownloadVideo={onDownloadVideo}
+                          onShareVideo={function (
+                            taskId: string,
+                            status: boolean
+                          ): void {
+                            throw new Error("Function not implemented.");
+                          }}
+                          shareStatus={false}
+                        />
+                        <div className="absolute bottom-0 left-0 w-full py-2 bg-black/80 backdrop-blur-md border-t border-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center z-20">
+                          <span className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5 tracking-wide">
+                            <Info className="w-3.5 h-3.5 text-purple-400" />
+                            More Info
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      // <div className="relative overflow-hidden rounded-xl border border-gray-700/50 shadow-2xl h-[200px]">
-                      //   {/* <video
-                      //     controls
-                      //     className="w-full h-full object-cover"
-                      //     preload="metadata"
-                      //   >
-                      //     <source
-                      //       src={`/api/vdo/${encodeURIComponent(image.imageUrl)}`}
-                      //       type="video/mp4"
-                      //     />
-                      //     Your browser does not support the video tag.
-                      //   </video> */}
-                      //   <video
-                      //     // ref={videoRef}
-                      //     src={image.imageUrl}
-                      //     muted
-                      //     loop
-                      //     playsInline
-                      //     preload="metadata"
-                      //   // className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                      //   />
-                      // </div>
-                      // <Image
-                      //   preview={false}
-                      //   height={"100%"}
-                      //   fallback={fallbackImage}
-                      //   // src={image.imageUrl}
-                      //   src={`/api/images/${encodeURIComponent(image.imageUrl)}`}
-                      //   className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-300"
-                      //   alt={`AI Generated Image ${imgIndex + 1}`}
-                      // />
-                      <img
+                      <Image
                         src={image.imageUrl}
                         loading="lazy"
                         alt="Video thumbnail"
+                        width="100%"
+                        height="100%"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
                       />
                     )}
 
@@ -282,7 +249,24 @@ const PromptActivity: FC<props> = ({
                   <div className="text-[16px]  space-y-4">
                     <div>
                       <div>Prompt:</div>
-                      <div>{selected.prompt}</div>
+                      <div>
+                        {selected.prompt.length > 0 && (
+                          <Tooltip
+                            placement="left"
+                            title={selected.prompt}
+                            overlayStyle={{ maxWidth: '600px' }}
+                          >
+                            <Typography.Paragraph
+                              ellipsis={{
+                                rows: 20,
+                              }}
+                              className="!text-gray-200 !mb-0"
+                            >
+                              {selected.prompt}
+                            </Typography.Paragraph>
+                          </Tooltip>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex justify-between">
@@ -295,13 +279,13 @@ const PromptActivity: FC<props> = ({
                       <div className="whitespace-pre-line">
                         {selected?.createdAt
                           ? `${new Date(selected.createdAt).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            })}`
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                          })}`
                           : "-"}
                       </div>
                     </div>

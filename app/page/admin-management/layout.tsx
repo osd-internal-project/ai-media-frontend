@@ -115,8 +115,8 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
             {/* Logo Section */}
             <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
               <Image
-                width={"120px"}
-                src="/images/Logo.png"
+                // width={"120px"}
+                src="/images/logo-1.png"
                 alt="OSD Logo"
                 preview={false}
                 className="mb-2"

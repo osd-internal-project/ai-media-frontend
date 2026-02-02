@@ -22,6 +22,7 @@ import {
   MenuOutlined,
   PlusCircleOutlined,
   SettingOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import {
   User,
@@ -179,14 +180,12 @@ const NavbarUser: React.FC<Props> = ({
           ORGANIZATION:
         </span>
         <div
-          className={`flex items-center ${
-            isMobile ? "flex-1 min-w-0" : "justify-between w-full"
-          } px-2 sm:px-4`}
+          className={`flex items-center ${isMobile ? "flex-1 min-w-0" : "justify-between w-full"
+            } px-2 sm:px-4`}
         >
           <div
-            className={`flex items-center gap-2 sm:gap-6 ${
-              isMobile ? "flex-1 min-w-0" : ""
-            }`}
+            className={`flex items-center gap-2 sm:gap-6 ${isMobile ? "flex-1 min-w-0" : ""
+              }`}
           >
             <Select
               size="middle"
@@ -294,9 +293,8 @@ const NavbarUser: React.FC<Props> = ({
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}
-                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
-                    isMobile ? "w-auto" : "w-full sm:w-auto"
-                  }`}
+                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
+                    }`}
                 >
                   Upgrade
                 </Button>
@@ -343,11 +341,10 @@ const NavbarUser: React.FC<Props> = ({
                 </div>
               </Tag>
               <div
-                className={`flex items-center ${
-                  isMobile ? "gap-1" : "gap-2 sm:gap-4"
-                }`}
+                className={`flex items-center ${isMobile ? "gap-1" : "gap-2 sm:gap-4"
+                  }`}
               >
-                <Avatar size={isMobile ? 34 : 48} />
+                <Avatar icon={<UserOutlined />} style={{ background: 'linear-gradient(90deg, #5B6BF9 0%, #9D5BF9 100%)', border: 'none' }} size={isMobile ? 34 : 42} />
                 {!isMobile && (
                   <div className="flex items-center min-w-0">
                     <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base truncate">
@@ -411,8 +408,8 @@ const NavbarUser: React.FC<Props> = ({
             {/* Logo at top of mobile drawer */}
             <div className="w-full flex justify-center items-center pt-8 flex-shrink-0">
               <Image
-                width={"60px"}
-                src="/images/Logo.png"
+                // width={"60px"}
+                src="/images/logo-1.png"
                 alt="OSD Logo"
                 preview={false}
                 className="mb-2"
