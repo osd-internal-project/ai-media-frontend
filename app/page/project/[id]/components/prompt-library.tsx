@@ -8,9 +8,13 @@ import {
   notification,
   Button,
   message,
+  Tabs,
+  TabsProps,
+  Typography,
+  Tooltip,
 } from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
-import { Download } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -31,7 +35,7 @@ const PromptLibrary: FC<props> = ({
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const pageSize = 8;
+  const pageSize = 9;
   const [getData, setData] = useState<{ data: any[]; total: number }>({
     data: [],
     total: 0,
@@ -128,12 +132,13 @@ const PromptLibrary: FC<props> = ({
     }
   };
 
+
   return (
     <div className="h-[calc(100vh-160px)]">
       {contextHolders}
       <div className="grid sm:grid-cols-2 md:grid-cols-5 h-full p-4 gap-6">
         <div className="md:col-span-4 sm:col-span-2 flex flex-col h-full pr-6 border-r border-gray-700/50">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-start overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 flex-1 content-start overflow-y-auto">
             {getData.data.map((image, imgIndex) => {
               return (
                 <div
@@ -145,23 +150,39 @@ const PromptLibrary: FC<props> = ({
                     onClick={() => onSelectPrompt(image)}
                   >
                     {image.typeGenerate === "video" ? (
-                      <VideoItem
-                        key={imgIndex}
-                        videoData={image}
-                        onDownloadVideo={onDownloadVideo}
-                        onShareVideo={function (
-                          taskId: string,
-                          status: boolean
-                        ): void {
-                          throw new Error("Function not implemented.");
-                        }}
-                        shareStatus={false}
-                      />
+                      <div>
+                        <VideoItem
+                          key={imgIndex}
+                          videoData={image}
+                          onDownloadVideo={onDownloadVideo}
+                          onShareVideo={function (
+                            taskId: string,
+                            status: boolean
+                          ): void {
+                            throw new Error("Function not implemented.");
+                          }}
+                          shareStatus={false}
+                        />
+                        <div className="absolute bottom-0 left-0 w-full py-2 bg-black/80 backdrop-blur-md border-t border-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center z-20">
+                          <span className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5 tracking-wide">
+                            <Info className="w-3.5 h-3.5 text-purple-400" />
+                            More Info
+                          </span>
+                        </div>
+                      </div>
                     ) : (
-                      <img
+                      <Image
                         src={image.imageUrl}
                         loading="lazy"
                         alt="Video thumbnail"
+                        width="100%"
+                        height="100%"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
                       />
                     )}
 
@@ -231,7 +252,22 @@ const PromptLibrary: FC<props> = ({
                   <div className="text-[16px] space-y-4">
                     <div>
                       <div>Prompt:</div>
-                      <div>{selected.prompt}</div>
+                      {selected.prompt.length > 0 && (
+                        <Tooltip
+                          placement="left"
+                          title={selected.prompt}
+                          overlayStyle={{ maxWidth: '600px' }}
+                        >
+                          <Typography.Paragraph
+                            ellipsis={{
+                              rows: 20,
+                            }}
+                            className="!text-gray-200 !mb-0"
+                          >
+                            {selected.prompt}
+                          </Typography.Paragraph>
+                        </Tooltip>
+                      )}
                     </div>
 
                     <div className="flex justify-between">

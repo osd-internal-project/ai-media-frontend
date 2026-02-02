@@ -423,6 +423,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           });
           isFirstLoad.current = false;
           setLoading(false);
+          setIsFetchingHistory(false);
         } else {
           setMessages(itemsToProcess);
           if (
@@ -833,7 +834,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             className="flex-1 overflow-y-auto px-4 scroll-smooth space-y-6"
           >
 
-            {loading && hasMore && (
+            {(loading || isFetchingHistory) && hasMore && (
               <div className="flex justify-center py-2">
                 <Spin
                   indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />}

@@ -22,6 +22,7 @@ import {
   MenuOutlined,
   PlusCircleOutlined,
   SettingOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import {
   User,
@@ -343,7 +344,7 @@ const NavbarUser: React.FC<Props> = ({
                 className={`flex items-center ${isMobile ? "gap-1" : "gap-2 sm:gap-4"
                   }`}
               >
-                <Avatar size={isMobile ? 34 : 48} />
+                <Avatar icon={<UserOutlined />} style={{ background: 'linear-gradient(90deg, #5B6BF9 0%, #9D5BF9 100%)', border: 'none' }} size={isMobile ? 34 : 42} />
                 {!isMobile && (
                   <div className="flex items-center min-w-0">
                     <span className="font-bold text-white whitespace-nowrap text-sm sm:text-base truncate">

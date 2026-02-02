@@ -199,7 +199,7 @@ export default function ChatVideoInput({
             <div className="w-full max-w-4xl pointer-events-auto">
                 <div className="bg-[#1a1b1e]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-2">
                     <Form
-                        name="basic"
+                        name="video"
                         form={form}
                         onFinish={handleSendMessage}
                         autoComplete="off"

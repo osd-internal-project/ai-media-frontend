@@ -372,6 +372,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                         return [...uniqueNewMessages, ...prev];
                     });
                     isFirstLoad.current = false;
+                    setIsFetchingHistory(false);
                     setLoading(false);
                 } else {
                     setMessages(itemsToProcess);
@@ -785,7 +786,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                         onScroll={handleScroll}
                         className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth space-y-6"
                     >
-                        {loading && !isFirstLoad.current && (
+                        {(loading || isFetchingHistory) && !isFirstLoad.current && (
                             <div className="flex justify-center py-4">
                                 <div className="w-6 h-6 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
                             </div>
