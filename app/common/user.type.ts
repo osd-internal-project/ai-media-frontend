@@ -17,6 +17,7 @@ export type TUser = {
   email: string;
   phoneNumber: string;
   password?: string;
+  role?: string;
   groups?: { group: TGroup }[];
   recentOrganizationId?: string;
 };
