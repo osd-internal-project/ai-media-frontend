@@ -1,6 +1,7 @@
 // src/hooks/useWebSocket.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import config from '../config';
 
 interface UseWebSocketOptions {
     url?: string;
@@ -23,7 +24,7 @@ export const useWebSocket = (
     options: UseWebSocketOptions = {}
 ): UseWebSocketReturn => {
     const {
-        url = 'http://localhost:4002',
+        url = `${config.backendWebHookUrl}`,
         path = '/api/websocket',
         autoConnect = true,
         onConnect,

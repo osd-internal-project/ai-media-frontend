@@ -6,6 +6,7 @@ const config = {
   backendUserUrl: process.env.AUTH_BACKEND_URL,
   nextauthUrl: process.env.NEXTAUTH_URL,
   version: process.env.NEXT_PUBLIC_VERSION,
+  backendWebHookUrl: process.env.NEXT_PUBLIC_API_BASE_URL_WEB_HOOCK,
 };
 
 export default config;
