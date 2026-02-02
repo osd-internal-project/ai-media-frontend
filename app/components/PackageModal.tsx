@@ -12,11 +12,17 @@ interface PackageModalProps {
   onPlanSelect?: (plan: Plan) => void;
 }
 
-const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect }) => {
+const PackageModal: React.FC<PackageModalProps> = ({
+  open,
+  onClose,
+  onPlanSelect,
+}) => {
   const router = useRouter();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
+    "monthly",
+  );
 
   const planService = useMemo(() => PlanServices(axiosCore), []);
 
@@ -32,7 +38,7 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
       console.log(data);
       setPlans(data);
     } catch (error) {
-      console.error('Failed to fetch plans:', error);
+      console.error("Failed to fetch plans:", error);
       setPlans([]);
     } finally {
       setLoading(false);
@@ -51,7 +57,9 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
       onClose();
     } else {
       onClose();
-      router.push(`/page/organization/create?plan=${encodeURIComponent(plan.name)}`);
+      router.push(
+        `/page/organization/create?plan=${encodeURIComponent(plan.id)}`,
+      );
     }
   };
 
@@ -87,8 +95,9 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
             />
           </div>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Unlock the full potential of AI media creation with our flexible pricing plans.
-            Start creating stunning images, videos, and audio content today.
+            Unlock the full potential of AI media creation with our flexible
+            pricing plans. Start creating stunning images, videos, and audio
+            content today.
           </p>
         </div>
 
@@ -96,19 +105,21 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
           <div className="inline-flex bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "monthly"
-                ? "bg-gray-700 text-white"
-                : "text-gray-400 hover:text-white"
-                }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingPeriod === "monthly"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
             >
               MONTHLY
             </button>
             <button
               onClick={() => setBillingPeriod("annually")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "annually"
-                ? "bg-gray-700 text-white"
-                : "text-gray-400 hover:text-white"
-                }`}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingPeriod === "annually"
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
             >
               ANNUALLY
               <span className="ml-2 text-xs text-green-400">
@@ -143,7 +154,10 @@ const PackageModal: React.FC<PackageModalProps> = ({ open, onClose, onPlanSelect
 
         <div className="text-center mt-8 p-4 border-t border-gray-700">
           <p className="text-sm text-gray-400">
-            Need a custom plan? <span className="text-blue-400 cursor-pointer hover:underline">Contact our sales team</span>
+            Need a custom plan?{" "}
+            <span className="text-blue-400 cursor-pointer hover:underline">
+              Contact our sales team
+            </span>
           </p>
         </div>
       </div>

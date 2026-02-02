@@ -29,10 +29,10 @@ export default function CreateOrganizationPage() {
       const raw = await planService.findAll();
       setRawPlans(raw);
 
-      const planName = searchParams.get("plan");
-      
-      if (planName) {
-        const rawPlan = raw.find((p) => p.name === planName);
+      const planId = searchParams.get("plan");
+
+      if (planId) {
+        const rawPlan = raw.find((p) => p.id === String(planId));
         if (rawPlan) {
           setSelectedPlan(rawPlan);
         }
@@ -40,7 +40,6 @@ export default function CreateOrganizationPage() {
     };
     fetchPlans();
   }, [planService, searchParams]);
-  
 
   const onFinish = async (values: any) => {
     if (!selectedPlan) {
@@ -52,13 +51,15 @@ export default function CreateOrganizationPage() {
 
     try {
       const userDetail = await userServices.findDetailByToken(
-        session?.user?.id as string
+        session?.user?.id as string,
       );
 
       const payload = {
         ...values,
-        packageTokenAmount: parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
-        packageImageAmount: parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
+        packageTokenAmount:
+          parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
+        packageImageAmount:
+          parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
         maxUserAccess: parseInt(selectedPlan.detailJson.maxUserAccess) || 1,
         type: "team",
         createdById: userDetail?.userId || "",

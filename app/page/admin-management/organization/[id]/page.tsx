@@ -15,6 +15,7 @@ import {
   Space,
   InputNumber,
   message,
+  Switch,
 } from "antd";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import OrganizationService from "@/app/services/organization.service";
@@ -103,6 +104,7 @@ export default function OrganizationDetailPage() {
     editForm.setFieldsValue({
       name: organization?.name,
       description: organization?.description,
+      status: organization?.status,
     });
     setIsEditModalOpen(true);
   };
@@ -348,7 +350,7 @@ export default function OrganizationDetailPage() {
         </Descriptions> */}
         </Card>
       </div>
-      <div className="grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
         <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
           <div className=" text-[#99a1af]"> Used Total Token : </div>
           <div className=" text-xl">
@@ -405,6 +407,9 @@ export default function OrganizationDetailPage() {
         <Form form={editForm} onFinish={onEditFinish} layout="vertical">
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
             <Input />
+          </Form.Item>{" "}
+          <Form.Item name="status" label="Status" valuePropName="checked">
+            <Switch />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} />
@@ -429,6 +434,7 @@ export default function OrganizationDetailPage() {
               <Select.Option value="OWNER">OWNER</Select.Option>
               <Select.Option value="ADMIN">ADMIN</Select.Option>
               <Select.Option value="MEMBER">MEMBER</Select.Option>
+              <Select.Option value="VIEWER">VIEWER</Select.Option>
             </Select>
           </Form.Item>
           {/* <Form.Item name="maxToken" label="Max Token">

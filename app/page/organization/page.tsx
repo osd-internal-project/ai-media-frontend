@@ -55,7 +55,7 @@ export default function OrganizationDetailPage() {
 
   const showMessage = (
     type: "error" | "success" | "warning" | "loading",
-    content: string
+    content: string,
   ) => {
     messageApi.open({
       type: type,
@@ -77,9 +77,8 @@ export default function OrganizationDetailPage() {
       const orgData = await organizationService.findById(organizationId);
       setOrganization(orgData);
 
-      const membersData = await organizationMemberService.findByOrganization(
-        organizationId
-      );
+      const membersData =
+        await organizationMemberService.findByOrganization(organizationId);
       setMembers(membersData || []);
     } catch (error) {
       console.error(error);
@@ -356,7 +355,7 @@ export default function OrganizationDetailPage() {
           <div className=" text-xl">
             {formatNumber(
               (organization?.packageTokenAmount || 0) -
-                (organization?.remainTokenAmount || 0)
+                (organization?.remainTokenAmount || 0),
             )}
             /{formatNumber(organization?.packageTokenAmount || 0)}
           </div>
@@ -366,7 +365,7 @@ export default function OrganizationDetailPage() {
           <div className=" text-xl">
             {formatNumber(
               (organization?.packageImageAmount || 0) -
-                (organization?.remainImageAmount || 0)
+                (organization?.remainImageAmount || 0),
             )}
             /{formatNumber(organization?.packageImageAmount || 0)}
           </div>
@@ -433,6 +432,7 @@ export default function OrganizationDetailPage() {
               <Select.Option value="OWNER">OWNER</Select.Option>
               <Select.Option value="ADMIN">ADMIN</Select.Option>
               <Select.Option value="MEMBER">MEMBER</Select.Option>
+              <Select.Option value="VIEWER">VIEWER</Select.Option>
             </Select>
           </Form.Item>
           {/* <Form.Item name="maxToken" label="Max Token">

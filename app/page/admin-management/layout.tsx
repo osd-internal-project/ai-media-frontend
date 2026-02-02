@@ -156,15 +156,14 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
             </div>
 
             {/* User Profile Section */}
-            <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
+            <div className="bg-black rounded-2xl p-4 flex items-center gap-5  justify-between mt-3">
               <Badge dot color="green">
                 <Avatar />
               </Badge>
               <div className="grid grid-cols-1">
                 <span className="text-white text-sm">
-                  {session?.user?.name}
+                  {session?.user?.name} {session?.user?.role}
                 </span>
-                <span className="text-[#6366F1]">Admin</span>
               </div>
               <Popover
                 content={content}

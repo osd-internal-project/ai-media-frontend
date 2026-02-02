@@ -112,6 +112,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       session?.user?.id as string,
     );
     setProject(projects);
+
     const members =
       await userServices.findOrganizationUserDetails(organizationId);
     setOrganizationMember(members);
@@ -123,6 +124,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       session?.user?.id as string,
     );
     setUserProfile(userDetail);
+
     const personalOrganizations = await organizationService.findManyByUserId(
       userDetail?.userId || "",
       { type: "personal" },
