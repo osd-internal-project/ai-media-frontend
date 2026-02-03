@@ -157,7 +157,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const [page, setPage] = useState<number>(0);
     const [currentId, setCurrentId] = useState<string | undefined>("");
     // Removed unused currentPrompt and firstFrameImage
-    const pageSize = 3;
+
 
     // Refs
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -167,6 +167,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const isLoadingMoreRef = useRef<boolean>(false);
     const shouldAutoScrollRef = useRef<boolean>(false);
     const isAtBottomRef = useRef<boolean>(true);
+    const initialPageSize = 3;
+    const historyPageSize = 1;
+    const currentLimitRef = useRef<number>(initialPageSize);
     const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
     const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
     const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
@@ -210,13 +213,22 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }, []);
 
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || activeKey !== "video") return;
         const handleTaskCreated = (data: {
             taskId: string,
             message: string,
             timestamp: string,
+            data: Message
         }) => {
-            console.log('✅ Task created:', data.taskId);
+            console.log('✅ Task created:', data);
+            setMessages((prev) => {
+                const exists = prev.some((msg) => msg.taskId === data.taskId);
+                if (exists) {
+                    return prev;
+                }
+                return [...prev, data.data];
+            });
+            shouldAutoScrollRef.current = true;
             setSubmitting(false);
         };
 
@@ -342,16 +354,22 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                 messages: Message[];
             };
         }) => {
+            console.log(`handleHistory`, data)
             setDisableTab(false);
             if (data.success) {
                 const messageData = data.data.messages;
                 if (isFetchingHistory) {
                     isLoadingMoreRef.current = true;
                 }
-                if (messageData.length < pageSize) {
+                if (messageData.length < currentLimitRef.current) {
                     setHasMore(false);
                 }
-                if (messageData.length === 0) return []
+                if (messageData.length === 0) {
+                    setIsFetchingHistory(false);
+                    setLoading(false);
+                    isFirstLoad.current = false;
+                    return;
+                }
                 const itemsToProcess = [...messageData].reverse();
                 const topId = itemsToProcess[0].id;
                 if (topId) {
@@ -411,32 +429,44 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         socket.on('worker:video-progress', handleProgress);
         socket.on('chat:history', handleHistory);
         return () => {
-            socket.off('video-task:created');
-            socket.off('task-video:started');
-            socket.off('video-generate:error');
-            socket.off('worker:video-url-success');
-            socket.off('worker:video-upload-success');
-            socket.off('worker:video-complete');
-            socket.off('worker:video-progress');
-            socket.off('chat:history');
+            socket.off('video-task:created', handleTaskCreated);
+            socket.off('task-video:started', handleTaskStarted);
+            socket.off('video-generate:error', handleError);
+            socket.off('worker:video-url-success', workerUrlSuccess);
+            socket.off('worker:video-upload-success', workerUploadSuccess);
+            socket.off('worker:video-complete', workerComplete);
+            socket.off('worker:video-progress', handleProgress);
+            socket.off('chat:history', handleHistory);
         };
-    }, [socket, page, projectId]);
+    }, [socket, page, projectId, activeKey]);
 
 
     useEffect(() => {
-        setLoading(true);
-        isFirstLoad.current = true;
-        loadMoreMessages(0, false, currentId)
-    }, [socket, projectId])
+        if (activeKey === "video") {
+            if (socket) {
+                socket.emit("join-room", {
+                    projectId,
+                    type: "video",
+                    message: `Joined room ${projectId}`,
+                });
+            }
+            setLoading(true);
+            isFirstLoad.current = true;
+            loadMoreMessages(0, false, currentId)
+        }
+    }, [socket, projectId, activeKey])
 
     const loadMoreMessages = (page: number, isLoadMore: boolean, currentId?: string) => {
         if (socket) {
             setDisableTab(true);
-            const skip = page + pageSize;
+            const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
+            const take = page === 0 ? initialPageSize : historyPageSize;
+            currentLimitRef.current = take;
+
             socket.emit('chat:get-history', {
                 projectId,
                 skip: skip,
-                take: pageSize,
+                take: take,
                 type: 'video'
             });
         }
@@ -448,8 +478,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
             50;
         isAtBottomRef.current = isAtBottom;
-        console.log(target.scrollTop)
-
         if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
             setIsFetchingHistory(true)
             scrollHeightRef.current = target.scrollHeight;
@@ -740,7 +768,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             prompt: values.prompt,
             typeGenerate: "video",
             createdAt: new Date().toISOString(),
-            status: true,
+            status: false,
             genneratedStatus: "PROCESSING",
             generateConfig: {
                 ratio: selectedRatio,
@@ -776,8 +804,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         }
         socket.emit('generate:video', message);
     }
-
-
 
     return (
         <div className={promptGuideOpenStatus ? "grid md:grid-cols-4 sm:grid-cols-1 gap-2" : ""}>

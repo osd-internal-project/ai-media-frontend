@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Check } from "lucide-react";
-import { Plan } from "../../services/plan.service";
+import { Plan } from "@/app/services/plan.service";
 
 interface DetailedComparisonTableProps {
   plans: Plan[];
@@ -87,11 +87,10 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                               className="flex items-center gap-3 mb-2"
                             >
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  feature?.isHighlight
+                                className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${feature?.isHighlight
                                     ? "bg-green-500"
                                     : "bg-gray-600"
-                                }`}
+                                  }`}
                               >
                                 <Check className="w-4 h-4 text-white" />
                               </div>
@@ -120,11 +119,10 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                 {plans.map((plan, index) => (
                   <th
                     key={index}
-                    className={`min-w-[320px] w-[320px] text-center p-6 ${
-                      index < plans.length - 1
+                    className={`min-w-[320px] w-[320px] text-center p-6 ${index < plans.length - 1
                         ? "border-r border-[#171717]"
                         : ""
-                    }`}
+                      }`}
                   >
                     <div className="text-white">
                       <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
@@ -201,19 +199,17 @@ const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
                               return (
                                 <td
                                   key={planIndex}
-                                  className={`p-4 text-center ${
-                                    planIndex < plans.length - 1
+                                  className={`p-4 text-center ${planIndex < plans.length - 1
                                       ? "border-r border-[#171717]"
                                       : ""
-                                  }`}
+                                    }`}
                                 >
                                   {hasFeature ? (
                                     <div
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto ${
-                                        feature?.isHighlight
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto ${feature?.isHighlight
                                           ? "bg-green-500"
                                           : "bg-gray-600"
-                                      }`}
+                                        }`}
                                     >
                                       <Check className="w-5 h-5 text-white" />
                                     </div>

@@ -194,14 +194,12 @@ const NavbarUser: React.FC<Props> = ({
           ORGANIZATION:
         </span>
         <div
-          className={`flex items-center ${
-            isMobile ? "flex-1 min-w-0" : "justify-between w-full"
-          } px-2 sm:px-4`}
+          className={`flex items-center ${isMobile ? "flex-1 min-w-0" : "justify-between w-full"
+            } px-2 sm:px-4`}
         >
           <div
-            className={`flex items-center gap-2 sm:gap-6 ${
-              isMobile ? "flex-1 min-w-0" : ""
-            }`}
+            className={`flex items-center gap-2 sm:gap-6 ${isMobile ? "flex-1 min-w-0" : ""
+              }`}
           >
             <Select
               size="middle"
@@ -309,9 +307,8 @@ const NavbarUser: React.FC<Props> = ({
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}
-                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
-                    isMobile ? "w-auto" : "w-full sm:w-auto"
-                  }`}
+                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
+                    }`}
                 >
                   Upgrade
                 </Button>
@@ -358,9 +355,8 @@ const NavbarUser: React.FC<Props> = ({
                 </div>
               </Tag>
               <div
-                className={`flex items-center ${
-                  isMobile ? "gap-1" : "gap-2 sm:gap-4"
-                }`}
+                className={`flex items-center ${isMobile ? "gap-1" : "gap-2 sm:gap-4"
+                  }`}
               >
                 <Avatar
                   icon={<UserOutlined />}
@@ -408,10 +404,41 @@ const NavbarUser: React.FC<Props> = ({
           {/* Guest User Section */}
           {!user && (
             <div className="flex items-center gap-4 flex-shrink-0">
-              <Avatar size={48} />
+              <Avatar
+                icon={<UserOutlined />}
+                style={{
+                  background:
+                    "linear-gradient(90deg, #5B6BF9 0%, #9D5BF9 100%)",
+                  border: "none",
+                }}
+                size={isMobile ? 34 : 42}
+              />
               <div className="grid grid-cols-1 items-center gap-2">
                 <span className="font-bold text-white">{`Guest`}</span>
               </div>
+              <Popover
+                content={content}
+                arrow={false}
+                trigger="click"
+                placement={isMobile ? "bottomLeft" : "bottomRight"}
+                title={false}
+                styles={{
+                  body: {
+                    padding: 4,
+                    backgroundColor: "#18181B",
+                    borderRadius: "8px",
+                    border: "1px solid #333",
+                    width: isMobile ? "200px" : "220px",
+                  },
+                }}
+              >
+                <Button
+                  type="default"
+                  size={isMobile ? "small" : "small"}
+                  icon={<SettingOutlined />}
+                  className="flex-shrink-0"
+                />
+              </Popover>
             </div>
           )}
         </div>

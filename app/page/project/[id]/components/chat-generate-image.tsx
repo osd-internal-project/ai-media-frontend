@@ -143,7 +143,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 }) => {
   const { organizationId } = useOrganization();
 
-  const pageSize = 3;
+
   const [api, contextHolderNoti] = notification.useNotification();
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
 
@@ -155,6 +155,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
+  const initialPageSize = 3;
+  const historyPageSize = 1;
+  const currentLimitRef = useRef<number>(initialPageSize);
   const { socket, isConnected } = useWebSocket();
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -201,10 +204,19 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    isFirstLoad.current = true;
-    loadMoreMessages(0, false, currentId);
-  }, [socket, projectId]);
+    if (activeKey === "image") {
+      if (socket) {
+        socket.emit("join-room", {
+          projectId,
+          type: "image",
+          message: `Joined room ${projectId}`,
+        });
+      }
+      setLoading(true);
+      isFirstLoad.current = true;
+      loadMoreMessages(0, false, currentId);
+    }
+  }, [socket, projectId, activeKey]);
 
   const loadMoreMessages = (
     page: number,
@@ -213,11 +225,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
-      const skip = page + pageSize;
+      const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
+      const take = page === 0 ? initialPageSize : historyPageSize;
+      currentLimitRef.current = take;
+
       socket.emit("chat:get-history", {
         projectId,
         skip: skip,
-        take: pageSize,
+        take: take,
         type: 'image'
       });
     }
@@ -234,7 +249,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || activeKey !== "image") return;
 
     // 1. Event เมื่อ task ถูกสร้างสำเร็จ
     const handleTaskCreated = (data: {
@@ -248,20 +263,28 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     };
 
     // 2. Event เมื่อ task เริ่มต้น processing
-    const handleTaskStarted = (data: { taskId: string; status: string }) => {
+    const handleTaskStarted = (data: { taskId: string; status: string, data: Message }) => {
       console.log("🚀 Task started:", data);
       // อัพเดท message ใน state
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-              percentage: 10,
-            }
-            : msg,
-        ),
-      );
+      // setMessages((prev) =>
+      //   prev.map((msg) =>
+      //     msg.taskId === data.taskId
+      //       ? {
+      //         ...msg,
+      //         genneratedStatus: "PROCESSING",
+      //         percentage: 10,
+      //       }
+      //       : msg,
+      //   ),
+      // );
+      setMessages((prev) => {
+        const exists = prev.some((msg) => msg.taskId === data.data.taskId);
+        if (exists) {
+          return prev;
+        }
+        return [...prev, data.data];
+      });
+      shouldAutoScrollRef.current = true;
     };
 
     // 3. Event เมื่อมีความคืบหน้าในการสร้างภาพ
@@ -282,6 +305,22 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               ...msg,
               genneratedStatus: "PROCESSING",
               percentage: data.percentage,
+            }
+            : msg,
+        ),
+      );
+    };
+
+    const workerStarted = (data: { taskId: string; status: string }) => {
+      console.log("🚀 Worker started:", data);
+      // อัพเดท message ใน state
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.taskId === data.taskId
+            ? {
+              ...msg,
+              genneratedStatus: "PROCESSING",
+              percentage: 10,
             }
             : msg,
         ),
@@ -398,7 +437,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         if (isFetchingHistory) {
           isLoadingMoreRef.current = true;
         }
-        if (messageData.length < pageSize) {
+        if (messageData.length < currentLimitRef.current) {
           setHasMore(false);
         }
         if (messageData.length === 0) return []
@@ -445,9 +484,24 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         }
       }
     };
+    // const handleNewMessage = (data: { success: boolean; data: Message }) => {
+    //   console.log("📩 New message:", data);
+    //   if (data.success && data.data) {
+    //     setMessages((prev) => {
+    //       // Check if message already exists
+    //       const exists = prev.some((msg) => msg.id === data.data.id || (msg.taskId && msg.taskId === data.data.taskId));
+    //       if (exists) {
+    //         return prev;
+    //       }
+    //       return [...prev, data.data];
+    //     });
+    //     shouldAutoScrollRef.current = true;
+    //   }
+    // };
+
     socket.on("task:started", handleTaskStarted);
     socket.on("task:created", handleTaskCreated);
-    socket.on("worker:started", handleTaskStarted);
+    socket.on("worker:started", workerStarted);
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
     socket.on("worker:error", handleError);
@@ -458,7 +512,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     return () => {
       socket.off("task:started", handleTaskStarted);
       socket.off("task:created", handleTaskCreated);
-      socket.off("worker:started", handleTaskStarted);
+      socket.off("worker:started", workerStarted);
       socket.off("worker:progress", handleProgress);
       socket.off("worker:image-complete", handleImageComplete);
       socket.off("worker:error", handleError);
@@ -466,9 +520,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("generate:error", handleError);
       socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
-      socket.off("chat:new-message");
     };
-  }, [socket, page, projectId]);
+  }, [socket, page, projectId, activeKey]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
