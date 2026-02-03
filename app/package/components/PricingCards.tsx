@@ -1,6 +1,6 @@
 import React from "react";
 import { Check } from "lucide-react";
-import { Plan } from "../../services/plan.service";
+import { Plan } from "@/app/services/plan.service";
 
 interface PricingCardsProps {
   plans: Plan[];

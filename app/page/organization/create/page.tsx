@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosCore } from "../../../lib/axios/axios";
 import OrganizationService from "@/app/services/organization.service";
-import PlanServices from "../../../services/plan.service";
+import PlanServices from "@/app/services/plan.service";
 import UserServices from "@/app/services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { ArrowLeft } from "lucide-react";
