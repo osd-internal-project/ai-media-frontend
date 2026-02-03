@@ -38,8 +38,7 @@ interface ClientLayoutProps {
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [reload, setReload] = useState<boolean>(false);
 
@@ -75,6 +74,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
   const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [organizationRole, setOrganizationRole] = useState<string>("");
+
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
   );
@@ -96,8 +96,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     await fetchdataUser();
 
     setLoading(false);
-    // const response = await projectService.findAll(session?.user?.id as string);
-    // setProject(response);
   };
   async function fecthdataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
@@ -107,11 +105,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         session?.user?.id as string,
       );
     setOrganizationRole(organizationDetail?.role || "");
-    const projects = await projectService.findByOrganizationId(
-      organizationId,
-      session?.user?.id as string,
-    );
-    setProject(projects);
 
     const members =
       await userServices.findOrganizationUserDetails(organizationId);
@@ -154,127 +147,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     }
   };
 
-  // const handleOpen = () => {
-  //   setOpen(true);
-  //   if (userProfile) {
-  //     setSearchTexts((prev) => ({ 0: userProfile.fullname }));
-  //     console.log(searchTexts);
-  //     setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
-  //   } else {
-  //     setProjectMembers([]);
-  //     setSearchTexts({});
-  //   }
-
-  //   form.resetFields();
-  // };
-  const handleClose = () => {
-    setOpen(false);
-    form.resetFields();
-    setProjectMembers([]);
-    setShowAddMember(false);
-    setSelectedUser("");
-    setSelectedRole("USER");
-    setSearchTexts({});
-  };
-
-  // const handleRemoveMember = (userId: string) => {
-  //   setProjectMembers(projectMembers.filter((m) => m.userId !== userId));
-  // };
-
-  // const handleRoleChange = (
-  //   userId: string,
-  //   role: "ADMIN" | "USER" | "VIEWER"
-  // ) => {
-  //   setProjectMembers(
-  //     projectMembers.map((m) => (m.userId === userId ? { ...m, role } : m))
-  //   );
-  // };
-  const handleCloseEdit = () => {
-    setOpenEdit(false);
-    editForm.resetFields();
-    setProjectMembers([]);
-    setSearchTexts({});
-  };
-
-  const onFinish = async (values: any) => {
-    const projectData = {
-      ...values,
-      members: projectMembers.filter((m) => m.userId), // Only include members with selected users
-      organizationId: organizationId,
-    };
-
-    const response = await projectService.create({
-      ...projectData,
-      organizationId: organizationId,
-    });
-    if (response) {
-      setOpen(false);
-      setLoading(true);
-      setProjectMembers([]);
-      form.resetFields();
-    }
-  };
-  const onFinishEdit = async (values: any) => {
-    const projectData = {
-      ...values,
-      members: projectMembers.filter((m) => m.userId), // Only include members with selected users
-    };
-
-    const response = await projectService.update(values.id, projectData);
-    if (response) {
-      setOpenEdit(false);
-      setLoading(true);
-      setProjectMembers([]);
-    }
-  };
-  // const onClickProjectAction = (action: string, project: IProject) => {
-  //   console.log("click", action, project);
-  //   if (action === "edit") {
-  //     setOpenEdit(true);
-  //     const members =
-  //       project.members.map((member: any) => ({
-  //         userId: member.userId,
-  //         role: member.role || "USER",
-  //       })) || [];
-  //     setProjectMembers(members);
-
-  //     // Pre-populate search texts with user names for existing members
-  //     const initialSearchTexts: { [key: number]: string } = {};
-  //     members.forEach((member: any, index: number) => {
-  //       const user = organizationMember.find((u) => u.userId === member.userId);
-  //       if (user) {
-  //         initialSearchTexts[index] = user.fullname;
-  //       }
-  //     });
-  //     setSearchTexts(initialSearchTexts);
-
-  //     editForm.setFieldsValue({ ...project });
-  //   }
-  //   if (action === "delete") {
-  //     // router.push(`/page/project/${project.id}`);
-  //     modal.confirm({
-  //       title: "Delete Project",
-  //       content: "Are you sure you want to delete this project?",
-  //       onOk: () => {
-  //         projectService.update(project.id, { status: "deleted" });
-  //         setLoading(true);
-  //       },
-  //     });
-  //   }
-  // };
-  const content = (
-    <div className="flex flex-col gap-2">
-      <p style={{ marginBottom: 8 }}></p>
-      <Button
-        type="default"
-        block
-        size="small"
-        onClick={() => signOut({ callbackUrl: "/login" })}
-      >
-        Sign Out
-      </Button>
-    </div>
-  );
   /* Create Organization Modal */
   const [openCreateOrg, setOpenCreateOrg] = useState(false);
   const [createOrgForm] = Form.useForm();
@@ -301,7 +173,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       setLoading(true); // Trigger data refresh
     }
   };
-
+  function handleManageOrg(): void {
+    router.push(`/page/organization`);
+  }
   async function handleOrganizationChange(
     organizationId: string,
   ): Promise<void> {
@@ -337,16 +211,39 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       </ConfigProvider>
     );
   }
-
+  //Admin Pages
   const isAdminRoute = pathname.startsWith("/page/admin-management");
 
   if (isAdminRoute) {
-    return <>{children}</>;
+    return (
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorBgBase: "#000000",
+            colorBgContainer: "#000000",
+            colorBgElevated: "#1a1a1a",
+            colorTextBase: "#f0f0f0",
+          },
+        }}
+      >
+        <Spin spinning={loading || reload}>
+          <OrganizationProvider
+            value={{
+              organizationId,
+              organizationRole,
+              userId: userProfile?.userId,
+              systemRole: userProfile?.role,
+            }}
+          >
+            {children}
+          </OrganizationProvider>
+        </Spin>
+      </ConfigProvider>
+    );
   }
 
-  function handleManageOrg(): void {
-    router.push(`/page/organization`);
-  }
+  //User Pages
 
   return (
     <ConfigProvider
@@ -484,393 +381,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             </Form>
           </Modal>
         ) : null}
-        {open ? (
-          <Modal
-            title="Add Project"
-            open={open}
-            onCancel={handleClose}
-            footer={false}
-            okText="Submit"
-            width={500}
-          >
-            <Form
-              form={form}
-              layout="vertical"
-              name="create_project_form"
-              onFinish={onFinish}
-            >
-              <Form.Item
-                label="Project Name"
-                name="name"
-                rules={[
-                  { required: true, message: "Please enter project name" },
-                ]}
-              >
-                <Input placeholder="Enter project name" />
-              </Form.Item>
-              <Form.Item label="Description" name="description">
-                <Input.TextArea rows={3} placeholder="Optional description" />
-              </Form.Item>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px",
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: "normal",
-                    color: "rgba(255, 255, 255, 0.85)",
-                  }}
-                >
-                  Team Members
-                </span>
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<PlusCircleOutlined />}
-                  onClick={() => {
-                    setProjectMembers([
-                      ...projectMembers,
-                      { userId: "", role: "USER" },
-                    ]);
-                  }}
-                >
-                  Add Member
-                </Button>
-              </div>
-
-              <Form.Item>
-                <div>
-                  {/* Selected Members List */}
-                  {projectMembers.length > 0 && (
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        Team Members (
-                        {projectMembers.filter((m) => m.userId).length})
-                      </div>
-                      {projectMembers.map((member, index) => {
-                        return (
-                          <div
-                            key={index}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              marginBottom: "8px",
-                            }}
-                          >
-                            <Select
-                              showSearch
-                              placeholder="Type to search users..."
-                              value={member.userId || undefined}
-                              style={{ flex: 1, marginRight: "8px" }}
-                              filterOption={false}
-                              onSearch={(searchText) => {
-                                setSearchTexts((prev) => ({
-                                  ...prev,
-                                  [index]: searchText,
-                                }));
-                              }}
-                              onChange={(userId: string) => {
-                                if (
-                                  userId &&
-                                  !projectMembers.find(
-                                    (m, i) =>
-                                      m.userId === userId && i !== index,
-                                  )
-                                ) {
-                                  const newMembers = [...projectMembers];
-                                  newMembers[index].userId = userId;
-                                  setProjectMembers(newMembers);
-                                }
-                              }}
-                              options={
-                                searchTexts[index] &&
-                                searchTexts[index].length > 0
-                                  ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
-                                  : []
-                              }
-                            />
-                            <Select
-                              value={member.role}
-                              style={{ width: 80, marginRight: "8px" }}
-                              onChange={(
-                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER",
-                              ) => {
-                                const newMembers = [...projectMembers];
-                                newMembers[index].role = role;
-                                setProjectMembers(newMembers);
-                              }}
-                              options={[
-                                { value: "OWNER", label: "Owner" },
-                                { value: "ADMIN", label: "Admin" },
-                                { value: "USER", label: "User" },
-                                { value: "VIEWER", label: "Viewer" },
-                              ]}
-                            />
-                            <Button
-                              size="small"
-                              type="text"
-                              danger
-                              onClick={() => {
-                                setProjectMembers(
-                                  projectMembers.filter((_, i) => i !== index),
-                                );
-                                const newSearchTexts: {
-                                  [key: number]: string;
-                                } = {};
-                                Object.keys(searchTexts).forEach((key) => {
-                                  const oldIndex = parseInt(key);
-                                  if (oldIndex < index) {
-                                    newSearchTexts[oldIndex] =
-                                      searchTexts[oldIndex];
-                                  } else if (oldIndex > index) {
-                                    newSearchTexts[oldIndex - 1] =
-                                      searchTexts[oldIndex];
-                                  }
-                                });
-                                setSearchTexts(newSearchTexts);
-                              }}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-              >{`Create Project`}</Button>
-            </Form>
-          </Modal>
-        ) : null}
-        {openEdit ? (
-          <Modal
-            title="Edit Project"
-            open={openEdit}
-            onCancel={handleCloseEdit}
-            footer={false}
-            width={500}
-          >
-            <Form
-              form={editForm}
-              layout="vertical"
-              name="create_project_form"
-              onFinish={onFinishEdit}
-            >
-              <Form.Item
-                label="ID"
-                name="id"
-                hidden
-                rules={[
-                  { required: true, message: "Please enter project name" },
-                ]}
-              >
-                <Input placeholder="Enter project id" />
-              </Form.Item>
-              <Form.Item
-                label="Project Name"
-                name="name"
-                rules={[
-                  { required: true, message: "Please enter project name" },
-                ]}
-              >
-                <Input placeholder="Enter project name" />
-              </Form.Item>
-              <Form.Item label="Description" name="description">
-                <Input.TextArea rows={3} placeholder="Optional description" />
-              </Form.Item>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px",
-                }}
-              >
-                <span
-                  style={{
-                    fontWeight: "normal",
-                    color: "rgba(255, 255, 255, 0.85)",
-                  }}
-                >
-                  Team Members
-                </span>
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<PlusCircleOutlined />}
-                  onClick={() => {
-                    setProjectMembers([
-                      ...projectMembers,
-                      { userId: "", role: "USER" },
-                    ]);
-                  }}
-                >
-                  Add Member
-                </Button>
-              </div>
-
-              <Form.Item>
-                <div>
-                  {/* Selected Members List */}
-                  {projectMembers.length > 0 && (
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        Team Members (
-                        {projectMembers.filter((m) => m.userId).length})
-                      </div>
-                      {projectMembers.map((member, index) => {
-                        return (
-                          <div
-                            key={index}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              marginBottom: "8px",
-                            }}
-                          >
-                            <Select
-                              showSearch
-                              placeholder="Type to search users..."
-                              value={member.userId || undefined}
-                              style={{ flex: 1, marginRight: "8px" }}
-                              filterOption={false}
-                              onSearch={(searchText) => {
-                                setSearchTexts((prev) => ({
-                                  ...prev,
-                                  [index]: searchText,
-                                }));
-                              }}
-                              onChange={(userId: string) => {
-                                if (
-                                  userId &&
-                                  !projectMembers.find(
-                                    (m, i) =>
-                                      m.userId === userId && i !== index,
-                                  )
-                                ) {
-                                  const newMembers = [...projectMembers];
-                                  newMembers[index].userId = userId;
-                                  setProjectMembers(newMembers);
-                                }
-                              }}
-                              options={
-                                searchTexts[index] &&
-                                searchTexts[index].length > 0
-                                  ? organizationMember
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
-                                  : []
-                              }
-                            />
-                            <Select
-                              value={member.role}
-                              style={{ width: 80, marginRight: "8px" }}
-                              onChange={(
-                                role: "OWNER" | "ADMIN" | "USER" | "VIEWER",
-                              ) => {
-                                const newMembers = [...projectMembers];
-                                newMembers[index].role = role;
-                                setProjectMembers(newMembers);
-                              }}
-                              options={[
-                                { value: "OWNER", label: "Owner" },
-                                { value: "ADMIN", label: "Admin" },
-                                { value: "USER", label: "User" },
-                                { value: "VIEWER", label: "Viewer" },
-                              ]}
-                            />
-                            <Button
-                              size="small"
-                              type="text"
-                              danger
-                              onClick={() => {
-                                setProjectMembers(
-                                  projectMembers.filter((_, i) => i !== index),
-                                );
-                                const newSearchTexts: {
-                                  [key: number]: string;
-                                } = {};
-                                Object.keys(searchTexts).forEach((key) => {
-                                  const oldIndex = parseInt(key);
-                                  if (oldIndex < index) {
-                                    newSearchTexts[oldIndex] =
-                                      searchTexts[oldIndex];
-                                  } else if (oldIndex > index) {
-                                    newSearchTexts[oldIndex - 1] =
-                                      searchTexts[oldIndex];
-                                  }
-                                });
-                                setSearchTexts(newSearchTexts);
-                              }}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-              <Button type="primary" htmlType="submit">{`Edit Project`}</Button>
-            </Form>
-          </Modal>
-        ) : null}
         <Layout className="h-screen overflow-hidden">
           <Sider
             width={90}
@@ -890,24 +401,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 />
               </div>
               {/* Admin Management Button */}
-              <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                {/* {checkRole(["ADMIN", "OWNER"], organizationRole) && (
-                  <>
-                    <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2">
-                      ADMIN
-                    </div>
-                    <div className="mt-3 w-full">
-                      <Button
-                        icon={<UserSwitchOutlined />}
-                        // type="primary"
-                        onClick={() => router.push("/page/admin-management")}
-                      >
-                        Admin
-                      </Button>
-                    </div>
-                  </>
-                )} */}
-              </div>
+              <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2"></div>
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
@@ -923,112 +417,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     items={renderMenuItems(MenuSider, organizationRole)}
                     // inlineCollapsed={true}
                   />
-                  {/* <div className="!text-gray-400 px-4 mt-2">
-                    <div className="text-[12px]">{`PROJECT`}</div>
-                    {checkRole(["ADMIN", "OWNER"], organizationRole) && (
-                      <div className="mt-3 w-full">
-                        <Button
-                          icon={<PlusCircleOutlined />}
-                          className="w-full"
-                          onClick={handleOpen}
-                        >
-                          {`Add new project`}
-                        </Button>
-                      </div>
-                    )}
-                    <div>
-                      {getProject?.map((project) => (
-                        <div
-                          key={project.id}
-                          className="w-full  justify-center mt-2 gap-4"
-                        >
-                          <Space.Compact className=" w-full">
-                            <Button
-                              className="w-full !bg-gray-800 !whitespace-normal !break-words !h-auto !p-2 !text-center"
-                              onClick={() =>
-                                router.push(`/page/project/${project.id}`)
-                              }
-                            >
-                              <Space>
-                                {project.name}{" "}
-                                {project.status === "deleted" && (
-                                  <Tag color="red">Deleted</Tag>
-                                )}
-                              </Space>
-                            </Button>
-                            {checkRole(
-                              ["ADMIN", "OWNER"],
-                              organizationRole
-                            ) && (
-                              <Dropdown
-                                menu={{
-                                  items: projectActionItems,
-                                  onClick: (e) =>
-                                    onClickProjectAction(e.key, project),
-                                }}
-                                placement="bottomRight"
-                              >
-                                <Button
-                                  className="!h-auto flex items-center"
-                                  icon={<EllipsisVertical size={16} />}
-                                />
-                              </Dropdown>
-                            )}
-                          </Space.Compact>
-                        </div>
-                      ))}
-                    </div>
-                  </div> */}
                 </div>
               )}
-              {/* <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
-                <Badge dot color="green">
-                  <Avatar />
-                </Badge>
-                <div className="grid grid-cols-1">
-                  <span className="text-white text-sm">{`${session?.user?.name}`}</span>
-                  <span className="text-[#6366F1]">Premium</span>
-                </div>
-                <>
-                  <Popover
-                    content={content}
-                    trigger="click"
-                    placement="bottomRight"
-                    title={false}
-                  >
-                    <Button
-                      type="default"
-                      size="small"
-                      icon={<SettingOutlined />}
-                    />
-                  </Popover>
-                </>
-              </div> */}
-              {/* {groupName !== "admin-user" ? (
-              <div className="bg-black rounded-2xl p-4 flex items-center gap-5 flex-shrink-0 mt-3">
-                <Badge dot color="green">
-                  <Avatar />
-                </Badge>
-                <div className="grid grid-cols-1">
-                  <span className="text-white text-sm">{`${session?.user?.name}`}</span>
-                  <span className="text-[#6366F1]">Premium</span>
-                </div>
-                <>
-                  <Popover
-                    content={content}
-                    trigger="click"
-                    placement="bottomRight"
-                    title={false}
-                  >
-                    <Button
-                      type="default"
-                      size="small"
-                      icon={<SettingOutlined />}
-                    />
-                  </Popover>
-                </>
-              </div>
-            ) : null} */}
             </div>
           </Sider>
           <Layout className="flex-1 w-full h-full overflow-hidden">

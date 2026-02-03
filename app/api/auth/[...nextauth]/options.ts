@@ -222,7 +222,6 @@ export const authOptions = {
               token.sub = decodedToken.sub;
               token.name = decodedToken.name;
               token.email = decodedToken.email;
-              token.role = decodedToken.role;
             }
           } catch (e) {
             console.error("Failed to decode user token from backend", e);

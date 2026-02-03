@@ -12,9 +12,10 @@ import {
   theme,
 } from "antd";
 import { LockKeyholeOpen, UserCog, ArrowLeft } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, notFound } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { SettingOutlined } from "@ant-design/icons";
+import { useOrganization } from "@/app/context/OrganizationContext";
 
 const { Sider } = Layout;
 
@@ -25,13 +26,15 @@ interface AdminManagementLayoutProps {
 const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
   children,
 }) => {
+  const { systemRole } = useOrganization();
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed] = useState(false);
   const { data: session } = useSession();
-
   // Extract the current path and check for sub-routes
-
+  if (systemRole !== "SUPER_ADMIN") {
+    notFound();
+  }
   // Determine which menu item should be selected
   const getSelectedKey = () => {
     if (pathname.includes("/admin-management/users-management")) {
@@ -109,7 +112,6 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
       }}
     >
       <Layout className="h-screen overflow-hidden">
-        {/* Admin Management Sidebar - Replaces Main Sidebar */}
         <Sider
           width={250}
           trigger={null}
@@ -128,7 +130,7 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
                 className="mb-2"
               />
             </div>
-
+            {/* Admin Management Sidebar - Replaces Main Sidebar */}
             {/* Back Button */}
             <div className="px-4 mb-4">
               <Button
