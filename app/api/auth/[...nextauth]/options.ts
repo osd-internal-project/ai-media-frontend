@@ -24,11 +24,6 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
         const refreshTokenExp = payload.exp * 1000;
 
-        console.log(
-          "Refresh token expiration:",
-          new Date(refreshTokenExp).toISOString(),
-        );
-
         // If refresh token is expired, don't attempt refresh
         if (Date.now() >= refreshTokenExp) {
           console.error("❌ Refresh token has expired");
@@ -37,8 +32,6 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
             error: "RefreshAccessTokenError",
           };
         }
-
-        console.log("✅ Refresh token is still valid");
       }
     } catch (decodeError) {
       console.error("Error decoding refresh token", decodeError);
@@ -65,15 +58,10 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       : response;
 
     if (!response.ok) {
-      console.error("❌ Token refresh failed:", refreshedTokens);
       throw refreshedTokens;
     }
 
-    console.log("✅ Token refresh successful!");
-    console.log("New token expires in:", refreshedTokens.expires_in, "seconds");
-
     const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
-    console.log("New expiration time:", new Date(newExpiresAt).toISOString());
 
     return {
       ...token,
@@ -187,7 +175,6 @@ export const authOptions = {
     async jwt({ token, account, user, profile }: any) {
       // Initial sign in from Keycloak Provider (Google or standard Keycloak)
       if (account && profile) {
-        console.log("Initial Keycloak login - setting tokens");
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.idToken = account.id_token;
@@ -200,11 +187,12 @@ export const authOptions = {
               const decodedToken = JSON.parse(
                 Buffer.from(parts[1], "base64").toString(),
               );
-              token.roles = decodedToken.realm_access?.roles || [];
+              // token.roles = decodedToken.realm_access?.roles || [];
               token.groups = decodedToken.groups || [];
               token.sub = decodedToken.sub;
               token.name = decodedToken.name;
               token.email = decodedToken.email;
+              token.role = decodedToken.role;
             }
           } catch (e) {
             console.error("Failed to decode token", e);
@@ -216,7 +204,6 @@ export const authOptions = {
 
       // Initial sign in from Credentials Provider (Backend Login)
       if (user) {
-        console.log("Initial credentials login - setting tokens");
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
         token.expiresAt = Date.now() + user.expiresIn * 1000;
@@ -250,29 +237,21 @@ export const authOptions = {
       const timeUntilExpiry = expiresAt - now;
       const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-      // Log token status
-      console.log("Token check:", {
-        expiresAt: new Date(expiresAt).toISOString(),
-        timeUntilExpiry: Math.floor(timeUntilExpiry / 1000) + "s",
-        needsRefresh: timeUntilExpiry < fiveMinutes,
-      });
-
       // Refresh token if it expires in less than 5 minutes
       if (timeUntilExpiry < fiveMinutes) {
-        console.log("Token expiring soon, attempting refresh...");
         return refreshAccessToken(token);
       }
 
       // Token is still valid, return as is
-      console.log("Token still valid, no refresh needed");
       return token;
     },
     async session({ session, token }: any) {
       session.accessToken = token.accessToken;
       session.error = token.error;
-      session.user.roles = token.roles;
+      // session.user.roles = token.roles;
       session.user.groups = token.groups;
       session.user.id = token.sub!;
+      session.user.role = token.role;
       return session;
     },
   },
