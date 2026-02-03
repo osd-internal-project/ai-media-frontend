@@ -11,14 +11,17 @@ import {
 } from "antd";
 import { FC, ReactElement, useEffect, useState } from "react";
 import { DollarOutlined } from "@ant-design/icons";
-import type { ITDashboard } from "@/app/common/dashbaord";
+import type {
+  IDashboardOrganizationSummary,
+  ITDashboard,
+} from "@/app/common/dashbaord";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { FileImage, FileVideoCamera } from "lucide-react";
 import { formatNumber } from "@/app/utils/format";
 import { IOrganization } from "@/app/common/organization.type";
 interface props {
-  organization?: IOrganization;
+  organization?: IDashboardOrganizationSummary;
   session: any;
 }
 
@@ -66,38 +69,43 @@ const CardOrganization: FC<props> = ({
                     </div>
                   </div>
                   <div>
-                    <div className={isMobile ? "text-sm" : ""}>Used</div>
+                    <div className={isMobile ? "text-sm" : ""}>Held</div>
                     <div
-                      className={`inline  text-yellow-500 ${
+                      className={`inline  text-blue-400 ${
                         isMobile ? "text-[16px]" : "text-[20px]"
                       }`}
                     >
                       {formatNumber(
                         (organization?.packageTokenAmount || 0) -
-                          (organization?.remainTokenAmount || 0)
+                          (organization?.remainTokenAmount || 0),
                       )}
                     </div>
                   </div>{" "}
                   <div>
-                    <div className={isMobile ? "text-sm" : ""}>Remain</div>
+                    <div className={isMobile ? "text-sm" : ""}>Used</div>
                     <div
                       className={`inline  text-green-500 ${
                         isMobile ? "text-[16px]" : "text-[20px]"
                       }`}
                     >
-                      {formatNumber(organization?.remainTokenAmount)}
+                      {formatNumber(organization?.tokenUsed)}
                     </div>
                   </div>
                 </div>
                 <div>
                   <Progress
-                    strokeColor={"#a8e063"}
+                    // strokeColor={"#a8e063"}
                     percent={
                       (((organization?.packageTokenAmount || 0) -
                         (organization?.remainTokenAmount || 0)) /
                         (organization?.packageTokenAmount || 0)) *
                       100
                     }
+                    success={{
+                      percent:
+                        ((organization?.tokenUsed || 0) * 100) /
+                        (organization?.packageTokenAmount || 0),
+                    }}
                     showInfo={false}
                   />
                 </div>
@@ -127,38 +135,43 @@ const CardOrganization: FC<props> = ({
                     </div>
                   </div>
                   <div>
-                    <div className={isMobile ? "text-sm" : ""}>Used</div>
+                    <div className={isMobile ? "text-sm" : ""}>Held</div>
                     <div
-                      className={`inline  text-yellow-500 ${
+                      className={`inline  text-blue-400 ${
                         isMobile ? "text-[16px]" : "text-[20px]"
                       }`}
                     >
                       {formatNumber(
                         (organization?.packageImageAmount || 0) -
-                          (organization?.remainImageAmount || 0)
+                          (organization?.remainImageAmount || 0),
                       )}
                     </div>
                   </div>{" "}
                   <div>
-                    <div className={isMobile ? "text-sm" : ""}>Remain</div>
+                    <div className={isMobile ? "text-sm" : ""}>Used</div>
                     <div
                       className={`inline  text-green-500 ${
                         isMobile ? "text-[16px]" : "text-[20px]"
                       }`}
                     >
-                      {formatNumber(organization?.remainImageAmount || 0)}
+                      {formatNumber(organization?.imageUsed || 0)}
                     </div>
                   </div>
                 </div>
                 <div>
                   <Progress
-                    strokeColor={"#667eea"}
+                    // strokeColor={"#667eea"}
                     percent={
                       (((organization?.packageImageAmount || 0) -
                         (organization?.remainImageAmount || 0)) /
                         (organization?.packageImageAmount || 0)) *
                       100
                     }
+                    success={{
+                      percent:
+                        ((organization?.imageUsed || 0) * 100) /
+                        (organization?.packageImageAmount || 0),
+                    }}
                     showInfo={false}
                   />
                 </div>

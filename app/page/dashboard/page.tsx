@@ -7,6 +7,7 @@ import DashboardServices from "@/app/services/dashboard.service";
 import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
 import type {
+  IDashboardOrganizationSummary,
   IDashboardProject,
   IDashboardTableUser,
   IDashboardUser,
@@ -32,10 +33,11 @@ const DashboardPage: FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const [summaryByProject, setSummaryByProject] = useState<IDashboardProject[]>(
-    []
+    [],
   );
   const [summaryByUser, setSummaryByUser] = useState<IDashboardTableUser[]>([]);
-  const [organization, setOrganization] = useState<IOrganization>();
+  const [organization, setOrganization] =
+    useState<IDashboardOrganizationSummary>();
   const [projectOptions, setProjectOptions] = useState<
     { value: string; label: string }[]
   >([]);
@@ -67,7 +69,7 @@ const DashboardPage: FC = () => {
     if (loading) fecthdata();
   }, [loading, session, params]);
   useEffect(() => {
-    if (organizationId) fecthOrganizationDetail(organizationId);
+    if (organizationId) fecthOrganizationSummary(organizationId);
   }, [organizationId]);
   const fecthdata = async () => {
     if (organizationId) {
@@ -77,10 +79,13 @@ const DashboardPage: FC = () => {
     }
   };
 
-  const fecthOrganizationDetail = async (organizationId: string) => {
-    const response = await organizationServices.findById(organizationId);
-    setOrganization(response);
+  const fecthOrganizationSummary = async (organizationId: string) => {
+    const response = await dashboardServices.findDashboardSummaryOrganization(
+      organizationId,
+      params,
+    );
     console.log(response);
+    setOrganization(response);
   };
 
   useEffect(() => {
@@ -91,7 +96,7 @@ const DashboardPage: FC = () => {
     if (organizationId) {
       const response = await projectServices.findByOrganizationId(
         organizationId as string,
-        session?.user.id as string
+        session?.user.id as string,
       );
       const mapOptions = await response?.map((project: IProject) => {
         return { value: project.id, label: project.name };
@@ -114,7 +119,7 @@ const DashboardPage: FC = () => {
   const fectdataTableProject = async (organizationId: string) => {
     const response = await dashboardServices.findDashboardSummaryProject(
       organizationId,
-      params
+      params,
     );
     setSummaryByProject(response);
     setLoading(false);
@@ -123,7 +128,7 @@ const DashboardPage: FC = () => {
     try {
       const blob = await ReportServices(axiosReport).reportcsvDashboard(
         session?.user.id as string,
-        params
+        params,
       );
       if (!blob) {
         alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
@@ -147,7 +152,7 @@ const DashboardPage: FC = () => {
   async function fectdataTableUser(organizationId: string) {
     const response = await dashboardServices.findDashboardSummaryUser(
       organizationId,
-      params
+      params,
     );
     setSummaryByUser(response);
   }

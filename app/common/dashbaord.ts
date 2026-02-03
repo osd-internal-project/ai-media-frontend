@@ -81,3 +81,13 @@ export interface IDashboardTableUser {
   imageUsed: number;
   tokenUsed: number;
 }
+export interface IDashboardOrganizationSummary {
+  id: string;
+  name: string;
+  packageImageAmount: number;
+  packageTokenAmount: number;
+  imageUsed: number;
+  tokenUsed: number;
+  remainImageAmount: number;
+  remainTokenAmount: number;
+}

@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import {
+  IDashboardOrganizationSummary,
   IDashboardProject,
   IDashboardTableUser,
   IDashboardUser,
@@ -8,9 +9,25 @@ import {
 const DashboardServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/dashboard";
   return {
+    findDashboardSummaryOrganization: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardOrganizationSummary> => {
+      return await axiosInstance
+        .get(`${baseUrl}/summary-organization/${organizationId}`, {
+          params: params,
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
     findDashboardSummaryProject: async (
       organizationId: string,
-      params: any
+      params: any,
     ): Promise<IDashboardProject[]> => {
       return await axiosInstance
         .get(`${baseUrl}/summary-project/${organizationId}`, { params: params })
@@ -24,7 +41,7 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
     },
     findDashboardSummaryUser: async (
       organizationId: string,
-      params: any
+      params: any,
     ): Promise<IDashboardTableUser[]> => {
       return await axiosInstance
         .get(`${baseUrl}/summary-user/${organizationId}`, { params: params })
