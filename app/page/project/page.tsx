@@ -40,7 +40,7 @@ const MAX_MEMBERS = 5;
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
-  const { socket, isConnected } = useWebSocket();
+  // const { socket, isConnected } = useWebSocket();
   const { organizationId, organizationRole } = useOrganization();
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
@@ -378,13 +378,13 @@ const ProjectsPage = () => {
 
 
   const onClickProject = (projectId: string) => {
-    if (socket) {
-      socket.emit('chat:get-history', {
-        projectId,
-        skip: 0,
-        pageSize: 3
-      });
-    }
+    // if (socket) {
+    //   socket.emit('chat:get-history', {
+    //     projectId,
+    //     skip: 0,
+    //     pageSize: 3
+    //   });
+    // }
     router.push(`/page/project/${projectId}`);
   };
 
