@@ -4,10 +4,12 @@ import Link from "next/link";
 import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
 import {
   Bot,
-  ChartPie,
   LayoutTemplate,
+  LayoutDashboard,
   Settings,
   ShieldUser,
+  SlidersHorizontal,
+  MessageSquare,
 } from "lucide-react";
 
 export const MenuSider = [
@@ -27,17 +29,17 @@ export const MenuSider = [
       {
         key: `project`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
-        icon: <Bot size={22} />,
+        icon: <MessageSquare size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>TEAMS</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
         ),
       },
       {
         key: `settings/template-setting`,
         role: ["OWNER", "ADMIN", "MEMBER"],
-        icon: <LayoutTemplate size={22} />,
+        icon: <SlidersHorizontal size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>TEMPLATE</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
         ),
       },
       // {
@@ -49,9 +51,9 @@ export const MenuSider = [
       {
         key: `dashboard`,
         role: ["OWNER", "ADMIN"],
-        icon: <ChartPie size={22} />,
+        icon: <LayoutDashboard size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>BOARD</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Dashboard</span>
         ),
       },
     ],

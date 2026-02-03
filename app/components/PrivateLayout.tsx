@@ -384,7 +384,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
         <Layout className="h-screen overflow-hidden">
           <Sider
-            width={90}
+            width={100}
             trigger={null}
             collapsible
             collapsed={false}
@@ -438,7 +438,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               currentOrganization={currentOrganization}
               systemRole={userProfile?.role && userProfile.role}
             />
-            {userProfile?.role}
             <div className="w-full h-full flex flex-col overflow-hidden">
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider

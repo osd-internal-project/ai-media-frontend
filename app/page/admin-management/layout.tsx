@@ -11,7 +11,11 @@ import {
   Popover,
   theme,
 } from "antd";
-import { LockKeyholeOpen, UserCog, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import {
+  getAdminMenuItems,
+  getSelectedAdminKey,
+} from "@/app/config/admin-menu";
 import { usePathname, useRouter, notFound } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { SettingOutlined } from "@ant-design/icons";
@@ -36,36 +40,6 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
     notFound();
   }
   // Determine which menu item should be selected
-  const getSelectedKey = () => {
-    if (pathname.includes("/admin-management/users-management")) {
-      return "users-management";
-    }
-    if (pathname.includes("/admin-management/organization")) {
-      return "organization";
-    }
-    return ""; // default
-  };
-
-  const menuItems = [
-    {
-      key: "users-management",
-      icon: <UserCog size={16} />,
-      label: "User Management",
-      onClick: () => router.push("/page/admin-management/users-management"),
-    },
-    // {
-    //   key: "group-permission",
-    //   icon: <LockKeyholeOpen size={16} />,
-    //   label: "Group & Permissions",
-    //   onClick: () => router.push("/page/admin-management/group-permission"),
-    // },
-    {
-      key: "organization",
-      icon: <LockKeyholeOpen size={16} />,
-      label: "Organization",
-      onClick: () => router.push("/page/admin-management/organization"),
-    },
-  ];
 
   const content = (
     <div className="flex flex-col gap-2">
@@ -151,8 +125,8 @@ const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
             <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden px-2">
               <Menu
                 mode="inline"
-                selectedKeys={[getSelectedKey()]}
-                items={menuItems}
+                selectedKeys={[getSelectedAdminKey(pathname)]}
+                items={getAdminMenuItems()}
                 className="bg-transparent border-0"
               />
             </div>
