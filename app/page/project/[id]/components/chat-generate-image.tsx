@@ -223,7 +223,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
-   
+
       const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
       const take = page === 0 ? initialPageSize : historyPageSize;
       currentLimitRef.current = take;
@@ -474,13 +474,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                 behavior: isFirstLoadNow ? "instant" : "smooth",
               });
               if (isFirstLoadNow) {
-                 // Delay resetting isFirstLoad to prevent handleScroll from triggering 
-                 // during the initial scroll-to-bottom
-                 isFirstLoad.current = false;
+                // Delay resetting isFirstLoad to prevent handleScroll from triggering 
+                // during the initial scroll-to-bottom
+                isFirstLoad.current = false;
               }
             }, 100);
           } else {
-             if (isFirstLoadNow) isFirstLoad.current = false;
+            if (isFirstLoadNow) isFirstLoad.current = false;
           }
 
           // if (isFirstLoadNow) {
@@ -742,6 +742,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       height: selectedHeight,
       imageGenerateType: groupMode,
       typeGenerate: "image",
+      organizationId: organizationId
     };
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -772,6 +773,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       resolution: selectedResolution,
       ratio: selectedRatio,
       imageUrls: [],
+      organizationId: organizationId
     } as Message;
 
     setMessages((prev) => [...prev, tempMessage]);
@@ -888,7 +890,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           />
         )}
         <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-        
+
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
