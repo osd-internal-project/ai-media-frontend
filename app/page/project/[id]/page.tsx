@@ -37,7 +37,7 @@ const GenerateImagePage: FC = () => {
     useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
- 
+
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
   const { id } = params as { id: string };
@@ -89,6 +89,7 @@ const GenerateImagePage: FC = () => {
 
   useEffect(() => {
     if (loadingData) {
+      console.log(`organizationId`, organizationId)
       fecthdata();
       masterdata();
     }

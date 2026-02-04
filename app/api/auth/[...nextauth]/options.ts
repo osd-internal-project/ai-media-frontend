@@ -130,6 +130,7 @@ export const authOptions = {
             refreshToken: data.refresh_token,
             expiresIn: data.expires_in,
             idToken: data.id_token,
+            organizationId: data.recentOrganizationId,
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -208,6 +209,7 @@ export const authOptions = {
         token.refreshToken = user.refreshToken;
         token.expiresAt = Date.now() + user.expiresIn * 1000;
         token.idToken = user.idToken;
+        token.organizationId = user.organizationId;
 
         // Decode token from backend
         if (user.accessToken) {
@@ -252,6 +254,7 @@ export const authOptions = {
       session.user.groups = token.groups;
       session.user.id = token.sub!;
       session.user.role = token.role;
+      session.user.organizationId = token.organizationId;
       return session;
     },
   },

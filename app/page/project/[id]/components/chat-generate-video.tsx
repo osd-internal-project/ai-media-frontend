@@ -54,6 +54,7 @@ import { useWebSocket } from "@/app/hooks/useWebsocket";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import { useSession } from "next-auth/react";
 
 interface VideoChatProps {
   projectId: string;
@@ -140,7 +141,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   onSetPromptTextRef,
 }) => {
   const [form] = Form.useForm();
-  const { organizationId } = useOrganization();
+  const { data: session } = useSession();
   const { socket, isConnected } = useWebSocket();
   const [api, contextHolderNoti] = notification.useNotification();
   const [messageApi, contextHolder] = message.useMessage();
@@ -508,7 +509,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
 
       socket.emit("chat:get-history", {
         projectId,
-        organizationId,
+        organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
         type: "video",
@@ -532,16 +533,16 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   };
 
   async function fetchVideoPromptGuides() {
-    if (organizationId) {
+    if (session?.user?.organizationId) {
       const types = await promptGuideTypeService.findAll(
-        organizationId,
+        session?.user?.organizationId,
         "video",
       );
 
       const templates = await Promise.all(
         types.map(async (type) => {
           const response = await promptGuideService.findWithImageByTypes(
-            organizationId,
+            session?.user?.organizationId || "",
             type.id,
           );
           return { ...type, promptGuides: response || [] };
@@ -687,7 +688,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       formData.append("generateType", "video");
       formData.append("uid", file.uid);
       formData.append("file", fileToUpload as Blob);
-      formData.append("organizationId", organizationId || "");
+      formData.append("organizationId", session?.user?.organizationId || "");
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
@@ -741,7 +742,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           formData.append("refUid", img.uid);
           formData.append("uid", `rc-upload-${Date.now()}-${newIndex}`);
           formData.append("file", img.url);
-          formData.append("organizationId", organizationId || "");
+          formData.append("organizationId", session?.user?.organizationId || "");
 
           try {
             const result =
@@ -826,7 +827,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       duration: selectedDuration,
       generateAudio: selectedAudio,
       draft: draftMode,
-      organizationId: organizationId
+      organizationId: session?.user?.organizationId
     };
     const tempMessage = {
       id: tempTask,
@@ -863,7 +864,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       resolution: selectedResolution,
       ratio: selectedRatio,
       imageUrls: [],
-      organizationId: organizationId
+      organizationId: session?.user?.organizationId
     } as Message;
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;

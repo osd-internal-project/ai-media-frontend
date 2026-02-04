@@ -72,7 +72,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     "OWNER" | "ADMIN" | "USER" | "VIEWER"
   >("USER");
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
-  const [organizationId, setOrganizationId] = useState<string | undefined>();
+  const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
 
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
@@ -415,7 +415,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                    // inlineCollapsed={true}
+                  // inlineCollapsed={true}
                   />
                 </div>
               )}

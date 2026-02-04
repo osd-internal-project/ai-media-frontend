@@ -40,6 +40,7 @@ import UploadsServices from "@/app/services/uploads.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import { useSession } from "next-auth/react";
 
 interface ImageChatProps {
   projectId: string;
@@ -139,7 +140,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   setDisableTab,
   onSetPromptTextRef,
 }) => {
-  const { organizationId } = useOrganization();
+  const { data: session } = useSession();
 
 
   const [api, contextHolderNoti] = notification.useNotification();
@@ -223,13 +224,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
-
       const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
       const take = page === 0 ? initialPageSize : historyPageSize;
       currentLimitRef.current = take;
       socket.emit("chat:get-history", {
         projectId,
-        organizationId,
+        organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
         type: 'image'
@@ -546,16 +546,16 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   async function fetchImagePromptGuides() {
-    if (organizationId) {
+    if (session?.user?.organizationId) {
       const types = await promptGuideTypeService.findAll(
-        organizationId,
+        session?.user?.organizationId,
         "image",
       );
 
       const templates = await Promise.all(
         types.map(async (type) => {
           const response = await promptGuideService.findWithImageByTypes(
-            organizationId,
+            session?.user?.organizationId || "",
             type.id,
           );
           return { ...type, promptGuides: response || [] };
@@ -631,7 +631,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       formData.append("generateType", "image");
       formData.append("uid", file.uid);
       formData.append("file", fileToUpload as Blob);
-      formData.append("organizationId", organizationId || "");
+      formData.append("organizationId", session?.user?.organizationId || "");
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         setRefImage((prev) => [...prev, result]);
@@ -743,7 +743,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       height: selectedHeight,
       imageGenerateType: groupMode,
       typeGenerate: "image",
-      organizationId: organizationId
+      organizationId: session?.user?.organizationId
     };
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -774,7 +774,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       resolution: selectedResolution,
       ratio: selectedRatio,
       imageUrls: [],
-      organizationId: organizationId
+      organizationId: session?.user?.organizationId
     } as Message;
 
     setMessages((prev) => [...prev, tempMessage]);
@@ -841,7 +841,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             formData.append("uid", `rc-upload-${Date.now()}-${no}`);
             formData.append("refUid", img.uid);
             formData.append("file", img.url);
-            formData.append("organizationId", organizationId || "");
+            formData.append("organizationId", session?.user?.organizationId || "");
             // formData.append("file", file);
 
             const result =
