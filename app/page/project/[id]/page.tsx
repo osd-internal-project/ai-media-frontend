@@ -24,7 +24,7 @@ import ChatGenerateVideo from "./components/chat-generate-video";
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
-  const promptguideTypeService = PromptGuideTypeServices(axiosCore);
+  // const promptguideTypeService = PromptGuideTypeServices(axiosCore);
   const projectService = ProjectService(axiosCore);
   const aiModelService = AIModelServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
@@ -37,10 +37,7 @@ const GenerateImagePage: FC = () => {
     useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
-
-  const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
-    []
-  );
+ 
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
   const { id } = params as { id: string };
@@ -120,13 +117,7 @@ const GenerateImagePage: FC = () => {
   };
 
   const masterdata = async () => {
-    const res = await promptguideTypeService.findAll();
 
-    const filteredTypes = (res || []).filter(
-      (type) => type.organizationId === organizationId
-    );
-
-    setPromptGuideTypes(filteredTypes);
 
     const models = await aiModelService.findAll();
 
@@ -257,7 +248,6 @@ const GenerateImagePage: FC = () => {
           onPromptGuideToggle={() =>
             setPromptGuideOpenStatus(!promptGuideOpenStatus)
           }
-          promptGuideTypes={promptGuideTypes}
           onSetPromptText={handleSetPromptText}
         />
       </div>
@@ -347,15 +337,15 @@ const GenerateImagePage: FC = () => {
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> Design
+                  <span className="text-green-400">• Recommended:</span> {`Design
                   a logo for a gaming company. The logo features a dog playing
                   with a game controller. The company name "PITBULL" is written
-                  on it.
+                  on it.`}
                 </li>
                 <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span> An abstract
+                  <span className="text-red-400">• Avoid:</span> {`An abstract
                   image of a dog holding a controller, and the word PITBULL on
-                  it.
+                  it.`}
                 </li>
               </ul>
             </div>
@@ -382,12 +372,12 @@ const GenerateImagePage: FC = () => {
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span>{" "}
-                  Generate a poster with the title "Seedream 4.0".
+                  <span className="text-green-400">• Recommended:</span>{`
+                  Generate a poster with the title "Seedream 4.0".`}
                 </li>
                 <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span> Generate a
-                  poster titled Seedream 4.0.
+                  <span className="text-red-400">• Avoid:</span>{` Generate a
+                  poster titled Seedream 4.0.`}
                 </li>
               </ul>
             </div>
@@ -713,7 +703,6 @@ const GenerateImagePage: FC = () => {
                   projectId={id}
                   userId={session?.user?.id}
                   projectRole={projectRole}
-                  promptGuideTypes={promptGuideTypes}
                   username={session?.user?.name || ""}
                   selectedAIModel={selectedAIModel}
                   setDisableTab={setDisableTab}
@@ -738,7 +727,6 @@ const GenerateImagePage: FC = () => {
                   projectId={id}
                   userId={session?.user?.id}
                   projectRole={projectRole}
-                  promptGuideTypes={promptGuideTypes}
                   promptGuideOpenStatus={promptGuideOpenStatus}
                   selectedAIModel={selectedAIModel}
                   username={session?.user?.name || ""}

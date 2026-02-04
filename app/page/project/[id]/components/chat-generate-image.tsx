@@ -46,7 +46,6 @@ interface ImageChatProps {
   userId?: string;
   activeKey: "image" | "video" | "library" | "activity";
   projectRole?: string | null;
-  promptGuideTypes: TPromptGuideTemplate[];
   promptGuideOpenStatus?: boolean;
   username?: string;
   selectedAIModel: (TAIModel & { capabilities?: string[] }) | undefined;
@@ -134,7 +133,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   userId,
   activeKey,
   projectRole,
-  promptGuideTypes,
   promptGuideOpenStatus,
   username,
   selectedAIModel,
@@ -225,10 +223,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
+   
       const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
       const take = page === 0 ? initialPageSize : historyPageSize;
       currentLimitRef.current = take;
-
       socket.emit("chat:get-history", {
         projectId,
         skip: skip,
@@ -465,21 +463,29 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           setIsFetchingHistory(false);
         } else {
           setMessages(itemsToProcess);
+          const isFirstLoadNow = isFirstLoad.current;
           if (
-            isFirstLoad.current ||
+            isFirstLoadNow ||
             isAtBottomRef.current ||
             shouldAutoScrollRef.current
           ) {
             setTimeout(() => {
               bottomRef.current?.scrollIntoView({
-                behavior: isFirstLoad.current ? "instant" : "smooth",
+                behavior: isFirstLoadNow ? "instant" : "smooth",
               });
+              if (isFirstLoadNow) {
+                 // Delay resetting isFirstLoad to prevent handleScroll from triggering 
+                 // during the initial scroll-to-bottom
+                 isFirstLoad.current = false;
+              }
             }, 100);
+          } else {
+             if (isFirstLoadNow) isFirstLoad.current = false;
           }
-          if (isFirstLoad.current) {
-            shouldAutoScrollRef.current = true;
-          }
-          isFirstLoad.current = false;
+
+          // if (isFirstLoadNow) {
+          //   shouldAutoScrollRef.current = true;
+          // }
           setLoading(false);
         }
       }
@@ -776,7 +782,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
     try {
       setSubmitting(true);
-      console.log("📤 Sending generate request:", message);
       socket.emit("generate", message);
     } catch (error: any) {
       console.error("Error in handleSendMessage:", error);
@@ -881,6 +886,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           />
         )}
         <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
+        
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
