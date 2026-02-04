@@ -630,6 +630,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       formData.append("generateType", "image");
       formData.append("uid", file.uid);
       formData.append("file", fileToUpload as Blob);
+      formData.append("organizationId", organizationId || "");
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         setRefImage((prev) => [...prev, result]);
@@ -839,6 +840,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             formData.append("uid", `rc-upload-${Date.now()}-${no}`);
             formData.append("refUid", img.uid);
             formData.append("file", img.url);
+            formData.append("organizationId", organizationId || "");
             // formData.append("file", file);
 
             const result =

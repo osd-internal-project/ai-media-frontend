@@ -3,7 +3,15 @@ import {
   TGenerateType,
   TPromptGuideType,
 } from "@/app/common/prompt-guide.type";
-import { Form, message, Modal, notification, Spin, Tabs, UploadFile } from "antd";
+import {
+  Form,
+  message,
+  Modal,
+  notification,
+  Spin,
+  Tabs,
+  UploadFile,
+} from "antd";
 import React, {
   useCallback,
   useEffect,
@@ -23,19 +31,18 @@ import { canManageTemplates } from "@/app/utils/permissions";
 import { RcFile, UploadChangeParam, UploadProps } from "antd/es/upload";
 import UploadsServices from "@/app/services/uploads.service";
 
-type NotificationType = 'success' | 'info' | 'warning' | 'error';
+type NotificationType = "success" | "info" | "warning" | "error";
 
 const TemplateSettingPage: FC = (): ReactElement => {
   const [api, contextHolderNoti] = notification.useNotification();
   const [modal, contextHolder] = Modal.useModal();
-  const { userId } = useOrganization();
   const promptguideServices = useMemo(() => PromptGuideServices(axiosCore), []);
   const promptguideTypeServices = useMemo(
     () => PromptGuideTypeServices(axiosCore),
     [],
   );
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
-  const { organizationId, organizationRole } = useOrganization();
+  const { userId, organizationId, organizationRole } = useOrganization();
 
   const canManage = canManageTemplates(organizationRole || "");
 
@@ -152,7 +159,10 @@ const TemplateSettingPage: FC = (): ReactElement => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, fetchPromptGuideTypes]);
 
-  const openNotificationWithIcon = (type: NotificationType, message: string) => {
+  const openNotificationWithIcon = (
+    type: NotificationType,
+    message: string,
+  ) => {
     api[type]({
       message: type,
       description: message,
@@ -247,7 +257,6 @@ const TemplateSettingPage: FC = (): ReactElement => {
     file,
     fileList: newFileList,
   }) => {
-
     if (newFileList.length >= 1 && file.status !== "removed") {
       setIsLoadingUpload(true);
       const fileToUpload = file.originFileObj || file;
@@ -260,7 +269,9 @@ const TemplateSettingPage: FC = (): ReactElement => {
               const minSide = Math.min(img.width, img.height);
               URL.revokeObjectURL(img.src);
               if (minSide < 300) {
-                reject("Image size is too small, minimum side length must not be less than 300 px");
+                reject(
+                  "Image size is too small, minimum side length must not be less than 300 px",
+                );
               } else {
                 resolve();
               }
@@ -271,7 +282,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
             };
           });
         } catch (error) {
-          openNotificationWithIcon('error', String(error));
+          openNotificationWithIcon("error", String(error));
           return;
         }
       }
@@ -285,6 +296,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
       formData.append("index", newFileList.length.toString());
       formData.append("promptGuideId", String(promptGuideId));
       formData.append("generateType", generateType);
+      formData.append("organizationId", organizationId || "");
       formData.append("uid", file.uid);
 
       // const fileToUpload = file.originFileObj || file;
@@ -336,7 +348,9 @@ const TemplateSettingPage: FC = (): ReactElement => {
                 const minSide = Math.min(img.width, img.height);
                 URL.revokeObjectURL(img.src);
                 if (minSide < 300) {
-                  reject("Image size is too small, minimum side length must not be less than 300 px");
+                  reject(
+                    "Image size is too small, minimum side length must not be less than 300 px",
+                  );
                 } else {
                   resolve();
                 }
@@ -347,7 +361,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
               };
             });
           } catch (error) {
-            openNotificationWithIcon('error', String(error));
+            openNotificationWithIcon("error", String(error));
             return;
           }
         }
@@ -364,7 +378,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("promptGuideId", String(promptGuideId));
         formData.append("generateType", generateType);
         formData.append("uid", file.uid);
-
+        formData.append("organizationId", organizationId || "");
         formData.append("file", fileToUpload as Blob);
         try {
           const result = await uploadsServices.uploadPromptGuideImage(formData);
@@ -387,7 +401,9 @@ const TemplateSettingPage: FC = (): ReactElement => {
                 const minSide = Math.min(img.width, img.height);
                 URL.revokeObjectURL(img.src);
                 if (minSide < 300) {
-                  reject("Image size is too small, minimum side length must not be less than 300 px");
+                  reject(
+                    "Image size is too small, minimum side length must not be less than 300 px",
+                  );
                 } else {
                   resolve();
                 }
@@ -398,7 +414,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
               };
             });
           } catch (error) {
-            openNotificationWithIcon('error', String(error));
+            openNotificationWithIcon("error", String(error));
             return;
           }
         }
@@ -416,6 +432,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("generateType", generateType);
         formData.append("uid", file.uid);
         formData.append("file", fileToUpload as Blob);
+        formData.append("organizationId", organizationId || "");
         try {
           const result = await uploadsServices.uploadPromptGuideImage(formData);
           setRefImage((prev) => [...prev, result]);
