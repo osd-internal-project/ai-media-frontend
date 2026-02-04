@@ -686,6 +686,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       formData.append("generateType", "video");
       formData.append("uid", file.uid);
       formData.append("file", fileToUpload as Blob);
+      formData.append("organizationId", organizationId || "");
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
@@ -739,6 +740,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           formData.append("refUid", img.uid);
           formData.append("uid", `rc-upload-${Date.now()}-${newIndex}`);
           formData.append("file", img.url);
+          formData.append("organizationId", organizationId || "");
+
           try {
             const result =
               await UploadsServices(axiosWorker).uploadFromPrompt(formData);
@@ -1073,7 +1076,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         {/* </div>
                 </div> */}
       </div>
-    
     </div>
   );
 };
