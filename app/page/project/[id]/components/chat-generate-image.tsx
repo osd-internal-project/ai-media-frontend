@@ -837,6 +837,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             formData.append("uid", `rc-upload-${Date.now()}-${no}`);
             formData.append("refUid", img.uid);
             formData.append("file", img.url);
+            // formData.append("organizationId", organizationId);
             // formData.append("file", file);
 
             const result =
