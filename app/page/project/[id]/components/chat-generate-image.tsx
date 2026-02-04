@@ -473,15 +473,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               bottomRef.current?.scrollIntoView({
                 behavior: isFirstLoadNow ? "instant" : "smooth",
               });
-              if (isFirstLoadNow) {
-                // Delay resetting isFirstLoad to prevent handleScroll from triggering 
-                // during the initial scroll-to-bottom
-                isFirstLoad.current = false;
-              }
+
             }, 100);
-          } else {
-            if (isFirstLoadNow) isFirstLoad.current = false;
           }
+          if (isFirstLoad.current) {
+            shouldAutoScrollRef.current = true;
+          }
+          isFirstLoad.current = false;
+
 
           // if (isFirstLoadNow) {
           //   shouldAutoScrollRef.current = true;
