@@ -229,6 +229,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       currentLimitRef.current = take;
       socket.emit("chat:get-history", {
         projectId,
+        organizationId,
         skip: skip,
         take: take,
         type: 'image'

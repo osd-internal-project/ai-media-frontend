@@ -508,6 +508,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
 
       socket.emit("chat:get-history", {
         projectId,
+        organizationId,
         skip: skip,
         take: take,
         type: "video",
