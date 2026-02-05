@@ -17,7 +17,6 @@ import {
   message,
   Switch,
 } from "antd";
-import { useOrganization } from "@/app/context/OrganizationContext";
 import OrganizationService from "@/app/services/organization.service";
 import OrganizationMembersServices from "@/app/services/organization-members.service";
 import { axiosUser } from "@/app/lib/axios/axios";

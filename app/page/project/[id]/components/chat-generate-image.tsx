@@ -37,7 +37,6 @@ import PreviewImage from "./chat-components/preview-image";
 import PromptStart from "./chat-components/prompt-start";
 import ChatImageInput from "./chat-components/chat-image-input";
 import UploadsServices from "@/app/services/uploads.service";
-import { useOrganization } from "@/app/context/OrganizationContext";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";

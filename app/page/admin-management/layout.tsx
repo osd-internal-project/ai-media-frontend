@@ -19,7 +19,6 @@ import {
 import { usePathname, useRouter, notFound } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { SettingOutlined } from "@ant-design/icons";
-import { useOrganization } from "@/app/context/OrganizationContext";
 
 const { Sider } = Layout;
 
@@ -29,14 +28,13 @@ interface AdminManagementLayoutProps {
 
 const AdminManagementLayout: React.FC<AdminManagementLayoutProps> = ({
   children,
-}) => {
-  const { systemRole } = useOrganization();
+}) => { 
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed] = useState(false);
   const { data: session } = useSession();
   // Extract the current path and check for sub-routes
-  if (systemRole !== "SUPER_ADMIN") {
+  if (session?.user?.systemRole !== "SUPER_ADMIN") {
     notFound();
   }
   // Determine which menu item should be selected

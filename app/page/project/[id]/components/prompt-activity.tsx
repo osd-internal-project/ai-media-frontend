@@ -31,6 +31,7 @@ const PromptActivity: FC<props> = ({
 }): ReactElement => {
   const params = useParams();
   const { data: session } = useSession();
+  const organizationId = session?.user?.organizationId || "";
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
@@ -60,9 +61,14 @@ const PromptActivity: FC<props> = ({
   }, [shouldRefetch]);
 
   const fectData = async () => {
-    if (!session) return
+    if (!session) return;
     const id = params.id as string;
-    const res = await galleryservices.findById(id, session.user.organizationId, page, pageSize);
+    const res = await galleryservices.findById(
+      id,
+      organizationId,
+      page,
+      pageSize,
+    );
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);
@@ -79,7 +85,7 @@ const PromptActivity: FC<props> = ({
       // Show loading message
       const hide = message.loading(
         `Downloading ${types === "video" ? "video" : "image"}...`,
-        0
+        0,
       );
 
       // Fetch the file directly from the URL
@@ -96,7 +102,7 @@ const PromptActivity: FC<props> = ({
 
       hide();
       message.success(
-        `${types === "video" ? "Video" : "Image"} downloaded successfully`
+        `${types === "video" ? "Video" : "Image"} downloaded successfully`,
       );
     } catch (error) {
       console.error("Download error:", error);
@@ -157,7 +163,7 @@ const PromptActivity: FC<props> = ({
                           onDownloadVideo={onDownloadVideo}
                           onShareVideo={function (
                             taskId: string,
-                            status: boolean
+                            status: boolean,
                           ): void {
                             throw new Error("Function not implemented.");
                           }}
@@ -210,7 +216,7 @@ const PromptActivity: FC<props> = ({
               total={total}
               pageSize={pageSize}
               onChange={(p) => {
-                setPage(p), setLoading(true);
+                (setPage(p), setLoading(true));
               }}
               showSizeChanger={false}
             />
@@ -257,7 +263,7 @@ const PromptActivity: FC<props> = ({
                           <Tooltip
                             placement="left"
                             title={selected.prompt}
-                            overlayStyle={{ maxWidth: '600px' }}
+                            overlayStyle={{ maxWidth: "600px" }}
                           >
                             <Typography.Paragraph
                               ellipsis={{
@@ -281,14 +287,17 @@ const PromptActivity: FC<props> = ({
                       <div>Create Date:</div>
                       <div className="whitespace-pre-line">
                         {selected?.createdAt
-                          ? `${new Date(selected.createdAt).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}`
+                          ? `${new Date(selected.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              },
+                            )}`
                           : "-"}
                       </div>
                     </div>

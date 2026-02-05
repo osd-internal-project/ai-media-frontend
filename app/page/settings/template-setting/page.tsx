@@ -30,10 +30,14 @@ import { useOrganization } from "@/app/context/OrganizationContext";
 import { canManageTemplates } from "@/app/utils/permissions";
 import { RcFile, UploadChangeParam, UploadProps } from "antd/es/upload";
 import UploadsServices from "@/app/services/uploads.service";
+import { useSession } from "next-auth/react";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
 const TemplateSettingPage: FC = (): ReactElement => {
+  const { data: session } = useSession();
+  const organizationId = session?.user?.organizationId;
+  const userId = session?.user?.userId;
   const [api, contextHolderNoti] = notification.useNotification();
   const [modal, contextHolder] = Modal.useModal();
   const promptguideServices = useMemo(() => PromptGuideServices(axiosCore), []);
@@ -42,7 +46,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
     [],
   );
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
-  const { userId, organizationId, organizationRole } = useOrganization();
+  const { organizationRole } = useOrganization();
 
   const canManage = canManageTemplates(organizationRole || "");
 
