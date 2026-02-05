@@ -5,7 +5,15 @@ const AuthService = (axiosInstance: AxiosInstance) => {
   return {
     validate: async (token: string) => {
       return await axiosInstance
-        .post(`${baseUrl}/validate`, { token })
+        .post(
+          `${baseUrl}/validate`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
         .then((res) => {
           return res.data;
         })
