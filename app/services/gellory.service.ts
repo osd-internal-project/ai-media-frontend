@@ -17,6 +17,7 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
 
     findById: async (
       projectId: string,
+      organizationId: string,
       page: number,
       pageSize: number,
       status?: boolean
@@ -24,6 +25,7 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
       return await axiosInstance
         .get(`${baseUrl}/${projectId}`, {
           params: {
+            organizationId,
             page,
             pageSize,
             status,
