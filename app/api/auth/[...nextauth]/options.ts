@@ -17,27 +17,27 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       };
     }
 
-    // Decode refresh token to check if it's expired
-    try {
-      const parts = String(token.refreshToken).split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
-        const refreshTokenExp = payload.exp * 1000;
+    // // Decode refresh token to check if it's expired
+    // try {
+    //   const parts = String(token.refreshToken).split(".");
+    //   if (parts.length === 3) {
+    //     const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+    //     const refreshTokenExp = payload.exp * 1000;
 
-        // If refresh token is expired, don't attempt refresh
-        if (Date.now() >= refreshTokenExp) {
-          console.error("❌ Refresh token has expired");
-          return {
-            ...token,
-            error: "RefreshAccessTokenError",
-          };
-        }
-      }
-    } catch (decodeError) {
-      console.error("Error decoding refresh token", decodeError);
-    }
+    //     // If refresh token is expired, don't attempt refresh
+    //     if (Date.now() >= refreshTokenExp) {
+    //       console.error("❌ Refresh token has expired");
+    //       return {
+    //         ...token,
+    //         error: "RefreshAccessTokenError",
+    //       };
+    //     }
+    //   }
+    // } catch (decodeError) {
+    //   console.error("Error decoding refresh token", decodeError);
+    // }
 
-    console.log("📡 Calling Keycloak token endpoint...");
+    // console.log("📡 Calling Keycloak token endpoint...");
     const url = `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/token`;
     const response = await fetch(url, {
       method: "POST",
@@ -61,12 +61,13 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
       throw refreshedTokens;
     }
 
-    const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
+    // const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
 
     return {
       ...token,
       accessToken: refreshedTokens.access_token,
-      expiresAt: newExpiresAt,
+      // expiresAt: newExpiresAt,
+      expiresAt: Date.now() + refreshedTokens.expires_in * 1000,
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
     };
   } catch (error) {
@@ -242,15 +243,15 @@ export const authOptions = {
       }
 
       // Check if token needs refresh
-      const now = Date.now();
-      const expiresAt = token.expiresAt as number;
-      const timeUntilExpiry = expiresAt - now;
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+      // const now = Date.now();
+      // const expiresAt = token.expiresAt as number;
+      // const timeUntilExpiry = expiresAt - now;
+      // const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-      // Refresh token if it expires in less than 5 minutes
-      if (timeUntilExpiry < fiveMinutes) {
-        return refreshAccessToken(token);
-      }
+      // // Refresh token if it expires in less than 5 minutes
+      // if (timeUntilExpiry < fiveMinutes) {
+      //   return refreshAccessToken(token);
+      // }
 
       // Token is still valid, return as is
       return token;
