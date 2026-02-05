@@ -131,6 +131,8 @@ export const authOptions = {
             expiresIn: data.expires_in,
             idToken: data.id_token,
             organizationId: data.recentOrganizationId,
+            userId: data.userId,
+            systemRole: data.role,
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -173,7 +175,11 @@ export const authOptions = {
       // 2. Credentials Login Flow (already validated in authorize)
       return true;
     },
-    async jwt({ token, account, user, profile }: any) {
+    async jwt({ token, account, user, profile, trigger, session }: any) {
+      if (trigger === "update" && session?.user?.organizationId) {
+        token.organizationId = session.user.organizationId;
+      }
+
       // Initial sign in from Keycloak Provider (Google or standard Keycloak)
       if (account && profile) {
         token.accessToken = account.access_token;
@@ -210,6 +216,8 @@ export const authOptions = {
         token.expiresAt = Date.now() + user.expiresIn * 1000;
         token.idToken = user.idToken;
         token.organizationId = user.organizationId;
+        token.userId = user.userId;
+        token.systemRole = user.systemRole;
 
         // Decode token from backend
         if (user.accessToken) {
@@ -255,6 +263,8 @@ export const authOptions = {
       session.user.id = token.sub!;
       session.user.role = token.role;
       session.user.organizationId = token.organizationId;
+      session.user.userId = token.userId;
+      session.user.systemRole = token.systemRole;
       return session;
     },
   },

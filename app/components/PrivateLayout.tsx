@@ -38,7 +38,7 @@ interface ClientLayoutProps {
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session ,update:updateSession} = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [reload, setReload] = useState<boolean>(false);
 
@@ -136,6 +136,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
+     
       const organization = [
         ...personalOrganizations,
         ...teamOrganizations,
@@ -185,6 +186,14 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     await userServices
       .updateDetailByToken(session?.user?.id as string, {
         recentOrganizationId: organizationId,
+      }).then(async () => {
+        await updateSession({
+          ...session,
+          user: {
+            ...session?.user,
+            organizationId: organizationId,
+          },
+        });
       })
       .finally(() => {
         setReload(false);
@@ -230,10 +239,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         <Spin spinning={loading || reload}>
           <OrganizationProvider
             value={{
-              organizationId,
               organizationRole,
-              userId: userProfile?.userId,
-              systemRole: userProfile?.role,
             }}
           >
             {children}
@@ -442,12 +448,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <PrivateContent user={userProfile ? userProfile : undefined}>
                 <OrganizationProvider
                   value={{
-                    organizationId,
                     organizationRole,
-                    userId: userProfile?.userId,
-                    systemRole: userProfile?.role && userProfile.role,
                   }}
                 >
+         <div className=" text-white">111 {session.user.organizationId ||""}</div>
                   {children}
                 </OrganizationProvider>
               </PrivateContent>

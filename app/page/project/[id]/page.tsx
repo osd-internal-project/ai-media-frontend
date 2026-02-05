@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
 import { Tabs, Drawer } from "antd";
-import "./styles.css";
-import { useOrganization } from "../../../context/OrganizationContext";
+import "./styles.css"; 
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -41,7 +40,7 @@ const GenerateImagePage: FC = () => {
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
   const { id } = params as { id: string };
-  const { organizationId } = useOrganization();
+  const organizationId = session?.user?.organizationId;
   const [projectRole, setProjectRole] = useState<string | null>(null);
 
   const onSetPromptTextRef = React.useRef<

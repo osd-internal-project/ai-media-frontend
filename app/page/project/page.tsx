@@ -40,8 +40,8 @@ const MAX_MEMBERS = 5;
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
-  // const { socket, isConnected } = useWebSocket();
-  const { organizationId, organizationRole } = useOrganization();
+  const {  organizationRole } = useOrganization();
+  const organizationId = session?.user?.organizationId;
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);

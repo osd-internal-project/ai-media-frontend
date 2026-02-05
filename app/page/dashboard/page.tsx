@@ -18,7 +18,6 @@ import type { IProject } from "@/app/common/project.type";
 import ReportServices from "@/app/services/report.service";
 import { canViewDashboard } from "@/app/utils/permissions";
 import { useOrganization } from "@/app/context/OrganizationContext";
-import { IOrganization } from "@/app/common/organization.type";
 import OrganizationServices from "@/app/services/organization.service";
 import CardOrganization from "./components/card-orgnization";
 import TableFilter from "./components/table-filter";
@@ -26,7 +25,8 @@ import TableProjectComponent from "./components/table-project";
 import TableUserComponent from "./components/table-user";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
-  const { organizationRole, organizationId } = useOrganization();
+  const { organizationRole } = useOrganization();
+  const organizationId = session?.user?.organizationId;
   const dashboardServices = DashboardServices(axiosCore);
   const organizationServices = OrganizationServices(axiosUser);
   const projectServices = ProjectService(axiosCore);

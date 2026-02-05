@@ -26,10 +26,13 @@ import { TUser } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 import { formatNumber } from "@/app/utils/format";
 import { canEditOrganization, canManageMembers } from "@/app/utils/permissions";
+import { useSession } from "next-auth/react";
 
 export default function OrganizationDetailPage() {
+  const { data: session } = useSession();
   const [messageApi, contextHolder] = message.useMessage();
-  const { organizationId, organizationRole } = useOrganization();
+  const { organizationRole } = useOrganization();
+  const organizationId = session?.user?.organizationId;
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

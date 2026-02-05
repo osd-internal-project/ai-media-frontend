@@ -51,7 +51,6 @@ import VideoSmartReference from "./chat-components/video-smart-reference";
 import ChatVideoInput from "./chat-components/chat-video-input";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
-import { useOrganization } from "@/app/context/OrganizationContext";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";

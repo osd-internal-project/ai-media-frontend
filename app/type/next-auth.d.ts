@@ -13,6 +13,8 @@ declare module "next-auth" {
       image?: string | null;
       role?: string | null;
       organizationId?: string | null;
+      userId?: string | null;
+      systemRole?: string | null;
     };
   }
 }
