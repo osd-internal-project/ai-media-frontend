@@ -451,7 +451,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                     organizationRole,
                   }}
                 >
-         <div className=" text-white">111 {session.user.organizationId ||""}</div>
                   {children}
                 </OrganizationProvider>
               </PrivateContent>

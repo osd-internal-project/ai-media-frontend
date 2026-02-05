@@ -20,6 +20,7 @@ import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
 import GenerateImageServices from "@/app/services/generate-image.service";
 import VideoItem from "./video-player";
+import { useSession } from "next-auth/react";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -31,6 +32,7 @@ const PromptLibrary: FC<props> = ({
   activeKey,
 }): ReactElement => {
   const params = useParams();
+  const { data: session } = useSession();
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
@@ -60,8 +62,9 @@ const PromptLibrary: FC<props> = ({
   }, [shouldRefetch]);
 
   const fectData = async () => {
+    if (!session) return
     const id = params.id as string;
-    const res = await galleryservices.findById(id, page, pageSize, true);
+    const res = await galleryservices.findById(id, session.user.organizationId, page, pageSize, true);
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);

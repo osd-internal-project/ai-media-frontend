@@ -140,11 +140,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   onSetPromptTextRef,
 }) => {
   const { data: session } = useSession();
-
-
   const [api, contextHolderNoti] = notification.useNotification();
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
-
   const promptGuideService = PromptGuideServices(axiosCore);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);

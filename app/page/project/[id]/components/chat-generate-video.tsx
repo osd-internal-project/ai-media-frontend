@@ -393,7 +393,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         messages: Message[];
       };
     }) => {
-      console.log(`handleHistory`, data);
       setDisableTab(false);
       if (data.success) {
         const messageData = data.data.messages;
