@@ -33,6 +33,7 @@ const PromptLibrary: FC<props> = ({
 }): ReactElement => {
   const params = useParams();
   const { data: session } = useSession();
+  const organizationId = session?.user?.organizationId ||"";
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
@@ -64,7 +65,7 @@ const PromptLibrary: FC<props> = ({
   const fectData = async () => {
     if (!session) return
     const id = params.id as string;
-    const res = await galleryservices.findById(id, session.user.organizationId, page, pageSize, true);
+    const res = await galleryservices.findById(id,organizationId, page, pageSize, true);
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);
