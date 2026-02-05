@@ -40,8 +40,7 @@ const MAX_MEMBERS = 5;
 const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
-  const {  organizationRole } = useOrganization();
-  const organizationId = session?.user?.organizationId;
+  const { organizationRole } = useOrganization();
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);
@@ -58,10 +57,11 @@ const ProjectsPage = () => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
-    "USER"
+    "USER",
   );
+  const [organizationId, setOrganizationId] = useState<string>("");
   const [organization, setOrganization] = useState<IOrganization | undefined>(
-    undefined
+    undefined,
   );
   const [form] = Form.useForm();
   const [modal, contextHolder] = Modal.useModal();
@@ -98,7 +98,7 @@ const ProjectsPage = () => {
         "Opening edit for project:",
         project.name,
         "Members:",
-        project.members
+        project.members,
       );
 
       setOpenEdit(true);
@@ -115,7 +115,7 @@ const ProjectsPage = () => {
       const initialSearchTexts: { [key: number]: string } = {};
       members.forEach((member: any, index: number) => {
         const user = organizationMembers.find(
-          (u) => u.userId === member.userId
+          (u) => u.userId === member.userId,
         );
         if (user) {
           initialSearchTexts[index] = user.fullname;
@@ -186,11 +186,11 @@ const ProjectsPage = () => {
       }
       const maxTokenAll = projectMembers.reduce(
         (per, total) => (total = per + total.maxToken),
-        0
+        0,
       );
       const maxImageAll = projectMembers.reduce(
         (per, total) => (total = per + total.maxImages),
-        0
+        0,
       );
       if (maxTokenAll > values.accessTokenAmount) {
         messageApi.error("Max token  is too high");
@@ -249,11 +249,11 @@ const ProjectsPage = () => {
       }
       const maxTokenAll = projectMembers.reduce(
         (per, total) => (total = per + total.maxToken),
-        0
+        0,
       );
       const maxImageAll = projectMembers.reduce(
         (per, total) => (total = per + total.maxImages),
-        0
+        0,
       );
       if (maxTokenAll > values.accessTokenAmount) {
         messageApi.error("Max token  is too high");
@@ -277,7 +277,7 @@ const ProjectsPage = () => {
 
       const updateResponse = await projectService.update(
         values.id,
-        projectData
+        projectData,
       );
       if (updateResponse) {
         const remainImageAmount =
@@ -308,7 +308,9 @@ const ProjectsPage = () => {
     if (session?.user?.id) {
       fetchUserProfile();
     }
-  }, [session?.user?.id]);
+
+    setOrganizationId(session?.user?.organizationId || "");
+  }, [session?.user?.id, session?.user.organizationId]);
 
   useEffect(() => {
     if (organizationId) {
@@ -329,9 +331,8 @@ const ProjectsPage = () => {
     }
     try {
       if (organizationId) {
-        const response = await userServices.findOrganizationUserDetails(
-          organizationId
-        );
+        const response =
+          await userServices.findOrganizationUserDetails(organizationId);
         setOrganizationMembers(response || []);
       }
     } catch (error) {
@@ -356,7 +357,7 @@ const ProjectsPage = () => {
       if (organizationId && session?.user?.id) {
         const response = await projectService.findByOrganizationId(
           organizationId,
-          session.user.id
+          session.user.id,
         );
         setProjects(response || []);
       }
@@ -376,7 +377,6 @@ const ProjectsPage = () => {
     });
   };
 
-
   const onClickProject = (projectId: string) => {
     // if (socket) {
     //   socket.emit('chat:get-history', {
@@ -392,9 +392,11 @@ const ProjectsPage = () => {
     <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
       {contextMessageHolder}
       <div
-        className={`flex ${isMobile ? "flex-row" : "flex-col sm:flex-row"
-          } justify-between items-center mb-6 sm:mb-8 ${isMobile ? "gap-3" : "gap-4 sm:gap-0"
-          }`}
+        className={`flex ${
+          isMobile ? "flex-row" : "flex-col sm:flex-row"
+        } justify-between items-center mb-6 sm:mb-8 ${
+          isMobile ? "gap-3" : "gap-4 sm:gap-0"
+        }`}
       >
         <div className="flex items-center gap-3">
           <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -407,8 +409,9 @@ const ProjectsPage = () => {
             icon={<PlusOutlined />}
             onClick={handleOpen}
             style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
-              }`}
+            className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
+              isMobile ? "w-auto" : "w-full sm:w-auto"
+            }`}
           >
             Create Team
           </Button>
@@ -507,7 +510,7 @@ const ProjectsPage = () => {
                       <span className="sm:hidden">
                         {new Date(project.createdAt).toLocaleDateString(
                           "en-US",
-                          { month: "short", day: "numeric" }
+                          { month: "short", day: "numeric" },
                         )}
                       </span>
                     </div>
@@ -549,7 +552,8 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Image{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainImageAmount || 0)})
+                        (Max:{" "}
+                        {formatNumber(organization?.remainImageAmount || 0)})
                       </span>
                     </span>
                   }
@@ -561,7 +565,7 @@ const ProjectsPage = () => {
                       type: "number",
                       max: organization?.remainImageAmount || 0,
                       message: `Cannot exceed available image (${formatNumber(
-                        organization?.remainImageAmount || 0
+                        organization?.remainImageAmount || 0,
                       )})`,
                     },
                   ]}
@@ -584,7 +588,8 @@ const ProjectsPage = () => {
                     <span>
                       จำนวน Token{" "}
                       <span style={{ color: "#888", fontSize: "12px" }}>
-                        (Max: {formatNumber(organization?.remainTokenAmount || 0)})
+                        (Max:{" "}
+                        {formatNumber(organization?.remainTokenAmount || 0)})
                       </span>
                     </span>
                   }
@@ -596,7 +601,7 @@ const ProjectsPage = () => {
                       type: "number",
                       max: organization?.remainTokenAmount || 0,
                       message: `Cannot exceed available token (${formatNumber(
-                        organization?.remainTokenAmount || 0
+                        organization?.remainTokenAmount || 0,
                       )})`,
                     },
                   ]}
@@ -754,7 +759,7 @@ const ProjectsPage = () => {
                               if (
                                 userId &&
                                 !projectMembers.find(
-                                  (m, i) => m.userId === userId && i !== index
+                                  (m, i) => m.userId === userId && i !== index,
                                 )
                               ) {
                                 const newMembers = [...projectMembers];
@@ -763,28 +768,31 @@ const ProjectsPage = () => {
                               }
                             }}
                             options={
-                              searchTexts[index] && searchTexts[index].length > 0
+                              searchTexts[index] &&
+                              searchTexts[index].length > 0
                                 ? organizationMembers
-                                  .filter(
-                                    (u) =>
-                                      !projectMembers.find(
-                                        (m, i) =>
-                                          m.userId === u.userId && i !== index
-                                      ) &&
-                                      u.fullname
-                                        .toLowerCase()
-                                        .includes(
-                                          searchTexts[index].toLowerCase()
-                                        )
-                                  )
-                                  .map((e) => ({
-                                    value: e.userId,
-                                    label: e.fullname,
-                                  }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                 : []
                             }
                             notFoundContent={
-                              searchTexts[index] && searchTexts[index].length > 0
+                              searchTexts[index] &&
+                              searchTexts[index].length > 0
                                 ? "No users found"
                                 : "Type to search users..."
                             }
@@ -830,7 +838,7 @@ const ProjectsPage = () => {
                             danger
                             onClick={() => {
                               setProjectMembers(
-                                projectMembers.filter((_, i) => i !== index)
+                                projectMembers.filter((_, i) => i !== index),
                               );
                               const newSearchTexts: {
                                 [key: number]: string;
@@ -900,7 +908,7 @@ const ProjectsPage = () => {
                         (Max:{" "}
                         {formatNumber(
                           (organization?.remainImageAmount || 0) +
-                          (selectedProject?.accessImageAmount || 0)
+                            (selectedProject?.accessImageAmount || 0),
                         )}
                         )
                       </span>
@@ -917,7 +925,7 @@ const ProjectsPage = () => {
                         (selectedProject?.accessImageAmount || 0),
                       message: `Cannot exceed available image (${formatNumber(
                         (organization?.remainImageAmount || 0) +
-                        (selectedProject?.accessImageAmount || 0)
+                          (selectedProject?.accessImageAmount || 0),
                       )})`,
                     },
                   ]}
@@ -926,7 +934,7 @@ const ProjectsPage = () => {
                     placeholder={
                       (organization?.remainImageAmount || 0) +
                         (selectedProject?.accessImageAmount || 0) ===
-                        0
+                      0
                         ? "No image available"
                         : "Enter image amount"
                     }
@@ -945,7 +953,7 @@ const ProjectsPage = () => {
                         (Max:{" "}
                         {formatNumber(
                           (organization?.remainTokenAmount || 0) +
-                          (selectedProject?.accessTokenAmount || 0)
+                            (selectedProject?.accessTokenAmount || 0),
                         )}
                         )
                       </span>
@@ -962,7 +970,7 @@ const ProjectsPage = () => {
                         (selectedProject?.accessTokenAmount || 0),
                       message: `Cannot exceed available token (${formatNumber(
                         (organization?.remainTokenAmount || 0) +
-                        (selectedProject?.accessTokenAmount || 0)
+                          (selectedProject?.accessTokenAmount || 0),
                       )})`,
                     },
                   ]}
@@ -971,7 +979,7 @@ const ProjectsPage = () => {
                     placeholder={
                       (organization?.remainTokenAmount || 0) +
                         (selectedProject?.accessTokenAmount || 0) ===
-                        0
+                      0
                         ? "No token available"
                         : "Enter token amount"
                     }
@@ -1122,7 +1130,7 @@ const ProjectsPage = () => {
                               if (
                                 userId &&
                                 !projectMembers.find(
-                                  (m, i) => m.userId === userId && i !== index
+                                  (m, i) => m.userId === userId && i !== index,
                                 )
                               ) {
                                 const newMembers = [...projectMembers];
@@ -1131,28 +1139,31 @@ const ProjectsPage = () => {
                               }
                             }}
                             options={
-                              searchTexts[index] && searchTexts[index].length > 0
+                              searchTexts[index] &&
+                              searchTexts[index].length > 0
                                 ? organizationMembers
-                                  .filter(
-                                    (u) =>
-                                      !projectMembers.find(
-                                        (m, i) =>
-                                          m.userId === u.userId && i !== index
-                                      ) &&
-                                      u.fullname
-                                        .toLowerCase()
-                                        .includes(
-                                          searchTexts[index].toLowerCase()
-                                        )
-                                  )
-                                  .map((e) => ({
-                                    value: e.userId,
-                                    label: e.fullname,
-                                  }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                 : []
                             }
                             notFoundContent={
-                              searchTexts[index] && searchTexts[index].length > 0
+                              searchTexts[index] &&
+                              searchTexts[index].length > 0
                                 ? "No users found"
                                 : "Type to search users..."
                             }
@@ -1200,7 +1211,7 @@ const ProjectsPage = () => {
                             danger
                             onClick={() => {
                               setProjectMembers(
-                                projectMembers.filter((_, i) => i !== index)
+                                projectMembers.filter((_, i) => i !== index),
                               );
                               const newSearchTexts: {
                                 [key: number]: string;
