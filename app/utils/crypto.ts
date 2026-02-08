@@ -1,8 +1,9 @@
 import CryptoJS from 'crypto-js';
+import { getEnv } from '../lib/env';
 
 // Secret key for encryption/decryption
 // IMPORTANT: In production, this should be stored securely (environment variable)
-const SECRET_KEY = process.env.NEXT_PUBLIC_CRYPTO_SECRET || 'your-secret-key-change-in-production';
+const SECRET_KEY = getEnv('NEXT_PUBLIC_CRYPTO_SECRET') || 'your-secret-key-change-in-production';
 
 /**
  * Encrypts a password using AES encryption

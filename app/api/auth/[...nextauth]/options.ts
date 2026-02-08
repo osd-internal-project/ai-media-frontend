@@ -106,7 +106,7 @@ export const authOptions = {
           );
 
           // Call the backend service for login
-          const url = `${config.backendUserUrl}/auth/login`;
+          const url = `${config.backendAuthUrl}/auth/login`;
           const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -151,7 +151,7 @@ export const authOptions = {
           const email = user.email;
           if (!email) return false;
 
-          const url = `${config.backendUserUrl}/auth/check`;
+          const url = `${config.backendAuthUrl}/auth/check`;
           const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
