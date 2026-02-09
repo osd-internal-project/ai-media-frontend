@@ -901,7 +901,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               </div>
             )}
 
-            {messages.map((message: Message, index) => (
+            {messages.length > 0 && messages.map((message: Message, index) => (
               <div key={`${message.id}-${index}`}>
                 <div
                   key={`${message.id}-${index}`}
