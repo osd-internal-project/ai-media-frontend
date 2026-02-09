@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aicave-console
+  namespace: aicave-prod
+spec:
+  type: ClusterIP
+  selector:
+    app: aicave-console
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
