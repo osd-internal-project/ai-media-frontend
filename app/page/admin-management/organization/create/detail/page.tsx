@@ -60,13 +60,17 @@ export default function CreateOrganizationPage() {
           parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
         packageImageAmount:
           parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
+        remainTokenAmount:
+          parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
+        remainImageAmount:
+          parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
         maxUserAccess: parseInt(selectedPlan.detailJson.maxUserAccess) || 1,
         type: "team",
         createdById: userDetail?.userId || "",
         slug: values.name.toLowerCase().replace(/ /g, "-"),
       };
 
-      console.log("Payload being sent:", payload);
+      // console.log("Payload being sent:", payload);
 
       const response = await organizationService.createBySystemAdmin(payload);
 
