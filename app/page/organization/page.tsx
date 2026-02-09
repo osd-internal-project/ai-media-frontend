@@ -32,14 +32,13 @@ export default function OrganizationDetailPage() {
   const { data: session } = useSession();
   const [messageApi, contextHolder] = message.useMessage();
   const { organizationRole } = useOrganization();
-  const organizationId = session?.user?.organizationId;
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   // Forms
   const [editForm] = Form.useForm();
   const [addMemberForm] = Form.useForm();
@@ -65,7 +64,11 @@ export default function OrganizationDetailPage() {
       content: content,
     });
   };
-
+useEffect(() => {
+    if (session?.user?.organizationId) {
+      setOrganizationId(session?.user?.organizationId);
+    }
+  }, [session]);
   useEffect(() => {
     if (organizationId) {
       fetchOrganizationData();

@@ -28,7 +28,7 @@ export const MenuSider = [
       // },
       {
         key: `project`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
         icon: <MessageSquare size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
@@ -36,7 +36,7 @@ export const MenuSider = [
       },
       {
         key: `settings/template-setting`,
-        role: ["OWNER", "ADMIN", "MEMBER"],
+        role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
         icon: <SlidersHorizontal size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
@@ -50,7 +50,7 @@ export const MenuSider = [
       // },
       {
         key: `dashboard`,
-        role: ["OWNER", "ADMIN"],
+        role: ["OWNER", "ADMIN","SUPER_ADMIN"],
         icon: <LayoutDashboard size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Dashboard</span>

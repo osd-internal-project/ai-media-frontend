@@ -3,7 +3,11 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button, Form, Input, Spin, message } from "antd";
-import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import {
+  LoadingOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import Image from "next/image";
 import Link from "next/link";
 import UserServices from "../services/users.service";
@@ -12,243 +16,309 @@ import { axiosUser } from "../lib/axios/axios";
 const userService = UserServices(axiosUser);
 
 const VerifyEmailContent = () => {
-    const [form] = Form.useForm();
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const token = searchParams.get("token");
-    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-    const [messageApi, contextHolder] = message.useMessage();
+  const [form] = Form.useForm();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get("token");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
-    useEffect(() => {
-        if (token) {
-            handleVerify(token);
-        } else {
-            setStatus("error");
-        }
-    }, [token]);
+  useEffect(() => {
+    if (token) {
+      handleVerify(token);
+    } else {
+      setStatus("error");
+    }
+  }, [token]);
 
-    const handleVerify = async (token: string) => {
-        try {
-            if (token) {
-                await userService.checkVerifyEmail(token);
-                setStatus("success");
-            }
-        } catch (error) {
-            console.error("Error verifying email:", error);
-            setStatus("error");
-        }
-    };
+  const handleVerify = async (token: string) => {
+    try {
+      if (token) {
+        await userService.checkVerifyEmail(token);
+        setStatus("success");
+      }
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      setStatus("error");
+    }
+  };
 
-    const onFinish = async (values: { password: string; confirmPassword: string }) => {
-        try {
-            if (token) {
-                await userService.confirmEmail(token, values.password);
-                setStatus("success");
-                messageApi.success("Email verified successfully!");
-                router.push("/login");
-            }
-        } catch (error: any) {
-            console.error("Error accepting invitation:", error);
-            if (
-                error.response &&
-                error.response.data &&
-                error.response.data.message
-            ) {
-                messageApi.error(`${error.response.data.message}`);
-            } else {
-                messageApi.error(`${error.message}`);
-            }
-        }
-    };
+  const onFinish = async (values: {
+    password: string;
+    confirmPassword: string;
+  }) => {
+    try {
+      setSubmitting(true);
+      if (token) {
+        await userService.confirmEmail(token, values.password);
+        setStatus("success");
+        messageApi.success("Email verified successfully!");
+        router.push("/login");
+      }
+    } catch (error: any) {
+      console.error("Error accepting invitation:", error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        messageApi.error(`${error.response.data.message}`);
+      } else {
+        messageApi.error(`${error.message}`);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-            {contextHolder}
-            <div className="w-full max-w-[1400px] h-[800px] bg-[#0E0E12] rounded-[30px] overflow-hidden flex shadow-2xl relative border border-[#1E1E24]">
-                {/* Left Side: Content */}
-                <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center relative z-10 bg-[#0E0E12]">
-                    {/* Logo */}
-                    <div className="absolute top-8 left-8 lg:left-12">
-                        <div className="relative w-8 h-8">
-                            <Image src="/images/logo-1.png" alt="Logo" fill className="object-contain" />
-                        </div>
-                    </div>
-
-                    <div className="max-w-md w-full mx-auto text-center">
-                        {status === "loading" && (
-                            <div className="flex flex-col items-center">
-                                <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: '#5465FF' }} spin />} />
-                                <h1 className="text-2xl font-bold text-white mt-8 mb-2">Verifying your email</h1>
-                                <p className="text-gray-400">Please wait while we verify your email address...</p>
-                            </div>
-                        )}
-
-                        {status === "success" && (
-                            <div className="flex flex-col items-center animate-fadeIn">
-                                <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
-                                    <CheckCircleOutlined style={{ fontSize: 40, color: '#22c55e' }} />
-                                </div>
-                                <h1 className="text-3xl font-bold text-white mb-4">Email Verified!</h1>
-                                <p className="text-gray-400 mb-8">
-                                    Your email has been successfully verified. You can now access your account.
-                                </p>
-                                <Form
-                                    form={form}
-                                    onFinish={onFinish}
-                                    layout="vertical"
-                                    requiredMark={false}
-                                    style={{ width: "100%" }}>
-                                    <Form.Item
-                                        name="password"
-                                        label={
-                                            <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
-                                                Password
-                                            </span>
-                                        }
-                                        rules={[{ required: true, message: "Required" }]}
-                                        style={{ marginBottom: "16px" }}
-                                    >
-                                        <Input.Password
-                                            placeholder="*************"
-                                            style={{
-                                                backgroundColor: "#1A1D21",
-                                                border: "1px solid #333",
-                                                color: "white",
-                                                borderRadius: "0.5rem",
-                                                height: "44px",
-                                            }}
-                                        />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        name="confirmPassword"
-                                        label={
-                                            <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
-                                                Confirm password
-                                            </span>
-                                        }
-                                        dependencies={["password"]}
-                                        rules={[
-                                            { required: true, message: "Required" },
-                                            ({ getFieldValue }) => ({
-                                                validator(_, value) {
-                                                    if (!value || getFieldValue("password") === value) {
-                                                        return Promise.resolve();
-                                                    }
-                                                    return Promise.reject(new Error("Passwords do not match!"));
-                                                },
-                                            }),
-                                        ]}
-                                        style={{ marginBottom: "16px" }}
-                                    >
-                                        <Input.Password
-                                            placeholder="*************"
-                                            style={{
-                                                backgroundColor: "#1A1D21",
-                                                border: "1px solid #333",
-                                                color: "white",
-                                                borderRadius: "0.5rem",
-                                                height: "44px",
-                                            }}
-                                        />
-                                    </Form.Item>
-                                    <Button
-                                        type="primary"
-                                        htmlType="submit"
-                                        size="large"
-                                        style={{
-                                            backgroundColor: "#5465FF",
-                                            borderColor: "#5465FF",
-                                            height: "48px",
-                                            borderRadius: "12px",
-                                            fontWeight: 600,
-                                            width: "100%",
-                                            fontSize: "16px",
-                                        }}
-                                    >
-                                        Confirm
-                                    </Button>
-                                </Form>
-                            </div>
-                        )}
-
-                        {status === "error" && (
-                            <div className="flex flex-col items-center animate-fadeIn">
-                                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
-                                    <CloseCircleOutlined style={{ fontSize: 40, color: '#ef4444' }} />
-                                </div>
-                                <h1 className="text-3xl font-bold text-white mb-4">Verification Failed</h1>
-                                <p className="text-gray-400 mb-8">
-                                    The verification link is invalid or has expired. Please request a new verification link or contact support.
-                                </p>
-                                <Link href="/login" className="w-full">
-                                    <Button
-                                        size="large"
-                                        style={{
-                                            backgroundColor: "#1A1D21",
-                                            borderColor: "#333",
-                                            color: "white",
-                                            height: "48px",
-                                            borderRadius: "12px",
-                                            fontWeight: 600,
-                                            width: "100%",
-                                            fontSize: "16px",
-                                        }}
-                                        className="hover:!text-[#5465FF] hover:!border-[#5465FF]"
-                                    >
-                                        Back to Login
-                                    </Button>
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="absolute bottom-8 left-0 right-0 text-center">
-                        <div className="flex justify-center items-center text-[10px] text-gray-600 gap-4">
-                            <p>aicave.ai @ 2026</p>
-                            <Link href="#" className="hover:text-gray-400 transition-colors">Privacy Policy</Link>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Side: Visual */}
-                <div className="hidden lg:flex w-1/2 bg-[#050505] relative overflow-hidden items-center justify-center">
-                    <div className="relative w-full h-full animate-float">
-                        <Image
-                            src="/images/login-visual.jpg"
-                            alt="Visual"
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                        {/* Overlay for integration */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-50"></div>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      {contextHolder}
+      <div className="w-full max-w-[1400px] h-[800px] bg-[#0E0E12] rounded-[30px] overflow-hidden flex shadow-2xl relative border border-[#1E1E24]">
+        {/* Left Side: Content */}
+        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center relative z-10 bg-[#0E0E12]">
+          {/* Logo */}
+          <div className="absolute top-8 left-8 lg:left-12">
+            <div className="relative w-8 h-8">
+              <Image
+                src="/images/logo-1.png"
+                alt="Logo"
+                fill
+                className="object-contain"
+              />
             </div>
-            <style jsx global>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.5s ease-out forwards;
-                }
-            `}</style>
+          </div>
+
+          <div className="max-w-md w-full mx-auto text-center">
+            {status === "loading" && (
+              <div className="flex flex-col items-center">
+                <Spin
+                  indicator={
+                    <LoadingOutlined
+                      style={{ fontSize: 64, color: "#5465FF" }}
+                      spin
+                    />
+                  }
+                />
+                <h1 className="text-2xl font-bold text-white mt-8 mb-2">
+                  Verifying your email
+                </h1>
+                <p className="text-gray-400">
+                  Please wait while we verify your email address...
+                </p>
+              </div>
+            )}
+
+            {status === "success" && (
+              <div className="flex flex-col items-center animate-fadeIn">
+                <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+                  <CheckCircleOutlined
+                    style={{ fontSize: 40, color: "#22c55e" }}
+                  />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-4">
+                  Email Verified!
+                </h1>
+                <p className="text-gray-400 mb-8">
+                  Your email has been successfully verified. You can now access
+                  your account.
+                </p>
+                <Form
+                  form={form}
+                  onFinish={onFinish}
+                  layout="vertical"
+                  requiredMark={false}
+                  style={{ width: "100%" }}
+                >
+                  <Form.Item
+                    name="password"
+                    label={
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
+                        Password
+                      </span>
+                    }
+                    rules={[{ required: true, message: "Required" }]}
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <Input.Password
+                      placeholder="*************"
+                      style={{
+                        backgroundColor: "#1A1D21",
+                        border: "1px solid #333",
+                        color: "white",
+                        borderRadius: "0.5rem",
+                        height: "44px",
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="confirmPassword"
+                    label={
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
+                        Confirm password
+                      </span>
+                    }
+                    dependencies={["password"]}
+                    rules={[
+                      { required: true, message: "Required" },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue("password") === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Passwords do not match!"),
+                          );
+                        },
+                      }),
+                    ]}
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <Input.Password
+                      placeholder="*************"
+                      style={{
+                        backgroundColor: "#1A1D21",
+                        border: "1px solid #333",
+                        color: "white",
+                        borderRadius: "0.5rem",
+                        height: "44px",
+                      }}
+                    />
+                  </Form.Item>
+                  <Button
+                    loading={submitting}
+                    type="primary"
+                    htmlType="submit"
+                    size="large"
+                    style={{
+                      backgroundColor: "#5465FF",
+                      borderColor: "#5465FF",
+                      height: "48px",
+                      borderRadius: "12px",
+                      fontWeight: 600,
+                      width: "100%",
+                      fontSize: "16px",
+                    }}
+                  >
+                    Confirm
+                  </Button>
+                </Form>
+              </div>
+            )}
+
+            {status === "error" && (
+              <div className="flex flex-col items-center animate-fadeIn">
+                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                  <CloseCircleOutlined
+                    style={{ fontSize: 40, color: "#ef4444" }}
+                  />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-4">
+                  Verification Failed
+                </h1>
+                <p className="text-gray-400 mb-8">
+                  The verification link is invalid or has expired. Please
+                  request a new verification link or contact support.
+                </p>
+                <Link href="/login" className="w-full">
+                  <Button
+                    size="large"
+                    style={{
+                      backgroundColor: "#1A1D21",
+                      borderColor: "#333",
+                      color: "white",
+                      height: "48px",
+                      borderRadius: "12px",
+                      fontWeight: 600,
+                      width: "100%",
+                      fontSize: "16px",
+                    }}
+                    className="hover:!text-[#5465FF] hover:!border-[#5465FF]"
+                  >
+                    Back to Login
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute bottom-8 left-0 right-0 text-center">
+            <div className="flex justify-center items-center text-[10px] text-gray-600 gap-4">
+              <p>aicave.ai @ 2026</p>
+              <Link href="#" className="hover:text-gray-400 transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
         </div>
-    );
+
+        {/* Right Side: Visual */}
+        <div className="hidden lg:flex w-1/2 bg-[#050505] relative overflow-hidden items-center justify-center">
+          <div className="relative w-full h-full animate-float">
+            <Image
+              src="/images/login-visual.jpg"
+              alt="Visual"
+              fill
+              className="object-cover"
+              priority
+            />
+            {/* Overlay for integration */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0E0E12] via-transparent to-transparent opacity-50"></div>
+          </div>
+        </div>
+      </div>
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default function VerifyEmailPage() {
-    return (
-        <Suspense
-            fallback={
-                <div className="min-h-screen bg-black flex items-center justify-center text-white">
-                    <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: '#5465FF' }} spin />} />
-                </div>
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center text-white">
+          <Spin
+            indicator={
+              <LoadingOutlined
+                style={{ fontSize: 48, color: "#5465FF" }}
+                spin
+              />
             }
-        >
-            <VerifyEmailContent />
-        </Suspense>
-    );
+          />
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
+  );
 }

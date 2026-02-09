@@ -251,6 +251,14 @@ const RegistrationFields = () => {
                 name="agreement"
                 valuePropName="checked"
                 className="mb-6"
+                rules={[
+                    {
+                      validator: (_, value) =>
+                        value
+                          ? Promise.resolve()
+                          : Promise.reject(new Error("Should accept terms")),
+                    },
+                  ]}
             >
                 <Checkbox className="custom-checkbox">
                     <span style={{ color: "#9ca3af", fontSize: "12px" }}>
