@@ -132,12 +132,11 @@ const ProjectsPage = () => {
         content: "Are you sure you want to delete this project?",
         onOk: () => {
           async function deleteProject() {
-            await projectService.update(project.id, { status: "deleted" });
+            await projectService.deleteProject(project.id);
             messageApi.success("Project deleted successfully");
             fetchProjects();
           }
           deleteProject();
-          projectService.update(project.id, { status: "deleted" });
           setLoading(true);
         },
       });
@@ -471,8 +470,10 @@ const ProjectsPage = () => {
                     {canCreateProjects(organizationRole) && (
                       <div className="flex-shrink-0">
                         <Dropdown
+                        disabled={project.status === "deleted"}
                           menu={{
                             items: projectActionItems,
+                            
                             onClick: (e) => {
                               e.domEvent.stopPropagation();
                               onClickProjectAction(e.key, project);

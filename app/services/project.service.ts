@@ -50,6 +50,17 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    deleteProject:async (id:string)=>{
+       return await axiosInstance
+        .delete(`${baseUrl}/${id}/remove`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     findById: async (id: string) => {
       return await axiosInstance
         .get(`${baseUrl}/manage/${id}`)
