@@ -135,6 +135,8 @@ export default function ChatImageInput({
     setSelectedRatio(ratio);
     const size = RATIO_SIZE_MAP[ratio];
     if (size) {
+      setSelectedWidth(size.width);
+      setSelectedHeight(size.height);
       form.setFieldsValue({
         width: size.width,
         height: size.height,
