@@ -74,8 +74,8 @@ jobs:
 
       - name: Patch OpenVPN Cipher
         run: |
-          echo 'cipher AES-256-CBC' >> .github/workflows/client.ovpn
-          echo 'data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC' >> .github/workflows/client.ovpn
+          echo 'cipher AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
+          echo 'data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
 
       # ---------------------------------------------------------------------
       # Connect VPN
@@ -83,7 +83,7 @@ jobs:
       - name: Connect VPN
         uses: kota65535/github-openvpn-connect-action@v2
         with:
-          config_file: .github/workflows/client.ovpn
+          config_file: .github/workflows/OSD-HQ-M395.ovpn
           username: ${{ secrets.OVPN_USERNAME }}
           password: ${{ secrets.OVPN_PASSWORD }}
 
