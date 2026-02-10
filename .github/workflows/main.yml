@@ -10,7 +10,6 @@ env:
   K8S_WORKER_1: ${{ secrets.WORKER_1_IP }}
   K8S_WORKER_2: ${{ secrets.WORKER_2_IP }}
   K8S_WORKER_3: ${{ secrets.WORKER_3_IP }}
-  K8S_SSH_KEY_PATH: .github/workflows/rnd-chareefm.key
 
 jobs:
   build-and-deploy:
@@ -102,7 +101,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_1 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
           target: "/tmp/"
 
@@ -111,7 +110,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_2 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
           target: "/tmp/"
 
@@ -120,7 +119,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_3 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
           target: "/tmp/"
 
@@ -132,7 +131,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_1 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0001..."
@@ -145,7 +144,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_2 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0002..."
@@ -158,7 +157,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_3 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0003..."
@@ -174,7 +173,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_1 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           source: "aicave-console-chart"
           target: "/tmp/"
 
@@ -186,7 +185,7 @@ jobs:
         with:
           host: ${{ env.K8S_WORKER_1 }}
           username: ${{ env.K8S_WORKER_USER }}
-          key_path: ${{ env.K8S_SSH_KEY_PATH }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           script: |
             set -e
 
