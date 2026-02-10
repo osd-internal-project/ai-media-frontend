@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, k8s]
 
     steps:
       # ---------------------------------------------------------------------
@@ -17,24 +17,16 @@ jobs:
         uses: actions/checkout@v4
 
       # ---------------------------------------------------------------------
-      # Show package info
-      # ---------------------------------------------------------------------
-      - name: Show Package Info
-        run: |
-          name=$(jq -r .name package.json)
-          ver=$(jq -r .version package.json)
-          echo "📦 Package: $name"
-          echo "📦 Version: $ver"
-          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
-
-      # ---------------------------------------------------------------------
-      # Read package info (for later steps)
+      # Read package info
       # ---------------------------------------------------------------------
       - name: Read Package Info
         id: pkg
         run: |
           echo "name=$(jq -r .name package.json)" >> "$GITHUB_OUTPUT"
           echo "ver=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+          echo "📦 Package: $(jq -r .name package.json)"
+          echo "📦 Version: $(jq -r .version package.json)"
+          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
 
       # ---------------------------------------------------------------------
       # Build Docker image
@@ -49,74 +41,8 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Save Docker Image as TAR
         run: |
-          docker save -o \
-            ${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar \
+          docker save -o image.tar \
             ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
-
-      # ---------------------------------------------------------------------
-      # Install OpenVPN
-      # ---------------------------------------------------------------------
-      - name: Install OpenVPN
-        run: |
-          sudo apt update
-          sudo apt install -y openvpn openvpn-systemd-resolved
-
-      - name: Enable TUN Device
-        run: |
-          sudo modprobe tun
-          sudo chmod 600 /dev/net/tun
-
-      - name: Patch OpenVPN Cipher
-        run: |
-          echo 'cipher AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
-          echo 'data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
-
-      # ---------------------------------------------------------------------
-      # Connect VPN
-      # ---------------------------------------------------------------------
-      - name: Connect VPN
-        uses: kota65535/github-openvpn-connect-action@v2
-        with:
-          config_file: .github/workflows/OSD-HQ-M395.ovpn
-          username: ${{ secrets.OVPN_USERNAME }}
-          password: ${{ secrets.OVPN_PASSWORD }}
-
-      # ---------------------------------------------------------------------
-      # Diagnose SSH connectivity (remove after confirming fix)
-      # ---------------------------------------------------------------------
-      - name: Diagnose SSH Key and Connectivity
-        run: |
-          # 1. Check the secret is not empty
-          KEY='${{ secrets.K8S_SSH_KEY }}'
-          if [ -z "$KEY" ]; then
-            echo "FAIL: K8S_SSH_KEY secret is empty or not set in GitHub"
-            exit 1
-          fi
-          echo "OK: K8S_SSH_KEY secret is present"
-
-          # 2. Write key to temp file and validate format
-          echo "$KEY" > /tmp/diag_key
-          chmod 600 /tmp/diag_key
-          if ssh-keygen -l -f /tmp/diag_key > /dev/null 2>&1; then
-            echo "OK: Key format is valid"
-            ssh-keygen -l -f /tmp/diag_key
-          else
-            echo "FAIL: Key format is invalid - check for stripped newlines when pasting into secret"
-            head -1 /tmp/diag_key
-            tail -1 /tmp/diag_key
-            exit 1
-          fi
-
-          # 3. Test raw SSH to worker 1 (verbose, timeout 10s)
-          ssh -i /tmp/diag_key \
-            -o StrictHostKeyChecking=no \
-            -o BatchMode=yes \
-            -o ConnectTimeout=10 \
-            -v \
-            ${{ secrets.WORKER_USER }}@${{ secrets.WORKER_1_IP }} \
-            "echo SSH_OK" 2>&1 | tail -30 || true
-
-          rm -f /tmp/diag_key
 
       # ---------------------------------------------------------------------
       # Upload image TAR to all K8s workers
@@ -127,7 +53,7 @@ jobs:
           host: ${{ secrets.WORKER_1_IP }}
           username: ${{ secrets.WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
-          source: "${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar"
+          source: "image.tar"
           target: "/tmp/"
 
       - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
@@ -136,7 +62,7 @@ jobs:
           host: ${{ secrets.WORKER_2_IP }}
           username: ${{ secrets.WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
-          source: "${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar"
+          source: "image.tar"
           target: "/tmp/"
 
       - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
@@ -145,7 +71,7 @@ jobs:
           host: ${{ secrets.WORKER_3_IP }}
           username: ${{ secrets.WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
-          source: "${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar"
+          source: "image.tar"
           target: "/tmp/"
 
       # ---------------------------------------------------------------------
@@ -163,8 +89,8 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0001..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
-            rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
+            rm -f /tmp/image.tar
             echo "✅ Done"
 
       - name: Import Image on Worker 2
@@ -179,8 +105,8 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0002..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
-            rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
+            rm -f /tmp/image.tar
             echo "✅ Done"
 
       - name: Import Image on Worker 3
@@ -195,29 +121,12 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0003..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
-            rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
+            rm -f /tmp/image.tar
             echo "✅ Done"
 
       # ---------------------------------------------------------------------
-      # Install Helm on GitHub runner
-      # ---------------------------------------------------------------------
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: '3.13.0'
-
-      # ---------------------------------------------------------------------
-      # Configure kubectl (VPN is already connected above)
-      # ---------------------------------------------------------------------
-      - name: Configure kubectl
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      # ---------------------------------------------------------------------
-      # Helm upgrade runs on GitHub runner via VPN + kubeconfig
+      # Helm upgrade (runs directly on self-hosted runner)
       # ---------------------------------------------------------------------
       - name: Helm Upgrade
         run: |
