@@ -10,7 +10,7 @@ env:
   K8S_WORKER_1: ${{ secrets.WORKER_1_IP }}
   K8S_WORKER_2: ${{ secrets.WORKER_2_IP }}
   K8S_WORKER_3: ${{ secrets.WORKER_3_IP }}
-  K8S_SSH_KEY_PATH: .github/workflows/rnd-chareefm 5.key
+  K8S_SSH_KEY_PATH: .github/workflows/rnd-chareefm.key
 
 jobs:
   build-and-deploy:
