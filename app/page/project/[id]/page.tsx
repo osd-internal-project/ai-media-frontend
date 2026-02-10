@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
 import { Tabs, Drawer } from "antd";
-import "./styles.css"; 
+import "./styles.css";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -38,7 +38,9 @@ const GenerateImagePage: FC = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   const [aiModels, setAIModels] = useState<TAIModel[]>([]);
-  const [selectedAIModel, setSelectedAIModel] = useState<(TAIModel & { capabilities?: string[] } | undefined)>(undefined);
+  const [selectedAIModel, setSelectedAIModel] = useState<
+    (TAIModel & { capabilities?: string[] }) | undefined
+  >(undefined);
   const { id } = params as { id: string };
   const organizationId = session?.user?.organizationId;
   const [projectRole, setProjectRole] = useState<string | null>(null);
@@ -71,7 +73,7 @@ const GenerateImagePage: FC = () => {
         try {
           const userService = UserServices(axiosUser);
           const userDetails = await userService.findDetailByToken(
-            session.user.id
+            session.user.id,
           );
           const actualUserId = userDetails?.userId || session.user.id;
 
@@ -88,7 +90,7 @@ const GenerateImagePage: FC = () => {
 
   useEffect(() => {
     if (loadingData) {
-      console.log(`organizationId`, organizationId)
+      console.log(`organizationId`, organizationId);
       fecthdata();
       masterdata();
     }
@@ -117,8 +119,6 @@ const GenerateImagePage: FC = () => {
   };
 
   const masterdata = async () => {
-
-
     const models = await aiModelService.findAll();
 
     setAIModels(models || []);
@@ -135,7 +135,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (key === "image" ? m.type === "image" : m.type === "video")
+            (key === "image" ? m.type === "image" : m.type === "video"),
         );
       }
 
@@ -144,13 +144,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (key === "image" ? m.type === "image" : m.type === "video")
+            (key === "image" ? m.type === "image" : m.type === "video"),
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            key === "image" ? m.type === "image" : m.type === "video"
+            key === "image" ? m.type === "image" : m.type === "video",
           );
         }
       }
@@ -162,20 +162,23 @@ const GenerateImagePage: FC = () => {
   };
 
   const processedModels = useMemo(() => {
-    const grouped = aiModels.reduce((acc, model) => {
-      const key = `${model.name}-${model.type}`;
+    const grouped = aiModels.reduce(
+      (acc, model) => {
+        const key = `${model.name}-${model.type}`;
 
-      if (!acc[key]) {
-        acc[key] = {
-          ...model,
-          capabilities: [model.mode],
-        };
-      } else {
-        acc[key].capabilities.push(model.mode);
-      }
+        if (!acc[key]) {
+          acc[key] = {
+            ...model,
+            capabilities: [model.mode],
+          };
+        } else {
+          acc[key].capabilities.push(model.mode);
+        }
 
-      return acc;
-    }, {} as Record<string, TAIModel & { capabilities: string[] }>);
+        return acc;
+      },
+      {} as Record<string, TAIModel & { capabilities: string[] }>,
+    );
 
     return Object.values(grouped);
   }, [aiModels]);
@@ -183,7 +186,7 @@ const GenerateImagePage: FC = () => {
   useEffect(() => {
     if (processedModels.length > 0 && !selectedAIModel) {
       const savedModelId = localStorage.getItem(
-        `selectedAIModel_${activeKey}_${id}`
+        `selectedAIModel_${activeKey}_${id}`,
       );
       let modelToSelect = null;
 
@@ -191,7 +194,7 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (activeKey === "image" ? m.type === "image" : m.type === "video")
+            (activeKey === "image" ? m.type === "image" : m.type === "video"),
         );
       }
 
@@ -200,13 +203,13 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (activeKey === "image" ? m.type === "image" : m.type === "video")
+            (activeKey === "image" ? m.type === "image" : m.type === "video"),
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            activeKey === "image" ? m.type === "image" : m.type === "video"
+            activeKey === "image" ? m.type === "image" : m.type === "video",
           );
         }
       }
@@ -218,7 +221,7 @@ const GenerateImagePage: FC = () => {
   }, [processedModels, activeKey, selectedAIModel, id]);
 
   const filteredAIModels = processedModels.filter((model) =>
-    activeKey === "image" ? model.type === "image" : model.type === "video"
+    activeKey === "image" ? model.type === "image" : model.type === "video",
   );
 
   return (
@@ -234,13 +237,13 @@ const GenerateImagePage: FC = () => {
           filteredAIModels={filteredAIModels}
           onAIModelChange={(value) => {
             const model = filteredAIModels.find(
-              (m) => m.id === parseInt(value)
+              (m) => m.id === parseInt(value),
             );
             setSelectedAIModel(model);
             if (model) {
               localStorage.setItem(
                 `selectedAIModel_${activeKey}_${id}`,
-                model.id.toString()
+                model.id.toString(),
               );
             }
           }}
@@ -337,13 +340,15 @@ const GenerateImagePage: FC = () => {
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> {`Design
+                  <span className="text-green-400">• Recommended:</span>{" "}
+                  {`Design
                   a logo for a gaming company. The logo features a dog playing
                   with a game controller. The company name "PITBULL" is written
                   on it.`}
                 </li>
                 <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span> {`An abstract
+                  <span className="text-red-400">• Avoid:</span>{" "}
+                  {`An abstract
                   image of a dog holding a controller, and the word PITBULL on
                   it.`}
                 </li>
@@ -372,11 +377,13 @@ const GenerateImagePage: FC = () => {
               </p>
               <ul className="space-y-2 ml-4">
                 <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span>{`
+                  <span className="text-green-400">• Recommended:</span>
+                  {`
                   Generate a poster with the title "Seedream 4.0".`}
                 </li>
                 <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span>{` Generate a
+                  <span className="text-red-400">• Avoid:</span>
+                  {` Generate a
                   poster titled Seedream 4.0.`}
                 </li>
               </ul>
