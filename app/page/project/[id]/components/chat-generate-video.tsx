@@ -269,18 +269,24 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       oldTaskId: string;
     }) => {
       console.log("🚀 Task started:", data.data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.oldTaskId
-            ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-              percentage: 10,
-              taskId: data.data.taskId,
-            }
-            : msg,
-        ),
-      );
+      if (data.status === 200) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.oldTaskId
+              ? {
+                ...msg,
+                genneratedStatus: "PROCESSING",
+                percentage: 10,
+                taskId: data.data.taskId,
+              }
+              : msg,
+          ),
+        );
+      } else {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.taskId !== data.oldTaskId),
+        );
+      }
     };
 
     const workerTaskStarted = (data: { taskId: string; timestamp: string }) => {

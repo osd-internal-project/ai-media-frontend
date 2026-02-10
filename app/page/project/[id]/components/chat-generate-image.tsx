@@ -258,7 +258,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     };
 
     // 2. Event เมื่อ task เริ่มต้น processing
-    const handleTaskStarted = (data: { taskId: string; status: string, data: Message }) => {
+    const handleTaskStarted = (data: { taskId: string; status: number, data: Message }) => {
       console.log("🚀 Task started:", data);
       // อัพเดท message ใน state
       // setMessages((prev) =>
@@ -272,13 +272,19 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       //       : msg,
       //   ),
       // );
-      setMessages((prev) => {
-        const exists = prev.some((msg) => msg.taskId === data.data.taskId);
-        if (exists) {
-          return prev;
-        }
-        return [...prev, data.data];
-      });
+      if (data.status === 200) {
+        setMessages((prev) => {
+          const exists = prev.some((msg) => msg.taskId === data.data.taskId);
+          if (exists) {
+            return prev;
+          }
+          return [...prev, data.data];
+        });
+      } else {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.taskId !== data.data.taskId),
+        );
+      }
       shouldAutoScrollRef.current = true;
     };
 
