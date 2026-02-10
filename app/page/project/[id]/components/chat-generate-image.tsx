@@ -261,11 +261,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     };
 
     // 2. Event เมื่อ task เริ่มต้น processing
-    const handleTaskStarted = (data: {
-      taskId: string;
-      status: string;
-      data: Message;
-    }) => {
+    const handleTaskStarted = (data: { taskId: string; status: number, data: Message }) => {
       console.log("🚀 Task started:", data);
       // อัพเดท message ใน state
       // setMessages((prev) =>
@@ -279,13 +275,19 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       //       : msg,
       //   ),
       // );
-      setMessages((prev) => {
-        const exists = prev.some((msg) => msg.taskId === data.data.taskId);
-        if (exists) {
-          return prev;
-        }
-        return [...prev, data.data];
-      });
+      if (data.status === 200) {
+        setMessages((prev) => {
+          const exists = prev.some((msg) => msg.taskId === data.data.taskId);
+          if (exists) {
+            return prev;
+          }
+          return [...prev, data.data];
+        });
+      } else {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.taskId !== data.data.taskId),
+        );
+      }
       shouldAutoScrollRef.current = true;
     };
 
@@ -304,10 +306,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: data.percentage,
-              }
+              ...msg,
+              genneratedStatus: "PROCESSING",
+              percentage: data.percentage,
+            }
             : msg,
         ),
       );
@@ -320,10 +322,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: 10,
-              }
+              ...msg,
+              genneratedStatus: "PROCESSING",
+              percentage: 10,
+            }
             : msg,
         ),
       );
@@ -665,7 +667,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const onDownloadImage = async (fileName: string, imageId: string) => {
-    try { 
+    try {
       const response = await galleryService.downloadFile(
         imageId,
         session?.user?.organizationId || "",
@@ -947,24 +949,24 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     />
                     {(message.genneratedStatus === "PENDING" ||
                       message.genneratedStatus === "PROCESSING") && (
-                      <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                        {/* <Progress
+                        <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
+                          {/* <Progress
                           size={260}
                           type="circle"
                           percent={message.percentage}
                           strokeColor={conicColors}
                         /> */}
-                        <AiImageLoader />
-                      </div>
-                    )}
+                          <AiImageLoader />
+                        </div>
+                      )}
 
                     {(message.genneratedStatus === "FAIL" ||
                       (message.genneratedStatus === "SUCCESS" &&
                         !message.imageUrls)) && (
-                      <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
-                        Generate failed
-                      </div>
-                    )}
+                        <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
+                          Generate failed
+                        </div>
+                      )}
                     {message.genneratedStatus === "SUCCESS" &&
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (
@@ -998,7 +1000,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                                       className="!bg-black/60 !text-white !border-none backdrop-blur-sm hover:!bg-black/80"
                                       onClick={(e) => {
                                         e.preventDefault();
-                                        e.stopPropagation(); 
+                                        e.stopPropagation();
                                         onDownloadImage(
                                           imgUrl.fileName || "image.jpg",
                                           imgUrl.id,

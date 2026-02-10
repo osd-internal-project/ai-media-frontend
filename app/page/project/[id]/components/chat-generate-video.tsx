@@ -271,18 +271,24 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       oldTaskId: string;
     }) => {
       console.log("🚀 Task started:", data.data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.oldTaskId
-            ? {
+      if (data.status === 200) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.oldTaskId
+              ? {
                 ...msg,
                 genneratedStatus: "PROCESSING",
                 percentage: 10,
                 taskId: data.data.taskId,
               }
-            : msg,
-        ),
-      );
+              : msg,
+          ),
+        );
+      } else {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.taskId !== data.oldTaskId),
+        );
+      }
     };
 
     const workerTaskStarted = (data: { taskId: string; timestamp: string }) => {
@@ -299,16 +305,16 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  {
-                    imageUrl: data.videoUrl,
-                    thumbnailUrl:
-                      "https://placehold.co/600x400/000000/FFFFFF/png",
-                  },
-                ],
-              }
+              ...msg,
+              genneratedStatus: "SUCCESS",
+              imageUrls: [
+                {
+                  imageUrl: data.videoUrl,
+                  thumbnailUrl:
+                    "https://placehold.co/600x400/000000/FFFFFF/png",
+                },
+              ],
+            }
             : msg,
         ),
       );
@@ -325,12 +331,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
-                ],
-              }
+              ...msg,
+              genneratedStatus: "SUCCESS",
+              imageUrls: [
+                { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
+              ],
+            }
             : msg,
         ),
       );
@@ -346,9 +352,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-              }
+              ...msg,
+              genneratedStatus: "SUCCESS",
+            }
             : msg,
         ),
       );
@@ -362,9 +368,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-              }
+              ...msg,
+              genneratedStatus: "PROCESSING",
+            }
             : msg,
         ),
       );
@@ -580,7 +586,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   //     }
   // }, [messages.length]);
 
-  const onDownloadVideo = async (fileName: string,videoId:string) => {
+  const onDownloadVideo = async (fileName: string, videoId: string) => {
     // try {
     // //   const urlWithoutParams = videoUrl.split("?")[0];
     // //   const filename = urlWithoutParams.split("/").pop() || "video.mp4";
@@ -1004,8 +1010,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                     />
                     {(massage.genneratedStatus === "PENDING" ||
                       massage.genneratedStatus === "PROCESSING") && (
-                      <AiImageLoader />
-                    )}
+                        <AiImageLoader />
+                      )}
                     {massage.genneratedStatus === "FAIL" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
