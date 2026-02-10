@@ -136,18 +136,18 @@ jobs:
           NAME="${{ steps.pkg.outputs.name }}"
           VER="${{ steps.pkg.outputs.ver }}"
 
-          echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
+          echo "🚀 Helm upgrade aicave-console (env: prod)"
 
           helm upgrade --install aicave-console ./aicave-console-chart \
-            -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+            -f ./aicave-console-chart/values-prod.yaml \
             --set image.repository=docker.io/library/${NAME} \
             --set image.tag=${VER} \
-            --namespace aicave-${DEPLOY_ENV} \
+            --namespace aicave-prod \
             --wait \
             --timeout 5m \
             --atomic
 
-          echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
+          echo "✅ Deployment completed: ${NAME}:${VER} (env: prod)"
 
       # ---------------------------------------------------------------------
       # Verify deployment
