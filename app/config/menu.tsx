@@ -1,85 +1,165 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { CodeOutlined, FileImageOutlined, UserSwitchOutlined } from "@ant-design/icons";
-import { LockKeyholeOpen, SquareChevronRight } from "lucide-react";
+import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
+import {
+  Bot,
+  LayoutTemplate,
+  LayoutDashboard,
+  Settings,
+  ShieldUser,
+  SlidersHorizontal,
+  MessageSquare,
+} from "lucide-react";
 
 export const MenuSider = [
   {
     key: `general`,
-    label: `GENERAL`,
+    // label: <span className=" text-[10px]">GENERAL</span>,
     role: "",
     disabled: true,
     header: true,
     children: [
+      // {
+      //   key: `project`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+      //   icon: <Bot size={24} />,
+      //   label: `Project`,
+      // },
+      {
+        key: `project`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
+        icon: <MessageSquare size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
+        ),
+      },
+      {
+        key: `settings/template-setting`,
+        role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
+        icon: <SlidersHorizontal size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
+        ),
+      },
+      // {
+      //   key: `admin-management`,
+      //   role: ["OWNER", "ADMIN"],
+      //   icon: <Settings size={22} />,
+      //   label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
+      // },
       {
         key: `dashboard`,
-        role: "d-v",
-        icon: <FileImageOutlined />,
-        label: `Dashboard`,
-      },
-      {
-        key: `group-permission`,
-        role: "g-v",
-        icon: <LockKeyholeOpen size={16} />,
-        label: `Groups & Permission`,
-      },
-      {
-        key: `users-management`,
-        role: "u-v",
-        icon: <UserSwitchOutlined />,
-        label: `User Managament`,
+        role: ["OWNER", "ADMIN","SUPER_ADMIN"],
+        icon: <LayoutDashboard size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Dashboard</span>
+        ),
       },
     ],
   },
-  {
-    key: `settings`,
-    label: `SETTING`,
-    disabled: true,
-    role: "s-v",
-    header: false,
-    children: [
-      {
-        key: `roles`,
-        role: "r-v",
-        icon: <FileImageOutlined />,
-        label: `Roles`,
-      },
-      {
-        key: `prompt-guide`,
-        role: "pg-v",
-        icon: <CodeOutlined />,
-        label: `Prompt Guide`,
-      },
-    ],
-  },
+  // {
+  //   key: `admin`,
+  //   label: <span className=" text-[10px]">ADMIN</span>,
+  //   role: ["OWNER", "ADMIN"],
+  //   disabled: true,
+  //   header: true,
+  //   children: [],
+  // },
 ];
 
 // ฟังก์ชันสร้างเมนูแบบ title + children แสดงตรง ๆ
-export const renderMenuItems = (menuList: any[]) => {
+export const renderMenuItems = (menuList: any[], role: string | undefined) => {
+  if (!role) {
+    return [];
+  }
+  const sortedMenu = filterMenuByOrganizationRole(menuList, role);
+
   const items: any[] = [];
-  menuList.forEach((menu) => {
+  sortedMenu.forEach((menu) => {
     if (menu.children && menu.children.length > 0) {
       items.push({
         type: "group",
         label: menu.label,
         key: menu.key,
-        children: menu.children.map((child: any) => ({
-          key: child.key,
-          icon: child.icon,
-          label:
-            menu.disabled && menu.header ? (
-              <Link href={`/page/${child.key}`}>{child.label}</Link>
-            ) : (
-              <Link href={`/page/${menu.key}/${child.key}`}>{child.label}</Link>
+        children: menu.children.map((child: any) => {
+          const isDirectLink = menu.disabled && menu.header;
+          const href = isDirectLink
+            ? `/page/${child.key}`
+            : `/page/${child.key}`;
+
+          return {
+            key: child.key,
+            style: { height: "auto", padding: "4px 0" }, // Allow flexible height
+            label: (
+              <Link
+                href={href}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  lineHeight: "normal",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "24px",
+                    marginBottom: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  className="menu-icon-container"
+                >
+                  {child.icon}
+                </div>
+                <div className="text-center menu-text-label text-[10px]">
+                  {child.label}
+                </div>
+              </Link>
             ),
-        })),
+          };
+        }),
       });
     } else {
       items.push({
         key: menu.key,
-        icon: menu.icon,
-        label: <Link href={`/page/${menu.key}`}>{menu.label}</Link>,
+        // icon: menu.icon, // Hide default icon prop to use custom layout if needed, but here we keep strict compatibility or apply same logic?
+        // Current config doesn't seem to hit this else block for the sidebar items in question.
+        // But for consistency:
+        style: { height: "auto", padding: "4px 0" },
+        // Removed original text label from Antd Item if we want full custom.
+        label: (
+          <Link
+            href={`/page/${menu.key}`}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              lineHeight: "normal",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "24px",
+                marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              className="menu-icon-container"
+            >
+              {menu.icon}
+            </div>
+            <div className="text-center menu-text-label text-[10px]">
+              {menu.label}
+            </div>
+          </Link>
+        ),
       });
     }
   });
@@ -99,6 +179,11 @@ export const findMenuLabel = (menuList: any[], key: string): string | null => {
 };
 
 export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
+  // ADMIN has super user access to all menus
+  if (userRoles.includes("ADMIN") || userRoles.includes("OWNER")) {
+    return menuList;
+  }
+
   const hasAccess = (role: string) => {
     if (!role || role === "") return true; // public
     return userRoles.includes(role);
@@ -107,7 +192,9 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
   return menuList
     .map((menu) => {
       // filter children ตาม role
-      const children = menu.children ? menu.children.filter((child: any) => hasAccess(child.role)) : null;
+      const children = menu.children
+        ? menu.children.filter((child: any) => hasAccess(child.role))
+        : null;
 
       // ถ้าตัว menu นี้ไม่ต้องมี children → แสดงได้ปกติ
       const canAccessMenu = hasAccess(menu.role);
@@ -121,4 +208,38 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
       };
     })
     .filter(Boolean); // ลบ null ออก
+};
+
+export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
+  const hasAccess = (itemRole: string[] | string) => {
+    if (!itemRole || itemRole === "") return true; // public access
+
+    // Handle array of roles
+    if (Array.isArray(itemRole)) {
+      return itemRole.includes(role);
+    }
+
+    // Handle single role
+    return itemRole === role;
+  };
+
+  return menuList
+    .map((menu) => {
+      // filter children based on role
+      const children = menu.children
+        ? menu.children.filter((child: any) => hasAccess(child.role))
+        : null;
+
+      // Check if current user can access this menu
+      const canAccessMenu = hasAccess(menu.role);
+
+      // If main menu has no access and no accessible children, exclude it
+      if (!canAccessMenu && (!children || children.length === 0)) return null;
+
+      return {
+        ...menu,
+        children: children || menu.children,
+      };
+    })
+    .filter(Boolean); // Remove null entries
 };

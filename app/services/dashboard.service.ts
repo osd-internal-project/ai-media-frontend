@@ -1,8 +1,58 @@
 import { AxiosInstance } from "axios";
+import {
+  IDashboardOrganizationSummary,
+  IDashboardProject,
+  IDashboardTableUser,
+  IDashboardUser,
+} from "../common/dashbaord";
 
 const DashboardServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/dashboard";
   return {
+    findDashboardSummaryOrganization: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardOrganizationSummary> => {
+      return await axiosInstance
+        .get(`${baseUrl}/summary-organization/${organizationId}`, {
+          params: params,
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
+    findDashboardSummaryProject: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardProject[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/summary-project/${organizationId}`, { params: params })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
+    findDashboardSummaryUser: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardTableUser[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/summary-user/${organizationId}`, { params: params })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
     findDashboardSummary: async (token: string, params: any) => {
       return await axiosInstance
         .get(`${baseUrl}/${token}`, { params: params })

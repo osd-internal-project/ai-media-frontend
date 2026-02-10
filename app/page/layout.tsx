@@ -8,16 +8,10 @@ export const metadata: Metadata = {
   description: "AI-Media Application",
 };
 
-export default function RootLayout({
+export default function PageLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body>
-        <PrivateLayout>{children}</PrivateLayout>
-      </body>
-    </html>
-  );
+  return <PrivateLayout>{children}</PrivateLayout>;
 }

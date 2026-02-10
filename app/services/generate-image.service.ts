@@ -29,7 +29,7 @@ const GenerateImageServices = (axiosInstance: AxiosInstance) => {
 
     findById: async (id: string) => {
       return await axiosInstance
-        .get(`${baseUrl}/${id}`)
+        .get(`${baseUrl}/new/${id}`)
         .then((res) => {
           return res.data;
         })
@@ -58,10 +58,10 @@ const GenerateImageServices = (axiosInstance: AxiosInstance) => {
         .then((res) => res.data)
         .catch((err) => err);
     },
-    downloadVDO: async (imageName: string) => {
+    downloadvideo: async (imageName: string) => {
       const encoded = encodeURIComponent(imageName);
       return axiosInstance
-        .get(`${baseUrl}/download-vdo/${encoded}`, {
+        .get(`${baseUrl}/download-video/${encoded}`, {
           responseType: "blob",
         })
         .then((res) => res.data)

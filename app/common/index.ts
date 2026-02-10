@@ -1,10 +1,16 @@
 export interface ITFromGenerate {
-  type: "image" | "vdo";
+  type: "image" | "video";
   text: string;
   resolution: string;
+  generateAudio: boolean;
   duration: string;
   image?: any;
   ratio: string;
   projectId?: string;
   userId?: string;
+  modelName?: string;
+  images?: any;
 }
+export type ISystemRole = "SUPER_ADMIN" | "USER";
+export type IOrganizationRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+export type IProjectRole = "ADMIN" | "USER" | "VIEWER";

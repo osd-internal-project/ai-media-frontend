@@ -1,5 +1,5 @@
 # Base image
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 ###############################################################################
 # Install dependencies
@@ -54,7 +54,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 
 EXPOSE 80
-ENV PORT 80
+ENV PORT=80
 ENV TZ="Asia/Bangkok"
 
 CMD ["node", "server.js"]

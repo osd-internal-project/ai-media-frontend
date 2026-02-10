@@ -1,0 +1,1257 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import {
+  Row,
+  Col,
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
+  Dropdown,
+  Tooltip,
+  Select,
+  InputNumber,
+  Spin,
+} from "antd";
+import {
+  PlusOutlined,
+  ProjectOutlined,
+  TeamOutlined,
+  CalendarOutlined,
+  PlusCircleOutlined,
+} from "@ant-design/icons";
+import { EllipsisVertical } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { IProject } from "@/app/common/project.type";
+import ProjectService from "@/app/services/project.service";
+import UserServices from "@/app/services/users.service";
+import { useOrganization } from "@/app/context/OrganizationContext";
+import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
+import { canCreateProjects } from "../../utils/permissions";
+import OrganizationServices from "@/app/services/organization.service";
+import { IOrganization } from "@/app/common/organization.type";
+import { formatNumber } from "@/app/utils/format";
+import { useWebSocket } from "@/app/hooks/useWebsocket";
+
+const MAX_MEMBERS = 5;
+
+const ProjectsPage = () => {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { organizationRole } = useOrganization();
+  const [messageApi, contextMessageHolder] = message.useMessage();
+  const projectService = ProjectService(axiosCore);
+  const userServices = UserServices(axiosUser);
+  const organizationService = OrganizationServices(axiosUser);
+  const [projects, setProjects] = useState<IProject[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
+  const [organizationMembers, setOrganizationMembers] = useState<any[]>([]);
+  const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
+    "USER",
+  );
+  const [organizationId, setOrganizationId] = useState<string>("");
+  const [organization, setOrganization] = useState<IOrganization | undefined>(
+    undefined,
+  );
+  const [form] = Form.useForm();
+  const [modal, contextHolder] = Modal.useModal();
+  const [editForm] = Form.useForm();
+  const [isMobile, setIsMobile] = useState(false);
+
+  const projectActionItems = [
+    {
+      key: "edit",
+      label: "Edit",
+    },
+    {
+      key: "delete",
+      label: "Delete",
+    },
+  ];
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  const onClickProjectAction = (action: string, project: IProject) => {
+    console.log("click", action, project);
+    setSelectedProject(project);
+    if (action === "edit") {
+      console.log(
+        "Opening edit for project:",
+        project.name,
+        "Members:",
+        project.members,
+      );
+
+      setOpenEdit(true);
+      const members =
+        project.members?.map((member: any) => ({
+          userId: member.userId,
+          role: member.role || "USER",
+          maxToken: member.maxToken,
+          maxImages: member.maxImages,
+        })) || [];
+      console.log("Setting project members:", members);
+      setProjectMembers(members);
+
+      const initialSearchTexts: { [key: number]: string } = {};
+      members.forEach((member: any, index: number) => {
+        const user = organizationMembers.find(
+          (u) => u.userId === member.userId,
+        );
+        if (user) {
+          initialSearchTexts[index] = user.fullname;
+        }
+      });
+      setSearchTexts(initialSearchTexts);
+
+      editForm.setFieldsValue({ ...project });
+    }
+    if (action === "delete") {
+      modal.confirm({
+        title: "Delete Project",
+        content: "Are you sure you want to delete this project?",
+        onOk: () => {
+          async function deleteProject() {
+            await projectService.deleteProject(project.id);
+            messageApi.success("Project deleted successfully");
+            fetchProjects();
+          }
+          deleteProject();
+          setLoading(true);
+        },
+      });
+    }
+    setLoading(false);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+    setLoading(true);
+    if (userProfile) {
+      setSearchTexts((prev) => ({ 0: userProfile.fullname }));
+      console.log(searchTexts);
+      setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
+      setLoading(false);
+    } else {
+      setProjectMembers([]);
+      setSearchTexts({});
+    }
+
+    form.resetFields();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    form.resetFields();
+    setProjectMembers([]);
+    setShowAddMember(false);
+    setSelectedUser("");
+    setSelectedRole("USER");
+    setSearchTexts({});
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEdit(false);
+    editForm.resetFields();
+    setProjectMembers([]);
+    setSearchTexts({});
+  };
+
+  const onFinishAdd = async (values: any) => {
+    try {
+      setLoading(true);
+      if (!organization) {
+        messageApi.error("Organization not found");
+        setLoading(false);
+        return;
+      }
+      const maxTokenAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxToken),
+        0,
+      );
+      const maxImageAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxImages),
+        0,
+      );
+      if (maxTokenAll > values.accessTokenAmount) {
+        messageApi.error("Max token  is too high");
+        setLoading(false);
+        return;
+      }
+      if (maxImageAll > values.accessImageAmount) {
+        messageApi.error(" Max image is too high");
+        setLoading(false);
+        return;
+      }
+      const projectData = {
+        ...values,
+        remainImageAmount: values.accessImageAmount - maxImageAll,
+        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
+        members: projectMembers.filter((m) => m.userId),
+        organizationId: organizationId,
+      };
+
+      const response = await projectService.create({
+        ...projectData,
+        organizationId: organizationId,
+      });
+
+      if (response) {
+        const remainImageAmount =
+          (organization?.remainImageAmount || 0) - response.accessImageAmount;
+        const remainTokenAmount =
+          (organization?.remainTokenAmount || 0) - response.accessTokenAmount;
+        await organizationService.update(organization.organizationId, {
+          remainImageAmount,
+          remainTokenAmount,
+        });
+        messageApi.success("Project created successfully");
+        setOpen(false);
+        setProjectMembers([]);
+        form.resetFields();
+        fetchOrganizationMembers();
+        fetchProjects();
+      }
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      messageApi.error("Failed to create project");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onFinishEdit = async (values: any) => {
+    setLoading(true);
+    try {
+      if (!organization) {
+        messageApi.error("Organization not found");
+        setLoading(false);
+        return;
+      }
+      const maxTokenAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxToken),
+        0,
+      );
+      const maxImageAll = projectMembers.reduce(
+        (per, total) => (total = per + total.maxImages),
+        0,
+      );
+      if (maxTokenAll > values.accessTokenAmount) {
+        messageApi.error("Max token  is too high");
+        setLoading(false);
+        return;
+      }
+      if (maxImageAll > values.accessImageAmount) {
+        messageApi.error(" Max image is too high");
+        setLoading(false);
+        return;
+      }
+      const projectData = {
+        name: values.name,
+        description: values.description,
+        accessTokenAmount: values.accessTokenAmount,
+        accessImageAmount: values.accessImageAmount,
+        remainImageAmount: values.accessImageAmount - maxImageAll,
+        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
+        members: projectMembers.filter((m) => m.userId),
+      };
+
+      const updateResponse = await projectService.update(
+        values.id,
+        projectData,
+      );
+      if (updateResponse) {
+        const remainImageAmount =
+          (organization?.remainImageAmount || 0) +
+          (selectedProject?.accessImageAmount || 0) -
+          updateResponse.accessImageAmount;
+        const remainTokenAmount =
+          (organization?.remainTokenAmount || 0) +
+          (selectedProject?.accessTokenAmount || 0) -
+          updateResponse.accessTokenAmount;
+        await organizationService.update(organization.organizationId, {
+          remainImageAmount,
+          remainTokenAmount,
+        });
+        messageApi.success("Project updated successfully");
+      }
+      setOpenEdit(false);
+      setProjectMembers([]);
+      fetchProjects();
+      fetchOrganizationMembers();
+    } catch (error) {
+      console.error("Failed to update project:", error);
+      messageApi.error("Failed to update project");
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchUserProfile();
+    }
+
+    setOrganizationId(session?.user?.organizationId || "");
+  }, [session?.user?.id, session?.user.organizationId]);
+
+  useEffect(() => {
+    if (organizationId) {
+      fetchProjects();
+      fetchOrganizationMembers();
+    }
+  }, [organizationId]);
+
+  const fetchOrganizationMembers = async () => {
+    try {
+      if (organizationId) {
+        const organization = await organizationService.findById(organizationId);
+        console.log(organization);
+        setOrganization(organization);
+      }
+    } catch (error) {
+      console.error("Failed to fetch organization :", error);
+    }
+    try {
+      if (organizationId) {
+        const response =
+          await userServices.findOrganizationUserDetails(organizationId);
+        setOrganizationMembers(response || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch organization members:", error);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      if (session?.user?.id) {
+        const profile = await userServices.findDetailByToken(session.user.id);
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      if (organizationId && session?.user?.id) {
+        const response = await projectService.findByOrganizationId(
+          organizationId,
+          session.user.id,
+        );
+        setProjects(response || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      messageApi.error("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const onClickProject = (projectId: string) => {
+    // if (socket) {
+    //   socket.emit('chat:get-history', {
+    //     projectId,
+    //     skip: 0,
+    //     pageSize: 3
+    //   });
+    // }
+    router.push(`/page/project/${projectId}`);
+  };
+
+  return (
+    <Spin spinning={loading}>
+      <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
+        {contextMessageHolder}
+        <div
+          className={`flex ${
+            isMobile ? "flex-row" : "flex-col sm:flex-row"
+          } justify-between items-center mb-6 sm:mb-8 ${
+            isMobile ? "gap-3" : "gap-4 sm:gap-0"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Teams
+            </h1>
+          </div>
+          {canCreateProjects(organizationRole) && (
+            <Button
+              size={isMobile ? "middle" : "large"}
+              icon={<PlusOutlined />}
+              onClick={handleOpen}
+              style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
+              className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
+                isMobile ? "w-auto" : "w-full sm:w-auto"
+              }`}
+            >
+              Create Team
+            </Button>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="text-center text-gray-400">Loading ...</div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12">
+            <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
+            <h3 className="text-xl text-gray-400 mb-2">No team yet</h3>
+          </div>
+        ) : (
+          <Row gutter={[12, 12]}>
+            {projects.map((project) => (
+              <Col xs={24} sm={12} lg={8} key={project.id}>
+                <div
+                  className="group relative rounded-xl p-3 sm:p-4 hover:bg-zinc-700/50 hover:scale-100 hover:shadow-lg hover:shadow-zinc-400/10 transition-all duration-300 cursor-pointer hover:border-zinc-500/60 h-full flex flex-col border border-zinc-700/50"
+                  style={{ backgroundColor: "#18181B" }}
+                  onClick={() => onClickProject(project.id)}
+                >
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex-grow min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-orange-400 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200 group-hover:shadow-md">
+                          <ProjectOutlined className="text-xs sm:text-sm text-white" />
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                          {project.name && project.name.length > 15 ? (
+                            <Tooltip
+                              title={project.name}
+                              placement="top"
+                              mouseEnterDelay={0.5}
+                            >
+                              <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
+                                {project.name}
+                              </h3>
+                            </Tooltip>
+                          ) : (
+                            <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
+                              {project.name}
+                            </h3>
+                          )}
+                          {project.status === "deleted" ? (
+                            <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                          ) : (
+                            <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full flex-shrink-0"></span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {canCreateProjects(organizationRole) && (
+                      <div className="flex-shrink-0">
+                        <Dropdown
+                        disabled={project.status === "deleted"}
+                          menu={{
+                            items: projectActionItems,
+                            
+                            onClick: (e) => {
+                              e.domEvent.stopPropagation();
+                              onClickProjectAction(e.key, project);
+                            },
+                          }}
+                          placement="bottomRight"
+                        >
+                          <Button
+                            className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !px-2 !py-2 sm:!px-3 sm:!py-2"
+                            type="text"
+                            icon={<EllipsisVertical size={18} />}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </Dropdown>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-grow">
+                    <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
+                      {project.description || "No description provided"}
+                    </p>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <div className="flex items-center space-x-1">
+                        <TeamOutlined className="text-xs" />
+                        <span>{project.members?.length || 0}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <CalendarOutlined className="text-xs" />
+                        <span className="hidden sm:inline">
+                          {formatDate(project.createdAt)}
+                        </span>
+                        <span className="sm:hidden">
+                          {new Date(project.createdAt).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric" },
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        )}
+
+        {open ? (
+          <Modal
+            title="Create Team"
+            open={open}
+            onCancel={handleClose}
+            footer={false}
+            okText="Submit"
+            width={isMobile ? "90%" : 700}
+          >
+            <Form
+              form={form}
+              layout="vertical"
+              name="create_project_form"
+              onFinish={onFinishAdd}
+              onFinishFailed={(e) => console.log(e)}
+            >
+              <Form.Item
+                label="Team Name"
+                name="name"
+                rules={[{ required: true, message: "Please enter team name" }]}
+              >
+                <Input placeholder="Enter team name" />
+              </Form.Item>
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label={
+                      <span>
+                        จำนวน Image{" "}
+                        <span style={{ color: "#888", fontSize: "12px" }}>
+                          (Max:{" "}
+                          {formatNumber(organization?.remainImageAmount || 0)})
+                        </span>
+                      </span>
+                    }
+                    name="accessImageAmount"
+                    validateTrigger={["onChange", "onBlur"]}
+                    rules={[
+                      { required: true, message: "Please enter image amount" },
+                      {
+                        type: "number",
+                        max: organization?.remainImageAmount || 0,
+                        message: `Cannot exceed available image (${formatNumber(
+                          organization?.remainImageAmount || 0,
+                        )})`,
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      placeholder={
+                        (organization?.remainImageAmount || 0) === 0
+                          ? "No image available"
+                          : "Enter image amount"
+                      }
+                      min={0}
+                      className="w-full"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label={
+                      <span>
+                        จำนวน Token{" "}
+                        <span style={{ color: "#888", fontSize: "12px" }}>
+                          (Max:{" "}
+                          {formatNumber(organization?.remainTokenAmount || 0)})
+                        </span>
+                      </span>
+                    }
+                    name="accessTokenAmount"
+                    validateTrigger={["onChange", "onBlur"]}
+                    rules={[
+                      { required: true, message: "Please enter token amount" },
+                      {
+                        type: "number",
+                        max: organization?.remainTokenAmount || 0,
+                        message: `Cannot exceed available token (${formatNumber(
+                          organization?.remainTokenAmount || 0,
+                        )})`,
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      placeholder={
+                        (organization?.remainTokenAmount || 0) === 0
+                          ? "No token available"
+                          : "Enter token amount"
+                      }
+                      min={0}
+                      className="w-full"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea rows={3} placeholder="Optional description" />
+              </Form.Item>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: "normal",
+                    color: "rgba(255, 255, 255, 0.85)",
+                  }}
+                >
+                  Team Members
+                </span>
+                <Tooltip
+                  title={
+                    projectMembers.length >= MAX_MEMBERS
+                      ? `Maximum ${MAX_MEMBERS} members allowed`
+                      : ""
+                  }
+                >
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusCircleOutlined />}
+                    disabled={projectMembers.length >= MAX_MEMBERS}
+                    onClick={() => {
+                      setProjectMembers([
+                        ...projectMembers,
+                        { userId: "", role: "USER" },
+                      ]);
+                    }}
+                  >
+                    Add Member
+                  </Button>
+                </Tooltip>
+              </div>
+              <Form.Item>
+                <div>
+                  {projectMembers.length > 0 && (
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Team Members (
+                        {projectMembers.filter((m) => m.userId).length})
+                      </div>
+                      <div className="grid grid-cols-12 gap-3 px-3 mb-3">
+                        <div
+                          className="col-span-4"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          User
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Role
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Images
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Tokens
+                        </div>
+                        <div
+                          className="col-span-2 text-center"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Action
+                        </div>
+                      </div>
+                      {projectMembers.map((member, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className=" grid grid-cols-6 gap-2 mb-2"
+                            style={{
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Select
+                              className=" col-span-2"
+                              showSearch
+                              placeholder="Type to search users..."
+                              value={member.userId || undefined}
+                              style={{ flex: 1, marginRight: "8px" }}
+                              filterOption={false}
+                              onSearch={(searchText) => {
+                                setSearchTexts((prev) => ({
+                                  ...prev,
+                                  [index]: searchText,
+                                }));
+                              }}
+                              onChange={(userId: string) => {
+                                if (
+                                  userId &&
+                                  !projectMembers.find(
+                                    (m, i) =>
+                                      m.userId === userId && i !== index,
+                                  )
+                                ) {
+                                  const newMembers = [...projectMembers];
+                                  newMembers[index].userId = userId;
+                                  setProjectMembers(newMembers);
+                                }
+                              }}
+                              options={
+                                searchTexts[index] &&
+                                searchTexts[index].length > 0
+                                  ? organizationMembers
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index,
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase(),
+                                            ),
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
+                                  : []
+                              }
+                              notFoundContent={
+                                searchTexts[index] &&
+                                searchTexts[index].length > 0
+                                  ? "No users found"
+                                  : "Type to search users..."
+                              }
+                            />
+                            <Select
+                              value={member.role}
+                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].role = role;
+                                setProjectMembers(newMembers);
+                              }}
+                              options={[
+                                { value: "ADMIN", label: "Admin" },
+                                { value: "USER", label: "User" },
+                                { value: "VIEWER", label: "Viewer" },
+                              ]}
+                            />
+                            <InputNumber
+                              value={member.maxImages}
+                              onChange={(value: number | null) => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].maxImages = value;
+                                setProjectMembers(newMembers);
+                              }}
+                              min={0}
+                              defaultValue={0}
+                              placeholder="Image"
+                            />
+                            <InputNumber
+                              value={member.maxToken}
+                              onChange={(value: number | null) => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].maxToken = value;
+                                setProjectMembers(newMembers);
+                              }}
+                              min={0}
+                              defaultValue={0}
+                              placeholder="Token"
+                            />
+                            <Button
+                              size="small"
+                              type="text"
+                              danger
+                              onClick={() => {
+                                setProjectMembers(
+                                  projectMembers.filter((_, i) => i !== index),
+                                );
+                                const newSearchTexts: {
+                                  [key: number]: string;
+                                } = {};
+                                Object.keys(searchTexts).forEach((key) => {
+                                  const oldIndex = parseInt(key);
+                                  if (oldIndex < index) {
+                                    newSearchTexts[oldIndex] =
+                                      searchTexts[oldIndex];
+                                  } else if (oldIndex > index) {
+                                    newSearchTexts[oldIndex - 1] =
+                                      searchTexts[oldIndex];
+                                  }
+                                });
+                                setSearchTexts(newSearchTexts);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </Form.Item>
+              <Button loading={loading} type="primary" htmlType="submit">{`Create Team`}</Button>
+            </Form>
+          </Modal>
+        ) : null}
+        {openEdit ? (
+          <Modal
+            title="Edit Team"
+            open={openEdit}
+            onCancel={handleCloseEdit}
+            footer={false}
+            width={isMobile ? "20%" : 700}
+          >
+            <Form
+              form={editForm}
+              layout="vertical"
+              name="create_project_form"
+              onFinish={onFinishEdit}
+            >
+              <Form.Item
+                label="ID"
+                name="id"
+                hidden
+                rules={[{ required: true, message: "Please enter team name" }]}
+              >
+                <Input placeholder="Enter team id" />
+              </Form.Item>
+              <Form.Item
+                label="Team Name"
+                name="name"
+                rules={[{ required: true, message: "Please enter team name" }]}
+              >
+                <Input placeholder="Enter team name" />
+              </Form.Item>{" "}
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label={
+                      <span>
+                        จำนวน Image{" "}
+                        <span style={{ color: "#888", fontSize: "12px" }}>
+                          (Max:{" "}
+                          {formatNumber(
+                            (organization?.remainImageAmount || 0) +
+                              (selectedProject?.accessImageAmount || 0),
+                          )}
+                          )
+                        </span>
+                      </span>
+                    }
+                    name="accessImageAmount"
+                    validateTrigger={["onChange", "onBlur"]}
+                    rules={[
+                      { required: true, message: "Please enter image amount" },
+                      {
+                        type: "number",
+                        max:
+                          (organization?.remainImageAmount || 0) +
+                          (selectedProject?.accessImageAmount || 0),
+                        message: `Cannot exceed available image (${formatNumber(
+                          (organization?.remainImageAmount || 0) +
+                            (selectedProject?.accessImageAmount || 0),
+                        )})`,
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      placeholder={
+                        (organization?.remainImageAmount || 0) +
+                          (selectedProject?.accessImageAmount || 0) ===
+                        0
+                          ? "No image available"
+                          : "Enter image amount"
+                      }
+                      min={0}
+                      className="w-full"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    label={
+                      <span>
+                        จำนวน Token{" "}
+                        <span style={{ color: "#888", fontSize: "12px" }}>
+                          (Max:{" "}
+                          {formatNumber(
+                            (organization?.remainTokenAmount || 0) +
+                              (selectedProject?.accessTokenAmount || 0),
+                          )}
+                          )
+                        </span>
+                      </span>
+                    }
+                    name="accessTokenAmount"
+                    validateTrigger={["onChange", "onBlur"]}
+                    rules={[
+                      { required: true, message: "Please enter token amount" },
+                      {
+                        type: "number",
+                        max:
+                          (organization?.remainTokenAmount || 0) +
+                          (selectedProject?.accessTokenAmount || 0),
+                        message: `Cannot exceed available token (${formatNumber(
+                          (organization?.remainTokenAmount || 0) +
+                            (selectedProject?.accessTokenAmount || 0),
+                        )})`,
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      placeholder={
+                        (organization?.remainTokenAmount || 0) +
+                          (selectedProject?.accessTokenAmount || 0) ===
+                        0
+                          ? "No token available"
+                          : "Enter token amount"
+                      }
+                      min={0}
+                      className="w-full"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label="Description" name="description">
+                <Input.TextArea rows={3} placeholder="Optional description" />
+              </Form.Item>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: "normal",
+                    color: "rgba(255, 255, 255, 0.85)",
+                  }}
+                >
+                  Team Members
+                </span>
+                <Tooltip
+                  title={
+                    projectMembers.length >= MAX_MEMBERS
+                      ? `Maximum ${MAX_MEMBERS} members allowed`
+                      : ""
+                  }
+                >
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusCircleOutlined />}
+                    disabled={projectMembers.length >= MAX_MEMBERS}
+                    onClick={() => {
+                      setProjectMembers([
+                        ...projectMembers,
+                        { userId: "", role: "USER" },
+                      ]);
+                    }}
+                  >
+                    Add Member
+                  </Button>
+                </Tooltip>
+              </div>
+              <Form.Item>
+                <div>
+                  {projectMembers.length > 0 && (
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Team Members (
+                        {projectMembers.filter((m) => m.userId).length})
+                      </div>
+                      <div className="grid grid-cols-12 gap-3 px-3 mb-3">
+                        <div
+                          className="col-span-4"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          User
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Role
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Images
+                        </div>
+                        <div
+                          className="col-span-2"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Tokens
+                        </div>
+                        <div
+                          className="col-span-2 text-center"
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "#8c8c8c",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Action
+                        </div>
+                      </div>
+                      {projectMembers.map((member, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className=" grid grid-cols-6 gap-2 mb-2"
+                            style={{
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Select
+                              className=" col-span-2"
+                              showSearch
+                              placeholder="Type to search users..."
+                              value={member.userId || undefined}
+                              style={{ flex: 1, marginRight: "8px" }}
+                              filterOption={false}
+                              onSearch={(searchText) => {
+                                setSearchTexts((prev) => ({
+                                  ...prev,
+                                  [index]: searchText,
+                                }));
+                              }}
+                              onChange={(userId: string) => {
+                                if (
+                                  userId &&
+                                  !projectMembers.find(
+                                    (m, i) =>
+                                      m.userId === userId && i !== index,
+                                  )
+                                ) {
+                                  const newMembers = [...projectMembers];
+                                  newMembers[index].userId = userId;
+                                  setProjectMembers(newMembers);
+                                }
+                              }}
+                              options={
+                                searchTexts[index] &&
+                                searchTexts[index].length > 0
+                                  ? organizationMembers
+                                      .filter(
+                                        (u) =>
+                                          !projectMembers.find(
+                                            (m, i) =>
+                                              m.userId === u.userId &&
+                                              i !== index,
+                                          ) &&
+                                          u.fullname
+                                            .toLowerCase()
+                                            .includes(
+                                              searchTexts[index].toLowerCase(),
+                                            ),
+                                      )
+                                      .map((e) => ({
+                                        value: e.userId,
+                                        label: e.fullname,
+                                      }))
+                                  : []
+                              }
+                              notFoundContent={
+                                searchTexts[index] &&
+                                searchTexts[index].length > 0
+                                  ? "No users found"
+                                  : "Type to search users..."
+                              }
+                            />
+                            <Select
+                              value={member.role}
+                              // style={{ width: 80 }}
+                              onChange={(role: "ADMIN" | "USER" | "VIEWER") => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].role = role;
+                                setProjectMembers(newMembers);
+                              }}
+                              options={[
+                                { value: "ADMIN", label: "Admin" },
+                                { value: "USER", label: "User" },
+                                { value: "VIEWER", label: "Viewer" },
+                              ]}
+                            />
+                            <InputNumber
+                              value={member.maxImages}
+                              // style={{ width: 80 }}
+                              onChange={(value: number | null) => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].maxImages = value;
+                                setProjectMembers(newMembers);
+                              }}
+                              min={0}
+                              defaultValue={0}
+                              placeholder="Image"
+                            />
+                            <InputNumber
+                              value={member.maxToken}
+                              onChange={(value: number | null) => {
+                                const newMembers = [...projectMembers];
+                                newMembers[index].maxToken = value;
+                                setProjectMembers(newMembers);
+                              }}
+                              min={0}
+                              defaultValue={0}
+                              placeholder="Token"
+                            />
+                            <Button
+                              size="small"
+                              type="text"
+                              danger
+                              onClick={() => {
+                                setProjectMembers(
+                                  projectMembers.filter((_, i) => i !== index),
+                                );
+                                const newSearchTexts: {
+                                  [key: number]: string;
+                                } = {};
+                                Object.keys(searchTexts).forEach((key) => {
+                                  const oldIndex = parseInt(key);
+                                  if (oldIndex < index) {
+                                    newSearchTexts[oldIndex] =
+                                      searchTexts[oldIndex];
+                                  } else if (oldIndex > index) {
+                                    newSearchTexts[oldIndex - 1] =
+                                      searchTexts[oldIndex];
+                                  }
+                                });
+                                setSearchTexts(newSearchTexts);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </Form.Item>
+              <Button loading={loading} type="primary" htmlType="submit">{`Edit Team`}</Button>
+            </Form>
+          </Modal>
+        ) : null}
+        {contextHolder}
+      </div>
+    </Spin>
+  );
+};
+
+export default ProjectsPage;

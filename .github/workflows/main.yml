@@ -1,0 +1,244 @@
+name: CI Workflow
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------------------------------------------------
+      # Checkout
+      # ---------------------------------------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------------
+      # Show package info
+      # ---------------------------------------------------------------------
+      - name: Show Package Info
+        run: |
+          name=$(jq -r .name package.json)
+          ver=$(jq -r .version package.json)
+          echo "📦 Package: $name"
+          echo "📦 Version: $ver"
+          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
+
+      # ---------------------------------------------------------------------
+      # Read package info (for later steps)
+      # ---------------------------------------------------------------------
+      - name: Read Package Info
+        id: pkg
+        run: |
+          echo "name=$(jq -r .name package.json)" >> "$GITHUB_OUTPUT"
+          echo "ver=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------------------------------------------------
+      # Build Docker image
+      # ---------------------------------------------------------------------
+      - name: Build Docker Image
+        run: |
+          docker build --platform linux/amd64 \
+            -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} .
+
+      # ---------------------------------------------------------------------
+      # Save Docker image as TAR
+      # ---------------------------------------------------------------------
+      - name: Save Docker Image as TAR
+        run: |
+          docker save -o \
+            ${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar \
+            ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
+
+      # ---------------------------------------------------------------------
+      # Install OpenVPN
+      # ---------------------------------------------------------------------
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - name: Enable TUN Device
+        run: |
+          sudo modprobe tun
+          sudo chmod 600 /dev/net/tun
+
+      - name: Patch OpenVPN Cipher
+        run: |
+          echo 'cipher AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
+          echo 'data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC' >> .github/workflows/OSD-HQ-M395.ovpn
+
+      # ---------------------------------------------------------------------
+      # Connect VPN
+      # ---------------------------------------------------------------------
+      - name: Connect VPN
+        uses: kota65535/github-openvpn-connect-action@v2
+        with:
+          config_file: .github/workflows/OSD-HQ-M395.ovpn
+          username: ${{ secrets.OVPN_USERNAME }}
+          password: ${{ secrets.OVPN_PASSWORD }}
+
+      # ---------------------------------------------------------------------
+      # Diagnose SSH connectivity (remove after confirming fix)
+      # ---------------------------------------------------------------------
+      - name: Diagnose SSH Key and Connectivity
+        run: |
+          # 1. Check the secret is not empty
+          KEY='${{ secrets.K8S_SSH_KEY }}'
+          if [ -z "$KEY" ]; then
+            echo "FAIL: K8S_SSH_KEY secret is empty or not set in GitHub"
+            exit 1
+          fi
+          echo "OK: K8S_SSH_KEY secret is present"
+
+          # 2. Write key to temp file and validate format
+          echo "$KEY" > /tmp/diag_key
+          chmod 600 /tmp/diag_key
+          if ssh-keygen -l -f /tmp/diag_key > /dev/null 2>&1; then
+            echo "OK: Key format is valid"
+            ssh-keygen -l -f /tmp/diag_key
+          else
+            echo "FAIL: Key format is invalid - check for stripped newlines when pasting into secret"
+            head -1 /tmp/diag_key
+            tail -1 /tmp/diag_key
+            exit 1
+          fi
+
+          # 3. Test raw SSH to worker 1 (verbose, timeout 10s)
+          ssh -i /tmp/diag_key \
+            -o StrictHostKeyChecking=no \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -v \
+            ${{ secrets.WORKER_USER }}@${{ secrets.WORKER_1_IP }} \
+            "echo SSH_OK" 2>&1 | tail -30 || true
+
+          rm -f /tmp/diag_key
+
+      # ---------------------------------------------------------------------
+      # Upload image TAR to all K8s workers
+      # ---------------------------------------------------------------------
+      - name: Upload TAR to Worker 1 (osd-saas01-worker-0001)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.WORKER_1_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
+          target: "/tmp/"
+
+      - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.WORKER_2_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
+          target: "/tmp/"
+
+      - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.WORKER_3_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
+          target: "/tmp/"
+
+      # ---------------------------------------------------------------------
+      # Import image into containerd (k8s.io namespace) on all workers
+      # ---------------------------------------------------------------------
+      - name: Import Image on Worker 1
+        uses: appleboy/ssh-action@master
+        env:
+          SUDO_PASS: ${{ secrets.PASSWORD }}
+        with:
+          host: ${{ secrets.WORKER_1_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          envs: SUDO_PASS
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0001..."
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      - name: Import Image on Worker 2
+        uses: appleboy/ssh-action@master
+        env:
+          SUDO_PASS: ${{ secrets.PASSWORD }}
+        with:
+          host: ${{ secrets.WORKER_2_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          envs: SUDO_PASS
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0002..."
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      - name: Import Image on Worker 3
+        uses: appleboy/ssh-action@master
+        env:
+          SUDO_PASS: ${{ secrets.PASSWORD }}
+        with:
+          host: ${{ secrets.WORKER_3_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          envs: SUDO_PASS
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0003..."
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      # ---------------------------------------------------------------------
+      # Upload Helm chart to Worker 1 for deployment
+      # ---------------------------------------------------------------------
+      - name: Upload Helm Chart to Worker 1
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.WORKER_1_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "aicave-console-chart"
+          target: "/tmp/"
+
+      # ---------------------------------------------------------------------
+      # Helm upgrade on K8s cluster
+      # ---------------------------------------------------------------------
+      - name: Helm Upgrade
+        uses: appleboy/ssh-action@master
+        env:
+          SUDO_PASS: ${{ secrets.PASSWORD }}
+        with:
+          host: ${{ secrets.WORKER_1_IP }}
+          username: ${{ secrets.WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          envs: SUDO_PASS
+          script: |
+            set -e
+
+            DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+            NAME="${{ steps.pkg.outputs.name }}"
+            VER="${{ steps.pkg.outputs.ver }}"
+
+            echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
+
+            helm upgrade --install aicave-console /tmp/aicave-console-chart \
+              -f /tmp/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+              --set image.repository=docker.io/library/${NAME} \
+              --set image.tag=${VER} \
+              -n aicave-${DEPLOY_ENV} \
+
+            echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
+
+            # Cleanup
+            rm -rf /tmp/aicave-console-chart
