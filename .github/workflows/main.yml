@@ -200,45 +200,52 @@ jobs:
             echo "✅ Done"
 
       # ---------------------------------------------------------------------
-      # Upload Helm chart to Worker 1 for deployment
+      # Install Helm on GitHub runner
       # ---------------------------------------------------------------------
-      - name: Upload Helm Chart to Worker 1
-        uses: appleboy/scp-action@master
+      - name: Install Helm
+        uses: azure/setup-helm@v3
         with:
-          host: ${{ secrets.WORKER_1_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          source: "aicave-console-chart"
-          target: "/tmp/"
+          version: '3.13.0'
 
       # ---------------------------------------------------------------------
-      # Helm upgrade on K8s cluster
+      # Configure kubectl (VPN is already connected above)
+      # ---------------------------------------------------------------------
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      # ---------------------------------------------------------------------
+      # Helm upgrade runs on GitHub runner via VPN + kubeconfig
       # ---------------------------------------------------------------------
       - name: Helm Upgrade
-        uses: appleboy/ssh-action@master
-        env:
-          SUDO_PASS: ${{ secrets.PASSWORD }}
-        with:
-          host: ${{ secrets.WORKER_1_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          envs: SUDO_PASS
-          script: |
-            set -e
+        run: |
+          set -e
 
-            DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
-            NAME="${{ steps.pkg.outputs.name }}"
-            VER="${{ steps.pkg.outputs.ver }}"
+          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+          NAME="${{ steps.pkg.outputs.name }}"
+          VER="${{ steps.pkg.outputs.ver }}"
 
-            echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
+          echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
 
-            helm upgrade --install aicave-console /tmp/aicave-console-chart \
-              -f /tmp/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
-              --set image.repository=docker.io/library/${NAME} \
-              --set image.tag=${VER} \
-              -n aicave-${DEPLOY_ENV} \
+          helm upgrade --install aicave-console ./aicave-console-chart \
+            -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+            --set image.repository=docker.io/library/${NAME} \
+            --set image.tag=${VER} \
+            --namespace aicave-${DEPLOY_ENV} \
+            --wait \
+            --timeout 5m \
+            --atomic
 
-            echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
+          echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
 
-            # Cleanup
-            rm -rf /tmp/aicave-console-chart
+      # ---------------------------------------------------------------------
+      # Verify deployment
+      # ---------------------------------------------------------------------
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/aicave-console \
+            -n aicave-${{ secrets.DEPLOY_ENV }}
+          kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
+            -l app=aicave-console
