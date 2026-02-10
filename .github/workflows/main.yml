@@ -103,7 +103,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/tmp/"
+          target: "/home/chareefm/"
 
       - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
         uses: appleboy/scp-action@master
@@ -112,7 +112,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/tmp/"
+          target: "/home/chareefm/"
 
       - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
         uses: appleboy/scp-action@master
@@ -121,7 +121,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/tmp/"
+          target: "/home/chareefm/"
 
       # ---------------------------------------------------------------------
       # Import image into containerd (k8s.io namespace) on all workers
