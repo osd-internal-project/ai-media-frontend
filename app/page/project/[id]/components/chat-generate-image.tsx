@@ -96,6 +96,7 @@ interface ImageMessage {
   id: string;
   imageUrl: string;
   status: boolean;
+  fileName?: string;
 }
 
 interface Message {
@@ -143,6 +144,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const [api, contextHolderNoti] = notification.useNotification();
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
   const promptGuideService = PromptGuideServices(axiosCore);
+  const galleryService = GalleryServices(axiosCore);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
@@ -220,7 +222,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   ) => {
     if (socket) {
       setDisableTab(true);
-      const skip = page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
+      const skip =
+        page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
       const take = page === 0 ? initialPageSize : historyPageSize;
       currentLimitRef.current = take;
       socket.emit("chat:get-history", {
@@ -228,7 +231,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
-        type: 'image'
+        type: "image",
       });
     }
   };
@@ -441,7 +444,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         if (messageData.length < currentLimitRef.current) {
           setHasMore(false);
         }
-        if (messageData.length === 0) return []
+        if (messageData.length === 0) return [];
         const itemsToProcess = [...messageData].reverse();
         const topId = itemsToProcess[0].id;
         if (topId) {
@@ -476,14 +479,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               bottomRef.current?.scrollIntoView({
                 behavior: isFirstLoadNow ? "instant" : "smooth",
               });
-
             }, 100);
           }
           if (isFirstLoad.current) {
             shouldAutoScrollRef.current = true;
           }
           isFirstLoad.current = false;
-
 
           // if (isFirstLoadNow) {
           //   shouldAutoScrollRef.current = true;
@@ -608,7 +609,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               const minSide = Math.min(img.width, img.height);
               URL.revokeObjectURL(img.src);
               if (minSide < 300) {
-                reject("Image size is too small, minimum side length must not be less than 300 px");
+                reject(
+                  "Image size is too small, minimum side length must not be less than 300 px",
+                );
               } else {
                 resolve();
               }
@@ -619,7 +622,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             };
           });
         } catch (error) {
-          openNotificationWithIcon('error', String(error));
+          openNotificationWithIcon("error", String(error));
           return;
         }
       }
@@ -663,19 +666,19 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     return false;
   };
 
-  const onDownloadImage = async (imageUrl: string) => {
+  const onDownloadImage = async (fileName: string, imageId: string) => {
     try {
-      const urlWithoutParams = imageUrl.split("?")[0];
-      const filename = urlWithoutParams.split("/").pop() || "image.jpg";
-
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error("Download failed");
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const response = await galleryService.downloadFile(
+        imageId,
+        session?.user?.organizationId || "",
+      );
+      if (!response) throw new Error("Download failed or response is empty");
+      // console.log(response);
+      // const filename = response.name || "image.jpg";
+      const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
 
@@ -744,7 +747,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       height: selectedHeight,
       imageGenerateType: groupMode,
       typeGenerate: "image",
-      organizationId: session?.user?.organizationId
+      organizationId: session?.user?.organizationId,
     };
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -775,7 +778,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       resolution: selectedResolution,
       ratio: selectedRatio,
       imageUrls: [],
-      organizationId: session?.user?.organizationId
+      organizationId: session?.user?.organizationId,
     } as Message;
 
     setMessages((prev) => [...prev, tempMessage]);
@@ -842,7 +845,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             formData.append("uid", `rc-upload-${Date.now()}-${no}`);
             formData.append("refUid", img.uid);
             formData.append("file", img.url);
-            formData.append("organizationId", session?.user?.organizationId || "");
+            formData.append(
+              "organizationId",
+              session?.user?.organizationId || "",
+            );
             // formData.append("file", file);
 
             const result =
@@ -892,13 +898,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           />
         )}
         <div className="flex flex-col h-full bg-[#18181b] text-white overflow-hidden relative rounded-xl border border-white/10">
-
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto px-4 scroll-smooth space-y-6"
           >
-
             {(loading || isFetchingHistory) && hasMore && (
               <div className="flex justify-center py-2">
                 <Spin
@@ -997,7 +1001,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        onDownloadImage(imgUrl.imageUrl);
+                                        onDownloadImage(
+                                          imgUrl.fileName || "image.jpg",
+                                          imgUrl.id,
+                                        );
                                       }}
                                     />
                                     <Button

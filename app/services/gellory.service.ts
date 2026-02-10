@@ -59,6 +59,19 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    downloadFile: async (id: string, organizationId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/download/${id}?organizationId=${organizationId}`, {
+          responseType: "blob",
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     updateShareOptions: async (
       taskId: string,
       imageUrl: string,

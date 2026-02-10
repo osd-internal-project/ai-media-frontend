@@ -95,6 +95,7 @@ export interface VideoMessage {
   imageUrl: string;
   thumbnailUrl?: string;
   status?: boolean;
+  fileName?: string;
 }
 
 interface Message {
@@ -147,6 +148,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
   // const promptguideService = PromptGuideServices(axiosCore);
   const promptGuideService = PromptGuideServices(axiosCore);
+  const galleryService = GalleryServices(axiosCore);
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [filesFirst, setFilesFirst] = useState<UploadFile[]>([]);
@@ -584,26 +586,46 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   //     }
   // }, [messages.length]);
 
-  const onDownloadVideo = async (videoUrl: string) => {
+  const onDownloadVideo = async (fileName: string, videoId: string) => {
+    // try {
+    // //   const urlWithoutParams = videoUrl.split("?")[0];
+    // //   const filename = urlWithoutParams.split("/").pop() || "video.mp4";
+
+    // //   const hide = message.loading("Downloading video...", 0);
+
+    // //   const response = await fetch(videoUrl);
+    // //   if (!response.ok) throw new Error("Download failed");
+
+    // //   const blob = await response.blob();
+    // //   const url = URL.createObjectURL(blob);
+    // //   const link = document.createElement("a");
+    // //   link.href = url;
+    // //   link.download = filename;
+    // //   link.click();
+    // //   URL.revokeObjectURL(url);
+
+    // //   hide();
+    // //   message.success("Video downloaded successfully");
+    // } catch (error) {
+    //   console.error("Download error:", error);
+    //   message.error("Download failed");
+    // }
     try {
-      const urlWithoutParams = videoUrl.split("?")[0];
-      const filename = urlWithoutParams.split("/").pop() || "video.mp4";
-
-      const hide = message.loading("Downloading video...", 0);
-
-      const response = await fetch(videoUrl);
-      if (!response.ok) throw new Error("Download failed");
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const response = await galleryService.downloadFile(
+        videoId,
+        session?.user?.organizationId || "",
+      );
+      if (!response) throw new Error("Download failed or response is empty");
+      // console.log(response);
+      // const filename = response.name || "image.jpg";
+      const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
 
-      hide();
-      message.success("Video downloaded successfully");
+      message.success("Image downloaded successfully");
     } catch (error) {
       console.error("Download error:", error);
       message.error("Download failed");
@@ -746,7 +768,10 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           formData.append("refUid", img.uid);
           formData.append("uid", `rc-upload-${Date.now()}-${newIndex}`);
           formData.append("file", img.url);
-          formData.append("organizationId", session?.user?.organizationId || "");
+          formData.append(
+            "organizationId",
+            session?.user?.organizationId || "",
+          );
 
           try {
             const result =
@@ -831,7 +856,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       duration: selectedDuration,
       generateAudio: selectedAudio,
       draft: draftMode,
-      organizationId: session?.user?.organizationId
+      organizationId: session?.user?.organizationId,
     };
     const tempMessage = {
       id: tempTask,
@@ -868,7 +893,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       resolution: selectedResolution,
       ratio: selectedRatio,
       imageUrls: [],
-      organizationId: session?.user?.organizationId
+      organizationId: session?.user?.organizationId,
     } as Message;
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;

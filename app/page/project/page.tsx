@@ -528,7 +528,7 @@ const ProjectsPage = () => {
 
         {open ? (
           <Modal
-            title="Add Team"
+            title="Create Team"
             open={open}
             onCancel={handleClose}
             footer={false}
@@ -870,7 +870,7 @@ const ProjectsPage = () => {
                   )}
                 </div>
               </Form.Item>
-              <Button type="primary" htmlType="submit">{`Create Team`}</Button>
+              <Button loading={loading} type="primary" htmlType="submit">{`Create Team`}</Button>
             </Form>
           </Modal>
         ) : null}
@@ -1244,7 +1244,7 @@ const ProjectsPage = () => {
                   )}
                 </div>
               </Form.Item>
-              <Button type="primary" htmlType="submit">{`Edit Team`}</Button>
+              <Button loading={loading} type="primary" htmlType="submit">{`Edit Team`}</Button>
             </Form>
           </Modal>
         ) : null}
