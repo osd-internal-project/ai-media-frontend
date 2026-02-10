@@ -88,6 +88,43 @@ jobs:
           password: ${{ secrets.OVPN_PASSWORD }}
 
       # ---------------------------------------------------------------------
+      # Diagnose SSH connectivity (remove after confirming fix)
+      # ---------------------------------------------------------------------
+      - name: Diagnose SSH Key and Connectivity
+        run: |
+          # 1. Check the secret is not empty
+          KEY='${{ secrets.K8S_SSH_KEY }}'
+          if [ -z "$KEY" ]; then
+            echo "FAIL: K8S_SSH_KEY secret is empty or not set in GitHub"
+            exit 1
+          fi
+          echo "OK: K8S_SSH_KEY secret is present"
+
+          # 2. Write key to temp file and validate format
+          echo "$KEY" > /tmp/diag_key
+          chmod 600 /tmp/diag_key
+          if ssh-keygen -l -f /tmp/diag_key > /dev/null 2>&1; then
+            echo "OK: Key format is valid"
+            ssh-keygen -l -f /tmp/diag_key
+          else
+            echo "FAIL: Key format is invalid - check for stripped newlines when pasting into secret"
+            head -1 /tmp/diag_key
+            tail -1 /tmp/diag_key
+            exit 1
+          fi
+
+          # 3. Test raw SSH to worker 1 (verbose, timeout 10s)
+          ssh -i /tmp/diag_key \
+            -o StrictHostKeyChecking=no \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -v \
+            ${{ env.K8S_WORKER_USER }}@${{ env.K8S_WORKER_1 }} \
+            "echo SSH_OK" 2>&1 | tail -30 || true
+
+          rm -f /tmp/diag_key
+
+      # ---------------------------------------------------------------------
       # Upload image TAR to all K8s workers
       # ---------------------------------------------------------------------
       - name: Upload TAR to Worker 1 (osd-saas01-worker-0001)
@@ -97,7 +134,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/home/chareefm/"
+          target: "/tmp/"
 
       - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
         uses: appleboy/scp-action@master
@@ -106,7 +143,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/home/chareefm/"
+          target: "/tmp/"
 
       - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
         uses: appleboy/scp-action@master
@@ -115,7 +152,7 @@ jobs:
           username: ${{ env.K8S_WORKER_USER }}
           key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/home/chareefm/"
+          target: "/tmp/"
 
       # ---------------------------------------------------------------------
       # Import image into containerd (k8s.io namespace) on all workers
