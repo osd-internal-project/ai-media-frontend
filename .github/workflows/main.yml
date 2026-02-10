@@ -163,7 +163,7 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0001..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             echo "✅ Done"
 
@@ -179,7 +179,7 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0002..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             echo "✅ Done"
 
@@ -195,7 +195,7 @@ jobs:
           script: |
             set -e
             echo "📦 Importing image on osd-saas01-worker-0003..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             rm -f /tmp/${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar
             echo "✅ Done"
 
