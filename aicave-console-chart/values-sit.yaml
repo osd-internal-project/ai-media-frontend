@@ -28,7 +28,7 @@ env:
   apiBaseUrlWebHook: "https://sit.aicave.ai/public/api/v1/web-hook"
   nextauthUrl: "https://sit.aicave.ai"
   keycloakClientId: "eportal-client-id"
-  keycloakClientSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  keycloakClientSecret: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
   keycloakIssuer: "https://id24-sit.aicave.ai/realms/eportal"
   authTrustHost: "true"
 
