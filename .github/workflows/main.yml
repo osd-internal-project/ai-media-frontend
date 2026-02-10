@@ -50,7 +50,7 @@ jobs:
       - name: Save Docker Image as TAR
         run: |
           docker save -o \
-            ${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar \
+            ${{ steps.pkg.outputs.name }}_${{ steps.pkg.outputs.ver }}.tar \
             ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
 
       # ---------------------------------------------------------------------
