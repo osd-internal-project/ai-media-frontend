@@ -15,3 +15,8 @@ export const axiosReport = axios.create({
   baseURL: config.backendReportUrl,
   headers: { "Content-Type": "application/json" },
 });
+
+export const axiosWorker = axios.create({
+  baseURL: config.backendWorkerUrl,
+  headers: { "Content-Type": "multipart/form-data" },
+});

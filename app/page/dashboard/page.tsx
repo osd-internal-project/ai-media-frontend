@@ -1,69 +1,109 @@
 "use client";
 import React, { useEffect, useState, type FC } from "react";
-import SummaryFilterComponent from "./components/summary-filter";
 import { useForm } from "antd/es/form/Form";
-import SummaryCardComponent from "./components/summary-card";
-import { Button, Col, ConfigProvider, message, Row, Tabs, type TabsProps } from "antd";
-import TableOwnerComponent from "./components/table-owner";
-import { axiosCore, axiosReport } from "@/app/lib/axios/axios";
+import { Col, ConfigProvider, Row, Tabs, type TabsProps, Result } from "antd";
+import { axiosCore, axiosReport, axiosUser } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
+import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
-import type { ITDashboard, ITDashboardOwner, ProductSummary } from "@/app/common/dashbaord";
-import TableProductComponent from "./components/table-product";
+import type {
+  IDashboardOrganizationSummary,
+  IDashboardProject,
+  IDashboardTableUser,
+  IDashboardUser,
+  ITDashboardOwner,
+} from "@/app/common/dashbaord";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
 import ReportServices from "@/app/services/report.service";
+import { canViewDashboard } from "@/app/utils/permissions";
+import { useOrganization } from "@/app/context/OrganizationContext";
+import OrganizationServices from "@/app/services/organization.service";
+import CardOrganization from "./components/card-orgnization";
+import TableFilter from "./components/table-filter";
+import TableProjectComponent from "./components/table-project";
+import TableUserComponent from "./components/table-user";
 const DashboardPage: FC = () => {
   const { data: session } = useSession();
+  const { organizationRole } = useOrganization();
+  const organizationId = session?.user?.organizationId;
   const dashboardServices = DashboardServices(axiosCore);
+  const organizationServices = OrganizationServices(axiosUser);
   const projectServices = ProjectService(axiosCore);
-  const [getdata, setData] = useState<ITDashboard>();
   const [loading, setLoading] = useState<boolean>(true);
-  const [summaryByOwner, setSummaryByOwner] = useState<ITDashboardOwner[]>([]);
-  const [summaryByProduct, setSummaryByProduct] = useState<ProductSummary[]>([]);
-  const [projectName, setProjectName] = useState<{ value: string; label: string }[]>([]);
-  const [params, setParams] = useState<{ projectId: string; createdAt: Date | string }>({ projectId: "", createdAt: "" });
+
+  const [summaryByProject, setSummaryByProject] = useState<IDashboardProject[]>(
+    [],
+  );
+  const [summaryByUser, setSummaryByUser] = useState<IDashboardTableUser[]>([]);
+  const [organization, setOrganization] =
+    useState<IDashboardOrganizationSummary>();
+  const [projectOptions, setProjectOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [params, setParams] = useState<{
+    projectId: string;
+    createdAt: Date | string;
+  }>({ projectId: "", createdAt: dayjs().format("YYYY-MM") });
   const [searchForm] = useForm();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  useEffect(() => {
+    searchForm.setFieldsValue({
+      createdAt: dayjs(),
+    });
+  }, []);
+
   useEffect(() => {
     if (loading) fecthdata();
   }, [loading, session, params]);
-
+  useEffect(() => {
+    if (organizationId) fecthOrganizationSummary(organizationId);
+  }, [organizationId]);
   const fecthdata = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummary(session?.user.id as string, params);
-      setData(response);
-      fectdataTableOwner();
-      fectdataTableProduct();
-      setLoading(false);
-    }
-  };
-  const fectdataTableOwner = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryOwner(session?.user.id as string, params);
-      setSummaryByOwner(response);
+    if (organizationId) {
+      fectdataTableProject(organizationId);
+      fectdataTableUser(organizationId);
       setLoading(false);
     }
   };
 
-  const fectdataTableProduct = async () => {
-    if (session?.user) {
-      const response = await dashboardServices.findDashboardSummaryProduct(session?.user.id as string, params);
-      setSummaryByProduct(response);
-      setLoading(false);
-    }
+  const fecthOrganizationSummary = async (organizationId: string) => {
+    const response = await dashboardServices.findDashboardSummaryOrganization(
+      organizationId,
+      params,
+    );
+    console.log(response);
+    setOrganization(response);
   };
 
   useEffect(() => {
     masterData();
-  }, [session]);
+  }, [organizationId]);
 
   const masterData = async () => {
-    if (session?.user) {
-      const response = await projectServices.findOneUserId(session?.user.id as string);
-      const mapOptions = await response.map((events: IProject) => {
-        return { value: events.id, label: events.name };
+    if (organizationId) {
+      const response = await projectServices.findByOrganizationId(
+        organizationId as string,
+        session?.user.id as string,
+      );
+      const mapOptions = await response?.map((project: IProject) => {
+        return { value: project.id, label: project.name };
       });
-      setProjectName(mapOptions);
+      setProjectOptions(mapOptions || []);
+      fectdataTableProject(organizationId);
+      fectdataTableUser(organizationId);
     }
   };
 
@@ -76,10 +116,20 @@ const DashboardPage: FC = () => {
       setLoading(true);
     }
   }
-
+  const fectdataTableProject = async (organizationId: string) => {
+    const response = await dashboardServices.findDashboardSummaryProject(
+      organizationId,
+      params,
+    );
+    setSummaryByProject(response);
+    setLoading(false);
+  };
   const exportcsv = async () => {
     try {
-      const blob = await ReportServices(axiosReport).reportcsvDashboard(session?.user.id as string, params);
+      const blob = await ReportServices(axiosReport).reportcsvDashboard(
+        session?.user.id as string,
+        params,
+      );
       if (!blob) {
         alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
         return;
@@ -99,27 +149,52 @@ const DashboardPage: FC = () => {
       alert("ไม่สามารถดาวน์โหลดไฟล์ได้");
     }
   };
-
-  const items: TabsProps["items"] = [
+  async function fectdataTableUser(organizationId: string) {
+    const response = await dashboardServices.findDashboardSummaryUser(
+      organizationId,
+      params,
+    );
+    setSummaryByUser(response);
+  }
+  const tableTabs: TabsProps["items"] = [
     {
       key: "1",
-      label: "Owner",
+      label: "Team",
       children: (
         <>
-          <TableOwnerComponent data={summaryByOwner} />
+          <TableProjectComponent data={summaryByProject} />
         </>
       ),
     },
     {
       key: "2",
-      label: "Product",
+      label: "Users",
       children: (
         <>
-          <TableProductComponent data={summaryByProduct} />
+          <TableUserComponent data={summaryByUser} />
         </>
       ),
     },
   ];
+
+  // Check if user has permission to view dashboard
+  if (!canViewDashboard(organizationRole || session?.user?.systemRole || "")) {
+    return (
+      <ConfigProvider
+        theme={{
+          token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
+        }}
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Result
+            status="403"
+            title="Access Denied"
+            subTitle="You don't have permission to view the dashboard. Only organization owners can access this page."
+          />
+        </div>
+      </ConfigProvider>
+    );
+  }
 
   return (
     <ConfigProvider
@@ -127,22 +202,22 @@ const DashboardPage: FC = () => {
         token: { colorText: "#99a1af", colorBgContainer: "#2a2a2a" },
       }}
     >
-      <div className="w-full pt-6">
-        <Row gutter={[8, 8]} className="">
+      <div className={`w-full space-y-3 ${isMobile ? "pt-3 px-3" : "pt-6"}`}>
+        <CardOrganization organization={organization} session={session} />
+        <Row gutter={[isMobile ? 4 : 8, isMobile ? 4 : 8]} className="">
           <Col span={24}>
-            <SummaryFilterComponent searchForm={searchForm} onSearch={onSearch} projectName={projectName} />
-          </Col>
-          <Col span={24}>
-            <SummaryCardComponent getdata={getdata} session={session} />
-          </Col>
-          <Col span={24}>
+            <div className="text-[#99a1af] text-lg">Usage Summary</div>
             <Tabs
+              size="small"
               defaultActiveKey="1"
-              items={items}
+              items={tableTabs}
               tabBarExtraContent={
-                <Button className="!border-[#6366F1] !text-[#6366F1]" onClick={exportcsv}>
-                  Export CSV
-                </Button>
+                <TableFilter
+                  searchForm={searchForm}
+                  onSearch={onSearch}
+                  projectOptions={projectOptions}
+                  exportcsv={exportcsv}
+                />
               }
             />
           </Col>

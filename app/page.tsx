@@ -7,8 +7,7 @@ export default async function Page() {
   const session = await getServerSession(authOptions as any);
 
   if (!session) {
-    signIn();
-    return null;
+    redirect("/package");
   }
-  redirect("/page/dashboard");
+  redirect("/page/project");
 }

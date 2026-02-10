@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.4' -f ./Dockerfile ."
+    "docker:buildx": "docker build --no-cache --platform linux/amd64 -t 'ai-media-fe:v1.0.25' -f ./Dockerfile ."
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",
@@ -15,6 +15,7 @@
     "@types/axios": "^0.14.4",
     "antd": "^5.27.4",
     "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.19",
     "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
@@ -25,11 +26,14 @@
     "next-auth": "^4.24.13",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-player": "^3.3.3"
+    "react-phone-input-2": "^2.15.1",
+    "react-player": "^3.3.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/crypto-js": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -38,5 +42,6 @@
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

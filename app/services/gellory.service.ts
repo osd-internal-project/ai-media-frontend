@@ -15,12 +15,20 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    findById: async (projectId: string, page: number, pageSize: number) => {
+    findById: async (
+      projectId: string,
+      organizationId: string,
+      page: number,
+      pageSize: number,
+      status?: boolean
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/${projectId}`, {
           params: {
+            organizationId,
             page,
             pageSize,
+            status,
           },
         })
         .then((res) => {
@@ -31,7 +39,11 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findActivityById: async (projectId: string, page: number, pageSize: number) => {
+    findActivityById: async (
+      projectId: string,
+      page: number,
+      pageSize: number
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/activity/${projectId}`, {
           params: {
@@ -47,9 +59,40 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    updateShareOptions: async (taskId: string, imageUrl: string, status: boolean) => {
+    downloadFile: async (id: string, organizationId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/download/${id}?organizationId=${organizationId}`, {
+          responseType: "blob",
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    updateShareOptions: async (
+      taskId: string,
+      imageUrl: string,
+      status: boolean
+    ) => {
       const base = {
         imageUrl,
+        status,
+      };
+      return await axiosInstance
+        .patch(`${baseUrl}/task/${taskId}`, { body: base })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    updateStatus: async (taskId: string, status: boolean) => {
+      const base = {
         status,
       };
       return await axiosInstance
@@ -59,7 +102,7 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
         })
         .catch((err) => {
           console.log(err);
-          return;
+          throw err
         });
     },
   };

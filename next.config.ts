@@ -2,17 +2,20 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  env: {
-    NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
-    VERSION: "2.0.0",
-    AUTH_BACKEND_URL: "http://192.168.31.181:8972/api",
-    NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:8973/api",
-    NEXT_PUBLIC_API_BASE_URL_CORE: "http://192.168.31.181:8971/api",
-    NEXTAUTH_URL: "http://192.168.31.181:9011",
-    KEYCLOAK_CLIENT_ID: "eportal-client-id",
-    KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
-    KEYCLOAK_ISSUER: "http://192.168.31.181:9000/realms/eportal",
-  },
+  // env: {
+  //   NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
+  //   VERSION: "2.0.0",
+  //   AUTH_BACKEND_URL: "https://www.aicave.ai/public/api/v1/user",
+  //   NEXT_PUBLIC_API_BASE_URL_REPORT: "https://www.aicave.ai/public/api/v1/report",
+  //   NEXT_PUBLIC_API_BASE_URL_CORE: "https://www.aicave.ai/public/api/v1/core",
+  //   NEXT_PUBLIC_API_BASE_URL_WORKER: "https://www.aicave.ai/public/api/v1/worker",
+  //   NEXT_PUBLIC_API_BASE_URL_WEB_HOOK: "https://www.aicave.ai/public/api/v1/web-hook",
+  //   NEXTAUTH_URL: "https://www.aicave.ai",
+  //   KEYCLOAK_CLIENT_ID: "eportal-client-id",
+  //   KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
+  //   KEYCLOAK_ISSUER: "https://id24.aicave.ai/realms/eportal",
+  //   AUTH_TRUST_HOST: true,
+  // },
   webpack: (config: any) => {
     config.externals = [...config.externals, "jsdom"];
     config.module.rules.push({
@@ -21,28 +24,18 @@ const nextConfig = {
     });
     return config;
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/images/:imageName",
-        destination: "http://192.168.31.181:8971/api/public/image-minio/:imageName",
-      },
-      {
-        source: "/api/vdo/:vdoName",
-        destination: "http://192.168.31.181:8971/api/public/vdo-minio/:vdoName",
-      },
-    ];
-  },
   reactStrictMode: false,
   output: "standalone",
-  images: {
-    unoptimized: true,
-  },
 };
 
 // const nextConfig = {
 //   eslint: {
 //     ignoreDuringBuilds: true,
+//   },
+//   experimental: {
+//     serverActions: {
+//       bodySizeLimit: '50mb',
+//     },
 //   },
 //   env: {
 //     NEXTAUTH_SECRET: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo=",
@@ -50,10 +43,12 @@ const nextConfig = {
 //     AUTH_BACKEND_URL: "http://localhost:4000/api",
 //     NEXT_PUBLIC_API_BASE_URL_REPORT: "http://localhost:4001/api",
 //     NEXT_PUBLIC_API_BASE_URL_CORE: "http://localhost:4002/api",
+//     NEXT_PUBLIC_API_BASE_URL_WORKER: "http://localhost:5003",
+//     NEXT_PUBLIC_API_BASE_URL_WEB_HOOK: "http://localhost:4002",
 //     NEXTAUTH_URL: "http://localhost:3000",
-//     KEYCLOAK_CLIENT_ID: "eportal-client-local",
-//     KEYCLOAK_CLIENT_SECRET: "l0lFk6yUWMDGfHEb0cnq0PSUJvXPT23s",
-//     KEYCLOAK_ISSUER: "http://192.168.31.181:9000/realms/eportal",
+//     KEYCLOAK_CLIENT_ID: "eportal-client-id",
+//     KEYCLOAK_CLIENT_SECRET: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId",
+//     KEYCLOAK_ISSUER: "https://id24.aicave.ai/realms/eportal",
 //   },
 //   webpack: (config: any) => {
 //     config.externals = [...config.externals, "jsdom"];
@@ -65,20 +60,5 @@ const nextConfig = {
 //   },
 //   reactStrictMode: false,
 //   output: "standalone",
-//   images: {
-//     unoptimized: true,
-//   },
-//   async rewrites() {
-//     return [
-//       {
-//         source: "/api/images/:imageName",
-//         destination: "http://localhost:4002/api/public/image-minio/:imageName",
-//       },
-//       {
-//         source: "/api/vdo/:vdoName",
-//         destination: "http://localhost:4002/api/public/vdo-minio/:vdoName",
-//       },
-//     ];
-//   },
 // };
 module.exports = nextConfig;

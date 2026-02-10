@@ -10,8 +10,8 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
   if (user) {
     return (
       <Content
+        className="h-full p-2 md:p-2 mobile-padding mobile-full overflow-y-auto"
         style={{
-          paddingRight: 1,
           margin: 0,
         }}
       >
@@ -20,5 +20,5 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
     );
   }
 
-  return <Content>{children}</Content>;
+  return <Content className="h-full">{children}</Content>;
 }

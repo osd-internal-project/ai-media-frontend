@@ -1,10 +1,10 @@
 import { AxiosInstance } from "axios";
-import type { TPromptType } from "../common/prompt-guide";
+import type { TPromptGuide } from "../common/prompt-guide.type";
 
 const PromptGuideServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide";
   return {
-    findAll: async (): Promise<TPromptType[]> => {
+    findAll: async (): Promise<TPromptGuide[]> => {
       return await axiosInstance
         .get(`${baseUrl}`)
         .then((res) => {
@@ -15,7 +15,7 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    create: async (value: TPromptType) => {
+    create: async (value: TPromptGuide) => {
       return await axiosInstance
         .post(`${baseUrl}`, { body: value })
         .then((res) => {
@@ -51,6 +51,44 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
     del: async (id: number) => {
       return await axiosInstance
         .delete(`${baseUrl}/${id}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findByOrganization: async (
+      organizationId: string,
+    ): Promise<TPromptGuide[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/organization/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findWithImageByTypes: async (
+      organizationId: string,
+      promptGuideTypeId: number,
+    ): Promise<TPromptGuide[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/type/${promptGuideTypeId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    getPromptGuideImages: async (promptGuideId: string) => {
+      return await axiosInstance
+        .get(`${baseUrl}/${promptGuideId}/images-with-urls`)
         .then((res) => {
           return res.data;
         })
