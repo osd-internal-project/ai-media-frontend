@@ -5,8 +5,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  K8S_WORKER_USER: ${{ secrets.WORKER_USER }}
+  K8S_WORKER_1: ${{ secrets.WORKER_1_IP }}
+  K8S_WORKER_2: ${{ secrets.WORKER_2_IP }}
+  K8S_WORKER_3: ${{ secrets.WORKER_3_IP }}
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +31,7 @@ jobs:
           ver=$(jq -r .version package.json)
           echo "📦 Package: $name"
           echo "📦 Version: $ver"
+          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
 
       # ---------------------------------------------------------------------
       # Read package info (for later steps)
@@ -81,42 +88,115 @@ jobs:
           password: ${{ secrets.OVPN_PASSWORD }}
 
       # ---------------------------------------------------------------------
-      # Upload image TAR to server
+      # Upload image TAR to all K8s workers
       # ---------------------------------------------------------------------
-      - name: Upload via SCP
+      - name: Upload TAR to Worker 1 (osd-saas01-worker-0001)
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          host: ${{ env.K8S_WORKER_1 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
-          target: "/home/osdadmin/"
+          target: "/tmp/"
+
+      - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.K8S_WORKER_2 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
+          target: "/tmp/"
+
+      - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.K8S_WORKER_3 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar"
+          target: "/tmp/"
 
       # ---------------------------------------------------------------------
-      # Deploy on server
+      # Import image into containerd (k8s.io namespace) on all workers
       # ---------------------------------------------------------------------
-      - name: Deploy via SSH
+      - name: Import Image on Worker 1
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          host: ${{ env.K8S_WORKER_1 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0001..."
+            sudo ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      - name: Import Image on Worker 2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.K8S_WORKER_2 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0002..."
+            sudo ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      - name: Import Image on Worker 3
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.K8S_WORKER_3 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          script: |
+            set -e
+            echo "📦 Importing image on osd-saas01-worker-0003..."
+            sudo ctr -n k8s.io images import /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            rm -f /tmp/${{ steps.pkg.outputs.name }}-${{ steps.pkg.outputs.ver }}.tar
+            echo "✅ Done"
+
+      # ---------------------------------------------------------------------
+      # Upload Helm chart to Worker 1 for deployment
+      # ---------------------------------------------------------------------
+      - name: Upload Helm Chart to Worker 1
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.K8S_WORKER_1 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
+          source: "aicave-console-chart"
+          target: "/tmp/"
+
+      # ---------------------------------------------------------------------
+      # Helm upgrade on K8s cluster
+      # ---------------------------------------------------------------------
+      - name: Helm Upgrade
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.K8S_WORKER_1 }}
+          username: ${{ env.K8S_WORKER_USER }}
+          key: ${{ secrets.K8S_SSH_KEY }}
           script: |
             set -e
 
-            name=${{ steps.pkg.outputs.name }}
-            ver=${{ steps.pkg.outputs.ver }}
+            DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+            NAME="${{ steps.pkg.outputs.name }}"
+            VER="${{ steps.pkg.outputs.ver }}"
 
-            cd /home/osdadmin
+            echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
 
-            docker load -i $name-$ver.tar
-            docker rm -f $name || true
-            rm -f $name-$ver.tar
+            helm upgrade --install aicave-console /tmp/aicave-console-chart \
+              -f /tmp/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+              --set image.repository=docker.io/library/${NAME} \
+              --set image.tag=${VER} \
+              -n aicave-${DEPLOY_ENV} \
+              --create-namespace
 
-            docker run -d \
-              --name $name \
-              -p 9011:80 \
-              --restart always \
-              $name:$ver
+            echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
 
-            echo "Deployment completed: $name:$ver"
+            # Cleanup
+            rm -rf /tmp/aicave-console-chart
