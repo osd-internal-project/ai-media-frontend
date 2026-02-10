@@ -178,7 +178,7 @@ const DashboardPage: FC = () => {
   ];
 
   // Check if user has permission to view dashboard
-  if (!canViewDashboard(organizationRole || "")) {
+  if (!canViewDashboard(organizationRole || session?.user?.systemRole || "")) {
     return (
       <ConfigProvider
         theme={{

@@ -6,8 +6,8 @@ import { StaticImageData } from "next/image";
 import { VideoMessage } from "./chat-generate-video";
 
 interface VideoItemProps {
-  videoData: VideoMessage
-  onDownloadVideo: (url: string) => void;
+  videoData: VideoMessage;
+  onDownloadVideo: (fileName: string, id: string) => void;
   onShareVideo: (taskId: string, status: boolean) => void;
   shareStatus: boolean;
 }
@@ -41,7 +41,7 @@ const VideoItem = memo(
             }
           });
         },
-        { threshold: 0.1, rootMargin: "50px" }
+        { threshold: 0.1, rootMargin: "50px" },
       );
 
       observerRef.current.observe(containerRef.current);
@@ -102,7 +102,7 @@ const VideoItem = memo(
       e.stopPropagation();
       setIsDownloading(true);
       try {
-        onDownloadVideo(videoData.imageUrl);
+        onDownloadVideo(videoData.fileName || "video.mp4", videoData.id || "");
       } finally {
         setIsDownloading(false);
       }
@@ -147,18 +147,20 @@ const VideoItem = memo(
             }
             loading="lazy"
             alt="Video thumbnail"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading
-              ? "opacity-0"
-              : "opacity-100"
-              }`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              isHovered && videoLoaded && !videoLoading
+                ? "opacity-0"
+                : "opacity-100"
+            }`}
           />
 
           {/* Play icon overlay */}
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered && videoLoaded && !videoLoading
-              ? "opacity-0"
-              : "opacity-100"
-              }`}
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+              isHovered && videoLoaded && !videoLoading
+                ? "opacity-0"
+                : "opacity-100"
+            }`}
           >
             <div className="p-4 bg-black/50 rounded-full backdrop-blur-sm">
               <Play size={32} className="text-white fill-white" />
@@ -174,8 +176,9 @@ const VideoItem = memo(
               loop
               playsInline
               preload="metadata"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered && !videoLoading ? "opacity-100" : "opacity-0"
-                }`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                isHovered && !videoLoading ? "opacity-100" : "opacity-0"
+              }`}
             />
           )}
 
@@ -217,7 +220,7 @@ const VideoItem = memo(
                 }}
               >
                 {videoData.status ? (
-                  <LikeFilled className="text-yellow-500 opacity-100" />
+                  <LikeFilled className=" !text-yellow-500 opacity-100 !text-yellow-500" />
                 ) : (
                   <LikeOutlined />
                 )}
@@ -257,7 +260,10 @@ const VideoItem = memo(
                 e.stopPropagation();
                 setIsDownloading(true);
                 try {
-                  await onDownloadVideo(videoData.imageUrl);
+                  await onDownloadVideo(
+                    videoData.fileName || "video.mp4",
+                    videoData.id || "",
+                  );
                 } finally {
                   setIsDownloading(false);
                 }
@@ -297,7 +303,7 @@ const VideoItem = memo(
       prevProps.videoData.thumbnailUrl === nextProps.videoData.thumbnailUrl &&
       prevProps.videoData.status === nextProps.videoData.status
     );
-  }
+  },
 );
 
 VideoItem.displayName = "VideoItem";

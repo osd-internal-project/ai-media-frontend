@@ -38,7 +38,7 @@ interface ClientLayoutProps {
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
-  const { data: session ,update:updateSession} = useSession();
+  const { data: session, update: updateSession } = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [reload, setReload] = useState<boolean>(false);
 
@@ -104,7 +104,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         organizationId,
         session?.user?.id as string,
       );
-    setOrganizationRole(organizationDetail?.role || "");
+    const role = organizationDetail?.role
+      ? organizationDetail?.role
+      : session?.user?.systemRole === "SUPER_ADMIN"
+        ? "SUPER_ADMIN"
+        : ""; 
+    setOrganizationRole(role);
 
     const members =
       await userServices.findOrganizationUserDetails(organizationId);
@@ -136,7 +141,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
-     
       const organization = [
         ...personalOrganizations,
         ...teamOrganizations,
@@ -186,7 +190,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     await userServices
       .updateDetailByToken(session?.user?.id as string, {
         recentOrganizationId: organizationId,
-      }).then(async () => {
+      })
+      .then(async () => {
         await updateSession({
           ...session,
           user: {
@@ -421,7 +426,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                       `${mappedPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                  // inlineCollapsed={true}
+                    // inlineCollapsed={true}
                   />
                 </div>
               )}
