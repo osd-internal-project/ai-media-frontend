@@ -29,31 +29,31 @@ spec:
           protocol: TCP
         env:
         - name: NEXTAUTH_SECRET
-          value: {{ .Values.env.nextauthSecret | quote }}
+          value: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo="
         - name: VERSION
-          value: {{ .Values.env.version | quote }}
+          value: "2.0.0"
         - name: AUTH_BACKEND_URL
-          value: {{ .Values.env.authBackendUrl | quote }}
+          value: "http://aicave-user-service:8972/api"
         - name: NEXT_PUBLIC_API_BASE_URL_USER
-          value: {{ .Values.env.apiBaseUrlUser | quote }}
+          value: "https://www.aicave.ai/public/api/v1/user/api"
         - name: NEXT_PUBLIC_API_BASE_URL_REPORT
-          value: {{ .Values.env.apiBaseUrlReport | quote }}
+          value: "https://www.aicave.ai/public/api/v1/report"
         - name: NEXT_PUBLIC_API_BASE_URL_CORE
-          value: {{ .Values.env.apiBaseUrlCore | quote }}
+          value: "https://www.aicave.ai/public/api/v1/core"
         - name: NEXT_PUBLIC_API_BASE_URL_WORKER
-          value: {{ .Values.env.apiBaseUrlWorker | quote }}
+          value: "https://www.aicave.ai/public/api/v1/worker"
         - name: NEXT_PUBLIC_API_BASE_URL_WEB_HOOCK
-          value: {{ .Values.env.apiBaseUrlWebHook | quote }}
+          value: "https://www.aicave.ai/public/api/v1/web-hook"
         - name: NEXTAUTH_URL
-          value: {{ .Values.env.nextauthUrl | quote }}
+          value: "https://www.aicave.ai"
         - name: KEYCLOAK_CLIENT_ID
-          value: {{ .Values.env.keycloakClientId | quote }}
+          value: "eportal-client-id"
         - name: KEYCLOAK_CLIENT_SECRET
-          value: {{ .Values.env.keycloakClientSecret | quote }}
+          value: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
         - name: KEYCLOAK_ISSUER
-          value: {{ .Values.env.keycloakIssuer | quote }}
+          value: "https://id24.aicave.ai/realms/eportal"
         - name: AUTH_TRUST_HOST
-          value: {{ .Values.env.authTrustHost | quote }}
+          value: "true"
         resources:
           requests:
             memory: {{ .Values.resources.requests.memory | quote }}
