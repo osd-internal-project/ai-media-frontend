@@ -135,11 +135,14 @@ export default function ChatImageInput({
     setSelectedRatio(ratio);
     const size = RATIO_SIZE_MAP[ratio];
     if (size) {
-      setSelectedWidth(size.width);
-      setSelectedHeight(size.height);
+      const scaleFactor = selectedResolution === "4k" ? 1.414 : 1;
+      const newWidth = Math.round(size.width * scaleFactor);
+      const newHeight = Math.round(size.height * scaleFactor);
+      setSelectedWidth(newWidth);
+      setSelectedHeight(newHeight);
       form.setFieldsValue({
-        width: size.width,
-        height: size.height,
+        width: newWidth,
+        height: newHeight,
         ratio: ratio,
       });
     }
@@ -197,7 +200,7 @@ export default function ChatImageInput({
                   maxCount={15}
                   showUploadList={true}
                   disabled={isLoadingUpload}
-                // style={{ width: '80px', height: "80px" }}
+                  // style={{ width: '80px', height: "80px" }}
                 >
                   {files.length >= 15 ? null : (
                     <Tooltip
@@ -252,8 +255,8 @@ export default function ChatImageInput({
                         borderRadius: "0.5rem",
                       }}
                       className="focus:ring-0 placeholder-gray-500 text-sm"
-                    // disabled={isLoading || !isConnected}
-                    // style={{ fieldSizing: "content" } as any}
+                      // disabled={isLoading || !isConnected}
+                      // style={{ fieldSizing: "content" } as any}
                     />
                   </Form.Item>
                 </div>
@@ -347,10 +350,11 @@ export default function ChatImageInput({
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div
-                                  className={`text-sm font-medium mb-0.5 ${groupMode === mode.id
+                                  className={`text-sm font-medium mb-0.5 ${
+                                    groupMode === mode.id
                                       ? "text-blue-400"
                                       : "text-gray-200"
-                                    }`}
+                                  }`}
                                 >
                                   {mode.label}
                                 </div>
@@ -494,7 +498,7 @@ export default function ChatImageInput({
                               readOnly
                               value={Math.round(
                                 (RATIO_SIZE_MAP[selectedRatio]?.width || 0) *
-                                (selectedResolution === "4k" ? 1.414 : 1),
+                                  (selectedResolution === "4k" ? 1.414 : 1),
                               )}
                               style={{
                                 width: "100%",
@@ -522,7 +526,7 @@ export default function ChatImageInput({
                               readOnly
                               value={Math.round(
                                 (RATIO_SIZE_MAP[selectedRatio]?.height || 0) *
-                                (selectedResolution === "4k" ? 1.414 : 1),
+                                  (selectedResolution === "4k" ? 1.414 : 1),
                               )}
                               style={{
                                 width: "100%",
