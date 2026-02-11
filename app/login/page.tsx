@@ -244,7 +244,7 @@ const Page: FC = () => {
                   </Checkbox>
                 </Form.Item>
                 <Link
-                  href="/forgot-password"
+                  href="/forget-password"
                   className="text-[#5BC0EB] hover:text-[#3B82F6] text-xs font-medium"
                 >
                   Forgot Password?
