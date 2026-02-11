@@ -2,7 +2,7 @@ name: CI Workflow
 
 on:
   push:
-    branches: [development]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -139,10 +139,10 @@ jobs:
       #     echo "🚀 Helm upgrade aicave-console (env: prod)"
 
       #     helm upgrade --install aicave-console ./aicave-console-chart \
-      #       -f ./aicave-console-chart/values-prod.yaml \
+      #       -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
       #       --set image.repository=docker.io/library/${NAME} \
       #       --set image.tag=${VER} \
-      #       --namespace aicave-prod \
+      #       --namespace aicave-${DEPLOY_ENV} \
       #       --wait \
       #       --timeout 5m \
       #       --atomic
