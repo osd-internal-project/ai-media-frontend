@@ -18,7 +18,7 @@ export const checkRole = (
 export const organizationPermissions = {
   createOrganization: ["OWNER", "SUPER_ADMIN"] as OrganizationRole[],
   createProjects: ["OWNER", "ADMIN"] as OrganizationRole[],
-  manageMembers: ["OWNER"] as OrganizationRole[],
+  manageMembers: ["OWNER", "ADMIN"] as OrganizationRole[],
   editOrganization: ["OWNER"] as OrganizationRole[],
   viewOrganization: ["OWNER", "ADMIN"] as OrganizationRole[],
   viewProjects: ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as OrganizationRole[],
