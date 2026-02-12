@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "antd";
 import { fallbackImage } from "@/app/utils/fallback";
-import { Download, Info } from "lucide-react";
+import { Download, Info, Loader } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -41,6 +41,8 @@ const PromptActivity: FC<props> = ({
     data: [],
     total: 0,
   });
+  const [loadingDownload, setLoadingDownload] = useState<boolean>(false);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [api, contextHolders] = notification.useNotification();
 
@@ -110,33 +112,57 @@ const PromptActivity: FC<props> = ({
     }
   };
 
-  const onDownloadVideo = async (videoUrl: string) => {
+  // const onDownloadVideo = async (videoUrl: string) => {
+  //   try {
+  //     // Extract filename from URL (before query parameters)
+  //     const urlWithoutParams = videoUrl.split("?")[0];
+  //     const filename = urlWithoutParams.split("/").pop() || "video.mp4";
+
+  //     // Show loading message for larger files
+  //     const hide = message.loading("Downloading video...", 0);
+
+  //     // Fetch the video directly from the URL
+  //     const response = await fetch(videoUrl);
+  //     if (!response.ok) throw new Error("Download failed");
+
+  //     const blob = await response.blob();
+  //     const url = URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = filename;
+  //     link.click();
+  //     URL.revokeObjectURL(url);
+
+  //     hide();
+  //     message.success("Video downloaded successfully");
+  //   } catch (error) {
+  //     console.error("Download error:", error);
+  //     message.error("Download failed");
+  //   }
+  // };
+  const onDownloadFile = async (fileName: string, imageId: string) => {
+    setLoadingDownload(true);
     try {
-      // Extract filename from URL (before query parameters)
-      const urlWithoutParams = videoUrl.split("?")[0];
-      const filename = urlWithoutParams.split("/").pop() || "video.mp4";
-
-      // Show loading message for larger files
-      const hide = message.loading("Downloading video...", 0);
-
-      // Fetch the video directly from the URL
-      const response = await fetch(videoUrl);
-      if (!response.ok) throw new Error("Download failed");
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const response = await galleryservices.downloadFile(
+        imageId,
+        session?.user?.organizationId || "",
+      );
+      if (!response) throw new Error("Download failed or response is empty");
+      // console.log(response);
+      // const filename = response.name || "image.jpg";
+      const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
 
-      hide();
-      message.success("Video downloaded successfully");
+      message.success("Image downloaded successfully");
     } catch (error) {
       console.error("Download error:", error);
       message.error("Download failed");
     }
+    setLoadingDownload(false);
   };
 
   return (
@@ -160,7 +186,7 @@ const PromptActivity: FC<props> = ({
                         <VideoItem
                           key={imgIndex}
                           videoData={image}
-                          onDownloadVideo={onDownloadVideo}
+                          onDownloadVideo={onDownloadFile}
                           onShareVideo={function (
                             taskId: string,
                             status: boolean,
@@ -196,12 +222,18 @@ const PromptActivity: FC<props> = ({
 
                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
+                        disabled={loadingDownload}
+                        hidden={image.typeGenerate === "video"}
                         className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
                         onClick={() =>
-                          handleOpenImage(image.imageUrl, image.typeGenerate)
+                          onDownloadFile(image.fileName || "image", image.id)
                         }
                       >
-                        <Download className="w-4 h-4 text-gray-800" />
+                        {loadingDownload ? (
+                          <Loader className="w-4 h-4 text-gray-800" />
+                        ) : (
+                          <Download className="w-4 h-4 text-gray-800" />
+                        )}
                       </button>
                     </div>
                   </div>
