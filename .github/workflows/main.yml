@@ -84,7 +84,7 @@ jobs:
       # ---------------------------------------------------------------------
       # Import image into containerd (k8s.io namespace) on all workers
       # ---------------------------------------------------------------------
-      -- name: Import Image on Worker 1
+      - name: Import Image on Worker 1
         uses: appleboy/ssh-action@master
         env:
           SUDO_PASS: ${{ secrets.PASSWORD }}
