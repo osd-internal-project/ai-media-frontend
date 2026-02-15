@@ -13,7 +13,7 @@ import {
 } from "antd";
 import { Upload as UploadIcon, Mic, Sparkles } from "lucide-react";
 import type { RcFile } from "antd/es/upload";
-import OmnihumanServices from "@/app/services/omnihuman.service";
+// import OmnihumenServices from "@/app/services/omnihumen.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import OmnihumenTaskServices from "@/app/services/omnihumen-task.service";
 import { TOmnihumenTask } from "@/app/common/omnihumen.type";
@@ -27,13 +27,13 @@ export interface props {
   isActive?: boolean;
 }
 
-const PromptOmnihuman: FC<props> = ({
+const PromptOmnihumen: FC<props> = ({
   projectId,
   token,
   shouldRefetch,
   isActive,
 }): ReactElement => {
-  const omnihumanServices = OmnihumanServices(axiosCore);
+  // const omnihumenServices = OmnihumenServices(axiosCore);
   const omnihumenTaskServices = OmnihumenTaskServices(axiosCore);
   const [api, contextHolders] = notification.useNotification();
   // const [api, contextHolders] = notification.useNotification();
@@ -129,19 +129,19 @@ const PromptOmnihuman: FC<props> = ({
       if (audioFile[0]?.originFileObj) {
         formData.append("audio", audioFile[0].originFileObj);
       }
-      const res = await omnihumanServices.create(formData);
-      console.log(res);
-      if (res) {
-        await fetchData();
-        setSubmitting(false);
-        //  Reset form
-        formAvatar.resetFields();
-        setImageFile([]);
-        setAudioFile([]);
-        setAvatarName("");
-        setPromptText("");
-        setSubmitting(false);
-      }
+      // const res = await omnihumenServices.create(formData);
+      // console.log(res);
+      // if (res) {
+      //   await fetchData();
+      //   setSubmitting(false);
+      //   //  Reset form
+      //   formAvatar.resetFields();
+      //   setImageFile([]);
+      //   setAudioFile([]);
+      //   setAvatarName("");
+      //   setPromptText("");
+      //   setSubmitting(false);
+      // }
     } catch (error) {
       console.error(error);
       api.error({ message: "Failed to create avatar" });
@@ -392,4 +392,4 @@ const PromptOmnihuman: FC<props> = ({
   );
 };
 
-export default PromptOmnihuman;
+export default PromptOmnihumen;

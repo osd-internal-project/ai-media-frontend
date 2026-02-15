@@ -13,8 +13,9 @@ import {
   Typography,
   Tooltip,
 } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 import { fallbackImage } from "@/app/utils/fallback";
-import { Download, Info } from "lucide-react";
+import { Download, Info, Loader } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -33,7 +34,7 @@ const PromptLibrary: FC<props> = ({
 }): ReactElement => {
   const params = useParams();
   const { data: session } = useSession();
-  const organizationId = session?.user?.organizationId ||"";
+  const organizationId = session?.user?.organizationId || "";
   const galleryservices = GalleryServices(axiosCore);
   const [selected, setSelected] = useState<any>();
   const [total, setTotal] = useState<number>(0);
@@ -44,6 +45,8 @@ const PromptLibrary: FC<props> = ({
     total: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingDownload, setLoadingDownload] = useState<boolean>(false);
+
   const [api, contextHolders] = notification.useNotification();
 
   const onSelectPrompt = (value: any) => {
@@ -63,9 +66,15 @@ const PromptLibrary: FC<props> = ({
   }, [shouldRefetch]);
 
   const fectData = async () => {
-    if (!session) return
+    if (!session) return;
     const id = params.id as string;
-    const res = await galleryservices.findById(id,organizationId, page, pageSize, true);
+    const res = await galleryservices.findById(
+      id,
+      organizationId,
+      page,
+      pageSize,
+      true,
+    );
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);
@@ -82,7 +91,7 @@ const PromptLibrary: FC<props> = ({
       // Show loading message
       const hide = message.loading(
         `Downloading ${types === "video" ? "video" : "image"}...`,
-        0
+        0,
       );
 
       // Fetch the file directly from the URL
@@ -99,7 +108,7 @@ const PromptLibrary: FC<props> = ({
 
       hide();
       message.success(
-        `${types === "video" ? "Video" : "Image"} downloaded successfully`
+        `${types === "video" ? "Video" : "Image"} downloaded successfully`,
       );
     } catch (error) {
       console.error("Download error:", error);
@@ -135,7 +144,30 @@ const PromptLibrary: FC<props> = ({
       message.error("Download failed");
     }
   };
+  const onDownloadFile = async (fileName: string, imageId: string) => {
+    setLoadingDownload(true);
+    try {
+      const response = await galleryservices.downloadFile(
+        imageId,
+        session?.user?.organizationId || "",
+      );
+      if (!response) throw new Error("Download failed or response is empty");
+      // console.log(response);
+      // const filename = response.name || "image.jpg";
+      const url = URL.createObjectURL(response);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
 
+      message.success("Image downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      message.error("Download failed");
+    }
+    setLoadingDownload(false);
+  };
 
   return (
     <div className="h-[calc(100vh-160px)]">
@@ -158,10 +190,10 @@ const PromptLibrary: FC<props> = ({
                         <VideoItem
                           key={imgIndex}
                           videoData={image}
-                          onDownloadVideo={onDownloadVideo}
+                          onDownloadVideo={onDownloadFile}
                           onShareVideo={function (
                             taskId: string,
-                            status: boolean
+                            status: boolean,
                           ): void {
                             throw new Error("Function not implemented.");
                           }}
@@ -194,12 +226,21 @@ const PromptLibrary: FC<props> = ({
 
                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
+                        disabled={loadingDownload}
+                        hidden={image.typeGenerate === "video"}
                         className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
+                        // onClick={() =>
+                        //   handleOpenImage(image.imageUrl, image.typeGenerate)
+                        // }
                         onClick={() =>
-                          handleOpenImage(image.imageUrl, image.typeGenerate)
+                          onDownloadFile(image.fileName || "image", image.id)
                         }
                       >
-                        <Download className="w-4 h-4 text-gray-800" />
+                        {loadingDownload ? (
+                          <Loader className="w-4 h-4 text-gray-800" />
+                        ) : (
+                          <Download className="w-4 h-4 text-gray-800" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -214,7 +255,7 @@ const PromptLibrary: FC<props> = ({
               total={total}
               pageSize={pageSize}
               onChange={(p) => {
-                setPage(p), setLoading(true);
+                (setPage(p), setLoading(true));
               }}
               showSizeChanger={false}
             />
@@ -260,7 +301,7 @@ const PromptLibrary: FC<props> = ({
                         <Tooltip
                           placement="left"
                           title={selected.prompt}
-                          overlayStyle={{ maxWidth: '600px' }}
+                          overlayStyle={{ maxWidth: "600px" }}
                         >
                           <Typography.Paragraph
                             ellipsis={{
@@ -283,14 +324,17 @@ const PromptLibrary: FC<props> = ({
                       <div>Create Date:</div>
                       <div className="whitespace-pre-line">
                         {selected?.createdAt
-                          ? `${new Date(selected.createdAt).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}`
+                          ? `${new Date(selected.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              },
+                            )}`
                           : "-"}
                       </div>
                     </div>

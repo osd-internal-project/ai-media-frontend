@@ -10,7 +10,7 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folders, Star, LightbulbIcon } from "lucide-react";
+import { Image, Video, Folders, Star, LightbulbIcon, Speech } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import PromptLibrary from "./components/prompt-library";
@@ -19,6 +19,7 @@ import AIModelServices from "@/app/services/ai-model.service";
 import { TAIModel } from "@/app/common/ai-model.type";
 import ChatGenerateImage from "./components/chat-generate-image";
 import ChatGenerateVideo from "./components/chat-generate-video";
+import ChatGenerateOmnihumen from "./components/chat-generate-omnihumen";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -742,9 +743,34 @@ const GenerateImagePage: FC = () => {
                 />
               ),
             },
+             {
+              disabled: disableTab,
+              forceRender: true,
+              key: "omnihumen",
+              label: (
+                <div className="flex items-center gap-2 px-2 py-1 w-full">
+                  <Speech size={20} />
+                  <span className="text-base font-medium">Omnihumen</span>
+                </div>
+              ),
+              children: (
+                <ChatGenerateOmnihumen
+                  key={"omnihumen"}
+                  activeKey={activeKey}
+                  projectId={id}
+                  userId={session?.user?.id}
+                  projectRole={projectRole}
+                  promptGuideOpenStatus={promptGuideOpenStatus}
+                  selectedAIModel={selectedAIModel}
+                  username={session?.user?.name || ""}
+                  setDisableTab={setDisableTab}
+                  onSetPromptTextRef={onSetPromptTextRef}
+                />
+              ),
+            },
             // {
             //   forceRender: true,
-            //   key: "omnihuman",
+            //   key: "omnihumen",
             //   label: (
             //     <span className="flex justify-center gap-2">
             //       <ContactRound />
@@ -752,17 +778,17 @@ const GenerateImagePage: FC = () => {
             //     </span>
             //   ),
             //   children: (
-            //     <PromptOmnihuman
+            //     <PromptOmnihumen
             //       key={`avatar-${activeKey}`}
             //       projectId={id}
             //       token={session?.user?.id}
-            //       isActive={activeKey === "omnihuman"}
+            //       isActive={activeKey === "omnihumen"}
             //     />
             //   ),
             // },
             // {
             //   forceRender: true,
-            //   key: "omnihuman",
+            //   key: "omnihumen",
             //   label: (
             //     <span className="flex justify-center gap-2">
             //       <ContactRound />
