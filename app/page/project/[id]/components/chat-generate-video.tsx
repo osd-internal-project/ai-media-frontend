@@ -199,6 +199,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }[]
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
+  const isFetchingRef = useRef<boolean>(false);
   const [draftMode, setDraftMode] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedWidth, setSelectedWidth] = useState<number>(1920);
@@ -411,7 +412,10 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           setHasMore(false);
         }
         if (messageData.length === 0) {
-          setIsFetchingHistory(false);
+          if (isFetchingHistory) {
+            setIsFetchingHistory(false);
+            isFetchingRef.current = false;
+          }
           setLoading(false);
           isFirstLoad.current = false;
           return;
@@ -437,6 +441,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           });
           isFirstLoad.current = false;
           setIsFetchingHistory(false);
+          isFetchingRef.current = false; // Add this
           setLoading(false);
         } else {
           setMessages(itemsToProcess);
@@ -463,6 +468,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           isFirstLoad.current = false;
           setLoading(false);
         }
+      } else {
+        // Handle failure case
+        if (isFetchingHistory) {
+          setIsFetchingHistory(false);
+          isFetchingRef.current = false;
+        }
+        setLoading(false);
       }
     };
     socket.on("video-task:created", handleTaskCreated);
@@ -529,7 +541,14 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
-    if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
+    if (
+      target.scrollTop <= 50 &&
+      hasMore &&
+      !loading &&
+      !isFirstLoad.current &&
+      !isFetchingRef.current
+    ) {
+      isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
       const nextPage = page + 1;
