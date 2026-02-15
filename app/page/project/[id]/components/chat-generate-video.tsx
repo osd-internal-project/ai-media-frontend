@@ -916,6 +916,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     } as Message;
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
     if (!socket || !isConnected) {
       messageApi.error("WebSocket is not connected. Please refresh the page.");
       return;
