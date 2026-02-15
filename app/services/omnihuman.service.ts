@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 
-const OmnihumanServices = (axiosInstance: AxiosInstance) => {
+const OmnihumenServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/omnihumen";
   return {
     findAll: async () => {
@@ -71,4 +71,4 @@ const OmnihumanServices = (axiosInstance: AxiosInstance) => {
   };
 };
 
-export default OmnihumanServices;
+export default OmnihumenServices;
