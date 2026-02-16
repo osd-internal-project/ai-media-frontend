@@ -44,7 +44,7 @@ import { useSession } from "next-auth/react";
 interface ImageChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "video" | "library" | "activity";
+  activeKey: "image" | "video" | "omnihumen" | "library" | "activity";
   projectRole?: string | null;
   promptGuideOpenStatus?: boolean;
   username?: string;

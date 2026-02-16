@@ -95,7 +95,7 @@ const HeaderGenerateImagePage: FC<props> = ({
       >
         {/* Desktop/Tablet: Title on left */}
         {!isMobile && (
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <TitleSection />
           </div>
         )}
@@ -109,7 +109,9 @@ const HeaderGenerateImagePage: FC<props> = ({
                 : "items-center gap-4"
             }`}
         >
-          {(activeKey === "image" || activeKey === "video") && (
+          {(activeKey === "image" ||
+            activeKey === "video" ||
+            activeKey === "omnihumen") && (
             <>
               {/* AI Model Selection */}
               <div className="flex items-center gap-2 min-w-0">

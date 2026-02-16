@@ -10,7 +10,14 @@ import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Image, Video, Folders, Star, LightbulbIcon, Speech } from "lucide-react";
+import {
+  Image,
+  Video,
+  Folders,
+  Star,
+  LightbulbIcon,
+  Speech,
+} from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import PromptLibrary from "./components/prompt-library";
@@ -30,7 +37,7 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
-    "image" | "video" | "library" | "activity"
+    "image" | "video" | "omnihumen" | "library" | "activity"
   >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -125,7 +132,9 @@ const GenerateImagePage: FC = () => {
     setAIModels(models || []);
   };
 
-  const onChangeTab = (key: "image" | "video" | "library" | "activity") => {
+  const onChangeTab = (
+    key: "image" | "video" | "omnihumen" | "library" | "activity",
+  ) => {
     setActiveKey(key);
 
     if (processedModels.length > 0) {
@@ -136,7 +145,11 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (key === "image" ? m.type === "image" : m.type === "video"),
+            (key === "image"
+              ? m.type === "image"
+              : key === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen"),
         );
       }
 
@@ -145,13 +158,21 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (key === "image" ? m.type === "image" : m.type === "video"),
+            (key === "image"
+              ? m.type === "image"
+              : key === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen"),
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            key === "image" ? m.type === "image" : m.type === "video",
+            key === "image"
+              ? m.type === "image"
+              : key === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen",
           );
         }
       }
@@ -195,7 +216,11 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.id === parseInt(savedModelId) &&
-            (activeKey === "image" ? m.type === "image" : m.type === "video"),
+            (activeKey === "image"
+              ? m.type === "image"
+              : activeKey === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen"),
         );
       }
 
@@ -204,13 +229,21 @@ const GenerateImagePage: FC = () => {
         modelToSelect = processedModels.find(
           (m) =>
             m.isDefault &&
-            (activeKey === "image" ? m.type === "image" : m.type === "video"),
+            (activeKey === "image"
+              ? m.type === "image"
+              : activeKey === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen"),
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
           modelToSelect = processedModels.find((m) =>
-            activeKey === "image" ? m.type === "image" : m.type === "video",
+            activeKey === "image"
+              ? m.type === "image"
+              : activeKey === "video"
+                ? m.type === "video"
+                : m.type === "omnihumen",
           );
         }
       }
@@ -222,9 +255,13 @@ const GenerateImagePage: FC = () => {
   }, [processedModels, activeKey, selectedAIModel, id]);
 
   const filteredAIModels = processedModels.filter((model) =>
-    activeKey === "image" ? model.type === "image" : model.type === "video",
+    activeKey === "image"
+      ? model.type === "image"
+      : activeKey === "video"
+        ? model.type === "video"
+        : model.type === "omnihumen",
   );
-
+  console.log("filteredAIModels", filteredAIModels,processedModels);
   return (
     <div
       className="h-full flex flex-col"
@@ -743,7 +780,7 @@ const GenerateImagePage: FC = () => {
                 />
               ),
             },
-             {
+            {
               disabled: disableTab,
               forceRender: true,
               key: "omnihumen",
