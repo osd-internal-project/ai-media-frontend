@@ -187,6 +187,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }[]
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
+  const isFetchingRef = useRef<boolean>(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -310,10 +311,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: data.percentage,
-              }
+              ...msg,
+              genneratedStatus: "PROCESSING",
+              percentage: data.percentage,
+            }
             : msg,
         ),
       );
@@ -326,10 +327,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: 10,
-              }
+              ...msg,
+              genneratedStatus: "PROCESSING",
+              percentage: 10,
+            }
             : msg,
         ),
       );
@@ -448,7 +449,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         if (messageData.length < currentLimitRef.current) {
           setHasMore(false);
         }
-        if (messageData.length === 0) return [];
+        if (messageData.length === 0) {
+          if (isFetchingHistory) {
+            setIsFetchingHistory(false);
+            isFetchingRef.current = false;
+          }
+          setLoading(false);
+          return;
+        }
         const itemsToProcess = [...messageData].reverse();
         const topId = itemsToProcess[0].id;
         if (topId) {
@@ -471,6 +479,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           isFirstLoad.current = false;
           setLoading(false);
           setIsFetchingHistory(false);
+          isFetchingRef.current = false;
         } else {
           setMessages(itemsToProcess);
           const isFirstLoadNow = isFirstLoad.current;
@@ -495,6 +504,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           // }
           setLoading(false);
         }
+      } else {
+        if (isFetchingHistory) {
+          setIsFetchingHistory(false);
+          isFetchingRef.current = false;
+        }
+        setLoading(false);
       }
     };
     // const handleNewMessage = (data: { success: boolean; data: Message }) => {
@@ -542,7 +557,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
-    if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
+    if (
+      target.scrollTop <= 50 &&
+      hasMore &&
+      !loading &&
+      !isFirstLoad.current &&
+      !isFetchingRef.current
+    ) {
+      isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
       const nextPage = page + 1;
@@ -787,6 +809,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     // console.log(message);
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;
+
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+
     if (!socket || !isConnected) {
       messageApi.error("WebSocket is not connected. Please refresh the page.");
       return;
@@ -953,24 +980,24 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     />
                     {(message.genneratedStatus === "PENDING" ||
                       message.genneratedStatus === "PROCESSING") && (
-                      <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                        {/* <Progress
+                        <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
+                          {/* <Progress
                           size={260}
                           type="circle"
                           percent={message.percentage}
                           strokeColor={conicColors}
                         /> */}
-                        <AiImageLoader />
-                      </div>
-                    )}
+                          <AiImageLoader />
+                        </div>
+                      )}
 
                     {(message.genneratedStatus === "FAIL" ||
                       (message.genneratedStatus === "SUCCESS" &&
                         !message.imageUrls)) && (
-                      <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
-                        Generate failed
-                      </div>
-                    )}
+                        <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
+                          Generate failed
+                        </div>
+                      )}
                     {message.genneratedStatus === "SUCCESS" &&
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (

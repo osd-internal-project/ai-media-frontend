@@ -30,7 +30,7 @@ const Page: FC = () => {
         messageApi.error("Login failed! Please check your User or Password.");
       } else {
         messageApi.success("Login successful!");
-        router.push("/page/project");
+        window.location.href = "/page/project";
       }
     } catch (error) {
       console.error("Login error:", error);
