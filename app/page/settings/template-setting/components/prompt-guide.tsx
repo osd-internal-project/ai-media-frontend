@@ -28,7 +28,7 @@ import {
 } from "antd";
 
 import { RcFile, UploadChangeParam } from "antd/es/upload";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus ,FilePlusCorner} from "lucide-react";
 import React, { useState, type FC, type ReactElement, useEffect } from "react";
 
 export interface props {
@@ -128,16 +128,19 @@ const PromptGuideComponent: FC<props> = ({
     <div className="min-h-screen p-4 md:p-8 text-white font-sans">
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8} lg={6}>
-          <Segmented
+          <Segmented 
             className=" mb-2"
-            options={["image", "video"]}
+            options={["image", "video", "omnihumen", "dreamacter"]}
             value={generateType}
             onChange={handleSelectGenerateType}
-            block
+            
           />
           <div className="flex justify-between items-center mb-4 md:mb-8">
             <h1 className="text-lg font-bold">
-              {generateType === "image" ? "Image Prompt" : "Video Prompt"}
+              {generateType === "image" && "Image Prompt"}
+              {generateType === "video" && "Video Prompt"}
+              {generateType === "omnihumen" && "Omnihumen Prompt"}
+              {generateType === "dreamacter" && "Dreamacter Prompt"}
             </h1>
             {canManage && (
               <Button
@@ -291,8 +294,8 @@ const PromptGuideComponent: FC<props> = ({
                 <Form.Item name={"title"} label="Title">
                   <Input readOnly={!canManage} />
                 </Form.Item>
-                <Form.Item label="Images">
-                  {generateType === "image" ? (
+                <Form.Item label={"Files"}>
+                  {generateType === "image" && (
                     <Upload
                       style={{
                         // width: "40px",
@@ -335,7 +338,8 @@ const PromptGuideComponent: FC<props> = ({
                         </Tooltip>
                       )}
                     </Upload>
-                  ) : (
+                  )}
+                  {generateType === "video" && (
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
                         <Upload
@@ -367,7 +371,7 @@ const PromptGuideComponent: FC<props> = ({
                                 ) : (
                                   <div className="flex flex-col items-center justify-center text-sm">
                                     <ImagePlus />
-                                    <div>{`First Frame`}</div>
+                                    <div>{`Image`}</div>
                                   </div>
                                 )}
                                 {firstFrame.length > 0 && (
@@ -410,6 +414,97 @@ const PromptGuideComponent: FC<props> = ({
                                   <div className="flex flex-col items-center justify-center text-sm">
                                     <ImagePlus />
                                     <div>{`Last Frame`}</div>
+                                  </div>
+                                )}
+                                {lastFrame.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {lastFrame.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          )}
+                        </Upload>
+                      </div>
+                    </div>
+                  )}
+                   {generateType === "omnihumen" && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Upload
+                          accept="image/*"
+                          listType="picture-card"
+                          fileList={firstFrame}
+                          onChange={(firstFrame) =>
+                            handleVideoImageUploadChange(firstFrame, "1")
+                          }
+                          style={{
+                            // width: "40px",
+                            // height: "40px",
+                            border: "1px dashed #3f3f46",
+                            borderRadius: "0.5rem",
+                          }}
+                          beforeUpload={beforeUpload}
+                          onRemove={onRemoveFile}
+                          maxCount={1}
+                          showUploadList={true}
+                          disabled={isLoadingFirstFrame}
+                        >
+                          {firstFrame.length >= 1 ? null : (
+                            <Tooltip
+                              title={`Upload first frame (${firstFrame.length}/1)`}
+                              placement="top"
+                            >
+                              <div className="w-full h-full rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                {isLoadingFirstFrame ? (
+                                  <LoadingOutlined />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-sm">
+                                    <ImagePlus />
+                                    <div>{`Image`}</div>
+                                  </div>
+                                )}
+                                {firstFrame.length > 0 && (
+                                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                    {firstFrame.length}
+                                  </div>
+                                )}
+                              </div>
+                            </Tooltip>
+                          )}
+                        </Upload>
+                        <SwapOutlined />
+                        <Upload
+                          accept="audio/*"
+                          style={{
+                            // width: "100%",
+                            // height: "100%",
+                            border: "1px dashed #3f3f46",
+                            borderRadius: "0.5rem",
+                          }}
+                          listType="picture-card"
+                          fileList={lastFrame}
+                          onChange={(lastFrame) =>
+                            handleVideoImageUploadChange(lastFrame, "2")
+                          }
+                          beforeUpload={beforeUpload}
+                          onRemove={onRemoveFile}
+                          maxCount={1}
+                          showUploadList={true}
+                          disabled={isLoadingLastFrame}
+                        >
+                          {lastFrame.length >= 1 ? null : (
+                            <Tooltip
+                              title={`Upload last frame (${lastFrame.length}/1)`}
+                              placement="top"
+                            >
+                              <div className="w-full h-full rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center justify-center text-zinc-400 cursor-pointer relative">
+                                {isLoadingLastFrame ? (
+                                  <LoadingOutlined />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center text-sm">
+                                    <FilePlusCorner />
+                                    <div>{`Audio`}</div>
                                   </div>
                                 )}
                                 {lastFrame.length > 0 && (
