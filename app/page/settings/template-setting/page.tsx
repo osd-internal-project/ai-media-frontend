@@ -113,7 +113,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         }));
 
         // For video type, separate into firstFrame (index 1) and lastFrame (index 2)
-        if (generateType === "video" || generateType === "omnihumen" || generateType === "dreamacter") {
+        if (generateType === "video" || generateType === "omnihumen" || generateType === "dreamactor") {
           console.log("promptGuideImages", promptGuideImages);
           const firstFrameFiles = promptGuideImages
             .filter((img: any) => img.index === 1)

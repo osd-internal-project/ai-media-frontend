@@ -111,7 +111,8 @@ const HeaderGenerateImagePage: FC<props> = ({
         >
           {(activeKey === "image" ||
             activeKey === "video" ||
-            activeKey === "omnihumen") && (
+            activeKey === "omnihumen" ||
+            activeKey === "dreamactor") && (
             <>
               {/* AI Model Selection */}
               <div className="flex items-center gap-2 min-w-0">

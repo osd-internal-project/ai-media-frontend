@@ -23,7 +23,13 @@ import ChatOmnihumenInput from "./chat-components/chat-omnihumen-input";
 interface OmniHumanChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "video" | "omnihumen" | "library" | "activity";
+  activeKey:
+    | "image"
+    | "video"
+    | "omnihumen"
+    | "dreamactor"
+    | "library"
+    | "activity";
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
@@ -896,7 +902,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
                       selectedAIModel={selectedAIModel}
                       referenceImages={massage.referenceImages}
                       resolution={massage.generateConfig?.resolution}
-                      fastMode={massage.generateConfig?.fastMode} 
+                      fastMode={massage.generateConfig?.fastMode}
                       seed={massage.generateConfig?.seed}
                     />
                     {(massage.genneratedStatus === "PENDING" ||
