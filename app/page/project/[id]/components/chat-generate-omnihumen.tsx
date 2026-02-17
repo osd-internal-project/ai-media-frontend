@@ -1,17 +1,7 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  type FC,
-} from "react";
+import React, { useEffect, useRef, useState, type FC } from "react";
 import { PermissionGuard } from "../../../../components/PermissionGuard";
 import { projectPermissions } from "../../../../utils/permissions";
-import {
-  Form,
-  message,
-  type UploadFile,
-  notification,
-} from "antd";
+import { Form, message, type UploadFile, notification } from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
   TPromptGuideType,
@@ -22,7 +12,7 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
 import VideoItem from "./video-player";
 import { TAIModel } from "@/app/common/ai-model.type";
-import VideoSmartReference from "./chat-components/video-smart-reference"; 
+import OmnihumenSmartReference from "./chat-components/omnihumen-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
@@ -33,7 +23,7 @@ import ChatOmnihumenInput from "./chat-components/chat-omnihumen-input";
 interface OmniHumanChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "video" | "omnihumen"  | "library" | "activity";
+  activeKey: "image" | "video" | "omnihumen" | "library" | "activity";
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
@@ -84,15 +74,11 @@ interface Message {
   status: boolean;
   genneratedStatus: string;
   generateConfig: {
-    ratio: string;
-    width: number;
-    height: number;
     content: string;
-    duration: string;
     modelName: string;
-    imageCount: number;
-    resolution: string;
-    generateAudio: boolean;
+    resolution?: string;
+    fastMode: boolean;
+    seed?: number;
   };
   percentage?: number;
   users: UserMessage;
@@ -149,7 +135,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
-  const [selectedAudio, setSelectedAudio] = useState<boolean>(false);
+  const [fastMode, setFastMode] = useState<boolean>(false);
   const [selectedDurationType, setSelectedDurationType] = useState<{
     value: string;
     label: string;
@@ -251,11 +237,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           prev.map((msg) =>
             msg.taskId === data.oldTaskId
               ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: 10,
-                taskId: data.data.taskId,
-              }
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: 10,
+                  taskId: data.data.taskId,
+                }
               : msg,
           ),
         );
@@ -280,16 +266,16 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-              imageUrls: [
-                {
-                  imageUrl: data.videoUrl,
-                  thumbnailUrl:
-                    "https://placehold.co/600x400/000000/FFFFFF/png",
-                },
-              ],
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+                imageUrls: [
+                  {
+                    imageUrl: data.videoUrl,
+                    thumbnailUrl:
+                      "https://placehold.co/600x400/000000/FFFFFF/png",
+                  },
+                ],
+              }
             : msg,
         ),
       );
@@ -306,12 +292,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-              imageUrls: [
-                { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
-              ],
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+                imageUrls: [
+                  { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
+                ],
+              }
             : msg,
         ),
       );
@@ -327,9 +313,9 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+              }
             : msg,
         ),
       );
@@ -343,9 +329,9 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-            }
+                ...msg,
+                genneratedStatus: "PROCESSING",
+              }
             : msg,
         ),
       );
@@ -532,10 +518,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       setPromptGuideTemplates(templates);
     }
   }
- 
 
   const onDownloadVideo = async (fileName: string, videoId: string) => {
- 
     try {
       const response = await galleryService.downloadFile(
         videoId,
@@ -763,25 +747,16 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     const message = {
       taskId: tempTask,
       model: selectedAIModel.name,
-      // prompt: values.prompt,
+      prompt: values.prompt,
       image: [
         firstImage?.imagePath ? firstImage.imagePath : null,
         lastImage?.imagePath ? lastImage.imagePath : null,
       ],
-      // sequentialImageGeneration: "auto",
-      // size: selectedResolution,
-      // maxImages: 0,
-      // watermark: false,
-      // ratio: selectedRatio,
-      // projectId: projectId,
-      // userId: userId,
-      // width: selectedWidth,
-      // height: selectedHeight,
-      // imageGenerateType: "",
-      // typeGenerate: "omnihumen",
-      // duration: selectedDuration,
-      // generateAudio: selectedAudio,
-      // draft: draftMode,
+      fastMode: fastMode,
+      seed: values.seed,
+      resolution: selectedResolution,
+      projectId: projectId,
+      userId: userId,
       organizationId: session?.user?.organizationId,
     };
     const tempMessage = {
@@ -795,17 +770,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       status: false,
       genneratedStatus: "PROCESSING",
       generateConfig: {
-        ratio: selectedRatio,
-        width: selectedWidth,
-        height: selectedHeight,
         content: values.prompt,
-        duration: selectedDuration.toString(),
         modelName: selectedAIModel.name,
-        imageCount: 0,
         resolution: selectedResolution,
-        draft: draftMode,
-        generateAudio: selectedAudio,
-        watermark: false,
+        fastMode: fastMode,
+        seed: values.seed,
       },
       users: {
         fullname: username,
@@ -923,21 +892,17 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
                   )}
 
                   <>
-                    <VideoSmartReference
+                    <OmnihumenSmartReference
                       selectedAIModel={selectedAIModel}
                       referenceImages={massage.referenceImages}
                       resolution={massage.generateConfig?.resolution}
-                      ratio={massage.generateConfig?.ratio}
-                      duration={massage.generateConfig?.duration}
-                      isMultiImage={
-                        massage.imageUrls ? massage.imageUrls.length > 1 : false
-                      }
-                      generateAudio={massage.generateConfig?.generateAudio}
+                      fastMode={massage.generateConfig?.fastMode} 
+                      seed={massage.generateConfig?.seed}
                     />
                     {(massage.genneratedStatus === "PENDING" ||
                       massage.genneratedStatus === "PROCESSING") && (
-                        <AiImageLoader />
-                      )}
+                      <AiImageLoader />
+                    )}
                     {massage.genneratedStatus === "FAIL" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
@@ -1014,8 +979,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
               selectedDuration={selectedDuration}
               setDraftMode={setDraftMode}
               draftMode={draftMode}
-              setSelectedAudio={setSelectedAudio}
-              selectedAudio={selectedAudio}
+              setFastMode={setFastMode}
+              fastMode={fastMode}
               onRemoveFile={onRemoveFile}
               setSelectedWidth={setSelectedWidth}
               setSelectedHeight={setSelectedHeight}

@@ -12,6 +12,8 @@ import {
   AudioLines,
   Check,
   ChevronDown,
+  ChevronRight,
+  ChevronsRight,
   Expand,
   Eye,
   FileText,
@@ -30,6 +32,8 @@ import {
   VolumeX,
   X,
   Zap,
+  ZapIcon,
+  ZapOff,
 } from "lucide-react";
 import {
   Button,
@@ -79,8 +83,8 @@ type Props = {
   selectedDuration: number;
   setDraftMode: (draftMode: boolean) => void;
   draftMode: boolean;
-  setSelectedAudio: (audio: boolean) => void;
-  selectedAudio: boolean;
+  setFastMode: (fastMode: boolean) => void;
+  fastMode: boolean;
   onRemoveFile: (file: UploadFile) => void;
   setSelectedWidth: (width: number) => void;
   setSelectedHeight: (height: number) => void;
@@ -105,74 +109,33 @@ export default function ChatOmnihumenInput({
   selectedDuration,
   setDraftMode,
   draftMode,
-  setSelectedAudio,
-  selectedAudio,
+  setFastMode,
+  fastMode,
   onRemoveFile,
   setSelectedWidth,
   setSelectedHeight,
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
-}: Props) {
-  const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
-    "1:1": { width: 2048, height: 2048 },
-    "4:3": { width: 2304, height: 1728 },
-    "3:4": { width: 1728, height: 2304 },
-    "16:9": { width: 2560, height: 1440 },
-    "9:16": { width: 1440, height: 2560 },
-    "3:2": { width: 2496, height: 1664 },
-    "2:3": { width: 1664, height: 2496 },
-    "21:9": { width: 3024, height: 1296 },
-  };
-
-  const getRatioIcon = (ratio: string) => {
-    switch (ratio) {
-      case "1:1":
-        return <Square size={14} />;
-      case "9:16":
-      case "3:4":
-      case "2:3":
-        return <RectangleVertical size={14} />;
-      case "16:9":
-      case "4:3":
-      case "3:2":
-      case "21:9":
-        return <RectangleHorizontal size={14} />;
-      default:
-        return <Square size={14} />;
-    }
-  };
-
-  const handleRatioChange = (ratio: { key: string; value: string }) => {
-    setSelectedRatio(ratio.value);
-    const size = RATIO_SIZE_MAP[ratio.value];
-    if (size) {
-      form.setFieldsValue({
-        width: size.width,
-        height: size.height,
-        ratio: ratio,
-      });
-    }
-  };
-
+}: Props) { 
   const handleResolutionChange = (resolution: string) => {
     setSelectedResolution(resolution);
     form.setFieldValue("resolution", resolution);
 
-    const currentRatio = selectedRatio;
-    const baseSize = RATIO_SIZE_MAP[currentRatio];
+    // const currentRatio = selectedRatio;
+    // const baseSize = RATIO_SIZE_MAP[currentRatio];
 
-    if (baseSize) {
-      const scaleFactor = resolution === "4k" ? 1.414 : 1;
-      const newWidth = Math.round(baseSize.width * scaleFactor);
-      const newHeight = Math.round(baseSize.height * scaleFactor);
-      setSelectedWidth(newWidth);
-      setSelectedHeight(newHeight);
-      form.setFieldsValue({
-        width: newWidth,
-        height: newHeight,
-      });
-    }
+    // if (baseSize) {
+    //   const scaleFactor = resolution === "4k" ? 1.414 : 1;
+    //   const newWidth = Math.round(baseSize.width * scaleFactor);
+    //   const newHeight = Math.round(baseSize.height * scaleFactor);
+    //   setSelectedWidth(newWidth);
+    //   setSelectedHeight(newHeight);
+    //   form.setFieldsValue({
+    //     width: newWidth,
+    //     height: newHeight,
+    //   });
+    // }
   };
 
   const [previewOpen, setPreviewOpen] = React.useState(false);
@@ -206,7 +169,7 @@ export default function ChatOmnihumenInput({
             autoComplete="off"
           >
             {/* Top: Image & Input */}
-            <div className="flex justify-between items-start p-2 gap-3">
+            <div className="flex items-start p-2 gap-3">
               {/* Upload Group */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* First Frame */}
@@ -391,16 +354,12 @@ export default function ChatOmnihumenInput({
                           height: "100%",
                           overflow: "hidden",
                           borderRadius: "0.5rem",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "#1f1f22",
                         }}
                         className="group"
                       >
-                        <div className="flex flex-col items-center justify-center gap-1">
+                        <div className="flex flex-col items-center justify-center gap-1 w-full h-full bg-[#1e1e21]">
                           <AudioLines size={24} className="text-blue-400" />
-                          <span className="text-[10px] text-gray-400 truncate max-w-[60px]">
+                          <span className="text-[10px] text-gray-400 truncate max-w-[60px] px-1">
                             {filesLast[0].name}
                           </span>
                         </div>
@@ -468,168 +427,207 @@ export default function ChatOmnihumenInput({
                   </Upload>
                 </div>
               </div>
-              <div className="flex items-center gap-3 pl-4 border-l border-white/5">
-                <Button
-                  htmlType="submit"
-                  // onClick={handleSendMessage}
-                  disabled={submitting}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#2563eb",
-                    color: "white",
-                    borderRadius: "0.5rem",
-                    boxShadow:
-                      "0 10px 15px -3px rgba(30, 58, 138, 0.2), 0 4px 6px -2px rgba(30, 58, 138, 0.2)",
-                    border: "none",
-                  }}
-                  className="hover:!bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  icon={<Zap size={18} fill="currentColor" />}
-                  loading={submitting}
-                ></Button>
-              </div>
+
               {/* Text Input Area */}
-             
+              <div className="flex flex-1 gap-3 w-full">
+                <div className="flex-1 relative h-[70px]">
+                  <Form.Item
+                    name="prompt"
+                        style={{ margin: 0, padding: 0, height: "100%" }}
+                  >
+                    <TextArea
+                      placeholder="(Optional) Enter the description based ."
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        backgroundColor: "transparent",
+                        // border: 'none',
+                        color: "#e5e7eb", // text-gray-200
+                        // resize: 'none',
+                        padding: "8px",
+                        paddingRight: "40px", // Space for Tpl button
+                        boxShadow: "none",
+                      }}
+                      className="focus:ring-0 placeholder-gray-500 text-sm !min-h-full"
+                    />
+                  </Form.Item>
+                </div>
+                {/* Tpl Button (Absolute Top Right) */}
+                <div className="flex-shrink-0">
+                  <Popover
+                    trigger="click"
+                    placement="topLeft"
+                    onOpenChange={(open) => open && fetchVideoPromptGuides()}
+                    content={
+                      <PromptPopover
+                        promptGuideTemplates={promptGuideTemplates}
+                        handleUsePromptGuide={handleUsePromptGuide}
+                      />
+                    }
+                  >
+                    <Tooltip title="Prompt Template" placement="top">
+                      <Button
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "4px 8px",
+                          backgroundColor: "rgba(255,255,255,0.05)",
+                          borderRadius: "0.5rem",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          fontSize: "10px",
+                          color: "#9ca3af",
+                          fontWeight: 500,
+                        }}
+                        className="hover:!bg-white/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Presentation size={16} />
+                          {/* <div className="text-xs">Template</div> */}
+                        </div>
+                      </Button>
+                    </Tooltip>
+                  </Popover>
+                </div>
+              </div>
             </div>
 
             {/* Bottom: Settings & Actions */}
             <div className="flex items-center justify-between px-2 pt-1 pb-1">
-              <div hidden={true}>
-                <div className="  flex items-center gap-2 overflow-x-auto no-scrollbar">
-                  {/* Settings Popover */}
-                  <Popover
-                    trigger="click"
-                    placement="topLeft"
-                    content={
-                      <div
-                        style={{
-                          width: "440px",
-                          backgroundColor: "#1a1b1e",
-                          color: "#e5e7eb", // text-gray-200
-                          padding: "16px", // p-4
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "16px", // space-y-4
-                        }}
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-gray-400">
-                              Ratio
-                            </div>
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                {/* Settings Popover */}
+                <Popover 
+                  trigger="click"
+                  placement="topLeft"
+                  content={
+                    <div
+                      style={{
+                        width: "440px",
+                        backgroundColor: "#1a1b1e",
+                        color: "#e5e7eb", // text-gray-200
+                        padding: "16px", // p-4
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px", // space-y-4
+                      }}
+                    > 
+                      {/* <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-medium text-gray-400">
+                            Ratio
                           </div>
-                          <div className="grid grid-cols-7 gap-2 bg-black/20 p-1 rounded-lg border border-white/5">
-                            {[
-                              {
-                                key: "21:9",
-                                value: "21:9",
-                                icon: <RectangleHorizontal size={12} />,
-                                label: "21:9",
-                              },
-                              {
-                                key: "16:9",
-                                value: "16:9",
-                                icon: <RectangleHorizontal size={12} />,
-                                label: "16:9",
-                              },
-                              {
-                                key: "4:3",
-                                value: "4:3",
-                                icon: <RectangleHorizontal size={12} />,
-                                label: "4:3",
-                              },
-                              {
-                                key: "1:1",
-                                value: "1:1",
-                                icon: <Square size={12} />,
-                                label: "1:1",
-                              },
-                              {
-                                key: "3:4",
-                                value: "3:4",
-                                icon: <RectangleVertical size={12} />,
-                                label: "3:4",
-                              },
-                              {
-                                key: "9:16",
-                                value: "9:16",
-                                icon: <RectangleVertical size={12} />,
-                                label: "9:16",
-                              },
-                              {
-                                key: "Auto",
-                                value: "adaptive",
-                                icon: <Expand size={12} />,
-                                label: "Smart",
-                              },
-                            ].map((option) => (
-                              <Button
-                                key={option.key}
-                                onClick={() =>
-                                  handleRatioChange({
-                                    key: option.key,
-                                    value: option.value,
-                                  })
-                                }
-                                className={`!flex !flex-col !items-center !justify-center !h-auto !py-2 !px-0 !border-none !shadow-none hover:!bg-white/10 transition-colors 
+                        </div>
+                        <div className="grid grid-cols-7 gap-2 bg-black/20 p-1 rounded-lg border border-white/5">
+                          {[
+                            {
+                              key: "21:9",
+                              value: "21:9",
+                              icon: <RectangleHorizontal size={12} />,
+                              label: "21:9",
+                            },
+                            {
+                              key: "16:9",
+                              value: "16:9",
+                              icon: <RectangleHorizontal size={12} />,
+                              label: "16:9",
+                            },
+                            {
+                              key: "4:3",
+                              value: "4:3",
+                              icon: <RectangleHorizontal size={12} />,
+                              label: "4:3",
+                            },
+                            {
+                              key: "1:1",
+                              value: "1:1",
+                              icon: <Square size={12} />,
+                              label: "1:1",
+                            },
+                            {
+                              key: "3:4",
+                              value: "3:4",
+                              icon: <RectangleVertical size={12} />,
+                              label: "3:4",
+                            },
+                            {
+                              key: "9:16",
+                              value: "9:16",
+                              icon: <RectangleVertical size={12} />,
+                              label: "9:16",
+                            },
+                            {
+                              key: "Auto",
+                              value: "adaptive",
+                              icon: <Expand size={12} />,
+                              label: "Smart",
+                            },
+                          ].map((option) => (
+                            <Button
+                              key={option.key}
+                              onClick={() =>
+                                handleRatioChange({
+                                  key: option.key,
+                                  value: option.value,
+                                })
+                              }
+                              className={`!flex !flex-col !items-center !justify-center !h-auto !py-2 !px-0 !border-none !shadow-none hover:!bg-white/10 transition-colors 
                                                                 ${selectedRatio === option.key ? "!bg-white/10 !text-blue-400" : "!bg-transparent !text-gray-500"}`}
-                              >
-                                {option.icon}
-                                <span className="text-[10px] mt-1">
-                                  {option.label}
-                                </span>
-                              </Button>
-                            ))}
-                          </div>
+                            >
+                              {option.icon}
+                              <span className="text-[10px] mt-1">
+                                {option.label}
+                              </span>
+                            </Button>
+                          ))}
                         </div>
-                        <div className="space-y-2">
-                          <div className="text-xs font-medium text-gray-400">
-                            Resolution
-                          </div>
-                          <div className="grid grid-cols-3 p-1 bg-black/20 rounded-lg border border-white/5">
-                            {["480p", "720p", "1080p"].map((res) => (
-                              <Button
-                                key={res}
-                                onClick={() => handleResolutionChange(res)}
-                                className={`!h-8 !border-none !shadow-none !text-xs font-medium transition-colors 
+                      </div>  */}
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium text-gray-400">
+                          Resolution
+                        </div>
+                        <div className="grid grid-cols-3 p-1 bg-black/20 rounded-lg border border-white/5">
+                          {[ "720p", "1080p"].map((res) => (
+                            <Button
+                              key={res}
+                              onClick={() => handleResolutionChange(res)}
+                              className={`!h-8 !border-none !shadow-none !text-xs font-medium transition-colors 
                                                                 ${selectedResolution === res ? "!bg-white/10 !text-blue-400" : "!bg-transparent !text-gray-500"}`}
-                              >
-                                {res}
-                              </Button>
-                            ))}
-                          </div>
+                            >
+                              {res}
+                            </Button>
+                          ))}
                         </div>
-                        <div className="space-y-2">
-                          <div className="text-xs font-medium text-gray-400">
-                            Duration
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <Form.Item name="duration" noStyle>
-                              <Slider
-                                min={1}
-                                max={12}
-                                onChange={setSelectedDuration}
-                                className="flex-1 [&_.ant-slider-track]:!bg-[#3f3f46] [&_.ant-slider-rail] [&_.ant-slider-handle]:!border-white [&_.ant-slider-handle]"
-                                tooltip={{ open: false }}
-                              />
-                            </Form.Item>
-                            <Form.Item name="duration" noStyle>
-                              <InputNumber
-                                min={1}
-                                max={12}
-                                onChange={(value) =>
-                                  value && setSelectedDuration(value)
-                                }
-                                className="!w-16 !border-none !rounded-lg [&_.ant-input-number-input]:!text-center [&_.ant-input-number-input]:!text-sm"
-                                controls={false}
-                              />
-                            </Form.Item>
-                          </div>
+                      </div> 
+                      {/* <div className="space-y-2">
+                        <div className="text-xs font-medium text-gray-400">
+                          Duration
+                        </div> 
+                        <div className="flex items-center gap-4">
+                          <Form.Item name="duration" noStyle>
+                            <Slider
+                              min={1}
+                              max={12}
+                              onChange={setSelectedDuration}
+                              className="flex-1 [&_.ant-slider-track]:!bg-[#3f3f46] [&_.ant-slider-rail] [&_.ant-slider-handle]:!border-white [&_.ant-slider-handle]"
+                              tooltip={{ open: false }}
+                            />
+                          </Form.Item>
+                          <Form.Item name="duration" noStyle>
+                            <InputNumber
+                              min={1}
+                              max={12}
+                              onChange={(value) =>
+                                value && setSelectedDuration(value)
+                              }
+                              className="!w-16 !border-none !rounded-lg [&_.ant-input-number-input]:!text-center [&_.ant-input-number-input]:!text-sm"
+                              controls={false}
+                            />
+                          </Form.Item>
                         </div>
+                      </div> */}
 
-                        {/* Quantity */}
-                        {/* <div className="space-y-2">
+                      {/* Quantity */}
+                      {/* <div className="space-y-2">
                                                 <div className="text-xs font-medium text-gray-400">Quantity</div>
                                                 <div className="flex items-center gap-4">
                                                     <Form.Item name="quantity" noStyle>
@@ -658,89 +656,91 @@ export default function ChatOmnihumenInput({
                                                     Generated based on the image.
                                                 </div>
                                             </div> */}
-                      </div>
-                    }
+                    </div>
+                  }
+                >
+                  <Button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "6px 12px",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      borderRadius: "0.5rem",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      fontSize: "12px",
+                      color: "#d1d5db",
+                    }}
+                    className="hover:!bg-white/10 transition-colors"
                   >
-                    <Button
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "6px 12px",
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                        borderRadius: "0.5rem",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        fontSize: "12px",
-                        color: "#d1d5db",
-                      }}
-                      className="hover:!bg-white/10 transition-colors"
-                    >
-                      <SlidersHorizontal size={14} className="text-gray-400" />
-                      <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          {getRatioIcon(selectedRatio)}
-                          <span>{selectedRatio}</span>
-                        </div>
-                        <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                        <span>{selectedResolution}</span>
-                        <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                        <span>
-                          {/* <Form.Item noStyle>
-                                                    {(duration: any) => <span>{duration || 5}s</span>}
-                                                </Form.Item> */}
-                          {selectedDuration} s
-                        </span>
-                        {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                    <SlidersHorizontal size={14} className="text-gray-400" />
+                    <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
+                    <div className="flex items-center gap-3">
+                      {/* <div className="flex items-center gap-1.5">
+                        {getRatioIcon(selectedRatio)}
+                        <span>{selectedRatio}</span>
+                      </div> */}
+                      <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                      <span>{selectedResolution}</span>
+                      {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                      <span> 
+                        {selectedDuration} s
+                      </span> */}
+                      {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
                                             <span>{selectedQuantity} videos</span> */}
-                      </div>
-                      <ChevronDown size={12} className="text-gray-500 ml-1" />
-                    </Button>
-                  </Popover>
-                  <Form.Item
-                    name="generateAudio"
-                    valuePropName="checked"
-                    noStyle
+                    </div>
+                    <ChevronDown size={12} className="text-gray-500 ml-1" />
+                  </Button>
+                </Popover>
+                <Form.Item name="fastMode" noStyle>
+                  <div
+                    className={` w-[200px] cursor-pointer py-1.5 rounded-lg ${fastMode && 'bg-blue-500/10 text-blue-400'} hover:bg-blue-500/20  flex items-center gap-2 transition-colors border border-blue-500/20`}
+                    onClick={() => {
+                      setFastMode(!fastMode);
+                    }}
                   >
-                    <div
-                      className="cursor-pointer px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center gap-2 transition-colors border border-blue-500/20"
-                      onClick={() => {
-                        setSelectedAudio(!selectedAudio);
+                    {fastMode ? (
+                      <ZapIcon size={16} />
+                    ) : (
+                      <ZapOff size={16} />
+                    )}
+                    <span className="text-xs font-medium">Fast Mode</span>
+                  </div>
+                </Form.Item> 
+                <Form.Item name="seed" noStyle><InputNumber    placeholder="(Optional) Seed."
+                      style={{
+                        backgroundColor: "transparent",
+                        // border: 'none',
+                        width: "100%",
+                        color: "#e5e7eb", // text-gray-200
+                        // resize: 'none',
+                      
+                        paddingRight: "40px", // Space for Tpl button
+                        boxShadow: "none",  
                       }}
-                    >
-                      {selectedAudio ? (
-                        <Volume2 size={16} />
-                      ) : (
-                        <VolumeX size={16} />
-                      )}
-                      <span className="text-xs font-medium">Audio</span>
-                    </div>
-                  </Form.Item>
+                      className="focus:ring-0 placeholder-gray-500 "/></Form.Item>
+              </div>
 
-                  <Form.Item name="draftMode" valuePropName="checked" noStyle>
-                    <div
-                      className="cursor-pointer px-3 py-1.5 rounded-lg hover:bg-white/5 text-gray-400 flex items-center gap-2 transition-colors border border-transparent"
-                      onClick={() => {
-                        setDraftMode(!draftMode);
-                      }}
-                      style={
-                        draftMode
-                          ? {
-                              backgroundColor: "rgba(59, 130, 246, 0.1)",
-                              color: "#60a5fa",
-                              borderColor: "rgba(59, 130, 246, 0.2)",
-                            }
-                          : {}
-                      }
-                    >
-                      <span
-                        className={`text-xs ${draftMode ? "font-medium" : ""}`}
-                      >
-                        Draft mode
-                      </span>
-                    </div>
-                  </Form.Item>
-                </div>
+              <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+                <Button
+                  htmlType="submit"
+                  // onClick={handleSendMessage}
+                  disabled={submitting}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#2563eb",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(30, 58, 138, 0.2), 0 4px 6px -2px rgba(30, 58, 138, 0.2)",
+                    border: "none",
+                  }}
+                  className="hover:!bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  icon={<Zap size={18} fill="currentColor" />}
+                  loading={submitting}
+                ></Button>
               </div>
             </div>
           </Form>
