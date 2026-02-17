@@ -17,6 +17,10 @@ function isAudio(url: string) {
   return /\.(mp3|wav|ogg|aac|flac|m4a)(\?|$)/i.test(url);
 }
 
+function isVideo(url: string) {
+  return /\.(mp4|webm|mov|qt)(\?|$)/i.test(url);
+}
+
 function MediaThumb({
   url,
   alt,
@@ -34,6 +38,20 @@ function MediaThumb({
       </div>
     );
   }
+
+  if (isVideo(url)) {
+    return (
+      <video
+        src={url}
+        className={`${className ?? "object-cover"} w-full h-full absolute inset-0`}
+        muted
+        playsInline
+        loop
+        autoPlay
+      />
+    );
+  }
+
   return (
     <Image
       src={url}

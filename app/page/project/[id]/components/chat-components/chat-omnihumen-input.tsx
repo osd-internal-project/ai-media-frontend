@@ -94,8 +94,6 @@ type Props = {
 };
 
 export default function ChatOmnihumenInput({
-  selectedRatio,
-  setSelectedRatio,
   selectedResolution,
   setSelectedResolution,
   form,
@@ -105,15 +103,9 @@ export default function ChatOmnihumenInput({
   handleSendMessage,
   isLoadingUpload,
   submitting,
-  setSelectedDuration,
-  selectedDuration,
-  setDraftMode,
-  draftMode,
   setFastMode,
   fastMode,
   onRemoveFile,
-  setSelectedWidth,
-  setSelectedHeight,
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
