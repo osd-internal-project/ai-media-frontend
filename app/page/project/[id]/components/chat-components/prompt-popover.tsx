@@ -5,13 +5,45 @@ import {
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
-import { ImageIcon, Lightbulb } from "lucide-react";
+import { ImageIcon, Lightbulb, Music } from "lucide-react";
 import { Button, Tooltip } from "antd";
 
 type Props = {
   promptGuideTemplates: TPromptGuideTemplate[];
   handleUsePromptGuide: (prompt: TPromptGuide) => void;
 };
+
+function isAudio(url: string) {
+  return /\.(mp3|wav|ogg|aac|flac|m4a)(\?|$)/i.test(url);
+}
+
+function MediaThumb({
+  url,
+  alt,
+  className,
+}: {
+  url: string;
+  alt: string;
+  className?: string;
+}) {
+  if (isAudio(url)) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 gap-1">
+        <Music className="w-8 h-8 text-zinc-400" />
+        <span className="text-[10px] text-zinc-500">Audio</span>
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={url}
+      alt={alt}
+      fill
+      className={className ?? "object-cover"}
+      unoptimized
+    />
+  );
+}
 
 export default function PromptPopover({
   promptGuideTemplates,
@@ -69,12 +101,10 @@ export default function PromptPopover({
                             <>
                               {/* 1 image: Show full */}
                               {prompt.images.length === 1 && (
-                                <Image
-                                  src={prompt.images[0].url}
+                                <MediaThumb
+                                  url={prompt.images[0].url}
                                   alt={prompt.title || "Prompt guide"}
-                                  fill
                                   className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                  unoptimized
                                 />
                               )}
 
@@ -82,21 +112,15 @@ export default function PromptPopover({
                               {prompt.images.length === 2 && (
                                 <div className="flex h-full group-hover:scale-105 transition-transform duration-700">
                                   <div className="relative w-1/2 h-full border-r border-black/20">
-                                    <Image
-                                      src={prompt.images[0].url}
+                                    <MediaThumb
+                                      url={prompt.images[0].url}
                                       alt="Image 1"
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
                                     />
                                   </div>
                                   <div className="relative w-1/2 h-full">
-                                    <Image
-                                      src={prompt.images[1].url}
+                                    <MediaThumb
+                                      url={prompt.images[1].url}
                                       alt="Image 2"
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
                                     />
                                   </div>
                                 </div>
@@ -107,31 +131,22 @@ export default function PromptPopover({
                                 <div className="flex flex-col h-full group-hover:scale-105 transition-transform duration-700">
                                   <div className="flex h-1/2 border-b border-black/20">
                                     <div className="relative w-1/2 h-full border-r border-black/20">
-                                      <Image
-                                        src={prompt.images[0].url}
+                                      <MediaThumb
+                                        url={prompt.images[0].url}
                                         alt="Image 1"
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
                                       />
                                     </div>
                                     <div className="relative w-1/2 h-full">
-                                      <Image
-                                        src={prompt.images[1].url}
+                                      <MediaThumb
+                                        url={prompt.images[1].url}
                                         alt="Image 2"
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
                                       />
                                     </div>
                                   </div>
                                   <div className="relative w-full h-1/2">
-                                    <Image
-                                      src={prompt.images[2].url}
+                                    <MediaThumb
+                                      url={prompt.images[2].url}
                                       alt="Image 3"
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
                                     />
                                   </div>
                                 </div>
