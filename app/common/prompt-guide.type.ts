@@ -42,7 +42,7 @@ export type TPromptGuideType = {
   promptGuide?: TPromptGuide[];
   generateType: TGenerateType;
 };
-export type TGenerateType = "image" | "video" | "omnihumen" | "dreamacter";
+export type TGenerateType = "image" | "video" | "omnihumen" | "dreamactor";
 
 export type TPromptGuideImage = {
   id?: number;

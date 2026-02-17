@@ -44,7 +44,13 @@ import { useSession } from "next-auth/react";
 interface ImageChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "video" | "omnihumen" | "library" | "activity";
+  activeKey:
+    | "image"
+    | "video"
+    | "omnihumen"
+    | "dreamactor"
+    | "library"
+    | "activity";
   projectRole?: string | null;
   promptGuideOpenStatus?: boolean;
   username?: string;
@@ -311,10 +317,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-              percentage: data.percentage,
-            }
+                ...msg,
+                genneratedStatus: "PROCESSING",
+                percentage: data.percentage,
+              }
             : msg,
         ),
       );
@@ -327,10 +333,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-              percentage: 10,
-            }
+                ...msg,
+                genneratedStatus: "PROCESSING",
+                percentage: 10,
+              }
             : msg,
         ),
       );
@@ -980,24 +986,24 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     />
                     {(message.genneratedStatus === "PENDING" ||
                       message.genneratedStatus === "PROCESSING") && (
-                        <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
-                          {/* <Progress
+                      <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5 flex items-center gap-3">
+                        {/* <Progress
                           size={260}
                           type="circle"
                           percent={message.percentage}
                           strokeColor={conicColors}
                         /> */}
-                          <AiImageLoader />
-                        </div>
-                      )}
+                        <AiImageLoader />
+                      </div>
+                    )}
 
                     {(message.genneratedStatus === "FAIL" ||
                       (message.genneratedStatus === "SUCCESS" &&
                         !message.imageUrls)) && (
-                        <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
-                          Generate failed
-                        </div>
-                      )}
+                      <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
+                        Generate failed
+                      </div>
+                    )}
                     {message.genneratedStatus === "SUCCESS" &&
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (

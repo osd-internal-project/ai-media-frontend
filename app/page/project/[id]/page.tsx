@@ -17,6 +17,7 @@ import {
   Star,
   LightbulbIcon,
   Speech,
+  Clapperboard,
 } from "lucide-react";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
@@ -27,6 +28,7 @@ import { TAIModel } from "@/app/common/ai-model.type";
 import ChatGenerateImage from "./components/chat-generate-image";
 import ChatGenerateVideo from "./components/chat-generate-video";
 import ChatGenerateOmnihumen from "./components/chat-generate-omnihumen";
+import ChatGenerateDreamactor from "./components/chat-generate-dreamactor";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -37,7 +39,7 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
-    "image" | "video" | "omnihumen" | "library" | "activity"
+    "image" | "video" | "omnihumen" | "dreamactor" | "library" | "activity"
   >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -98,7 +100,6 @@ const GenerateImagePage: FC = () => {
 
   useEffect(() => {
     if (loadingData) {
-      console.log(`organizationId`, organizationId);
       fecthdata();
       masterdata();
     }
@@ -128,12 +129,17 @@ const GenerateImagePage: FC = () => {
 
   const masterdata = async () => {
     const models = await aiModelService.findAll();
-
     setAIModels(models || []);
   };
 
   const onChangeTab = (
-    key: "image" | "video" | "omnihumen" | "library" | "activity",
+    key:
+      | "image"
+      | "video"
+      | "omnihumen"
+      | "dreamactor"
+      | "library"
+      | "activity",
   ) => {
     setActiveKey(key);
 
@@ -149,7 +155,9 @@ const GenerateImagePage: FC = () => {
               ? m.type === "image"
               : key === "video"
                 ? m.type === "video"
-                : m.type === "omnihumen"),
+                : key === "omnihumen"
+                  ? m.type === "omnihumen"
+                  : m.type === "dreamactor"),
         );
       }
 
@@ -162,7 +170,9 @@ const GenerateImagePage: FC = () => {
               ? m.type === "image"
               : key === "video"
                 ? m.type === "video"
-                : m.type === "omnihumen"),
+                : key === "omnihumen"
+                  ? m.type === "omnihumen"
+                  : m.type === "dreamactor"),
         );
 
         // Fallback to first available if no default found
@@ -172,7 +182,9 @@ const GenerateImagePage: FC = () => {
               ? m.type === "image"
               : key === "video"
                 ? m.type === "video"
-                : m.type === "omnihumen",
+                : key === "omnihumen"
+                  ? m.type === "omnihumen"
+                  : m.type === "dreamactor",
           );
         }
       }
@@ -201,7 +213,6 @@ const GenerateImagePage: FC = () => {
       },
       {} as Record<string, TAIModel & { capabilities: string[] }>,
     );
-
     return Object.values(grouped);
   }, [aiModels]);
 
@@ -214,37 +225,19 @@ const GenerateImagePage: FC = () => {
 
       if (savedModelId) {
         modelToSelect = processedModels.find(
-          (m) =>
-            m.id === parseInt(savedModelId) &&
-            (activeKey === "image"
-              ? m.type === "image"
-              : activeKey === "video"
-                ? m.type === "video"
-                : m.type === "omnihumen"),
+          (m) => m.id === parseInt(savedModelId) && activeKey === m.type,
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
         modelToSelect = processedModels.find(
-          (m) =>
-            m.isDefault &&
-            (activeKey === "image"
-              ? m.type === "image"
-              : activeKey === "video"
-                ? m.type === "video"
-                : m.type === "omnihumen"),
+          (m) => m.isDefault && activeKey === m.type,
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
-          modelToSelect = processedModels.find((m) =>
-            activeKey === "image"
-              ? m.type === "image"
-              : activeKey === "video"
-                ? m.type === "video"
-                : m.type === "omnihumen",
-          );
+          modelToSelect = processedModels.find((m) => m.type === activeKey);
         }
       }
 
@@ -254,14 +247,9 @@ const GenerateImagePage: FC = () => {
     }
   }, [processedModels, activeKey, selectedAIModel, id]);
 
-  const filteredAIModels = processedModels.filter((model) =>
-    activeKey === "image"
-      ? model.type === "image"
-      : activeKey === "video"
-        ? model.type === "video"
-        : model.type === "omnihumen",
+  const filteredAIModels = processedModels.filter(
+    (model) => activeKey === model.type,
   );
-  console.log("filteredAIModels", filteredAIModels,processedModels);
   return (
     <div
       className="h-full flex flex-col"
@@ -793,6 +781,31 @@ const GenerateImagePage: FC = () => {
               children: (
                 <ChatGenerateOmnihumen
                   key={"omnihumen"}
+                  activeKey={activeKey}
+                  projectId={id}
+                  userId={session?.user?.id}
+                  projectRole={projectRole}
+                  promptGuideOpenStatus={promptGuideOpenStatus}
+                  selectedAIModel={selectedAIModel}
+                  username={session?.user?.name || ""}
+                  setDisableTab={setDisableTab}
+                  onSetPromptTextRef={onSetPromptTextRef}
+                />
+              ),
+            },
+            {
+              disabled: disableTab,
+              forceRender: true,
+              key: "dreamactor",
+              label: (
+                <div className="flex items-center gap-2 px-2 py-1 w-full">
+                  <Clapperboard size={20} />
+                  <span className="text-base font-medium">Dream Actor</span>
+                </div>
+              ),
+              children: (
+                <ChatGenerateDreamactor
+                  key={"dreamactor"}
                   activeKey={activeKey}
                   projectId={id}
                   userId={session?.user?.id}

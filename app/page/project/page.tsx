@@ -402,7 +402,7 @@ const ProjectsPage = () => {
         >
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Teams
+              Projects
             </h1>
           </div>
           {canCreateProjects(organizationRole) && (
@@ -415,7 +415,7 @@ const ProjectsPage = () => {
                 isMobile ? "w-auto" : "w-full sm:w-auto"
               }`}
             >
-              Create Team
+              Create Project
             </Button>
           )}
         </div>
@@ -425,7 +425,7 @@ const ProjectsPage = () => {
         ) : projects.length === 0 ? (
           <div className="text-center py-12">
             <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
-            <h3 className="text-xl text-gray-400 mb-2">No team yet</h3>
+            <h3 className="text-xl text-gray-400 mb-2">No project yet</h3>
           </div>
         ) : (
           <Row gutter={[12, 12]}>
@@ -455,7 +455,7 @@ const ProjectsPage = () => {
                             </Tooltip>
                           ) : (
                             <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
-                              {project.name}
+                               {project.name}
                             </h3>
                           )}
                           {project.status === "deleted" ? (
@@ -528,7 +528,7 @@ const ProjectsPage = () => {
 
         {open ? (
           <Modal
-            title="Create Team"
+            title="Create Project"
             open={open}
             onCancel={handleClose}
             footer={false}
@@ -543,7 +543,7 @@ const ProjectsPage = () => {
               onFinishFailed={(e) => console.log(e)}
             >
               <Form.Item
-                label="Team Name"
+                label="Project Name"
                 name="name"
                 rules={[{ required: true, message: "Please enter team name" }]}
               >

@@ -58,7 +58,13 @@ import { useSession } from "next-auth/react";
 interface VideoChatProps {
   projectId: string;
   userId?: string;
-  activeKey: "image" | "video" | "omnihumen" | "library" | "activity";
+  activeKey:
+    | "image"
+    | "video"
+    | "omnihumen"
+    | "dreamactor"
+    | "library"
+    | "activity";
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
@@ -277,11 +283,11 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           prev.map((msg) =>
             msg.taskId === data.oldTaskId
               ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: 10,
-                taskId: data.data.taskId,
-              }
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: 10,
+                  taskId: data.data.taskId,
+                }
               : msg,
           ),
         );
@@ -306,16 +312,16 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-              imageUrls: [
-                {
-                  imageUrl: data.videoUrl,
-                  thumbnailUrl:
-                    "https://placehold.co/600x400/000000/FFFFFF/png",
-                },
-              ],
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+                imageUrls: [
+                  {
+                    imageUrl: data.videoUrl,
+                    thumbnailUrl:
+                      "https://placehold.co/600x400/000000/FFFFFF/png",
+                  },
+                ],
+              }
             : msg,
         ),
       );
@@ -332,12 +338,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-              imageUrls: [
-                { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
-              ],
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+                imageUrls: [
+                  { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
+                ],
+              }
             : msg,
         ),
       );
@@ -353,9 +359,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-            }
+                ...msg,
+                genneratedStatus: "SUCCESS",
+              }
             : msg,
         ),
       );
@@ -369,9 +375,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         prev.map((msg) =>
           msg.taskId === data.taskId
             ? {
-              ...msg,
-              genneratedStatus: "PROCESSING",
-            }
+                ...msg,
+                genneratedStatus: "PROCESSING",
+              }
             : msg,
         ),
       );
@@ -1032,8 +1038,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                     />
                     {(massage.genneratedStatus === "PENDING" ||
                       massage.genneratedStatus === "PROCESSING") && (
-                        <AiImageLoader />
-                      )}
+                      <AiImageLoader />
+                    )}
                     {massage.genneratedStatus === "FAIL" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
