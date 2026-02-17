@@ -399,8 +399,8 @@ export default function ChatDreamactorInput({
               </div>
 
               {/* Text Input Area */}
-              <div className="flex flex-1 gap-3 w-full">
-                <div className="flex-1 relative h-[70px]">
+              <div className="flex flex-1 gap-3 w-full justify-end">
+                {/* <div className="flex-1 relative h-[70px]">
                   <Form.Item
                     name="prompt"
                     style={{ margin: 0, padding: 0, height: "100%" }}
@@ -421,7 +421,7 @@ export default function ChatDreamactorInput({
                       className="focus:ring-0 placeholder-gray-500 text-sm !min-h-full"
                     />
                   </Form.Item>
-                </div>
+                </div> */}
                 {/* Tpl Button (Absolute Top Right) */}
                 <div className="flex-shrink-0">
                   <Popover
@@ -458,14 +458,33 @@ export default function ChatDreamactorInput({
                       </Button>
                     </Tooltip>
                   </Popover>
-                </div>
+                  
+                </div> <Button
+                  htmlType="submit"
+                  // onClick={handleSendMessage}
+                  disabled={submitting}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#2563eb",
+                    color: "white",
+                    borderRadius: "0.5rem",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(30, 58, 138, 0.2), 0 4px 6px -2px rgba(30, 58, 138, 0.2)",
+                    border: "none",
+                  }}
+                  className="hover:!bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  icon={<Zap size={18} fill="currentColor" />}
+                  loading={submitting}
+                ></Button>
               </div>
             </div>
 
             {/* Bottom: Settings & Actions */}
-            <div className="flex items-center justify-between px-2 pt-1 pb-1">
+            {/* <div className="flex items-center justify-between px-2 pt-1 pb-1">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                {/* Settings Popover */}
+               
                 <Popover
                   trigger="click"
                   placement="topLeft"
@@ -480,77 +499,7 @@ export default function ChatDreamactorInput({
                         flexDirection: "column",
                         gap: "16px", // space-y-4
                       }}
-                    >
-                      {/* <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-medium text-gray-400">
-                            Ratio
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-7 gap-2 bg-black/20 p-1 rounded-lg border border-white/5">
-                          {[
-                            {
-                              key: "21:9",
-                              value: "21:9",
-                              icon: <RectangleHorizontal size={12} />,
-                              label: "21:9",
-                            },
-                            {
-                              key: "16:9",
-                              value: "16:9",
-                              icon: <RectangleHorizontal size={12} />,
-                              label: "16:9",
-                            },
-                            {
-                              key: "4:3",
-                              value: "4:3",
-                              icon: <RectangleHorizontal size={12} />,
-                              label: "4:3",
-                            },
-                            {
-                              key: "1:1",
-                              value: "1:1",
-                              icon: <Square size={12} />,
-                              label: "1:1",
-                            },
-                            {
-                              key: "3:4",
-                              value: "3:4",
-                              icon: <RectangleVertical size={12} />,
-                              label: "3:4",
-                            },
-                            {
-                              key: "9:16",
-                              value: "9:16",
-                              icon: <RectangleVertical size={12} />,
-                              label: "9:16",
-                            },
-                            {
-                              key: "Auto",
-                              value: "adaptive",
-                              icon: <Expand size={12} />,
-                              label: "Smart",
-                            },
-                          ].map((option) => (
-                            <Button
-                              key={option.key}
-                              onClick={() =>
-                                handleRatioChange({
-                                  key: option.key,
-                                  value: option.value,
-                                })
-                              }
-                              className={`!flex !flex-col !items-center !justify-center !h-auto !py-2 !px-0 !border-none !shadow-none hover:!bg-white/10 transition-colors 
-                                                                ${selectedRatio === option.key ? "!bg-white/10 !text-blue-400" : "!bg-transparent !text-gray-500"}`}
-                            >
-                              {option.icon}
-                              <span className="text-[10px] mt-1">
-                                {option.label}
-                              </span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>  */}
+                    > 
                       <div className="space-y-2">
                         <div className="text-xs font-medium text-gray-400">
                           Resolution
@@ -568,64 +517,8 @@ export default function ChatDreamactorInput({
                           ))}
                         </div>
                       </div>
-                      {/* <div className="space-y-2">
-                        <div className="text-xs font-medium text-gray-400">
-                          Duration
-                        </div> 
-                        <div className="flex items-center gap-4">
-                          <Form.Item name="duration" noStyle>
-                            <Slider
-                              min={1}
-                              max={12}
-                              onChange={setSelectedDuration}
-                              className="flex-1 [&_.ant-slider-track]:!bg-[#3f3f46] [&_.ant-slider-rail] [&_.ant-slider-handle]:!border-white [&_.ant-slider-handle]"
-                              tooltip={{ open: false }}
-                            />
-                          </Form.Item>
-                          <Form.Item name="duration" noStyle>
-                            <InputNumber
-                              min={1}
-                              max={12}
-                              onChange={(value) =>
-                                value && setSelectedDuration(value)
-                              }
-                              className="!w-16 !border-none !rounded-lg [&_.ant-input-number-input]:!text-center [&_.ant-input-number-input]:!text-sm"
-                              controls={false}
-                            />
-                          </Form.Item>
-                        </div>
-                      </div> */}
-
-                      {/* Quantity */}
-                      {/* <div className="space-y-2">
-                                                <div className="text-xs font-medium text-gray-400">Quantity</div>
-                                                <div className="flex items-center gap-4">
-                                                    <Form.Item name="quantity" noStyle>
-                                                        <Slider
-                                                            min={1}
-                                                            max={8}
-                                                            value={selectedQuantity}
-                                                            onChange={setSelectedQuantity}
-                                                            className="flex-1 [&_.ant-slider-track]:!bg-[#3f3f46] [&_.ant-slider-rail]:!bg-white/10 [&_.ant-slider-handle]:!border-white [&_.ant-slider-handle]:!bg-white"
-                                                            tooltip={{ open: false }}
-                                                        />
-                                                    </Form.Item>
-                                                    <Form.Item name="quantity" noStyle>
-                                                        <InputNumber
-                                                            min={1}
-                                                            max={8}
-                                                            value={selectedQuantity}
-                                                            onChange={(val) => val && setSelectedQuantity(val)}
-                                                            className="!w-16 !border-none !rounded-lg [&_.ant-input-number-input]:!text-center [&_.ant-input-number-input]:!text-sm"
-                                                            controls={false}
-                                                        />
-                                                    </Form.Item>
-                                                    <span className="text-xs text-gray-500 ml-1">videos</span>
-                                                </div>
-                                                <div className="text-[10px] text-gray-500 text-right">
-                                                    Generated based on the image.
-                                                </div>
-                                            </div> */}
+                
+                    
                     </div>
                   }
                 >
@@ -645,19 +538,9 @@ export default function ChatDreamactorInput({
                   >
                     <SlidersHorizontal size={14} className="text-gray-400" />
                     <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
-                    <div className="flex items-center gap-3">
-                      {/* <div className="flex items-center gap-1.5">
-                        {getRatioIcon(selectedRatio)}
-                        <span>{selectedRatio}</span>
-                      </div> */}
+                    <div className="flex items-center gap-3"> 
                       <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                      <span>{selectedResolution}</span>
-                      {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                      <span> 
-                        {selectedDuration} s
-                      </span> */}
-                      {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                                            <span>{selectedQuantity} videos</span> */}
+                      <span>{selectedResolution}</span> 
                     </div>
                     <ChevronDown size={12} className="text-gray-500 ml-1" />
                   </Button>
@@ -678,12 +561,9 @@ export default function ChatDreamactorInput({
                     placeholder="(Optional) Seed."
                     style={{
                       backgroundColor: "transparent",
-                      // border: 'none',
                       width: "100%",
-                      color: "#e5e7eb", // text-gray-200
-                      // resize: 'none',
-
-                      paddingRight: "40px", // Space for Tpl button
+                      color: "#e5e7eb",
+                      paddingRight: "40px",
                       boxShadow: "none",
                     }}
                     className="focus:ring-0 placeholder-gray-500 "
@@ -712,7 +592,7 @@ export default function ChatDreamactorInput({
                   loading={submitting}
                 ></Button>
               </div>
-            </div>
+            </div> */}
           </Form>
         </div>
       </div>

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Tag, Tooltip } from "antd";
 import Image from "next/image";
 import { TAIModel } from "@/app/common/ai-model.type";
-import { ChevronsRight, Volume2, VolumeX, ChevronRight, ZapIcon, ZapOff } from "lucide-react";
+import { ChevronsRight, Volume2, VolumeX, ChevronRight, ZapIcon, ZapOff, Play } from "lucide-react";
 
 interface OmnihumenSmartReferenceProps {
   selectedAIModel?: TAIModel | null;
@@ -12,6 +12,13 @@ interface OmnihumenSmartReferenceProps {
   fastMode?: boolean;
   seed?: number;
 }
+
+const getFileType = (url: string) => {
+  const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+  if (["mp4", "webm", "ogg", "mov", "avi"].includes(ext || "")) return "video";
+  if (["mp3", "wav", "aac", "m4a", "flac"].includes(ext || "")) return "audio";
+  return "image";
+};
 
 export default function OmnihumenSmartReference({
   selectedAIModel,
@@ -32,7 +39,7 @@ export default function OmnihumenSmartReference({
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
+ 
   const getResolutionLabel = (res: string) => {
     switch (res) {
       case "480p":
@@ -75,44 +82,67 @@ export default function OmnihumenSmartReference({
         {/* Multiple Reference Images Preview - separate from first frame */}
         <div className="flex-shrink-0 flex items-center gap-1">
           {referenceImages && referenceImages.length > 0 ? (
-            referenceImages.slice(0, 3).map((imageUrl, index) => (
-              <Tooltip
-                key={index}
-                title={
-                  <div className="p-2">
-                    <Image
-                      src={imageUrl}
-                      alt={`Reference ${index + 1}`}
-                      width={200}
-                      height={200}
-                      className="max-w-[200px] max-h-[200px] object-contain rounded"
-                      unoptimized
-                    />
+            referenceImages.slice(0, 3).map((imageUrl, index) => {
+              const fileType = getFileType(imageUrl);
+              return (
+                <Tooltip
+                  key={index}
+                  title={
+                    <div className="p-2">
+                      {fileType === "video" ? (
+                        <video
+                          src={imageUrl}
+                          controls
+                          autoPlay
+                          muted
+                          loop
+                          className="max-w-[200px] max-h-[200px] rounded"
+                        />
+                      ) : fileType === "audio" ? (
+                        <div className="min-w-[200px] flex items-center justify-center bg-gray-800 rounded p-2">
+                          <audio src={imageUrl} controls className="w-full" />
+                        </div>
+                      ) : (
+                        <Image
+                          src={imageUrl}
+                          alt={`Reference ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="max-w-[200px] max-h-[200px] object-contain rounded"
+                          unoptimized
+                        />
+                      )}
+                    </div>
+                  }
+                  placement="bottom"
+                  mouseEnterDelay={0.3}
+                  mouseLeaveDelay={0.1}
+                  arrow={false}
+                  destroyTooltipOnHide={true}
+                >
+                  <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors bg-gray-800 flex items-center justify-center">
+                    {fileType === "video" || fileType === "audio" ? (
+                      <Play size={14} className="text-white" />
+                    ) : (
+                      <Image
+                        src={imageUrl}
+                        alt={`Reference ${index + 1}`}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                        onError={() => {
+                          console.error(
+                            `Reference image ${index + 1} failed to load:`,
+                            imageUrl
+                          );
+                        }}
+                      />
+                    )}
                   </div>
-                }
-                placement="bottom"
-                mouseEnterDelay={0.3}
-                mouseLeaveDelay={0.1}
-                arrow={false}
-              >
-                <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 cursor-pointer hover:border-white/40 transition-colors">
-                  <Image
-                    src={imageUrl}
-                    alt={`Reference ${index + 1}`}
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                    onError={() => {
-                      console.error(
-                        `Reference image ${index + 1} failed to load:`,
-                        imageUrl,
-                      );
-                    }}
-                  />
-                </div>
-              </Tooltip>
-            ))
+                </Tooltip>
+              );
+            })
           ) : (
             <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
               <svg

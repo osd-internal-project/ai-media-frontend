@@ -12,13 +12,13 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
 import VideoItem from "./video-player";
 import { TAIModel } from "@/app/common/ai-model.type";
-import OmnihumenSmartReference from "./chat-components/omnihumen-smart-reference";
+import DreamactorSmartReference from "./chat-components/dreamactor-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
-import ChatOmnihumenInput from "./chat-components/chat-omnihumen-input";
+import ChatDreamactorInput from "./chat-components/chat-dreamactor-input";
 
 interface DreamactorChatProps {
   projectId: string;
@@ -749,6 +749,10 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
     const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+    if (!firstImage)
+      return openNotificationWithIcon("error", "Please upload image");
+    if (!lastImage)
+      return openNotificationWithIcon("error", "Please upload audio");
     const tempTask = `temp-${Date.now()}`;
     const message = {
       taskId: tempTask,
@@ -898,12 +902,10 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                   )}
 
                   <>
-                    <OmnihumenSmartReference
+                    <DreamactorSmartReference
                       selectedAIModel={selectedAIModel}
                       referenceImages={massage.referenceImages}
-                      resolution={massage.generateConfig?.resolution}
-                      fastMode={massage.generateConfig?.fastMode}
-                      seed={massage.generateConfig?.seed}
+                      resolution={undefined}
                     />
                     {(massage.genneratedStatus === "PENDING" ||
                       massage.genneratedStatus === "PROCESSING") && (
@@ -970,7 +972,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
               </div>
             }
           >
-            <ChatOmnihumenInput
+            <ChatDreamactorInput
               setSelectedRatio={setSelectedRatio}
               selectedRatio={selectedRatio}
               setSelectedResolution={setSelectedResolution}

@@ -383,7 +383,9 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           isFirstLoad.current = false;
           return;
         }
+
         const itemsToProcess = [...messageData].reverse();
+
         const topId = itemsToProcess[0].id;
         if (topId) {
           setCurrentId(String(topId));
@@ -400,6 +402,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
               setHasMore(false);
               return prev;
             }
+
             return [...uniqueNewMessages, ...prev];
           });
           isFirstLoad.current = false;
@@ -749,6 +752,10 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
     const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+    if (!firstImage)
+      return openNotificationWithIcon("error", "Please upload image");
+    if (!lastImage)
+      return openNotificationWithIcon("error", "Please upload audio");
     const tempTask = `temp-${Date.now()}`;
     const message = {
       taskId: tempTask,
