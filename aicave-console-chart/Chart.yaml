@@ -3,4 +3,4 @@ name: aicave-console
 description: A Helm chart for AICave Console Frontend Application
 type: application
 version: 1.0.0
-appVersion: "v1.0.25"
+appVersion: "v1.0.34"
