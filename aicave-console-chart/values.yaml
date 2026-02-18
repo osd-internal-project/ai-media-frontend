@@ -9,7 +9,7 @@ replicaCount: 5
 image:
   repository: docker.io/library/ai-media-fe
   pullPolicy: IfNotPresent
-  tag: "v1.0.35"
+  tag: "v1.0.36"
 
 strategy:
   rollingUpdate:
@@ -48,10 +48,10 @@ env:
   apiBaseUrlReport: "https://www.aicave.ai/public/api/v1/report"
   apiBaseUrlCore: "https://www.aicave.ai/public/api/v1/core"
   apiBaseUrlWorker: "https://www.aicave.ai/public/api/v1/worker"
-  apiBaseUrlWebHook: "https://www.aicave.ai/public/api/v1/web-hook"
+  apiBaseUrlWebHook: "https://www.aicave.ai"
   nextauthUrl: "https://www.aicave.ai"
   keycloakClientId: "eportal-client-id"
-  keycloakClientSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  keycloakClientSecret: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
   keycloakIssuer: "https://id24.aicave.ai/realms/eportal"
   authTrustHost: "true"
 
@@ -73,5 +73,3 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-nameOverride: ""
-fullnameOverride: ""
