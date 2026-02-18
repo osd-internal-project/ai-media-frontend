@@ -768,91 +768,58 @@ const GenerateImagePage: FC = () => {
                 />
               ),
             },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "omnihumen",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Speech size={20} />
-                  <span className="text-base font-medium">Omnihumen</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateOmnihumen
-                  key={"omnihumen"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "dreamactor",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Clapperboard size={20} />
-                  <span className="text-base font-medium">Dream Actor</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateDreamactor
-                  key={"dreamactor"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
+            //Dream Actor and Omnihumen Tabs
             // {
+            //   disabled: disableTab,
             //   forceRender: true,
             //   key: "omnihumen",
             //   label: (
-            //     <span className="flex justify-center gap-2">
-            //       <ContactRound />
-            //       <div>{`Omni human`}</div>
-            //     </span>
+            //     <div className="flex items-center gap-2 px-2 py-1 w-full">
+            //       <Speech size={20} />
+            //       <span className="text-base font-medium">Omnihumen</span>
+            //     </div>
             //   ),
             //   children: (
-            //     <PromptOmnihumen
-            //       key={`avatar-${activeKey}`}
-            //       projectId={id}
-            //       token={session?.user?.id}
-            //       isActive={activeKey === "omnihumen"}
-            //     />
-            //   ),
-            // },
-            // {
-            //   forceRender: true,
-            //   key: "omnihumen",
-            //   label: (
-            //     <span className="flex justify-center gap-2">
-            //       <ContactRound />
-            //       <div>{`Omni human`}</div>
-            //     </span>
-            //   ),
-            //   children: (
-            //     <PromptGenerateAvatar
-            //       key={`avatar-${activeKey}`}
+            //     <ChatGenerateOmnihumen
+            //       key={"omnihumen"}
+            //       activeKey={activeKey}
             //       projectId={id}
             //       userId={session?.user?.id}
+            //       projectRole={projectRole}
+            //       promptGuideOpenStatus={promptGuideOpenStatus}
+            //       selectedAIModel={selectedAIModel}
+            //       username={session?.user?.name || ""}
+            //       setDisableTab={setDisableTab}
+            //       onSetPromptTextRef={onSetPromptTextRef}
             //     />
             //   ),
             // },
+            // {
+            //   disabled: disableTab,
+            //   forceRender: true,
+            //   key: "dreamactor",
+            //   label: (
+            //     <div className="flex items-center gap-2 px-2 py-1 w-full">
+            //       <Clapperboard size={20} />
+            //       <span className="text-base font-medium">Dream Actor</span>
+            //     </div>
+            //   ),
+            //   children: (
+            //     <ChatGenerateDreamactor
+            //       key={"dreamactor"}
+            //       activeKey={activeKey}
+            //       projectId={id}
+            //       userId={session?.user?.id}
+            //       projectRole={projectRole}
+            //       promptGuideOpenStatus={promptGuideOpenStatus}
+            //       selectedAIModel={selectedAIModel}
+            //       username={session?.user?.name || ""}
+            //       setDisableTab={setDisableTab}
+            //       onSetPromptTextRef={onSetPromptTextRef}
+            //     />
+            //   ),
+            // },
+             
             {
               disabled: disableTab,
               forceRender: true,

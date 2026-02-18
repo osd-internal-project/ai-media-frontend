@@ -130,7 +130,11 @@ const PromptGuideComponent: FC<props> = ({
         <Col xs={24} md={8} lg={6}>
           <Segmented
             className=" mb-2"
-            options={["image", "video", "omnihumen", "dreamactor"]}
+            options={[
+              "image",
+              "video",
+              //  "omnihumen", "dreamactor"
+            ]}
             value={generateType}
             onChange={handleSelectGenerateType}
           />
@@ -139,7 +143,7 @@ const PromptGuideComponent: FC<props> = ({
               {generateType === "image" && "Image Prompt"}
               {generateType === "video" && "Video Prompt"}
               {generateType === "omnihumen" && "Omnihumen Prompt"}
-              {generateType === "dreamactor" && "Dreamactor Prompt"}
+              {generateType === "dreamactor" && "Dream Actor Prompt"}
             </h1>
             {canManage && (
               <Button
@@ -582,6 +586,31 @@ const PromptGuideComponent: FC<props> = ({
                           maxCount={1}
                           showUploadList={true}
                           disabled={isLoadingLastFrame}
+                          itemRender={(originNode, file, fileList, actions) => {
+                            return (
+                              <div className="w-full h-full relative group rounded-lg overflow-hidden border border-zinc-700">
+                                <video
+                                  src={
+                                    file.url ||
+                                    (file.originFileObj
+                                      ? URL.createObjectURL(file.originFileObj)
+                                      : "")
+                                  }
+                                  className="w-full h-full object-cover"
+                                  muted
+                                  playsInline
+                                  loop
+                                  autoPlay
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <DeleteOutlined
+                                    className="text-white text-lg cursor-pointer hover:text-red-500"
+                                    onClick={actions.remove}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          }}
                         >
                           {lastFrame.length >= 1 ? null : (
                             <Tooltip
