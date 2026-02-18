@@ -29,31 +29,31 @@ spec:
           protocol: TCP
         env:
         - name: NEXTAUTH_SECRET
-          value: {{ .Values.env.nextauthSecret }}
+          value: {{ .Values.env.nextauthSecret | quote }}
         - name: VERSION
-          value: {{ .Values.env.version }}
+          value: {{ .Values.env.version | quote }}
         - name: AUTH_BACKEND_URL
-          value: {{ .Values.env.authBackendUrl }}
+          value: {{ .Values.env.authBackendUrl | quote }}
         - name: NEXT_PUBLIC_API_BASE_URL_USER
-          value: {{ .Values.env.apiBaseUrlUser }}
+          value: {{ .Values.env.apiBaseUrlUser | quote }}
         - name: NEXT_PUBLIC_API_BASE_URL_REPORT
-          value: {{ .Values.env.apiBaseUrlReport }}
+          value: {{ .Values.env.apiBaseUrlReport | quote }}
         - name: NEXT_PUBLIC_API_BASE_URL_CORE
-          value: {{ .Values.env.apiBaseUrlCore }}
+          value: {{ .Values.env.apiBaseUrlCore | quote }}
         - name: NEXT_PUBLIC_API_BASE_URL_WORKER
-          value: {{ .Values.env.apiBaseUrlWorker }}
+          value: {{ .Values.env.apiBaseUrlWorker | quote }}
         - name: NEXT_PUBLIC_API_BASE_URL_WEB_HOOCK
-          value: {{ .Values.env.apiBaseUrlWebHook }}
+          value: {{ .Values.env.apiBaseUrlWebHook | quote }}
         - name: NEXTAUTH_URL
-          value: {{ .Values.env.nextauthUrl }}
+          value: {{ .Values.env.nextauthUrl | quote }}
         - name: KEYCLOAK_CLIENT_ID
-          value: {{ .Values.env.keycloakClientId }}
+          value: {{ .Values.env.keycloakClientId | quote }}
         - name: KEYCLOAK_CLIENT_SECRET
-          value: {{ .Values.env.keycloakClientSecret }}
+          value: {{ .Values.env.keycloakClientSecret | quote }}
         - name: KEYCLOAK_ISSUER
-          value: {{ .Values.env.keycloakIssuer }}
+          value: {{ .Values.env.keycloakIssuer | quote }}
         - name: AUTH_TRUST_HOST
-          value: {{ .Values.env.authTrustHost }}
+          value: {{ .Values.env.authTrustHost | quote }}
         resources:
           requests:
             memory: {{ .Values.resources.requests.memory | quote }}
