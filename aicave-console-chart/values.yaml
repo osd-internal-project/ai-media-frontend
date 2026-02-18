@@ -9,7 +9,7 @@ replicaCount: 5
 image:
   repository: docker.io/library/ai-media-fe
   pullPolicy: IfNotPresent
-  tag: "v1.0.34"
+  tag: "v1.0.35"
 
 strategy:
   rollingUpdate:
