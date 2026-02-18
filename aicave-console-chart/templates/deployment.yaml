@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "aicave-console.fullname" . }}
+  name: {{ .Values.appName }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "aicave-console.labels" . | nindent 4 }}
+    app: {{ .Values.appName }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "aicave-console.selectorLabels" . | nindent 6 }}
+      app: {{ .Values.appName }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,10 +18,10 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "aicave-console.selectorLabels" . | nindent 8 }}
+        app: {{ .Values.appName }}
     spec:
       containers:
-      - name: {{ .Chart.Name }}
+      - name: {{ .Values.appName }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
@@ -29,7 +29,7 @@ spec:
           protocol: TCP
         env:
         - name: NEXTAUTH_SECRET
-          value: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo="
+          value: {{ .Values.env.nextauthSecret | quote }}
         - name: VERSION
           value: {{ .Values.env.version | quote }}
         - name: AUTH_BACKEND_URL

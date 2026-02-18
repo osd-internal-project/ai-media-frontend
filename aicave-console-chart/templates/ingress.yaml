@@ -2,10 +2,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "aicave-console.fullname" . }}-ingress
+  name: {{ .Values.appName }}-ingress
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "aicave-console.labels" . | nindent 4 }}
+    app: {{ .Values.appName }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -30,7 +30,7 @@ spec:
         pathType: {{ .pathType }}
         backend:
           service:
-            name: {{ include "aicave-console.fullname" $ }}
+            name: {{ $.Values.appName }}
             port:
               number: {{ $.Values.service.port }}
       {{- end }}
