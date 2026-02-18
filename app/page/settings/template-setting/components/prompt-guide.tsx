@@ -130,11 +130,7 @@ const PromptGuideComponent: FC<props> = ({
         <Col xs={24} md={8} lg={6}>
           <Segmented
             className=" mb-2"
-            options={[
-              "image",
-              "video",
-              //  "omnihumen", "dreamactor"
-            ]}
+            options={["image", "video", "omnihumen", "dreamactor"]}
             value={generateType}
             onChange={handleSelectGenerateType}
           />

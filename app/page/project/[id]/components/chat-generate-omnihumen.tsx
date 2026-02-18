@@ -326,7 +326,23 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         ),
       );
     };
-
+  const workerError = (data: {
+      taskId: string;
+      success: boolean;
+      timestamp: string;
+    }) => {
+      console.log("🚀 Task error:", data.taskId);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.taskId === data.taskId
+            ? {
+                ...msg,
+                genneratedStatus: "FAILED",
+              }
+            : msg,
+        ),
+      );
+    };
     const handleProgress = (data: { taskId: string; timestamp: string }) => {
       console.log("📊 Progress:", data.taskId);
 
@@ -442,6 +458,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
+    socket.on("worker:omnihumen-error", workerError);
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:history", handleHistory);
     return () => {
@@ -451,6 +468,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       socket.off("worker:omnihumen-url-success", workerUrlSuccess);
       socket.off("worker:omnihumen-upload-success", workerUploadSuccess);
       socket.off("worker:omnihumen-complete", workerComplete);
+      socket.off("worker:omnihumen-error", workerError);
       socket.off("worker:omnihumen-progress", handleProgress);
       socket.off("chat:history", handleHistory);
     };
@@ -916,7 +934,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
                       massage.genneratedStatus === "PROCESSING") && (
                       <AiImageLoader />
                     )}
-                    {massage.genneratedStatus === "FAIL" && (
+                    {massage.genneratedStatus === "FAILED" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
                       </div>

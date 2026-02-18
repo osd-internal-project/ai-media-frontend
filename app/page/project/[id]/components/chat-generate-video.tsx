@@ -1040,7 +1040,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                       massage.genneratedStatus === "PROCESSING") && (
                       <AiImageLoader />
                     )}
-                    {massage.genneratedStatus === "FAIL" && (
+                    {massage.genneratedStatus === "FAILED" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
                       </div>

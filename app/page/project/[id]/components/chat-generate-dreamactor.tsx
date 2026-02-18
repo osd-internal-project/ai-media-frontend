@@ -327,6 +327,24 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       );
     };
 
+    const workerError = (data: {
+      taskId: string;
+      success: boolean;
+      timestamp: string;
+    }) => {
+      console.log("🚀 Task error:", data.taskId);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.taskId === data.taskId && msg.genneratedStatus !== "FAILED"
+            ? {
+                ...msg,
+                genneratedStatus: "FAILED",
+              }
+            : msg,
+        ),
+      );
+    };
+
     const handleProgress = (data: { taskId: string; timestamp: string }) => {
       console.log("📊 Progress:", data.taskId);
 
@@ -432,6 +450,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         }
       }
     };
+
+    
     socket.on("dreamactor-task:created", handleTaskCreated);
     socket.on("task-dreamactor:started", handleTaskStarted);
     socket.on("dreamactor-generate:error", handleError);
@@ -439,6 +459,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     socket.on("worker:dreamactor-url-success", workerUrlSuccess);
     socket.on("worker:dreamactor-upload-success", workerUploadSuccess);
     socket.on("worker:dreamactor-complete", workerComplete);
+    socket.on("worker:dreamactor-error", workerError);
     socket.on("worker:dreamactor-progress", handleProgress);
     socket.on("chat:history", handleHistory);
     return () => {
@@ -448,6 +469,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       socket.off("worker:dreamactor-url-success", workerUrlSuccess);
       socket.off("worker:dreamactor-upload-success", workerUploadSuccess);
       socket.off("worker:dreamactor-complete", workerComplete);
+      socket.off("worker:dreamactor-error", workerError);
       socket.off("worker:dreamactor-progress", handleProgress);
       socket.off("chat:history", handleHistory);
     };
@@ -911,7 +933,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                       massage.genneratedStatus === "PROCESSING") && (
                       <AiImageLoader />
                     )}
-                    {massage.genneratedStatus === "FAIL" && (
+                    {massage.genneratedStatus === "FAILED" && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
                         Generate failed
                       </div>
