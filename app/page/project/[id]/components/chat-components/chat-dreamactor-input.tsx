@@ -6,9 +6,11 @@ import {
   ChevronDown,
   Eye,
   ImagePlus,
+  Play,
   Presentation,
   RefreshCcw,
   SlidersHorizontal,
+  Video,
   X,
   Zap,
   ZapIcon,
@@ -110,6 +112,7 @@ export default function ChatDreamactorInput({
 
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState("");
+  const [previewFileType, setPreviewFileType] = React.useState("image");
   const lastProcessedUid = React.useRef<string>("");
 
   const handlePreview = async (file: UploadFile) => {
@@ -117,6 +120,12 @@ export default function ChatDreamactorInput({
       file.preview = await getBase64(file.originFileObj as RcFile);
     }
     setPreviewImage(file.url || (file.preview as string));
+    
+    const isVideo = 
+      file.type?.startsWith("video/") || 
+      /\.(mp4|mov|webm)$/i.test(file.name);
+    setPreviewFileType(isVideo ? "video" : "image");
+    
     setPreviewOpen(true);
   };
 
@@ -145,7 +154,7 @@ export default function ChatDreamactorInput({
                 {/* First Frame */}
                 <div className="w-[70px] h-[70px]">
                   <Upload
-                    accept="jpeg, jpg, png"
+                    accept=".jpeg,.jpg,.png"
                     listType="picture-card"
                     fileList={filesFirst[0] ? [filesFirst[0]] : []}
                     onChange={({ fileList }) => {
@@ -277,7 +286,7 @@ export default function ChatDreamactorInput({
                 {/* Last Frame */}
                 <div className="w-[70px] h-[70px]">
                   <Upload
-                    accept="mp4, mov, webm"
+                    accept=".mp4,.mov,.webm"
                     listType="picture-card"
                     fileList={filesLast[0] ? [filesLast[0]] : []}
                     onChange={({ fileList }) => {
@@ -328,7 +337,7 @@ export default function ChatDreamactorInput({
                         className="group"
                       >
                         <div className="flex flex-col items-center justify-center gap-1 w-full h-full bg-[#1e1e21]">
-                          <AudioLines size={24} className="text-blue-400" />
+                          <Play size={24} className="text-blue-400" />
                           <span className="text-[10px] text-gray-400 truncate max-w-[60px] px-1">
                             {filesLast[0].name}
                           </span>
@@ -381,7 +390,7 @@ export default function ChatDreamactorInput({
                           color: "#71717a",
                         }}
                       >
-                        <AudioLines size={16} />
+                        <Video size={16} />
                         <span
                           style={{
                             fontSize: "10px",
@@ -390,7 +399,7 @@ export default function ChatDreamactorInput({
                             textAlign: "center",
                           }}
                         >
-                          Audio
+                          Video
                         </span>
                       </div>
                     )}
@@ -601,6 +610,7 @@ export default function ChatDreamactorInput({
         title={null}
         footer={null}
         onCancel={() => setPreviewOpen(false)}
+        destroyOnClose={true}
         centered
         className="[&_.ant-modal-content]:!bg-transparent [&_.ant-modal-content]:!shadow-none [&_.ant-modal-content]:!p-0"
         width="auto"
@@ -610,17 +620,32 @@ export default function ChatDreamactorInput({
           </span>
         }
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt="example"
-          style={{
-            width: "auto",
-            maxHeight: "80vh",
-            maxWidth: "90vw",
-            borderRadius: "8px",
-          }}
-          src={previewImage}
-        />
+
+        {previewFileType === "video" ? (
+          <video
+            controls
+            autoPlay
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: "8px",
+            }}
+            src={previewImage}
+          />
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            alt="example"
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: "8px",
+            }}
+            src={previewImage}
+          />
+        )}
       </Modal>
     </div>
   );
