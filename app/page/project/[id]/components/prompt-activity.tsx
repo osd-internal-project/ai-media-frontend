@@ -181,7 +181,21 @@ const PromptActivity: FC<props> = ({
                     className="relative overflow-hidden rounded-xl  border-gray-700/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-[200px]"
                     onClick={() => onSelectPrompt(image)}
                   >
-                    {image.typeGenerate === "video" ? (
+                    {image.typeGenerate === "image" ? (
+                      <Image
+                        src={image.imageUrl}
+                        loading="lazy"
+                        alt="Video thumbnail"
+                        width="100%"
+                        height="100%"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
                       <div>
                         <VideoItem
                           key={imgIndex}
@@ -202,20 +216,6 @@ const PromptActivity: FC<props> = ({
                           </span>
                         </div>
                       </div>
-                    ) : (
-                      <Image
-                        src={image.imageUrl}
-                        loading="lazy"
-                        alt="Video thumbnail"
-                        width="100%"
-                        height="100%"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
                     )}
 
                     <div className="absolute inset-0 !bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

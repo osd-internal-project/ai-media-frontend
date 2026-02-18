@@ -132,6 +132,7 @@ export default function ChatOmnihumenInput({
 
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState("");
+  const [previewFileType, setPreviewFileType] = React.useState("image");
   const lastProcessedUid = React.useRef<string>("");
 
   const handlePreview = async (file: UploadFile) => {
@@ -139,6 +140,21 @@ export default function ChatOmnihumenInput({
       file.preview = await getBase64(file.originFileObj as RcFile);
     }
     setPreviewImage(file.url || (file.preview as string));
+
+    const isVideo =
+      file.type?.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(file.name);
+    const isAudio =
+      file.type?.startsWith("audio/") ||
+      /\.(mp3|wav|ogg|m4a)$/i.test(file.name);
+
+    if (isVideo) {
+      setPreviewFileType("video");
+    } else if (isAudio) {
+      setPreviewFileType("audio");
+    } else {
+      setPreviewFileType("image");
+    }
+
     setPreviewOpen(true);
   };
 
@@ -743,6 +759,7 @@ export default function ChatOmnihumenInput({
         title={null}
         footer={null}
         onCancel={() => setPreviewOpen(false)}
+        destroyOnClose={true}
         centered
         className="[&_.ant-modal-content]:!bg-transparent [&_.ant-modal-content]:!shadow-none [&_.ant-modal-content]:!p-0"
         width="auto"
@@ -752,17 +769,43 @@ export default function ChatOmnihumenInput({
           </span>
         }
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt="example"
-          style={{
-            width: "auto",
-            maxHeight: "80vh",
-            maxWidth: "90vw",
-            borderRadius: "8px",
-          }}
-          src={previewImage}
-        />
+
+        {previewFileType === "video" ? (
+          <video
+            controls
+            autoPlay
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: "8px",
+            }}
+            src={previewImage}
+          />
+        ) : previewFileType === "audio" ? (
+          <div className="p-4 bg-[#1a1b1e] rounded-lg border border-white/10">
+            <audio
+              controls
+              autoPlay
+              style={{
+                width: "300px",
+              }}
+              src={previewImage}
+            />
+          </div>
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            alt="example"
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: "8px",
+            }}
+            src={previewImage}
+          />
+        )}
       </Modal>
     </div>
   );
