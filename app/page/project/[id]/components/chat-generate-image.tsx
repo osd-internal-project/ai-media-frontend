@@ -194,7 +194,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
   const isFetchingRef = useRef<boolean>(false);
-
+  const [usedCredit, setUsedCredit] = useState<{ total: string; used: string }>(
+    {
+      total: "-",
+      used: "-",
+    },
+  );
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -439,6 +444,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         );
       }
     };
+    // 6. Event เมื่อเกิด Credit Change
+    const handleCreditChange = (data: {
+      used: number;
+      total: number;
+    }) => {
+      // console.log("💰 Credit change:", data);
+      setUsedCredit({ used:`${data.used}`||'-',total:`${data.total}`||'-' });
+    };
 
     const handleHistory = (data: {
       success: boolean;
@@ -539,6 +552,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
     socket.on("worker:error", handleError);
+    socket.on("worker:credit-chage", handleCreditChange);
     socket.on("worker:complete", handleTaskComplete);
     socket.on("generate:error", handleError);
     socket.on("chat:history", handleHistory);
@@ -551,6 +565,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("worker:image-complete", handleImageComplete);
       socket.off("worker:error", handleError);
       socket.off("worker:complete", handleTaskComplete);
+      socket.off("worker:credit-chage", handleCreditChange);
       socket.off("generate:error", handleError);
       socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
@@ -997,7 +1012,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                       </div>
                     )}
 
-                    {(message.genneratedStatus === "FAIL" ||
+                    {(message.genneratedStatus === "FAILED" ||
                       (message.genneratedStatus === "SUCCESS" &&
                         !message.imageUrls)) && (
                       <div className="mt-1 p-2 bg-red-900/20 rounded-lg border border-red-500/20 text-red-400">
