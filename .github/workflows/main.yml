@@ -156,33 +156,33 @@ jobs:
       # ---------------------------------------------------------------------
       # Helm upgrade (runs directly on self-hosted runner)
       # ---------------------------------------------------------------------
-      - name: Helm Upgrade
-        run: |
-          set -e
+      # - name: Helm Upgrade
+      #   run: |
+      #     set -e
 
-          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
-          NAME="${{ steps.pkg.outputs.name }}"
-          VER="${{ steps.pkg.outputs.ver }}"
+      #     DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+      #     NAME="${{ steps.pkg.outputs.name }}"
+      #     VER="${{ steps.pkg.outputs.ver }}"
 
-          echo "🚀 Helm upgrade aicave-console (env: prod)"
+      #     echo "🚀 Helm upgrade aicave-console (env: prod)"
 
-          helm upgrade --install aicave-console ./aicave-console-chart \
-            -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
-            --set image.repository=docker.io/library/${NAME} \
-            --set image.tag=${VER} \
-            --namespace aicave-${DEPLOY_ENV} \
-            --wait \
-            --timeout 5m \
-            --atomic
+      #     helm upgrade --install aicave-console ./aicave-console-chart \
+      #       -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+      #       --set image.repository=docker.io/library/${NAME} \
+      #       --set image.tag=${VER} \
+      #       --namespace aicave-${DEPLOY_ENV} \
+      #       --wait \
+      #       --timeout 5m \
+      #       --atomic
 
-          echo "✅ Deployment completed: ${NAME}:${VER} (env: prod)"
+      #     echo "✅ Deployment completed: ${NAME}:${VER} (env: prod)"
 
       # ---------------------------------------------------------------------
       # Verify deployment
       # ---------------------------------------------------------------------
-      - name: Verify Deployment
-        run: |
-          kubectl rollout status deployment/aicave-console \
-            -n aicave-${{ secrets.DEPLOY_ENV }}
-          kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
-            -l app=aicave-console
+      # - name: Verify Deployment
+      #   run: |
+      #     kubectl rollout status deployment/aicave-console \
+      #       -n aicave-${{ secrets.DEPLOY_ENV }}
+      #     kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
+      #       -l app=aicave-console

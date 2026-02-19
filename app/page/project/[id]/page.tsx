@@ -775,7 +775,7 @@ const GenerateImagePage: FC = () => {
               label: (
                 <div className="flex items-center gap-2 px-2 py-1 w-full">
                   <Speech size={20} />
-                  <span className="text-base font-medium">Omnihumen</span>
+                  <span className="text-base font-medium">OmniHuman</span>
                 </div>
               ),
               children: (
@@ -801,7 +801,7 @@ const GenerateImagePage: FC = () => {
               label: (
                 <div className="flex items-center gap-2 px-2 py-1 w-full">
                   <Clapperboard size={20} />
-                  <span className="text-base font-medium">Dream Actor</span>
+                  <span className="text-base font-medium">DreamActor</span>
                 </div>
               ),
               children: (
