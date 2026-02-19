@@ -138,8 +138,8 @@ const PromptGuideComponent: FC<props> = ({
             <h1 className="text-lg font-bold">
               {generateType === "image" && "Image Prompt"}
               {generateType === "video" && "Video Prompt"}
-              {generateType === "omnihumen" && "Omnihumen Prompt"}
-              {generateType === "dreamactor" && "Dream Actor Prompt"}
+              {generateType === "omnihumen" && "OmniHuman Prompt"}
+              {generateType === "dreamactor" && "DreamActor Prompt"}
             </h1>
             {canManage && (
               <Button
