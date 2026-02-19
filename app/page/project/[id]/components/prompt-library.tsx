@@ -214,7 +214,7 @@ const PromptLibrary: FC<props> = ({
                         />
                         <div className="absolute bottom-0 left-0 w-full py-2 bg-black/80 backdrop-blur-md border-t border-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center z-20">
                           <span className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5 tracking-wide">
-                            <Info className="w-3.5 h-3.5 text-purple-400" />
+                            <Info className="w-3.5 h-3.5 text-purple-400 cursor-pointer" />
                             More Info
                           </span>
                         </div>
