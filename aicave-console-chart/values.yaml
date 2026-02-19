@@ -74,3 +74,10 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
