@@ -86,11 +86,11 @@ const PromptLibrary: FC<props> = ({
       const urlWithoutParams = imageUrl.split("?")[0];
       const filename =
         urlWithoutParams.split("/").pop() ||
-        (types === "video" ? "video.mp4" : "image.jpg");
+        (types === "image" ? "image.jpg" : "video.mp4");
 
       // Show loading message
       const hide = message.loading(
-        `Downloading ${types === "video" ? "video" : "image"}...`,
+        `Downloading ${types === "image" ? "image" : "video"}...`,
         0,
       );
 
@@ -214,7 +214,7 @@ const PromptLibrary: FC<props> = ({
                         />
                         <div className="absolute bottom-0 left-0 w-full py-2 bg-black/80 backdrop-blur-md border-t border-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex items-center justify-center z-20">
                           <span className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5 tracking-wide">
-                            <Info className="w-3.5 h-3.5 text-purple-400" />
+                            <Info className="w-3.5 h-3.5 text-purple-400 cursor-pointer" />
                             More Info
                           </span>
                         </div>
@@ -225,11 +225,8 @@ const PromptLibrary: FC<props> = ({
                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <button
                         disabled={loadingDownload}
-                        hidden={image.typeGenerate === "video"}
+                        hidden={image.typeGenerate !== "image"}
                         className="p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-lg shadow-lg transition-all hover:scale-110 cursor-pointer"
-                        // onClick={() =>
-                        //   handleOpenImage(image.imageUrl, image.typeGenerate)
-                        // }
                         onClick={() =>
                           onDownloadFile(image.fileName || "image", image.id)
                         }
@@ -295,7 +292,7 @@ const PromptLibrary: FC<props> = ({
                   <div className="text-[16px] space-y-4">
                     <div>
                       <div>Prompt:</div>
-                      {selected.prompt.length > 0 && (
+                      {selected.prompt &&selected.prompt.length > 0 && (
                         <Tooltip
                           placement="left"
                           title={selected.prompt}
