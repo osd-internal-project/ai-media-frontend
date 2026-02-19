@@ -194,10 +194,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
   const isFetchingRef = useRef<boolean>(false);
-  const [usedCredit, setUsedCredit] = useState<{ total: string; used: string }>(
+  const [usedCredit, setUsedCredit] = useState<{ total?: number; used?: number }>(
     {
-      total: "-",
-      used: "-",
+      total: undefined,
+      used: undefined,
     },
   );
   useEffect(() => {
@@ -243,6 +243,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
+        type: "image",
+      });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
         type: "image",
       });
     }
@@ -444,14 +450,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         );
       }
     };
-    // 6. Event เมื่อเกิด Credit Change
-    const handleCreditChange = (data: {
-      used: number;
-      total: number;
-    }) => {
-      // console.log("💰 Credit change:", data);
-      setUsedCredit({ used:`${data.used}`||'-',total:`${data.total}`||'-' });
-    };
+ 
+     
 
     const handleHistory = (data: {
       success: boolean;
@@ -531,6 +531,21 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         setLoading(false);
       }
     };
+   // 6. Event เมื่อเกิด Credit Change
+    const handleCreditChange = (res: {
+      success: boolean;
+      data: {
+        usedCredit: number;
+        totalCredit?: number;
+      };
+    }) => {
+      if (res.success) {
+        setUsedCredit({
+          used: res.data.usedCredit,
+          total: res?.data?.totalCredit,
+        });
+      }
+    };
     // const handleNewMessage = (data: { success: boolean; data: Message }) => {
     //   console.log("📩 New message:", data);
     //   if (data.success && data.data) {
@@ -551,11 +566,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     socket.on("worker:started", workerStarted);
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
-    socket.on("worker:error", handleError);
-    socket.on("worker:credit-chage", handleCreditChange);
+    socket.on("worker:error", handleError); 
     socket.on("worker:complete", handleTaskComplete);
     socket.on("generate:error", handleError);
     socket.on("chat:history", handleHistory);
+    socket.on("chat:used-credit", handleCreditChange);
 
     return () => {
       socket.off("task:started", handleTaskStarted);
@@ -564,11 +579,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("worker:progress", handleProgress);
       socket.off("worker:image-complete", handleImageComplete);
       socket.off("worker:error", handleError);
-      socket.off("worker:complete", handleTaskComplete);
-      socket.off("worker:credit-chage", handleCreditChange);
+      socket.off("worker:complete", handleTaskComplete); 
       socket.off("generate:error", handleError);
       socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
+      socket.off("chat:used-credit", handleCreditChange);
     };
   }, [socket, page, projectId, activeKey]);
 
@@ -1131,6 +1146,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
               promptGuideTemplates={promptGuideTemplates}
               fetchImagePromptGuides={fetchImagePromptGuides}
               handleUsePromptGuide={handleUsePromptGuide}
+              usedCredit={usedCredit}
             />
           </PermissionGuard>
         </div>

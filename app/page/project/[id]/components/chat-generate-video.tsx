@@ -214,7 +214,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const [promptGuideTemplates, setPromptGuideTemplates] = useState<
     TPromptGuideTemplate[]
   >([]);
-
+  const [usedCredit, setUsedCredit] = useState<{
+    total?: number;
+    used?: number;
+  }>({
+    total: undefined,
+    used: undefined,
+  });
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -401,7 +407,22 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         );
       }
     };
-
+    // 7. Event เมื่อเกิด Credit Change
+    const handleCreditChange = (res: {
+      success: boolean;
+      data: {
+        usedCredit: number;
+        totalCredit?: number;
+      };
+    }) => {
+      if (res.success) {
+        console.log("🚀 Credit change:", res.data);
+        setUsedCredit({
+          used: res.data.usedCredit,
+          total: res?.data?.totalCredit,
+        });
+      }
+    };
     const handleHistory = (data: {
       success: boolean;
       data: {
@@ -483,6 +504,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         setLoading(false);
       }
     };
+
     socket.on("video-task:created", handleTaskCreated);
     socket.on("task-video:started", handleTaskStarted);
     socket.on("video-generate:error", handleError);
@@ -492,6 +514,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     socket.on("worker:video-complete", workerComplete);
     socket.on("worker:video-progress", handleProgress);
     socket.on("chat:history", handleHistory);
+    socket.on("chat:used-credit", handleCreditChange);
     return () => {
       socket.off("video-task:created", handleTaskCreated);
       socket.off("task-video:started", handleTaskStarted);
@@ -501,6 +524,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       socket.off("worker:video-complete", workerComplete);
       socket.off("worker:video-progress", handleProgress);
       socket.off("chat:history", handleHistory);
+      socket.off("chat:used-credit", handleCreditChange);
     };
   }, [socket, page, projectId, activeKey]);
 
@@ -536,6 +560,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
+        type: "video",
+      });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
         type: "video",
       });
     }
@@ -1124,6 +1154,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
               promptGuideTemplates={promptGuideTemplates}
               fetchVideoPromptGuides={fetchVideoPromptGuides}
               handleUsePromptGuide={handleUsePromptGuide}
+              usedCredit={usedCredit}
             />
           </PermissionGuard>
         </div>

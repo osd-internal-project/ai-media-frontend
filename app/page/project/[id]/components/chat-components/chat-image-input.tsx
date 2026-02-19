@@ -54,6 +54,7 @@ type Props = {
   promptGuideTemplates: TPromptGuideTemplate[];
   fetchImagePromptGuides: () => void;
   handleUsePromptGuide: (prompt: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
 };
 
 export default function ChatImageInput({
@@ -78,6 +79,7 @@ export default function ChatImageInput({
   promptGuideTemplates,
   fetchImagePromptGuides,
   handleUsePromptGuide,
+  usedCredit,
 }: Props) {
   const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
     "1:1": { width: 2048, height: 2048 },
@@ -648,7 +650,8 @@ export default function ChatImageInput({
                 </Popover>
               </div>
 
-              <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+              <div className="flex items-center gap-3 pl-4 border-l border-white/5 ">
+                <span className="text-sm text-gray-500 italic">{`${usedCredit.used || 0} / ${usedCredit.total || "-"}`}</span>
                 <Button
                   htmlType="submit"
                   // onClick={handleSendMessage}

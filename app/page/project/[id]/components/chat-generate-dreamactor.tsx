@@ -508,7 +508,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         skip: skip,
         take: take,
         type: "dreamactor",
-      });
+      }); 
+  
     }
   };
 
