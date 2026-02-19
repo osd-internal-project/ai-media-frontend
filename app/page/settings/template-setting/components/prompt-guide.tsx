@@ -83,6 +83,8 @@ const PromptGuideComponent: FC<props> = ({
   isLoadingLastFrame,
   handleVideoImageUploadChange,
 }): ReactElement => {
+  const hiddenTabs = ["omnihumen", "dreamactor"];
+
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
@@ -130,7 +132,9 @@ const PromptGuideComponent: FC<props> = ({
         <Col xs={24} md={8} lg={6}>
           <Segmented
             className=" mb-2"
-            options={["image", "video", "omnihumen", "dreamactor"]}
+            options={["image", "video",
+//  "omnihumen", "dreamactor"
+            ]}
             value={generateType}
             onChange={handleSelectGenerateType}
           />
