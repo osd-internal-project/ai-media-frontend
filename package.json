@@ -1,6 +1,6 @@
 {
   "name": "ai-media-fe",
-  "version": "v1.0.37",
+  "version": "v1.0.38",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
