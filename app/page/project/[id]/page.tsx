@@ -775,7 +775,7 @@ const GenerateImagePage: FC = () => {
               label: (
                 <div className="flex items-center gap-2 px-2 py-1 w-full">
                   <Speech size={20} />
-                  <span className="text-base font-medium">Omnihumen</span>
+                  <span className="text-base font-medium">Omnihuman</span>
                 </div>
               ),
               children: (
