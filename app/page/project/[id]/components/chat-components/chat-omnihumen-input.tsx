@@ -80,7 +80,7 @@ type Props = {
   isLoadingUpload: boolean;
   submitting: boolean;
   setSelectedDuration: (duration: number) => void;
-  selectedDuration: number;
+  selectedDuration: number | null;
   setDraftMode: (draftMode: boolean) => void;
   draftMode: boolean;
   setFastMode: (fastMode: boolean) => void;
@@ -91,6 +91,10 @@ type Props = {
   promptGuideTemplates: TPromptGuideTemplate[];
   fetchVideoPromptGuides: () => Promise<void>;
   handleUsePromptGuide: (template: TPromptGuide) => void;
+  usedCredit: {
+    total?: number;
+    used?: number;
+  };
 };
 
 export default function ChatOmnihumenInput({
@@ -109,7 +113,10 @@ export default function ChatOmnihumenInput({
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
-}: Props) { 
+  selectedDuration,
+  setSelectedDuration,
+  usedCredit,
+}: Props) {
   const handleResolutionChange = (resolution: string) => {
     setSelectedResolution(resolution);
     form.setFieldValue("resolution", resolution);
@@ -441,7 +448,7 @@ export default function ChatOmnihumenInput({
                 <div className="flex-1 relative h-[70px]">
                   <Form.Item
                     name="prompt"
-                        style={{ margin: 0, padding: 0, height: "100%" }}
+                    style={{ margin: 0, padding: 0, height: "100%" }}
                   >
                     <TextArea
                       placeholder="(Optional) Enter the description based ."
@@ -504,7 +511,7 @@ export default function ChatOmnihumenInput({
             <div className="flex items-center justify-between px-2 pt-1 pb-1">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 {/* Settings Popover */}
-                <Popover 
+                <Popover
                   trigger="click"
                   placement="topLeft"
                   content={
@@ -518,7 +525,7 @@ export default function ChatOmnihumenInput({
                         flexDirection: "column",
                         gap: "16px", // space-y-4
                       }}
-                    > 
+                    >
                       {/* <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-medium text-gray-400">
@@ -593,8 +600,8 @@ export default function ChatOmnihumenInput({
                         <div className="text-xs font-medium text-gray-400">
                           Resolution
                         </div>
-                        <div className="grid grid-cols-3 p-1 bg-black/20 rounded-lg border border-white/5">
-                          {[ "720p", "1080p"].map((res) => (
+                        <div className="grid grid-cols-2 p-1 bg-black/20 rounded-lg border border-white/5">
+                          {["720p", "1080p"].map((res) => (
                             <Button
                               key={res}
                               onClick={() => handleResolutionChange(res)}
@@ -605,7 +612,7 @@ export default function ChatOmnihumenInput({
                             </Button>
                           ))}
                         </div>
-                      </div> 
+                      </div>
                       {/* <div className="space-y-2">
                         <div className="text-xs font-medium text-gray-400">
                           Duration
@@ -690,10 +697,10 @@ export default function ChatOmnihumenInput({
                       </div> */}
                       <div className="w-1 h-1 rounded-full bg-gray-600"></div>
                       <span>{selectedResolution}</span>
-                      {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
-                      <span> 
-                        {selectedDuration} s
-                      </span> */}
+                      <div className="w-1 h-1 rounded-full bg-gray-600"></div>
+                      <span>
+                        {selectedDuration ? `${selectedDuration} s` : "0 s"}
+                      </span>
                       {/* <div className="w-1 h-1 rounded-full bg-gray-600"></div>
                                             <span>{selectedQuantity} videos</span> */}
                     </div>
@@ -702,34 +709,36 @@ export default function ChatOmnihumenInput({
                 </Popover>
                 <Form.Item name="fastMode" noStyle>
                   <div
-                    className={` w-[200px] cursor-pointer py-1.5 rounded-lg ${fastMode && 'bg-blue-500/10 text-blue-400'} hover:bg-blue-500/20  flex items-center gap-2 transition-colors border border-blue-500/20`}
+                    className={` w-[200px] cursor-pointer py-1.5 rounded-lg ${fastMode && "bg-blue-500/10 text-blue-400"} hover:bg-blue-500/20  flex items-center gap-2 transition-colors border border-blue-500/20`}
                     onClick={() => {
                       setFastMode(!fastMode);
                     }}
                   >
-                    {fastMode ? (
-                      <ZapIcon size={16} />
-                    ) : (
-                      <ZapOff size={16} />
-                    )}
+                    {fastMode ? <ZapIcon size={16} /> : <ZapOff size={16} />}
                     <span className="text-xs font-medium">Fast Mode</span>
                   </div>
-                </Form.Item> 
-                <Form.Item name="seed" noStyle><InputNumber    placeholder="(Optional) Seed."
-                      style={{
-                        backgroundColor: "transparent",
-                        // border: 'none',
-                        width: "100%",
-                        color: "#e5e7eb", // text-gray-200
-                        // resize: 'none',
-                      
-                        paddingRight: "40px", // Space for Tpl button
-                        boxShadow: "none",  
-                      }}
-                      className="focus:ring-0 placeholder-gray-500 "/></Form.Item>
+                </Form.Item>
+                <Form.Item name="seed" noStyle>
+                  <InputNumber
+                    placeholder="(Optional) Seed."
+                    style={{
+                      backgroundColor: "transparent",
+                      // border: 'none',
+                      width: "100%",
+                      color: "#e5e7eb", // text-gray-200
+                      // resize: 'none',
+
+                      paddingRight: "40px", // Space for Tpl button
+                      boxShadow: "none",
+                    }}
+                    className="focus:ring-0 placeholder-gray-500 "
+                  />
+                </Form.Item>
               </div>
 
               <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+                <span className="text-sm text-gray-500 italic">{`${usedCredit?.used ? usedCredit?.used?.toFixed(2) : 0} / ${usedCredit.total || "-"}`}</span>
+
                 <Button
                   htmlType="submit"
                   // onClick={handleSendMessage}
@@ -769,7 +778,6 @@ export default function ChatOmnihumenInput({
           </span>
         }
       >
-
         {previewFileType === "video" ? (
           <video
             controls

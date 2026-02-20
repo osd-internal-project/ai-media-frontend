@@ -85,6 +85,7 @@ interface Message {
     resolution?: string;
     fastMode: boolean;
     seed?: number;
+    duration: number;
   };
   percentage?: number;
   users: UserMessage;
@@ -174,7 +175,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const [promptGuideTemplates, setPromptGuideTemplates] = useState<
     TPromptGuideTemplate[]
   >([]);
-
+  const [usedCredit, setUsedCredit] = useState<{
+    total?: number;
+    used?: number;
+  }>({
+    used: 0,
+    total: 0,
+  });
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -451,7 +458,22 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       }
     };
 
-    
+    const handleCredit = (data: {
+      success: boolean;
+      data: {
+        usedCredit: number;
+        totalCredit: number;
+      };
+    }) => {
+      if (data.success) {
+        // console.log("🚀 Credit:", data.data);
+        setUsedCredit({
+          total: data.data.totalCredit,
+          used: data.data.usedCredit,
+        });
+      }
+    };
+
     socket.on("dreamactor-task:created", handleTaskCreated);
     socket.on("task-dreamactor:started", handleTaskStarted);
     socket.on("dreamactor-generate:error", handleError);
@@ -462,6 +484,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     socket.on("worker:dreamactor-error", workerError);
     socket.on("worker:dreamactor-progress", handleProgress);
     socket.on("chat:history", handleHistory);
+    socket.on("chat:used-credit", handleCredit);
     return () => {
       socket.off("dreamactor-task:created", handleTaskCreated);
       socket.off("task-dreamactor:started", handleTaskStarted);
@@ -472,6 +495,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       socket.off("worker:dreamactor-error", workerError);
       socket.off("worker:dreamactor-progress", handleProgress);
       socket.off("chat:history", handleHistory);
+      socket.off("chat:used-credit", handleCredit);
     };
   }, [socket, page, projectId, activeKey]);
 
@@ -508,8 +532,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         skip: skip,
         take: take,
         type: "dreamactor",
-      }); 
-  
+      });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "omnihumen",
+      });
     }
   };
 
@@ -787,6 +816,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       ],
       fastMode: fastMode,
       seed: values.seed,
+      duration: selectedDuration,
       resolution: selectedResolution,
       projectId: projectId,
       userId: userId,
@@ -808,6 +838,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         resolution: selectedResolution,
         fastMode: fastMode,
         seed: values.seed,
+        duration: selectedDuration,
       },
       users: {
         fullname: username,
@@ -1019,6 +1050,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
               promptGuideTemplates={promptGuideTemplates}
               fetchVideoPromptGuides={fetchDreamactorPromptGuides}
               handleUsePromptGuide={handleUsePromptGuide}
+              usedCredit={usedCredit}
             />
           </PermissionGuard>
         </div>

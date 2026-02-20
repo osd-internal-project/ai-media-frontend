@@ -416,7 +416,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       };
     }) => {
       if (res.success) {
-        console.log("🚀 Credit change:", res.data);
+        // console.log("🚀 Credit change:", res.data);
         setUsedCredit({
           used: res.data.usedCredit,
           total: res?.data?.totalCredit,

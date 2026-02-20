@@ -651,7 +651,7 @@ export default function ChatImageInput({
               </div>
 
               <div className="flex items-center gap-3 pl-4 border-l border-white/5 ">
-                <span className="text-sm text-gray-500 italic">{`${usedCredit.used || 0} / ${usedCredit.total || "-"}`}</span>
+                <span className="text-sm text-gray-500 italic">{`${usedCredit?.used ? usedCredit?.used?.toFixed(2) : 0} / ${usedCredit?.total || "-"}`}</span>
                 <Button
                   htmlType="submit"
                   // onClick={handleSendMessage}

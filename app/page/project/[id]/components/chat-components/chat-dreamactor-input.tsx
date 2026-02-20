@@ -71,10 +71,13 @@ type Props = {
   promptGuideTemplates: TPromptGuideTemplate[];
   fetchVideoPromptGuides: () => Promise<void>;
   handleUsePromptGuide: (template: TPromptGuide) => void;
+  usedCredit: {
+    used?: number;
+    total?: number;
+  };
 };
 
 export default function ChatDreamactorInput({
-  selectedResolution,
   setSelectedResolution,
   form,
   filesFirst,
@@ -83,33 +86,12 @@ export default function ChatDreamactorInput({
   handleSendMessage,
   isLoadingUpload,
   submitting,
-  setFastMode,
-  fastMode,
   onRemoveFile,
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
+  usedCredit,
 }: Props) {
-  const handleResolutionChange = (resolution: string) => {
-    setSelectedResolution(resolution);
-    form.setFieldValue("resolution", resolution);
-
-    // const currentRatio = selectedRatio;
-    // const baseSize = RATIO_SIZE_MAP[currentRatio];
-
-    // if (baseSize) {
-    //   const scaleFactor = resolution === "4k" ? 1.414 : 1;
-    //   const newWidth = Math.round(baseSize.width * scaleFactor);
-    //   const newHeight = Math.round(baseSize.height * scaleFactor);
-    //   setSelectedWidth(newWidth);
-    //   setSelectedHeight(newHeight);
-    //   form.setFieldsValue({
-    //     width: newWidth,
-    //     height: newHeight,
-    //   });
-    // }
-  };
-
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState("");
   const [previewFileType, setPreviewFileType] = React.useState("image");
@@ -120,12 +102,11 @@ export default function ChatDreamactorInput({
       file.preview = await getBase64(file.originFileObj as RcFile);
     }
     setPreviewImage(file.url || (file.preview as string));
-    
-    const isVideo = 
-      file.type?.startsWith("video/") || 
-      /\.(mp4|mov|webm)$/i.test(file.name);
+
+    const isVideo =
+      file.type?.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(file.name);
     setPreviewFileType(isVideo ? "video" : "image");
-    
+
     setPreviewOpen(true);
   };
 
@@ -467,8 +448,8 @@ export default function ChatDreamactorInput({
                       </Button>
                     </Tooltip>
                   </Popover>
-                  
-                </div> <Button
+                </div>{" "}
+                <Button
                   htmlType="submit"
                   // onClick={handleSendMessage}
                   disabled={submitting}
@@ -489,7 +470,9 @@ export default function ChatDreamactorInput({
                 ></Button>
               </div>
             </div>
-
+            <div className="flex justify-end">
+              <span className="text-sm text-gray-500 italic">{`${usedCredit?.used ? usedCredit?.used?.toFixed(2) : 0} / ${usedCredit.total || "-"}`}</span>
+            </div>
             {/* Bottom: Settings & Actions */}
             {/* <div className="flex items-center justify-between px-2 pt-1 pb-1">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
@@ -620,7 +603,6 @@ export default function ChatDreamactorInput({
           </span>
         }
       >
-
         {previewFileType === "video" ? (
           <video
             controls

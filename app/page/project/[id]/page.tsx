@@ -33,7 +33,7 @@ import ChatGenerateDreamactor from "./components/chat-generate-dreamactor";
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
-  const hiddenTabs = ["omnihumen", "dreamactor"];
+  // const hiddenTabs = [];
   // const promptguideTypeService = PromptGuideTypeServices(axiosCore);
   const projectService = ProjectService(axiosCore);
   const aiModelService = AIModelServices(axiosCore);
@@ -892,7 +892,9 @@ const GenerateImagePage: FC = () => {
                 </div>
               ),
             },
-          ].filter((item) => !hiddenTabs.includes(item.key))}
+          ]
+          // .filter((item) => !hiddenTabs.includes(item.key))
+        }
         />
       </div>
     </div>

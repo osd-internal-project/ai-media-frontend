@@ -85,6 +85,7 @@ interface Message {
     resolution?: string;
     fastMode: boolean;
     seed?: number;
+    duration: number;
   };
   percentage?: number;
   users: UserMessage;
@@ -142,11 +143,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
   const [fastMode, setFastMode] = useState<boolean>(false);
-  const [selectedDurationType, setSelectedDurationType] = useState<{
-    value: string;
-    label: string;
-  }>({ value: "Seconds", label: "Seconds" });
-  const [selectedDuration, setSelectedDuration] = useState<number>(6);
+  // const [selectedDurationType, setSelectedDurationType] = useState<{
+  //   value: string;
+  //   label: string;
+  // }>({ value: "Seconds", label: "Seconds" });
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
   const [refImageFrist, setRefImageFrist] = useState<
     {
       name: string;
@@ -174,7 +175,13 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [promptGuideTemplates, setPromptGuideTemplates] = useState<
     TPromptGuideTemplate[]
   >([]);
-
+const [usedCredit, setUsedCredit] = useState<{
+    total?: number;
+    used?: number;
+  }>({
+    total: undefined,
+    used: undefined,
+  });
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -198,7 +205,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   };
 
   useEffect(() => {
-    form.setFieldValue("duration", selectedDuration);
     form.setFieldValue("quantity", selectedQuantity);
   }, []);
 
@@ -326,7 +332,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         ),
       );
     };
-  const workerError = (data: {
+    const workerError = (data: {
       taskId: string;
       success: boolean;
       timestamp: string;
@@ -451,6 +457,23 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         }
       }
     };
+
+    const handleCreditChange = (res: {
+      success: boolean;
+      data: {
+        usedCredit: number;
+        totalCredit?: number;
+      };
+    }) => {
+      if (res.success) {
+        // console.log("🚀 Credit change:", res.data);
+        setUsedCredit({
+          used: res.data.usedCredit,
+          total: res?.data?.totalCredit,
+        });
+      }
+    };
+
     socket.on("omnihumen-task:created", handleTaskCreated);
     socket.on("task-omnihumen:started", handleTaskStarted);
     socket.on("omnihumen-generate:error", handleError);
@@ -461,6 +484,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-error", workerError);
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:history", handleHistory);
+    socket.on("chat:used-credit", handleCreditChange);
+
     return () => {
       socket.off("omnihumen-task:created", handleTaskCreated);
       socket.off("task-omnihumen:started", handleTaskStarted);
@@ -471,6 +496,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       socket.off("worker:omnihumen-error", workerError);
       socket.off("worker:omnihumen-progress", handleProgress);
       socket.off("chat:history", handleHistory);
+      socket.off("chat:used-credit", handleCreditChange);
     };
   }, [socket, page, projectId, activeKey]);
 
@@ -506,6 +532,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         organizationId: session?.user?.organizationId,
         skip: skip,
         take: take,
+        type: "omnihumen",
+      });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
         type: "omnihumen",
       });
     }
@@ -661,6 +693,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           } else {
             setFilesLast([file]);
             setRefImageLast((prev) => [...prev, result]);
+            handleCalculateDuration(file);
           }
         }
       } catch (error) {
@@ -675,6 +708,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         } else {
           setRefImageLast((prev) => prev.filter((f) => f.uid !== file.uid));
           setFilesLast([]);
+          handleCalculateDuration(null);
         }
         await UploadsServices(axiosWorker).remove(file.uid);
       } catch (error) {
@@ -683,7 +717,40 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     }
     setIsLoadingUpload(false);
   };
+  const handleCalculateDuration = (file: UploadFile | null) => {
+    if (!file) {
+      setSelectedDuration(null);
+      return;
+    }
+    const fileObj = file.originFileObj;
+    const url = file.url || (fileObj ? URL.createObjectURL(fileObj) : null);
 
+    if (!url) return;
+
+    const isVideo =
+      file.type?.startsWith("video/") ||
+      file.name.match(/\.(mp4|webm|ogg|mov)$/i);
+    const isAudio =
+      file.type?.startsWith("audio/") ||
+      file.name.match(/\.(mp3|wav|ogg|m4a|aac)$/i);
+
+    if (isVideo) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        setSelectedDuration(video.duration);
+        if (!file.url) URL.revokeObjectURL(url);
+      };
+      video.src = url;
+    } else if (isAudio) {
+      const audio = new Audio(url);
+      audio.preload = "metadata";
+      audio.onloadedmetadata = () => {
+        setSelectedDuration(audio.duration);
+        if (!file.url) URL.revokeObjectURL(url);
+      };
+    }
+  };
   async function handleUsePromptGuide(prompt: TPromptGuide) {
     form.setFieldValue("prompt", prompt.textPrompt);
     // Clear both First and Last inputs
@@ -770,10 +837,16 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
     const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+
     if (!firstImage)
       return openNotificationWithIcon("error", "Please upload image");
     if (!lastImage)
       return openNotificationWithIcon("error", "Please upload audio");
+    if (!selectedDuration)
+      return openNotificationWithIcon(
+        "error",
+        "File duration is not supported,Please Try Upload Audio Again",
+      );
     const tempTask = `temp-${Date.now()}`;
     const message = {
       taskId: tempTask,
@@ -784,6 +857,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         lastImage?.imagePath ? lastImage.imagePath : null,
       ],
       fastMode: fastMode,
+      duration: selectedDuration,
       seed: values.seed,
       resolution: selectedResolution,
       projectId: projectId,
@@ -806,6 +880,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         resolution: selectedResolution,
         fastMode: fastMode,
         seed: values.seed,
+        duration: selectedDuration,
       },
       users: {
         fullname: username,
@@ -1018,6 +1093,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
               promptGuideTemplates={promptGuideTemplates}
               fetchVideoPromptGuides={fetchOmnihumenPromptGuides}
               handleUsePromptGuide={handleUsePromptGuide}
+              usedCredit={usedCredit}
             />
           </PermissionGuard>
         </div>
