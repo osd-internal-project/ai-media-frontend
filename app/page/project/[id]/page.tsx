@@ -33,7 +33,7 @@ import ChatGenerateDreamactor from "./components/chat-generate-dreamactor";
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
-  // const hiddenTabs = [];
+  // const hiddenTabs = ["omnihumen", "dreamactor"];
   // const promptguideTypeService = PromptGuideTypeServices(axiosCore);
   const projectService = ProjectService(axiosCore);
   const aiModelService = AIModelServices(axiosCore);
