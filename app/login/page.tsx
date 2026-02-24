@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { encryptPassword } from "../utils/crypto";
 import Link from "next/link";
 import Image from "next/image";
+import axios from "axios";
 
 const Page: FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -40,12 +41,14 @@ const Page: FC = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    signIn(
-      "keycloak",
-      { callbackUrl: "/page/project" },
-      { kc_idp_hint: "google" },
-    );
+  const handleGoogleLogin = async () => {
+    try {
+      const res = await axios.get("/api/auth/google");
+      window.location.href = res.data.url;
+    } catch (error) {
+      console.error("Google login error:", error);
+      messageApi.error("Failed to connect to Google Login");
+    }
   };
 
   // Check URL errors (e.g. from Google/Keycloak redirects)
@@ -113,7 +116,7 @@ const Page: FC = () => {
             {/* Socials */}
             <div className="flex gap-4 mb-8">
               <button
-                disabled
+                // disabled
                 onClick={handleGoogleLogin}
                 className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
               >
