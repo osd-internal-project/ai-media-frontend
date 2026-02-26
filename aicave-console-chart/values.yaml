@@ -8,8 +8,12 @@ replicaCount: 5
 
 image:
   repository: docker.io/library/ai-media-fe
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: "v1.0.37"
+
+imagePullSecretName: huawei-swr-secret
+
+containerPort: 3000
 
 strategy:
   rollingUpdate:
