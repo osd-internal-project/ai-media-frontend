@@ -94,56 +94,56 @@ jobs:
       # ---------------------------------------------------------------------
       # Helm upgrade (runs on self-hosted runner with cluster access)
       # ---------------------------------------------------------------------
-      # - name: Helm Upgrade
-      #   run: |
-      #     set -e
-      #     DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
-      #     NAME="${{ needs.build-and-deploy.outputs.image_name }}"
-      #     VER="${{ needs.build-and-deploy.outputs.image_version }}"
+      - name: Helm Upgrade
+        run: |
+          set -e
+          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+          NAME="${{ needs.build-and-deploy.outputs.image_name }}"
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
 
-      #     echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
-      #     echo "📦 Image: swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME}:${VER}"
+          echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
+          echo "📦 Image: swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME}:${VER}"
 
-      #     helm upgrade --install aicave-console ./aicave-console-chart \
-      #       -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
-      #       --set image.repository=swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME} \
-      #       --set image.tag=${VER} \
-      #       --namespace aicave-${DEPLOY_ENV} \
-      #       --wait \
-      #       --timeout 5m
+          helm upgrade --install aicave-console ./aicave-console-chart \
+            -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+            --set image.repository=swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME} \
+            --set image.tag=${VER} \
+            --namespace aicave-${DEPLOY_ENV} \
+            --wait \
+            --timeout 5m
 
-      #     echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
+          echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
 
       # ---------------------------------------------------------------------
       # Debug on failure — capture pod state before atomic rollback completes
       # ---------------------------------------------------------------------
-      # - name: Debug on Failure
-      #   if: failure()
-      #   run: |
-      #     NS="aicave-${{ secrets.DEPLOY_ENV }}"
-      #     echo "====== POD STATUS ======"
-      #     kubectl get pods -n ${NS} -l app=aicave-console -o wide
+      - name: Debug on Failure
+        if: failure()
+        run: |
+          NS="aicave-${{ secrets.DEPLOY_ENV }}"
+          echo "====== POD STATUS ======"
+          kubectl get pods -n ${NS} -l app=aicave-console -o wide
 
-      #     echo "====== POD EVENTS ======"
-      #     kubectl get events -n ${NS} --sort-by='.lastTimestamp' \
-      #       --field-selector involvedObject.kind=Pod | tail -40
+          echo "====== POD EVENTS ======"
+          kubectl get events -n ${NS} --sort-by='.lastTimestamp' \
+            --field-selector involvedObject.kind=Pod | tail -40
 
-      #     echo "====== POD DESCRIBE ======"
-      #     kubectl describe pods -n ${NS} -l app=aicave-console | tail -80
+          echo "====== POD DESCRIBE ======"
+          kubectl describe pods -n ${NS} -l app=aicave-console | tail -80
 
-      #     echo "====== POD LOGS (last 50 lines each) ======"
-      #     for pod in $(kubectl get pods -n ${NS} -l app=aicave-console \
-      #       --no-headers -o custom-columns=':metadata.name'); do
-      #       echo "--- Logs: ${pod} ---"
-      #       kubectl logs -n ${NS} ${pod} --tail=50 2>/dev/null || echo "(no logs)"
-      #     done
+          echo "====== POD LOGS (last 50 lines each) ======"
+          for pod in $(kubectl get pods -n ${NS} -l app=aicave-console \
+            --no-headers -o custom-columns=':metadata.name'); do
+            echo "--- Logs: ${pod} ---"
+            kubectl logs -n ${NS} ${pod} --tail=50 2>/dev/null || echo "(no logs)"
+          done
 
       # ---------------------------------------------------------------------
       # Verify deployment
       # ---------------------------------------------------------------------
-      # - name: Verify Deployment
-      #   run: |
-      #     kubectl rollout status deployment/aicave-console \
-      #       -n aicave-${{ secrets.DEPLOY_ENV }}
-      #     kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
-      #       -l app=aicave-console
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/aicave-console \
+            -n aicave-${{ secrets.DEPLOY_ENV }}
+          kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
+            -l app=aicave-console
