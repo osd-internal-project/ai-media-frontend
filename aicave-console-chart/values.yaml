@@ -62,10 +62,10 @@ env:
 
 resources:
   requests:
-    memory: "64Mi"
+    memory: "192Mi"
     cpu: "100m"
   limits:
-    memory: "256Mi"
+    memory: "384Mi"
     cpu: "500m"
 
 livenessProbe:
