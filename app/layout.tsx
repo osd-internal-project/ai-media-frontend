@@ -1,6 +1,12 @@
 import EnvVarProvider from "./components/EnvVarProvider";
 import SessionProvider from "./components/SessionProvider";
 import "./globals.css";
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function RootLayout({
   children,
