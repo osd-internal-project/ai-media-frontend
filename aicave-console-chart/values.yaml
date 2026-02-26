@@ -13,7 +13,7 @@ image:
 
 imagePullSecretName: huawei-swr-secret
 
-containerPort: 3000
+containerPort: 80
 
 strategy:
   rollingUpdate:
@@ -23,7 +23,7 @@ strategy:
 service:
   type: ClusterIP
   port: 80
-  targetPort: 3000
+  targetPort: 80
 
 ingress:
   enabled: true
@@ -70,7 +70,7 @@ resources:
 
 livenessProbe:
   path: /
-  initialDelaySeconds: 90
+  initialDelaySeconds: 30
   periodSeconds: 10
 
 readinessProbe:
