@@ -394,11 +394,9 @@ const ProjectsPage = () => {
       <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
         {contextMessageHolder}
         <div
-          className={`flex ${
-            isMobile ? "flex-row" : "flex-col sm:flex-row"
-          } justify-between items-center mb-6 sm:mb-8 ${
-            isMobile ? "gap-3" : "gap-4 sm:gap-0"
-          }`}
+          className={`flex ${isMobile ? "flex-row" : "flex-col sm:flex-row"
+            } justify-between items-center mb-6 sm:mb-8 ${isMobile ? "gap-3" : "gap-4 sm:gap-0"
+            }`}
         >
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -411,9 +409,8 @@ const ProjectsPage = () => {
               icon={<PlusOutlined />}
               onClick={handleOpen}
               style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-              className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
-                isMobile ? "w-auto" : "w-full sm:w-auto"
-              }`}
+              className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
+                }`}
             >
               Create Project
             </Button>
@@ -455,7 +452,7 @@ const ProjectsPage = () => {
                             </Tooltip>
                           ) : (
                             <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
-                               {project.name}
+                              {project.name}
                             </h3>
                           )}
                           {project.status === "deleted" ? (
@@ -470,10 +467,10 @@ const ProjectsPage = () => {
                     {canCreateProjects(organizationRole) && (
                       <div className="flex-shrink-0">
                         <Dropdown
-                        disabled={project.status === "deleted"}
+                          disabled={project.status === "deleted"}
                           menu={{
                             items: projectActionItems,
-                            
+
                             onClick: (e) => {
                               e.domEvent.stopPropagation();
                               onClickProjectAction(e.key, project);
@@ -774,30 +771,30 @@ const ProjectsPage = () => {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMembers
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                               notFoundContent={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? "No users found"
                                   : "Type to search users..."
                               }
@@ -913,7 +910,7 @@ const ProjectsPage = () => {
                           (Max:{" "}
                           {formatNumber(
                             (organization?.remainImageAmount || 0) +
-                              (selectedProject?.accessImageAmount || 0),
+                            (selectedProject?.accessImageAmount || 0),
                           )}
                           )
                         </span>
@@ -930,7 +927,7 @@ const ProjectsPage = () => {
                           (selectedProject?.accessImageAmount || 0),
                         message: `Cannot exceed available image (${formatNumber(
                           (organization?.remainImageAmount || 0) +
-                            (selectedProject?.accessImageAmount || 0),
+                          (selectedProject?.accessImageAmount || 0),
                         )})`,
                       },
                     ]}
@@ -939,7 +936,7 @@ const ProjectsPage = () => {
                       placeholder={
                         (organization?.remainImageAmount || 0) +
                           (selectedProject?.accessImageAmount || 0) ===
-                        0
+                          0
                           ? "No image available"
                           : "Enter image amount"
                       }
@@ -958,7 +955,7 @@ const ProjectsPage = () => {
                           (Max:{" "}
                           {formatNumber(
                             (organization?.remainTokenAmount || 0) +
-                              (selectedProject?.accessTokenAmount || 0),
+                            (selectedProject?.accessTokenAmount || 0),
                           )}
                           )
                         </span>
@@ -975,7 +972,7 @@ const ProjectsPage = () => {
                           (selectedProject?.accessTokenAmount || 0),
                         message: `Cannot exceed available token (${formatNumber(
                           (organization?.remainTokenAmount || 0) +
-                            (selectedProject?.accessTokenAmount || 0),
+                          (selectedProject?.accessTokenAmount || 0),
                         )})`,
                       },
                     ]}
@@ -984,7 +981,7 @@ const ProjectsPage = () => {
                       placeholder={
                         (organization?.remainTokenAmount || 0) +
                           (selectedProject?.accessTokenAmount || 0) ===
-                        0
+                          0
                           ? "No token available"
                           : "Enter token amount"
                       }
@@ -1146,30 +1143,30 @@ const ProjectsPage = () => {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMembers
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                               notFoundContent={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? "No users found"
                                   : "Type to search users..."
                               }
