@@ -8,8 +8,12 @@ replicaCount: 5
 
 image:
   repository: docker.io/library/ai-media-fe
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: "v1.0.37"
+
+imagePullSecretName: huawei-swr-secret
+
+containerPort: 80
 
 strategy:
   rollingUpdate:
@@ -58,10 +62,10 @@ env:
 
 resources:
   requests:
-    memory: "64Mi"
+    memory: "192Mi"
     cpu: "100m"
   limits:
-    memory: "256Mi"
+    memory: "384Mi"
     cpu: "500m"
 
 livenessProbe:
@@ -71,7 +75,7 @@ livenessProbe:
 
 readinessProbe:
   path: /
-  initialDelaySeconds: 5
+  initialDelaySeconds: 10
   periodSeconds: 5
 
 autoscaling:
