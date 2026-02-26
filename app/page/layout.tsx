@@ -6,6 +6,10 @@ import PrivateLayout from "../components/PrivateLayout";
 export const metadata: Metadata = {
   title: "AI CAVE",
   description: "AI-Media Application",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function PageLayout({
