@@ -70,7 +70,7 @@ jobs:
 
   deploy:
     runs-on: [self-hosted, k8s]
-    needs: build-and-push
+    needs: build-and-deploy
 
     steps:
       # ---------------------------------------------------------------------
@@ -98,8 +98,8 @@ jobs:
       #   run: |
       #     set -e
       #     DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
-      #     NAME="${{ needs.build-and-push.outputs.image_name }}"
-      #     VER="${{ needs.build-and-push.outputs.image_version }}"
+      #     NAME="${{ needs.build-and-deploy.outputs.image_name }}"
+      #     VER="${{ needs.build-and-deploy.outputs.image_version }}"
 
       #     echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
       #     echo "📦 Image: swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME}:${VER}"
