@@ -104,8 +104,8 @@ jobs:
           echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
           echo "📦 Image: swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME}:${VER}"
 
-          helm upgrade --install aicave-console ./aicave-console-chart \
-            -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+          helm upgrade --install aicave-console ./charts/aicave-console-chart \
+            -f ./charts/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
             --set image.repository=swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME} \
             --set image.tag=${VER} \
             --namespace aicave-${DEPLOY_ENV} \
