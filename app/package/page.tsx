@@ -3,17 +3,16 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Button, Image } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "../lib/axios/axios";
-import PlanServices, { Plan } from "../services/plan.service";
+import PlanServices from "../services/plan.service";
 import PricingCards from "./components/PricingCards";
 import DetailedComparisonTable from "./components/DetailedComparisonTable";
+import { TPlan } from "../common/plan.type";
 
 const PackagePage = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
-    "monthly"
-  );
-  const [plans, setPlans] = useState<Plan[]>([]);
+ 
+  const [plans, setPlans] = useState<TPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const pricingRef = useRef<HTMLDivElement | null>(null);
   const featureRef = useRef<HTMLDivElement | null>(null);
@@ -22,7 +21,7 @@ const PackagePage = () => {
 
   // Sort plans by price whenever plans state changes
   const sortedPlans = useMemo(() => {
-    return [...plans].sort((a, b) => a.price.monthly - b.price.monthly);
+    return [...plans];
   }, [plans]);
 
   const handleGetStarted = () => {
@@ -36,9 +35,7 @@ const PackagePage = () => {
       setLoading(true);
       const data = await planService.findAllFormatted();
 
-      const sortedPlans = [...data].sort(
-        (a: Plan, b: Plan) => a.price.monthly - b.price.monthly
-      );
+      const sortedPlans = [...data];
 
       setPlans(sortedPlans);
     } catch (error) {
@@ -109,7 +106,7 @@ const PackagePage = () => {
                 <Button
                   onClick={handleToLoginPage}
                   type="primary"
-                // className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
+                  // className="cursor-pointer rounded-md bg-gray-950/50 px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white hover:bg-gray-800 hover:text-white transition"
                 >
                   Sign In
                 </Button>
@@ -158,53 +155,7 @@ const PackagePage = () => {
           </div>
         </div>
       </div>
-      <div ref={pricingRef} className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex bg-gray-800 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "monthly"
-                ? "bg-gray-700 text-white"
-                : "text-gray-400 hover:text-white"
-                }`}
-            >
-              MONTHLY
-            </button>
-            <button
-              onClick={() => setBillingPeriod("annually")}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${billingPeriod === "annually"
-                ? "bg-gray-700 text-white"
-                : "text-gray-400 hover:text-white"
-                }`}
-            >
-              ANNUALLY
-              <span className="ml-2 text-xs text-green-400">
-                UP TO 50% OFF ⚡
-              </span>
-            </button>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 mb-8 max-w-4xl mx-auto">
-            <p className="text-sm">
-              Upgrade to Advanced or above from now till Jan 31 to enjoy
-              discounted model prices throughout 2026
-            </p>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <PricingCards
-          plans={sortedPlans}
-          billingPeriod={billingPeriod}
-          onGetStarted={handleGetStarted}
-        />
-
-        {/* Detailed Comparison Table */}
-        <div ref={featureRef}>
-          <DetailedComparisonTable plans={sortedPlans} />
-        </div>
-      </div>
+     
     </div>
   );
 };

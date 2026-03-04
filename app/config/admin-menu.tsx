@@ -1,4 +1,4 @@
-import { UserCog, LockKeyholeOpen } from "lucide-react";
+import { UserCog, LockKeyholeOpen, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 
 export const getAdminMenuItems = () => [
@@ -16,6 +16,15 @@ export const getAdminMenuItems = () => [
     icon: <LockKeyholeOpen size={16} />,
     label: <Link href="/page/admin-management/organization">Organization</Link>,
   },
+  {
+    key: "plan-management",
+    icon: <LayoutDashboard size={16} />,
+    label: (
+      <Link href="/page/admin-management/plan-management">
+        Plan Management
+      </Link>
+    ),
+  },
 ];
 
 export const getSelectedAdminKey = (pathname: string) => {
@@ -24,6 +33,9 @@ export const getSelectedAdminKey = (pathname: string) => {
   }
   if (pathname.includes("/admin-management/organization")) {
     return "organization";
+  }
+  if (pathname.includes("/admin-management/plan-management")) {
+    return "plan-management";
   }
   return ""; // default
 };

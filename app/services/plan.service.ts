@@ -1,31 +1,6 @@
 import { AxiosInstance } from "axios";
 
-export interface PlanFeature {
-  icon: string;
-  text: string;
-  isHighlight: boolean;
-  category?: string;
-}
-
-export interface Plan {
-  id: string;
-  name: string;
-  description: string;
-  badge: string | null;
-  popular: boolean;
-  borderColor: string;
-  price: {
-    monthly: number;
-    annually: number;
-  };
-  features: PlanFeature[];
-  featuresByCategory?: { [category: string]: PlanFeature[] };
-  detailJson?: {
-    maxUserAccess: string;
-    packageTokenAmount: string;
-    packageImageAmount: string;
-  };
-}
+import { TPlan, TPlanPrice } from "../common/plan.type";
 
 const PlanServices = (axiosInstance: AxiosInstance) => {
   const basePlansUrl = "/plans";
@@ -43,7 +18,7 @@ const PlanServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    findAllFormatted: async (): Promise<Plan[]> => {
+    findAllFormatted: async (): Promise<TPlan[]> => {
       return await axiosInstance
         .get(`${basePlansUrl}/formatted`)
         .then((res) => {
@@ -66,16 +41,50 @@ const PlanServices = (axiosInstance: AxiosInstance) => {
           return [];
         });
     },
-
-    findByName: async (name: string): Promise<any> => {
+    findPlanWithPrice: async (priceId: string): Promise<TPlanPrice | null> => {
       return await axiosInstance
-        .get(`${basePlansUrl}/${name}`)
+        .get(`${basePlansUrl}/price/${priceId}`)
         .then((res) => {
           return res.data;
         })
         .catch((err) => {
           console.log(err);
           return null;
+        });
+    },
+    findById: async (id: string): Promise<TPlan | null> => {
+      return await axiosInstance
+        .get(`${basePlansUrl}/${id}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return null;
+        });
+    },
+
+    create: async (data: any): Promise<TPlan | null> => {
+      return await axiosInstance
+        .post(`${basePlansUrl}`, data)
+        .then((res) => res.data);
+    },
+
+    update: async (id: string, data: any): Promise<TPlan | null> => {
+      return await axiosInstance
+        .patch(`${basePlansUrl}/${id}`, data)
+        .then((res) => res.data);
+    },
+
+    delete: async (id: string): Promise<boolean> => {
+      return await axiosInstance
+        .delete(`${basePlansUrl}/${id}`)
+        .then(() => {
+          return true;
+        })
+        .catch((err) => {
+          console.log(err);
+          return false;
         });
     },
   };

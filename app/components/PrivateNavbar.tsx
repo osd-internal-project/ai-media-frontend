@@ -35,7 +35,7 @@ import {
   ShieldUser,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { IOrganization } from "../common/organization.type";
+import { ICreditBalance, IOrganization } from "../common/organization.type";
 import {
   canCreateOrganization,
   canViewOrganization,
@@ -45,7 +45,7 @@ import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import PackageModal from "./PackageModal";
-import { formatNumber } from "../utils/format";
+import { formatCompactNumber, formatNumber } from "../utils/format";
 
 const { Header } = Layout;
 
@@ -56,10 +56,10 @@ interface Props {
   personalOrganizations: IOrganization[];
   teamOrganizations: IOrganization[];
   handleOrganizationChange: (value: string) => void;
-  handleOpenCreateOrg: () => void;
   handleManageOrg: () => void;
   organizationRole?: string;
   currentOrganization: IOrganization | undefined;
+  creditBalance: ICreditBalance | undefined;
   systemRole?: string;
 }
 const NavbarUser: React.FC<Props> = ({
@@ -67,10 +67,10 @@ const NavbarUser: React.FC<Props> = ({
   pageTitle,
   organizationId,
   currentOrganization,
+  creditBalance,
   personalOrganizations,
   teamOrganizations,
   handleOrganizationChange,
-  handleOpenCreateOrg,
   handleManageOrg,
   organizationRole,
   systemRole,
@@ -194,12 +194,14 @@ const NavbarUser: React.FC<Props> = ({
           ORGANIZATION:
         </span>
         <div
-          className={`flex items-center ${isMobile ? "flex-1 min-w-0" : "justify-between w-full"
-            } px-2 sm:px-4`}
+          className={`flex items-center ${
+            isMobile ? "flex-1 min-w-0" : "justify-between w-full"
+          } px-2 sm:px-4`}
         >
           <div
-            className={`flex items-center gap-2 sm:gap-6 ${isMobile ? "flex-1 min-w-0" : ""
-              }`}
+            className={`flex items-center gap-2 sm:gap-6 ${
+              isMobile ? "flex-1 min-w-0" : ""
+            }`}
           >
             <Select
               size="middle"
@@ -244,20 +246,6 @@ const NavbarUser: React.FC<Props> = ({
                   <div className="p-2">{menu}</div>
                   <div className="h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent mx-3" />
                   <div className="p-2 space-y-1">
-                    {canCreateOrganization(organizationRole) && (
-                      <Button
-                        hidden
-                        type="text"
-                        size="large"
-                        onClick={handleOpenCreateOrg}
-                        icon={<PlusCircleOutlined className="text-blue-400" />}
-                        className="w-full !text-left !justify-start !bg-transparent hover:!bg-gray-800/70 !text-gray-300 hover:!text-white !border-none !rounded-lg !px-3 !py-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
-                      >
-                        <span className="font-medium">
-                          Add new organization system admin
-                        </span>
-                      </Button>
-                    )}
                     {canCreateOrganization(organizationRole) && (
                       <Button
                         type="text"
@@ -307,8 +295,9 @@ const NavbarUser: React.FC<Props> = ({
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}
-                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
-                    }`}
+                  className={`!border-zinc-700 hover:!border-zinc-500 hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
+                    isMobile ? "w-auto" : "w-full sm:w-auto"
+                  }`}
                 >
                   Upgrade
                 </Button>
@@ -339,7 +328,8 @@ const NavbarUser: React.FC<Props> = ({
                     <div className=" flex flex-row gap-2 items-center justify-between">
                       <div className=" flex gap-2 items-center">
                         <Coins size={15} />
-                        {formatNumber(currentOrganization?.packageTokenAmount)}
+                        {" "}{formatCompactNumber(creditBalance?.currentCycleBalance)}+{" "}
+                        {formatCompactNumber(creditBalance?.onTopBalance)}
                       </div>
                       <CircleQuestionMark size={13} />
                     </div>
@@ -347,7 +337,8 @@ const NavbarUser: React.FC<Props> = ({
                     <div className=" flex flex-row gap-2 items-center w-[130px] justify-between">
                       <div className=" flex gap-2 items-center">
                         <FileImage size={15} />
-                        {formatNumber(currentOrganization?.packageImageAmount)}
+                        {" "}{formatCompactNumber(creditBalance?.currentCycleImage)}+{" "}
+                        {formatCompactNumber(creditBalance?.onTopImage)}
                       </div>
                       <CircleQuestionMark size={13} />
                     </div>
@@ -355,8 +346,9 @@ const NavbarUser: React.FC<Props> = ({
                 </div>
               </Tag>
               <div
-                className={`flex items-center ${isMobile ? "gap-1" : "gap-2 sm:gap-4"
-                  }`}
+                className={`flex items-center ${
+                  isMobile ? "gap-1" : "gap-2 sm:gap-4"
+                }`}
               >
                 <Avatar
                   icon={<UserOutlined />}

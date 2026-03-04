@@ -3,18 +3,19 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Button, Image } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "@/app/lib/axios/axios";
-import PlanServices, { Plan } from "@/app/services/plan.service";
+import PlanServices from "@/app/services/plan.service";
 import PricingCards from "./components/PricingCards";
 import DetailedComparisonTable from "./components/DetailedComparisonTable";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+import { TPlan } from "@/app/common/plan.type";
 
 const PackagePage = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
-    "monthly",
-  );
-  const [plans, setPlans] = useState<Plan[]>([]);
+  // const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
+  //   "monthly",
+  // );
+  const [plans, setPlans] = useState<TPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const pricingRef = useRef<HTMLDivElement | null>(null);
   const featureRef = useRef<HTMLDivElement | null>(null);
@@ -23,12 +24,12 @@ const PackagePage = () => {
 
   // Sort plans by price whenever plans state changes
   const sortedPlans = useMemo(() => {
-    return [...plans].sort((a, b) => a.price.monthly - b.price.monthly);
+    return [...plans].sort((a, b) => a.prices[0].price - b.prices[0].price);
   }, [plans]);
 
-  const handleGetStarted = (plan: Plan) => {
+  const handleGetStarted = (priceId: string) => {
     router.push(
-      `/page/admin-management/organization/create/detail?plan=${encodeURIComponent(plan.id)}`,
+      `/page/admin-management/organization/create/detail?price=${encodeURIComponent(priceId)}`,
     );
   };
 
@@ -40,11 +41,11 @@ const PackagePage = () => {
       setLoading(true);
       const data = await planService.findAllFormatted();
 
-      const sortedPlans = [...data].sort(
-        (a: Plan, b: Plan) => a.price.monthly - b.price.monthly,
-      );
-
-      setPlans(sortedPlans);
+      // const sortedPlans = [...data].sort(
+      //   (a: Plan, b: Plan) => a.price.monthly - b.price.monthly,
+      // );
+console.log(data)
+      setPlans(data);
     } catch (error) {
       console.error("Failed to fetch plans:", error);
       setPlans([]);
@@ -85,7 +86,7 @@ const PackagePage = () => {
             <ArrowLeftOutlined /> Back
           </Button>
         </div>
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <div className="inline-flex bg-gray-800 rounded-lg p-1 mb-6">
             <button
               onClick={() => setBillingPeriod("monthly")}
@@ -111,12 +112,12 @@ const PackagePage = () => {
               </span>
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Pricing Cards */}
         <PricingCards
           plans={sortedPlans}
-          billingPeriod={billingPeriod}
+          // billingPeriod={billingPeriod}
           onGetStarted={handleGetStarted}
         />
 

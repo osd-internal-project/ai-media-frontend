@@ -19,7 +19,9 @@ import {
 } from "antd";
 import OrganizationService from "@/app/services/organization.service";
 import OrganizationMembersServices from "@/app/services/organization-members.service";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
 import { axiosUser } from "@/app/lib/axios/axios";
+import { PlusCircleOutlined } from "@ant-design/icons";
 import { IOrganization } from "@/app/common/organization.type";
 import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
@@ -38,17 +40,20 @@ export default function OrganizationDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isExtraCoinModalOpen, setIsExtraCoinModalOpen] = useState(false);
 
   // Forms
   const [editForm] = Form.useForm();
   const [addMemberForm] = Form.useForm();
   const [editMemberForm] = Form.useForm();
   const [inviteForm] = Form.useForm();
+  const [extraCoinForm] = Form.useForm();
 
   // Services
   const organizationService = OrganizationService(axiosUser);
   const organizationMemberService = OrganizationMembersServices(axiosUser);
   const userServices = UserServices(axiosUser);
+  const creditBalanceService = CreditBalanceServices(axiosUser);
 
   // Data
   const [availableUsers, setAvailableUsers] = useState<TUser[]>([]);
@@ -203,6 +208,25 @@ export default function OrganizationDetailPage() {
     }
   };
 
+  // Extra Coin
+  const handleExtraCoin = () => {
+    extraCoinForm.resetFields();
+    setIsExtraCoinModalOpen(true);
+  };
+
+  const onExtraCoinFinish = async (values: any) => {
+    if (!organizationId) return;
+    try {
+      await creditBalanceService.updateExtraCoin(organizationId, values);
+      setIsExtraCoinModalOpen(false);
+      showMessage("success", "Extra coin added successfully");
+      fetchOrganizationData();
+    } catch (error) {
+      console.error(error);
+      showMessage("error", "Failed to add extra coin");
+    }
+  };
+
   // Table Columns
   const columns: ColumnsType<any> = [
     {
@@ -349,25 +373,39 @@ export default function OrganizationDetailPage() {
         </Descriptions> */}
         </Card>
       </div>
-      <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className=" text-[#99a1af]"> Used Total Token : </div>
+          <div className=" flex justify-start items-center text-[#99a1af] mb-1">
+            <span> Used Total Credit : </span>
+          </div>
           <div className=" text-xl">
             {formatNumber(
-              (organization?.packageTokenAmount || 0) -
-                (organization?.remainTokenAmount || 0),
+              (organization?.subscription?.creditAllowance || 0) -
+                (organization?.creditBalance?.currentCycleBalance || 0),
             )}
-            /{formatNumber(organization?.packageTokenAmount || 0)}
+            : {formatNumber(organization?.subscription?.creditAllowance || 0)}
           </div>
         </Card>
         <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
           <div className=" text-[#99a1af]">Used Total Image : </div>
           <div className=" text-xl">
             {formatNumber(
-              (organization?.packageImageAmount || 0) -
-                (organization?.remainImageAmount || 0),
+              (organization?.subscription?.imageAllowance || 0) -
+                (organization?.creditBalance?.currentCycleImage || 0),
             )}
-            /{formatNumber(organization?.packageImageAmount || 0)}
+            : {formatNumber(organization?.subscription?.imageAllowance || 0)}
+          </div>
+        </Card>
+        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+          <div className=" text-[#99a1af]">Extra Credit : </div>
+          <div className=" text-xl">
+            {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
+          </div>
+        </Card>
+        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+          <div className=" text-[#99a1af]">Extra Image : </div>
+          <div className=" text-xl">
+            {formatNumber(organization?.creditBalance?.onTopImage || 0)}
           </div>
         </Card>
         <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
@@ -382,6 +420,14 @@ export default function OrganizationDetailPage() {
         className="mt-4"
         extra={
           <Space>
+            <Button
+              type="primary"
+              // size="small"
+              icon={<PlusCircleOutlined className="text-orange-500" />}
+              onClick={handleExtraCoin}
+            >
+              Add Extra
+            </Button>
             <Button type="primary" onClick={handleInvite}>
               Invite User
             </Button>
@@ -512,6 +558,30 @@ export default function OrganizationDetailPage() {
             </div>
           </Form>
         </div>
+      </Modal>
+      {/* Extra Coin Modal */}
+      <Modal
+        title={<div className="text-lg font-bold">Add Extra</div>}
+        open={isExtraCoinModalOpen}
+        onCancel={() => setIsExtraCoinModalOpen(false)}
+        onOk={() => extraCoinForm.submit()}
+      >
+        <Form
+          form={extraCoinForm}
+          onFinish={onExtraCoinFinish}
+          layout="vertical"
+          className="pt-4"
+        >
+          <Form.Item name="onTopBalance" label="On Top Balance">
+            <InputNumber
+              style={{ width: "100%" }}
+              placeholder="Enter balance"
+            />
+          </Form.Item>
+          <Form.Item name="onTopImage" label="On Top Image">
+            <InputNumber style={{ width: "100%" }} placeholder="Enter images" />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

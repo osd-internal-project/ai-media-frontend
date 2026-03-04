@@ -2,7 +2,7 @@ export type ProjectMember = {
   id: string;
   projectId: string;
   userId: string;
-  role: "OWNER" | "ADMIN" | "USER" | "VIEWER" ;
+  role: "OWNER" | "ADMIN" | "USER" | "VIEWER";
   joinedAt: string;
   users?: {
     userId: string;
@@ -10,11 +10,21 @@ export type ProjectMember = {
     fullname: string;
     email: string;
   };
+
+  //new value
+  limitImageAllowance: number;
+  limitCreditAllowance: number;
+  // ยอดใช้ของ ProjectMember
+  usedImageAllowance: number;
+  usedCreditAllowance: number;
+  // ยอดจัดเก็บของ ProjectMember
+  holdImageAllowance: number;
+  holdCreditAllowance: number;
 };
 
 export type ProjectMemberInput = {
   userId: string;
-  role: "OWNER" | "ADMIN" | "USER" | "VIEWER" ;
+  role: "OWNER" | "ADMIN" | "USER" | "VIEWER";
 };
 
 export type IProject = {
@@ -24,6 +34,18 @@ export type IProject = {
   status: string;
   members: ProjectMember[];
   name: string;
+
+  //new value
+  limitImageAllowance: number;
+  limitCreditAllowance: number;
+  // ยอดใช้ของ ProjectMember
+  usedImageAllowance: number;
+  usedCreditAllowance: number;
+  // ยอดจัดเก็บของ ProjectMember
+  holdImageAllowance: number;
+  holdCreditAllowance: number;
+
+  //old value
   accessImageAmount: number;
   remainImageAmount: number;
   accessTokenAmount: number;

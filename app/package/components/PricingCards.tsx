@@ -1,16 +1,18 @@
 import React from "react";
 import { Check } from "lucide-react";
-import { Plan } from "@/app/services/plan.service";
+import { TPlan } from "@/app/common/plan.type";
+import { Button } from "antd";
+// import { TPlan } from "@/app/common/plan.type";
 
 interface PricingCardsProps {
-  plans: Plan[];
-  billingPeriod: "monthly" | "annually";
-  onGetStarted: (plan: Plan) => void;
+  plans: TPlan[];
+  // billingPeriod: "monthly" | "annually";
+  onGetStarted: (plan: TPlan) => void;
 }
 
 const PricingCards: React.FC<PricingCardsProps> = ({
   plans,
-  billingPeriod,
+  // billingPeriod,
   onGetStarted,
 }) => {
   const getBorderClass = (borderColor: string | undefined) => {
@@ -33,7 +35,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
   return (
     <div className="flex flex-nowrap gap-6 overflow-x-auto w-full pb-4">
       {plans.map((plan, index) => {
-        const borderClass = getBorderClass(plan.borderColor);
+        const borderClass = getBorderClass(plan.borderColor ?? undefined);
 
         return (
           <div
@@ -51,33 +53,50 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold text-white">
-                  $
-                  {billingPeriod === "monthly"
-                    ? plan.price.monthly
-                    : plan.price.annually}
-                </span>
+              {/* <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-g font-bold text-white">
+              {plan.detailJson?.imageAllowance || 0 } Image {plan.detailJson?.creditAllowance || 0} Credit</span>
                 <span className="text-gray-400 text-sm">
-                  /Seat/{billingPeriod === "monthly" ? "mo" : "yr"}
+                / {plan.detailJson?.duration || 0} {plan.detailJson?.unit === "day" ?"Day" : plan.detailJson?.unit === "year" ? "Year" : "Month"}
                 </span>
-              </div>
+              </div> */}
               {/* <div className="  w-full bg-[#6c6c6c]  text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4">
                 Contact Sale
-              </div> */}
-              {/* <button
-            
-                onClick={() => onGetStarted(plan)}
-                className="w-full bg-[#6c6c6c] hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors mb-4"
-              >
-                Get Started
-              </button> */}
+              </div>
+              {/*Add Organization*/}
+              {plan.prices.map((price) => {
+                return (
+                  <div
+                    key={price.id}
+                    className="mb-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 flex justify-between"
+                  >
+                    <div className="">
+                      <span className="text-gray-400 font-medium text-sm">
+                        {price.interval}
+                      </span>
+                      <div className="text-right">
+                        {/* <span className="text-white text-2xl font-bold">
+                          ฿ {Number(price.price).toLocaleString()}
+                        </span> */}
+                        <span className="text-white text-sm font-bold ">
+                          ฿ {Number(price.price).toLocaleString()}
+                        </span>
+                        {/* <span className="text-gray-500 text-xs block">
+                          {price.interval}
+                        </span> */}
+                      </div>
+                    </div>
+                    
+                  </div>
+                );
+              })}
+
               <p className="text-gray-400 text-sm leading-relaxed">
                 {plan.description}
               </p>
             </div>
 
-            <div className="px-6 pb-6">
+            {/* <div className="px-6 pb-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-green-400">
@@ -99,7 +118,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
 
             <div className="bg-gray-750 px-6 py-6">
               <div className="space-y-3">

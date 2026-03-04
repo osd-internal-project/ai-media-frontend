@@ -31,10 +31,15 @@ import UserServices from "@/app/services/users.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import { canCreateProjects } from "../../utils/permissions";
-import OrganizationServices from "@/app/services/organization.service";
-import { IOrganization } from "@/app/common/organization.type";
+// import OrganizationServices from "@/app/services/organization.service";
+import {
+  ICreditBalance,
+  IOrganization,
+  IOrganizationSubscription,
+} from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
 
 const MAX_MEMBERS = 5;
 
@@ -45,8 +50,13 @@ const ProjectsPage = () => {
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);
-  const organizationService = OrganizationServices(axiosUser);
+  const creditBalanceService = CreditBalanceServices(axiosUser);
+
   const [projects, setProjects] = useState<IProject[]>([]);
+  const [projectSummary, setProjectSummary] = useState<{
+    accessCredit: number;
+    accessImage: number;
+  }>({ accessCredit: 0, accessImage: 0 });
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -55,15 +65,17 @@ const ProjectsPage = () => {
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [organizationMembers, setOrganizationMembers] = useState<any[]>([]);
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
-    "USER",
-  );
+  const [creditBalance, setCreditBalance] = useState<
+    ICreditBalance | undefined
+  >(undefined);
+  const [limitProject, setLimitProject] = useState<{
+    imageMin: number;
+    imageMax: number;
+    creditMin: number;
+    creditMax: number;
+  }>({ imageMin: 0, imageMax: 0, creditMin: 0, creditMax: 0 });
   const [organizationId, setOrganizationId] = useState<string>("");
-  const [organization, setOrganization] = useState<IOrganization | undefined>(
-    undefined,
-  );
+
   const [form] = Form.useForm();
   const [modal, contextHolder] = Modal.useModal();
   const [editForm] = Form.useForm();
@@ -91,26 +103,20 @@ const ProjectsPage = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  const onClickProjectAction = (action: string, project: IProject) => {
-    console.log("click", action, project);
+  const onClickProjectAction = async (action: string, project: IProject) => {
+    // console.log("click", action, project);
     setSelectedProject(project);
     if (action === "edit") {
-      console.log(
-        "Opening edit for project:",
-        project.name,
-        "Members:",
-        project.members,
-      );
-
       setOpenEdit(true);
+      await fetchOrganizationMembers();
       const members =
         project.members?.map((member: any) => ({
           userId: member.userId,
           role: member.role || "USER",
-          maxToken: member.maxToken,
-          maxImages: member.maxImages,
+          limitCreditAllowance: member.limitCreditAllowance,
+          limitImageAllowance: member.limitImageAllowance,
         })) || [];
-      console.log("Setting project members:", members);
+      // console.log("Setting project members:", members);
       setProjectMembers(members);
 
       const initialSearchTexts: { [key: number]: string } = {};
@@ -147,9 +153,10 @@ const ProjectsPage = () => {
   const handleOpen = () => {
     setOpen(true);
     setLoading(true);
+    fetchOrganizationMembers();
+
     if (userProfile) {
       setSearchTexts((prev) => ({ 0: userProfile.fullname }));
-      console.log(searchTexts);
       setProjectMembers([{ userId: userProfile.userId, role: "ADMIN" }]);
       setLoading(false);
     } else {
@@ -164,67 +171,54 @@ const ProjectsPage = () => {
     setOpen(false);
     form.resetFields();
     setProjectMembers([]);
-    setShowAddMember(false);
-    setSelectedUser("");
-    setSelectedRole("USER");
     setSearchTexts({});
   };
 
   const handleCloseEdit = () => {
     setOpenEdit(false);
+    setSelectedProject(null);
     editForm.resetFields();
     setProjectMembers([]);
     setSearchTexts({});
   };
 
-  const onFinishAdd = async (values: any) => {
+  const onFinishAdd = async (project: any) => {
     try {
       setLoading(true);
-      if (!organization) {
-        messageApi.error("Organization not found");
+      if (!creditBalance) {
+        messageApi.error("Credit Allowance not found");
         setLoading(false);
         return;
       }
-      const maxTokenAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxToken),
+      const memberCreditAllowance = projectMembers.reduce(
+        (per, total) => (total = per + total.limitCreditAllowance),
         0,
       );
-      const maxImageAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxImages),
+      const memberCreditAllowanceImage = projectMembers.reduce(
+        (per, total) => (total = per + total.limitImageAllowance),
         0,
       );
-      if (maxTokenAll > values.accessTokenAmount) {
-        messageApi.error("Max token  is too high");
+      if (memberCreditAllowance > project.limitCreditAllowance || 0) {
+        messageApi.error("Max Credit  is too high");
         setLoading(false);
         return;
       }
-      if (maxImageAll > values.accessImageAmount) {
-        messageApi.error(" Max image is too high");
+      if (memberCreditAllowanceImage > project.limitImageAllowance || 0) {
+        messageApi.error("Max Image is too high");
         setLoading(false);
         return;
       }
       const projectData = {
-        ...values,
-        remainImageAmount: values.accessImageAmount - maxImageAll,
-        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
+        ...project,
         members: projectMembers.filter((m) => m.userId),
         organizationId: organizationId,
       };
-
       const response = await projectService.create({
         ...projectData,
         organizationId: organizationId,
       });
 
       if (response) {
-        const remainImageAmount =
-          (organization?.remainImageAmount || 0) - response.accessImageAmount;
-        const remainTokenAmount =
-          (organization?.remainTokenAmount || 0) - response.accessTokenAmount;
-        await organizationService.update(organization.organizationId, {
-          remainImageAmount,
-          remainTokenAmount,
-        });
         messageApi.success("Project created successfully");
         setOpen(false);
         setProjectMembers([]);
@@ -243,62 +237,48 @@ const ProjectsPage = () => {
   const onFinishEdit = async (values: any) => {
     setLoading(true);
     try {
-      if (!organization) {
+      if (!creditBalance) {
         messageApi.error("Organization not found");
         setLoading(false);
         return;
       }
-      const maxTokenAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxToken),
+
+      const memberCreditAllowance = projectMembers.reduce(
+        (per, total) => (total = per + total.limitCreditAllowance),
         0,
       );
-      const maxImageAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxImages),
+      const memberImageAllowance = projectMembers.reduce(
+        (per, total) => (total = per + total.limitImageAllowance),
         0,
       );
-      if (maxTokenAll > values.accessTokenAmount) {
+
+      if (memberCreditAllowance > values.limitCreditAllowance || 0) {
         messageApi.error("Max token  is too high");
         setLoading(false);
         return;
       }
-      if (maxImageAll > values.accessImageAmount) {
+      if (memberImageAllowance > values.limitImageAllowance || 0) {
         messageApi.error(" Max image is too high");
         setLoading(false);
         return;
       }
       const projectData = {
-        name: values.name,
-        description: values.description,
-        accessTokenAmount: values.accessTokenAmount,
-        accessImageAmount: values.accessImageAmount,
-        remainImageAmount: values.accessImageAmount - maxImageAll,
-        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
+        ...values,
         members: projectMembers.filter((m) => m.userId),
       };
-
+      // console.log("projectData", projectData);
       const updateResponse = await projectService.update(
         values.id,
         projectData,
       );
       if (updateResponse) {
-        const remainImageAmount =
-          (organization?.remainImageAmount || 0) +
-          (selectedProject?.accessImageAmount || 0) -
-          updateResponse.accessImageAmount;
-        const remainTokenAmount =
-          (organization?.remainTokenAmount || 0) +
-          (selectedProject?.accessTokenAmount || 0) -
-          updateResponse.accessTokenAmount;
-        await organizationService.update(organization.organizationId, {
-          remainImageAmount,
-          remainTokenAmount,
-        });
         messageApi.success("Project updated successfully");
       }
       setOpenEdit(false);
       setProjectMembers([]);
       fetchProjects();
       fetchOrganizationMembers();
+      setSelectedProject(null);
     } catch (error) {
       console.error("Failed to update project:", error);
       messageApi.error("Failed to update project");
@@ -321,11 +301,32 @@ const ProjectsPage = () => {
   }, [organizationId]);
 
   const fetchOrganizationMembers = async () => {
-    try {
-      if (organizationId) {
-        const organization = await organizationService.findById(organizationId);
-        console.log(organization);
-        setOrganization(organization);
+    try { 
+      if (organizationId) { 
+        const creditBalance =
+          await creditBalanceService.findByOrganizationId(organizationId);
+        setCreditBalance(creditBalance);
+
+        const limit = {
+          imageMin:
+            (selectedProject?.usedImageAllowance || 0) +
+            (selectedProject?.holdImageAllowance || 0),
+          imageMax:
+            (creditBalance?.currentCycleImage || 0) +
+            (creditBalance?.onTopImage || 0) +
+            (selectedProject?.limitImageAllowance || 0) -
+            projectSummary.accessImage,
+
+          creditMin:
+            (selectedProject?.usedCreditAllowance || 0) +
+            (selectedProject?.holdCreditAllowance || 0),
+          creditMax:
+            (creditBalance?.currentCycleBalance || 0) +
+            (creditBalance?.onTopBalance || 0) +
+            (selectedProject?.limitCreditAllowance || 0) -
+            projectSummary.accessCredit,
+        };
+        setLimitProject(limit);
       }
     } catch (error) {
       console.error("Failed to fetch organization :", error);
@@ -361,6 +362,21 @@ const ProjectsPage = () => {
           session.user.id,
         );
         setProjects(response || []);
+        const projectSummary = await response.reduce(
+          (
+            per: { accessCredit: number; accessImage: number },
+            total: {
+              limitImageAllowance: number;
+              limitCreditAllowance: number;
+            },
+          ) => {
+            per.accessCredit += total.limitCreditAllowance || 0;
+            per.accessImage += total.limitImageAllowance || 0;
+            return per;
+          },
+          { accessCredit: 0, accessImage: 0 },
+        );
+        setProjectSummary(projectSummary);
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -455,7 +471,7 @@ const ProjectsPage = () => {
                             </Tooltip>
                           ) : (
                             <h3 className="text-base sm:text-lg font-semibold text-white truncate min-w-0">
-                               {project.name}
+                              {project.name}
                             </h3>
                           )}
                           {project.status === "deleted" ? (
@@ -470,10 +486,10 @@ const ProjectsPage = () => {
                     {canCreateProjects(organizationRole) && (
                       <div className="flex-shrink-0">
                         <Dropdown
-                        disabled={project.status === "deleted"}
+                          disabled={project.status === "deleted"}
                           menu={{
                             items: projectActionItems,
-                            
+
                             onClick: (e) => {
                               e.domEvent.stopPropagation();
                               onClickProjectAction(e.key, project);
@@ -556,27 +572,34 @@ const ProjectsPage = () => {
                       <span>
                         จำนวน Image{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Max:{" "}
-                          {formatNumber(organization?.remainImageAmount || 0)})
+                          (Between : {formatNumber(limitProject?.imageMin || 0)}
+                          - {formatNumber(limitProject?.imageMax || 0)})
                         </span>
                       </span>
                     }
-                    name="accessImageAmount"
+                    name="limitImageAllowance"
                     validateTrigger={["onChange", "onBlur"]}
                     rules={[
                       { required: true, message: "Please enter image amount" },
                       {
                         type: "number",
-                        max: organization?.remainImageAmount || 0,
+                        max: limitProject?.imageMax || 0,
                         message: `Cannot exceed available image (${formatNumber(
-                          organization?.remainImageAmount || 0,
+                          limitProject?.imageMax || 0,
+                        )})`,
+                      },
+                      {
+                        type: "number",
+                        min: limitProject?.imageMin || 0,
+                        message: `Cannot exceed available image (${formatNumber(
+                          limitProject?.imageMin || 0,
                         )})`,
                       },
                     ]}
                   >
                     <InputNumber
                       placeholder={
-                        (organization?.remainImageAmount || 0) === 0
+                        (limitProject?.imageMax || 0) === 0
                           ? "No image available"
                           : "Enter image amount"
                       }
@@ -590,29 +613,37 @@ const ProjectsPage = () => {
                   <Form.Item
                     label={
                       <span>
-                        จำนวน Token{" "}
+                        จำนวน Credit{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Max:{" "}
-                          {formatNumber(organization?.remainTokenAmount || 0)})
+                          (Between :{" "}
+                          {formatNumber(limitProject?.creditMin || 0)} -{" "}
+                          {formatNumber(limitProject?.creditMax || 0)})
                         </span>
                       </span>
                     }
-                    name="accessTokenAmount"
+                    name="limitCreditAllowance"
                     validateTrigger={["onChange", "onBlur"]}
                     rules={[
                       { required: true, message: "Please enter token amount" },
                       {
                         type: "number",
-                        max: organization?.remainTokenAmount || 0,
+                        max: limitProject?.creditMax || 0,
                         message: `Cannot exceed available token (${formatNumber(
-                          organization?.remainTokenAmount || 0,
+                          limitProject?.creditMax || 0,
+                        )})`,
+                      },
+                      {
+                        type: "number",
+                        min: limitProject?.creditMin || 0,
+                        message: `Cannot exceed available token (${formatNumber(
+                          limitProject?.creditMin || 0,
                         )})`,
                       },
                     ]}
                   >
                     <InputNumber
                       placeholder={
-                        (organization?.remainTokenAmount || 0) === 0
+                        (limitProject?.creditMin || 0) === 0
                           ? "No token available"
                           : "Enter token amount"
                       }
@@ -722,7 +753,7 @@ const ProjectsPage = () => {
                             textTransform: "uppercase",
                           }}
                         >
-                          Tokens
+                          Credits
                         </div>
                         <div
                           className="col-span-2 text-center"
@@ -816,10 +847,10 @@ const ProjectsPage = () => {
                               ]}
                             />
                             <InputNumber
-                              value={member.maxImages}
+                              value={member.limitImageAllowance}
                               onChange={(value: number | null) => {
                                 const newMembers = [...projectMembers];
-                                newMembers[index].maxImages = value;
+                                newMembers[index].limitImageAllowance = value;
                                 setProjectMembers(newMembers);
                               }}
                               min={0}
@@ -827,10 +858,10 @@ const ProjectsPage = () => {
                               placeholder="Image"
                             />
                             <InputNumber
-                              value={member.maxToken}
+                              value={member.limitCreditAllowance}
                               onChange={(value: number | null) => {
                                 const newMembers = [...projectMembers];
-                                newMembers[index].maxToken = value;
+                                newMembers[index].limitCreditAllowance = value;
                                 setProjectMembers(newMembers);
                               }}
                               min={0}
@@ -870,7 +901,11 @@ const ProjectsPage = () => {
                   )}
                 </div>
               </Form.Item>
-              <Button loading={loading} type="primary" htmlType="submit">{`Create Team`}</Button>
+              <Button
+                loading={loading}
+                type="primary"
+                htmlType="submit"
+              >{`Create Team`}</Button>
             </Form>
           </Modal>
         ) : null}
@@ -910,40 +945,39 @@ const ProjectsPage = () => {
                       <span>
                         จำนวน Image{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Max:{" "}
-                          {formatNumber(
-                            (organization?.remainImageAmount || 0) +
-                              (selectedProject?.accessImageAmount || 0),
-                          )}
-                          )
+                          (Between : {formatNumber(limitProject.imageMin)} -{" "}
+                          {formatNumber(limitProject.imageMax)})
                         </span>
                       </span>
                     }
-                    name="accessImageAmount"
+                    name="limitImageAllowance"
                     validateTrigger={["onChange", "onBlur"]}
                     rules={[
                       { required: true, message: "Please enter image amount" },
                       {
                         type: "number",
-                        max:
-                          (organization?.remainImageAmount || 0) +
-                          (selectedProject?.accessImageAmount || 0),
+                        max: limitProject.imageMax,
                         message: `Cannot exceed available image (${formatNumber(
-                          (organization?.remainImageAmount || 0) +
-                            (selectedProject?.accessImageAmount || 0),
+                          limitProject.imageMax,
                         )})`,
+                      },
+                      {
+                        type: "number",
+                        min: limitProject.imageMin,
+                        message: `Cannot be less than ${formatNumber(
+                          limitProject.imageMin,
+                        )}`,
                       },
                     ]}
                   >
                     <InputNumber
                       placeholder={
-                        (organization?.remainImageAmount || 0) +
-                          (selectedProject?.accessImageAmount || 0) ===
-                        0
+                        (limitProject?.imageMax || 0) === 0
                           ? "No image available"
                           : "Enter image amount"
                       }
-                      min={0}
+                      min={limitProject?.imageMin || 0}
+                      max={limitProject?.imageMax || 0}
                       className="w-full"
                       style={{ width: "100%" }}
                     />
@@ -953,42 +987,43 @@ const ProjectsPage = () => {
                   <Form.Item
                     label={
                       <span>
-                        จำนวน Token{" "}
+                        จำนวน Credit{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Max:{" "}
-                          {formatNumber(
-                            (organization?.remainTokenAmount || 0) +
-                              (selectedProject?.accessTokenAmount || 0),
-                          )}
-                          )
+                          (Between : {formatNumber(limitProject.creditMin)} -{" "}
+                          {formatNumber(limitProject.creditMax)})
                         </span>
                       </span>
                     }
-                    name="accessTokenAmount"
+                    name="limitCreditAllowance"
                     validateTrigger={["onChange", "onBlur"]}
                     rules={[
-                      { required: true, message: "Please enter token amount" },
+                      { required: true, message: "Please enter credit amount" },
                       {
                         type: "number",
-                        max:
-                          (organization?.remainTokenAmount || 0) +
-                          (selectedProject?.accessTokenAmount || 0),
-                        message: `Cannot exceed available token (${formatNumber(
-                          (organization?.remainTokenAmount || 0) +
-                            (selectedProject?.accessTokenAmount || 0),
+                        max: limitProject.creditMax,
+                        message: `Cannot exceed available credit (${formatNumber(
+                          limitProject.creditMax,
                         )})`,
+                      },
+                      {
+                        type: "number",
+                        min: limitProject.creditMin,
+                        message: `Cannot be less than ${formatNumber(
+                          limitProject.creditMin,
+                        )}`,
                       },
                     ]}
                   >
                     <InputNumber
                       placeholder={
-                        (organization?.remainTokenAmount || 0) +
-                          (selectedProject?.accessTokenAmount || 0) ===
+                        (creditBalance?.currentCycleBalance || 0) +
+                          (creditBalance?.onTopBalance || 0) ===
                         0
                           ? "No token available"
                           : "Enter token amount"
                       }
-                      min={0}
+                      min={limitProject.creditMin}
+                      max={limitProject.creditMax}
                       className="w-full"
                       style={{ width: "100%" }}
                     />
@@ -1094,7 +1129,7 @@ const ProjectsPage = () => {
                             textTransform: "uppercase",
                           }}
                         >
-                          Tokens
+                          Credits
                         </div>
                         <div
                           className="col-span-2 text-center"
@@ -1189,11 +1224,11 @@ const ProjectsPage = () => {
                               ]}
                             />
                             <InputNumber
-                              value={member.maxImages}
+                              value={member.limitImageAllowance}
                               // style={{ width: 80 }}
                               onChange={(value: number | null) => {
                                 const newMembers = [...projectMembers];
-                                newMembers[index].maxImages = value;
+                                newMembers[index].limitImageAllowance = value;
                                 setProjectMembers(newMembers);
                               }}
                               min={0}
@@ -1201,15 +1236,15 @@ const ProjectsPage = () => {
                               placeholder="Image"
                             />
                             <InputNumber
-                              value={member.maxToken}
+                              value={member.limitCreditAllowance}
                               onChange={(value: number | null) => {
                                 const newMembers = [...projectMembers];
-                                newMembers[index].maxToken = value;
+                                newMembers[index].limitCreditAllowance = value;
                                 setProjectMembers(newMembers);
                               }}
                               min={0}
                               defaultValue={0}
-                              placeholder="Token"
+                              placeholder="Credit"
                             />
                             <Button
                               size="small"
@@ -1244,7 +1279,11 @@ const ProjectsPage = () => {
                   )}
                 </div>
               </Form.Item>
-              <Button loading={loading} type="primary" htmlType="submit">{`Edit Team`}</Button>
+              <Button
+                loading={loading}
+                type="primary"
+                htmlType="submit"
+              >{`Edit Team`}</Button>
             </Form>
           </Modal>
         ) : null}

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Check } from "lucide-react";
-import { Plan } from "@/app/services/plan.service";
+import { TPlan } from "@/app/common/plan.type";
 
 interface DetailedComparisonTableProps {
-  plans: Plan[];
+  plans: TPlan[];
 }
 
 const DetailedComparisonTable: React.FC<DetailedComparisonTableProps> = ({
