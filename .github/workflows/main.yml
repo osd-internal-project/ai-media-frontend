@@ -1,5 +1,9 @@
 name: CI Workflow
 
+concurrency:
+  group: deploy-aicare-console
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -92,6 +96,21 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
       # ---------------------------------------------------------------------
+      # Fix stuck Helm release (pending-install / pending-upgrade / pending-rollback)
+      # ---------------------------------------------------------------------
+      - name: Fix Stuck Helm Release
+        run: |
+          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+          NS="aicave-${DEPLOY_ENV}"
+          RELEASE="aicave-console"
+          STATUS=$(helm status ${RELEASE} -n ${NS} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "not-found")
+          echo "Current Helm release status: ${STATUS}"
+          if [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-upgrade" ] || [ "$STATUS" = "pending-rollback" ]; then
+            echo "Release ${RELEASE} is stuck (${STATUS}), rolling back..."
+            helm rollback ${RELEASE} 0 -n ${NS} || helm uninstall ${RELEASE} -n ${NS} || true
+          fi
+
+      # ---------------------------------------------------------------------
       # Helm upgrade (runs on self-hosted runner with cluster access)
       # ---------------------------------------------------------------------
       - name: Helm Upgrade
@@ -110,7 +129,9 @@ jobs:
             --set image.tag=${VER} \
             --namespace aicave-${DEPLOY_ENV} \
             --wait \
-            --timeout 5m
+            --timeout 5m \
+            --atomic \
+            --history-max 10
 
           echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
 
