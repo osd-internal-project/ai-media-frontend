@@ -1,5 +1,5 @@
 import { Table } from "antd";
-import { FC, ReactElement, useState } from "react";
+import { FC, ReactElement, useEffect, useState } from "react";
 import type {
   IDashboardProject,
   IDashboardProjectLogs,
@@ -15,6 +15,9 @@ interface props {
 }
 
 const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
   const [expandedData, setExpandedData] = useState<
     Record<string, IDashboardUser[]>
   >({});
@@ -27,17 +30,17 @@ const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
       key: "name",
     },
     {
-      title: "Token Usage",
-      dataIndex: ["tokenUsed"],
-      render: (v: number) => formatNumber(v),
+      title: "Video Credit Usage",
+      dataIndex: ["usedCredit"],
+      render: (v: number) => formatNumber(v || 0),
       key: "projectId",
       width: "250px",
       align: "right",
     },
     {
       title: "Image Usage",
-      dataIndex: ["imageUsed"],
-      render: (v: number) => formatNumber(v),
+      dataIndex: ["usedImage"],
+      render: (v: number) => formatNumber(v || 0),
       key: "projectId",
       width: "250px",
       align: "right",
@@ -56,10 +59,14 @@ const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
       key: "userId",
     },
     {
-      title: "Token Usage",
+      title: "Video Credit Usage",
       dataIndex: ["project", "logs"],
       render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.filter(log => log.typeGenerate === 'video').reduce((sum, log) => sum + (log?.tokenUsed || 0), 0)),
+        formatNumber(
+          v
+            .filter((log) => log.typeGenerate !== "video")
+            .reduce((sum, log) => sum + (log?.usedCredit || 0), 0),
+        ),
       width: "250px",
       align: "right",
     },
@@ -67,7 +74,11 @@ const TableProjectComponent: FC<props> = ({ data }): ReactElement => {
       title: "Image Usage",
       dataIndex: ["project", "logs"],
       render: (v: IDashboardProjectLogs[]) =>
-        formatNumber(v.reduce((sum, log) => sum + (log?.ImageUsed || 0), 0)),
+        formatNumber(
+          v
+            .filter((log) => log.typeGenerate === "image")
+            .reduce((sum, log) => sum + (log?.usedImage || 0), 0),
+        ),
       width: "250px",
       align: "right",
     },

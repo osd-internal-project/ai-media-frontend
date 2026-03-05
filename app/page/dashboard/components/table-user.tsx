@@ -33,18 +33,18 @@ const TableUserComponent: FC<props> = ({ data }): ReactElement => {
       key: "userId",
     },
     {
-      title: "Token Usage",
-      dataIndex: "tokenUsed",
+      title: "Video Credit Usage",
+      dataIndex: "usedCredit",
       render: (text: number) => formatStringToNumber(text),
       align: "right",
-      sorter: (a, b) => a.tokenUsed - b.tokenUsed,
+      sorter: (a, b) => a.usedCredit - b.usedCredit,
     },
     {
       title: "Image Usage",
-      dataIndex: "imageUsed",
+      dataIndex: "usedImage",
       render: (text: number) => formatStringToNumber(text),
       align: "right",
-      sorter: (a, b) => a.imageUsed - b.imageUsed,
+      sorter: (a, b) => a.usedImage - b.usedImage,
     },
   ];
 

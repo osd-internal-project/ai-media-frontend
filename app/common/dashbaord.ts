@@ -41,6 +41,8 @@ export interface LogsData {
   status: "success" | "pending";
   ImageUsed: number;
   tokenUsed: number;
+  usedCredit: number;
+  usedImage: number;
   createdAt: string;
 }
 export interface IDashboardProject {
@@ -60,8 +62,8 @@ export interface IDashboardUser {
   };
 }
 export interface IDashboardProjectLogs {
-  tokenUsed: number;
-  ImageUsed: number;
+  usedCredit: number;
+  usedImage: number;
   typeGenerate: "image" | "video";
 }
 export interface IDashboardUser {
@@ -78,16 +80,16 @@ export interface IDashboardTableUser {
   userId: string;
   fullname: string;
   role: string;
-  imageUsed: number;
-  tokenUsed: number;
+  usedCredit: number;
+  usedImage: number;
 }
 export interface IDashboardOrganizationSummary {
   id: string;
   name: string;
   packageImageAmount: number;
   packageTokenAmount: number;
-  imageUsed: number;
-  tokenUsed: number;
+  usedImage: number;
+  usedCredit: number;
   remainImageAmount: number;
   remainTokenAmount: number;
 }
