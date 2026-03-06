@@ -391,7 +391,7 @@ const ProjectsPage = () => {
 
   return (
     <Spin spinning={loading}>
-      <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
+      <div className="p-3 sm:p-6 text-white h-full overflow-y-auto">
         {contextMessageHolder}
         <div
           className={`flex ${isMobile ? "flex-row" : "flex-col sm:flex-row"

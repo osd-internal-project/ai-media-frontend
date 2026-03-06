@@ -25,7 +25,8 @@ export type IProject = {
   members: ProjectMember[];
   name: string;
   accessImageAmount: number;
-  remainImageAmount: number;
-  accessTokenAmount: number;
-  remainTokenAmount: number;
+    updatedAt?: string;
+    remainImageAmount: number;
+    accessTokenAmount: number;
+    remainTokenAmount: number;
 };

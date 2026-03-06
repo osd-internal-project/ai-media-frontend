@@ -1,5 +1,6 @@
 import EnvVarProvider from "./components/EnvVarProvider";
 import SessionProvider from "./components/SessionProvider";
+import { ThemeProvider } from "./components/ThemeProvider";
 import "./globals.css";
 
 export default function RootLayout({
@@ -26,8 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <EnvVarProvider env={publicEnv} />
-        <SessionProvider>{children}</SessionProvider>
+        <ThemeProvider>
+          <EnvVarProvider env={publicEnv} />
+          <SessionProvider>{children}</SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
