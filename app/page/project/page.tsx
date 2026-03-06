@@ -410,11 +410,9 @@ const ProjectsPage = () => {
       <div className="p-3 sm:p-6 bg-black text-white h-full overflow-y-auto">
         {contextMessageHolder}
         <div
-          className={`flex ${
-            isMobile ? "flex-row" : "flex-col sm:flex-row"
-          } justify-between items-center mb-6 sm:mb-8 ${
-            isMobile ? "gap-3" : "gap-4 sm:gap-0"
-          }`}
+          className={`flex ${isMobile ? "flex-row" : "flex-col sm:flex-row"
+            } justify-between items-center mb-6 sm:mb-8 ${isMobile ? "gap-3" : "gap-4 sm:gap-0"
+            }`}
         >
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -427,9 +425,8 @@ const ProjectsPage = () => {
               icon={<PlusOutlined />}
               onClick={handleOpen}
               style={{ backgroundColor: "#1A1A1A", borderColor: "#3f3f46" }}
-              className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${
-                isMobile ? "w-auto" : "w-full sm:w-auto"
-              }`}
+              className={`!border-zinc-700 hover:!border-zinc-500 !text-white hover:!text-white hover:!bg-zinc-800 transition-all duration-300 hover:shadow-md ${isMobile ? "w-auto" : "w-full sm:w-auto"
+                }`}
             >
               Create Project
             </Button>
@@ -805,30 +802,30 @@ const ProjectsPage = () => {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMembers
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                               notFoundContent={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? "No users found"
                                   : "Type to search users..."
                               }
@@ -945,8 +942,8 @@ const ProjectsPage = () => {
                       <span>
                         จำนวน Image{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Between : {formatNumber(limitProject.imageMin)} -{" "}
-                          {formatNumber(limitProject.imageMax)})
+                          (Between : {formatNumber(limitProject?.imageMin || 0)} -{" "}
+                          {formatNumber(limitProject?.imageMax || 0)})
                         </span>
                       </span>
                     }
@@ -956,16 +953,16 @@ const ProjectsPage = () => {
                       { required: true, message: "Please enter image amount" },
                       {
                         type: "number",
-                        max: limitProject.imageMax,
+                        max: limitProject?.imageMax || 0,
                         message: `Cannot exceed available image (${formatNumber(
-                          limitProject.imageMax,
+                          limitProject?.imageMax || 0,
                         )})`,
                       },
                       {
                         type: "number",
-                        min: limitProject.imageMin,
+                        min: limitProject?.imageMin || 0,
                         message: `Cannot be less than ${formatNumber(
-                          limitProject.imageMin,
+                          limitProject?.imageMin || 0,
                         )}`,
                       },
                     ]}
@@ -989,8 +986,8 @@ const ProjectsPage = () => {
                       <span>
                         จำนวน Credit{" "}
                         <span style={{ color: "#888", fontSize: "12px" }}>
-                          (Between : {formatNumber(limitProject.creditMin)} -{" "}
-                          {formatNumber(limitProject.creditMax)})
+                          (Between : {formatNumber(limitProject?.creditMin || 0)} -{" "}
+                          {formatNumber(limitProject?.creditMax || 0)})
                         </span>
                       </span>
                     }
@@ -1000,30 +997,28 @@ const ProjectsPage = () => {
                       { required: true, message: "Please enter credit amount" },
                       {
                         type: "number",
-                        max: limitProject.creditMax,
+                        max: limitProject?.creditMax || 0,
                         message: `Cannot exceed available credit (${formatNumber(
-                          limitProject.creditMax,
+                          limitProject?.creditMax || 0,
                         )})`,
                       },
                       {
                         type: "number",
-                        min: limitProject.creditMin,
+                        min: limitProject?.creditMin || 0,
                         message: `Cannot be less than ${formatNumber(
-                          limitProject.creditMin,
+                          limitProject?.creditMin || 0,
                         )}`,
                       },
                     ]}
                   >
                     <InputNumber
                       placeholder={
-                        (creditBalance?.currentCycleBalance || 0) +
-                          (creditBalance?.onTopBalance || 0) ===
-                        0
+                        (limitProject?.creditMax || 0) === 0
                           ? "No token available"
                           : "Enter token amount"
                       }
-                      min={limitProject.creditMin}
-                      max={limitProject.creditMax}
+                      min={limitProject?.creditMin || 0}
+                      max={limitProject?.creditMax || 0}
                       className="w-full"
                       style={{ width: "100%" }}
                     />
@@ -1181,30 +1176,30 @@ const ProjectsPage = () => {
                               }}
                               options={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? organizationMembers
-                                      .filter(
-                                        (u) =>
-                                          !projectMembers.find(
-                                            (m, i) =>
-                                              m.userId === u.userId &&
-                                              i !== index,
-                                          ) &&
-                                          u.fullname
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTexts[index].toLowerCase(),
-                                            ),
-                                      )
-                                      .map((e) => ({
-                                        value: e.userId,
-                                        label: e.fullname,
-                                      }))
+                                    .filter(
+                                      (u) =>
+                                        !projectMembers.find(
+                                          (m, i) =>
+                                            m.userId === u.userId &&
+                                            i !== index,
+                                        ) &&
+                                        u.fullname
+                                          .toLowerCase()
+                                          .includes(
+                                            searchTexts[index].toLowerCase(),
+                                          ),
+                                    )
+                                    .map((e) => ({
+                                      value: e.userId,
+                                      label: e.fullname,
+                                    }))
                                   : []
                               }
                               notFoundContent={
                                 searchTexts[index] &&
-                                searchTexts[index].length > 0
+                                  searchTexts[index].length > 0
                                   ? "No users found"
                                   : "Type to search users..."
                               }
