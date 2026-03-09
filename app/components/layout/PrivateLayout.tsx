@@ -28,7 +28,7 @@ import { axiosCore, axiosUser } from "../../lib/axios/axios";
 import type { TUser } from "../../common/user.type";
 import type { IProject, ProjectMemberInput } from "../../common/project.type";
 import OrganizationService from "../../services/organization.service";
-import { IOrganization } from "../../common/organization.type";
+import { ICreditBalance, IOrganization } from "../../common/organization.type";
 import { OrganizationProvider } from "../../context/OrganizationContext";
 import OrganizationMembersServices from "../../services/organization-members.service";
 import { PrivateHeader } from "./../layout/PrivateHeader";
@@ -37,6 +37,7 @@ import PrivateContent from "./../layout/PrivateContent";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -66,12 +67,16 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const organizationService = OrganizationService(axiosUser);
   const organizationMemberService = OrganizationMembersServices(axiosUser);
+  const creditฺBalanceService = CreditBalanceServices(axiosUser);
+
   const projectService = ProjectService(axiosCore);
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<
     IOrganization | undefined
   >();
-
+  const [creditBalance, setCreditBalance] = useState<
+    ICreditBalance | undefined
+  >(undefined);
   const [getProject, setProject] = useState<IProject[]>([]);
   const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
     [],
@@ -124,7 +129,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       ? organizationDetail?.role
       : session?.user?.systemRole === "SUPER_ADMIN"
         ? "SUPER_ADMIN"
-        : ""; 
+        : "";
     setOrganizationRole(role);
 
     const members =
@@ -163,6 +168,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       ].find((org) => org.organizationId === userDetail?.recentOrganizationId);
       if (organization) {
         setCurrentOrganization(organization);
+        const credit = await creditฺBalanceService.findByOrganizationId(
+          userDetail?.recentOrganizationId,
+        );
+        setCreditBalance(credit);
       }
       fecthdataByOrganization(userDetail?.recentOrganizationId);
     }
@@ -235,9 +244,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       //     },
       //   }}
       // >
-        <Layout className="h-screen overflow-hidden" style={{ position: "relative" }}>
-          <Spin spinning={true}></Spin>
-        </Layout>
+      <Layout
+        className="h-screen overflow-hidden"
+        style={{ position: "relative" }}
+      >
+        <Spin spinning={true}></Spin>
+      </Layout>
       // </ConfigProvider>
     );
   }
@@ -257,15 +269,15 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       //     },
       //   }}
       // >
-        <Spin spinning={loading || reload}>
-          <OrganizationProvider
-            value={{
-              organizationRole,
-            }}
-          >
-            {children}
-          </OrganizationProvider>
-        </Spin>
+      <Spin spinning={loading || reload}>
+        <OrganizationProvider
+          value={{
+            organizationRole,
+          }}
+        >
+          {children}
+        </OrganizationProvider>
+      </Spin>
       // </ConfigProvider>
     );
   }
@@ -313,115 +325,118 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     //     },
     //   }}
     // >
-      <Spin spinning={loading || reload}>
-        {contextHolder}
-        {openCreateOrg ? (
-          <Modal
-            title="Create Organization (Team)"
-            open={openCreateOrg}
-            onCancel={handleCloseCreateOrg}
-            footer={false}
-            width={500}
+    <Spin spinning={loading || reload}>
+      {contextHolder}
+      {openCreateOrg ? (
+        <Modal
+          title="Create Organization (Team)"
+          open={openCreateOrg}
+          onCancel={handleCloseCreateOrg}
+          footer={false}
+          width={500}
+        >
+          <Form
+            size="small"
+            form={createOrgForm}
+            layout="vertical"
+            name="create_org_form"
+            onFinish={onFinishCreateOrg}
           >
-            <Form
-              size="small"
-              form={createOrgForm}
-              layout="vertical"
-              name="create_org_form"
-              onFinish={onFinishCreateOrg}
+            <Form.Item
+              label="Organization Name"
+              name="name"
+              rules={[
+                { required: true, message: "Please enter organization name" },
+              ]}
             >
-              <Form.Item
-                label="Organization Name"
-                name="name"
-                rules={[
-                  { required: true, message: "Please enter organization name" },
-                ]}
-              >
-                <Input placeholder="Enter organization name" />
-              </Form.Item>
-              <Row gutter={[6, 0]}>
-                <Col span={12}>
-                  <Form.Item
-                    rules={[
-                      {
-                        message: "Please enter package token amount",
-                        required: true,
-                      },
-                    ]}
-                    label="จำนวน Package Token"
-                    name="packageTokenAmount"
-                  >
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      placeholder="Enter package token amount"
-                      defaultValue={0}
-                      min={0}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    rules={[
-                      {
-                        message: "Please enter package image amount",
-                        required: true,
-                      },
-                    ]}
-                    label="จำนวน Package Image"
-                    name="packageImageAmount"
-                  >
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      placeholder="Enter package image amount"
-                      defaultValue={0}
-                      min={0}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    rules={[
-                      {
-                        message: "Please enter max user access",
-                        required: true,
-                      },
-                    ]}
-                    label="จำนวน User"
-                    name="maxUserAccess"
-                  >
-                    <InputNumber
-                      style={{ width: "100%" }}
-                      placeholder="Enter max user access"
-                      defaultValue={1}
-                      min={1}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
+              <Input placeholder="Enter organization name" />
+            </Form.Item>
+            <Row gutter={[6, 0]}>
+              <Col span={12}>
+                <Form.Item
+                  rules={[
+                    {
+                      message: "Please enter package token amount",
+                      required: true,
+                    },
+                  ]}
+                  label="จำนวน Package Token"
+                  name="packageTokenAmount"
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Enter package token amount"
+                    defaultValue={0}
+                    min={0}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  rules={[
+                    {
+                      message: "Please enter package image amount",
+                      required: true,
+                    },
+                  ]}
+                  label="จำนวน Package Image"
+                  name="packageImageAmount"
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Enter package image amount"
+                    defaultValue={0}
+                    min={0}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  rules={[
+                    {
+                      message: "Please enter max user access",
+                      required: true,
+                    },
+                  ]}
+                  label="จำนวน User"
+                  name="maxUserAccess"
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Enter max user access"
+                    defaultValue={1}
+                    min={1}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Form.Item label="Description" name="description">
-                <Input.TextArea rows={3} placeholder="Optional description" />
-              </Form.Item>
-              {/* <Button type="primary" htmlType="submit">
+            <Form.Item label="Description" name="description">
+              <Input.TextArea rows={3} placeholder="Optional description" />
+            </Form.Item>
+            {/* <Button type="primary" htmlType="submit">
                 Create Organization
               </Button> */}
-            </Form>
-          </Modal>
+          </Form>
+        </Modal>
+      ) : null}
+
+      <Layout
+        className="h-screen overflow-hidden"
+        style={{ position: "relative" }}
+      >
+        {!isMobile ? (
+          <PrivateSider
+            organizationId={organizationId}
+            mappedPath={mappedPath}
+            currentPathSub={currentPathSub}
+            organizationRole={organizationRole}
+          />
         ) : null}
 
-        <Layout className="h-screen overflow-hidden" style={{ position: "relative" }}>
-          {!isMobile ? (
-            <PrivateSider
-              organizationId={organizationId}
-              mappedPath={mappedPath}
-              currentPathSub={currentPathSub}
-              organizationRole={organizationRole}
-            />
-          ) : null}
-
-          {isMobile ? (
-            <>
-              {mobileSiderOpen ? (
+        {isMobile ? (
+          <>
+            {mobileSiderOpen ? (
               <div
                 style={{
                   position: "absolute",
@@ -431,32 +446,34 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 }}
                 onClick={() => setMobileSiderOpen(false)}
               />
-              ) : null}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  zIndex: 1300,
-                  width: 100,
-                  background: semantic.colorBgContainer,
-                  transform: mobileSiderOpen ? "translateX(0)" : "translateX(-100%)",
-                  transition: "transform 0.22s ease",
-                }}
-              >
-                <PrivateSider
-                  organizationId={organizationId}
-                  mappedPath={mappedPath}
-                  currentPathSub={currentPathSub}
-                  organizationRole={organizationRole}
-                  onClose={() => setMobileSiderOpen(false)}
-                />
-              </div>
-            </>
-          ) : null}
-          <Layout className="flex-1 w-full h-full overflow-hidden">
-            {/* <PrivateNavigation
+            ) : null}
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                zIndex: 1300,
+                width: 100,
+                background: semantic.colorBgContainer,
+                transform: mobileSiderOpen
+                  ? "translateX(0)"
+                  : "translateX(-100%)",
+                transition: "transform 0.22s ease",
+              }}
+            >
+              <PrivateSider
+                organizationId={organizationId}
+                mappedPath={mappedPath}
+                currentPathSub={currentPathSub}
+                organizationRole={organizationRole}
+                onClose={() => setMobileSiderOpen(false)}
+              />
+            </div>
+          </>
+        ) : null}
+        <Layout className="flex-1 w-full h-full overflow-hidden">
+          {/* <PrivateNavigation
               organizationRole={organizationRole}
               user={
                 userProfile
@@ -472,37 +489,36 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               currentOrganization={currentOrganization}
               systemRole={userProfile?.role && userProfile.role}
             /> */}
-            <PrivateHeader
-              organizationRole={organizationRole}
-              user={
-                userProfile
-                  ? { fullname: userProfile.fullname ?? "" }
-                  : undefined
-              }
-              organizationId={organizationId}
-              personalOrganizations={personalOrganizations}
-              teamOrganizations={teamOrganizations}
-              handleOrganizationChange={handleOrganizationChange}
-              handleOpenCreateOrg={handleOpenCreateOrg}
-              handleManageOrg={handleManageOrg}
-              currentOrganization={currentOrganization}
-              systemRole={userProfile?.role && userProfile.role}
-              onToggleSider={() => setMobileSiderOpen((prev) => !prev)}
-            />
-            <div className="w-full h-full flex flex-col overflow-hidden">
-              <PrivateContent user={userProfile ? userProfile : undefined}>
-                <OrganizationProvider
-                  value={{
-                    organizationRole,
-                  }}
-                >
-                  {children}
-                </OrganizationProvider>
-              </PrivateContent>
-            </div>
-          </Layout>
+          <PrivateHeader
+            organizationRole={organizationRole}
+            creditBalance={creditBalance}
+            user={
+              userProfile ? { fullname: userProfile.fullname ?? "" } : undefined
+            }
+            organizationId={organizationId}
+            personalOrganizations={personalOrganizations}
+            teamOrganizations={teamOrganizations}
+            handleOrganizationChange={handleOrganizationChange}
+            handleOpenCreateOrg={handleOpenCreateOrg}
+            handleManageOrg={handleManageOrg}
+            currentOrganization={currentOrganization}
+            systemRole={userProfile?.role && userProfile.role}
+            onToggleSider={() => setMobileSiderOpen((prev) => !prev)}
+          />
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            <PrivateContent user={userProfile ? userProfile : undefined}>
+              <OrganizationProvider
+                value={{
+                  organizationRole,
+                }}
+              >
+                {children}
+              </OrganizationProvider>
+            </PrivateContent>
+          </div>
         </Layout>
-      </Spin>
+      </Layout>
+    </Spin>
     //   <style>{`
     //     /* Dark Select Styling */
     //     .dark-select .ant-select-selector {
@@ -534,8 +550,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
     //     /* Custom Sidebar Menu Styling */
     //     .ant-menu-item-selected .menu-icon-container {
-    //       background-color: #1677ff; 
-    //       border-radius: 8px; 
+    //       background-color: #1677ff;
+    //       border-radius: 8px;
     //       padding: 8px;
     //       min-width: 40px;
     //       height: 40px;
@@ -548,9 +564,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     //     }
     //     .ant-menu-item-selected .menu-text-label {
     //       font-weight: bold !important;
-    //       color: white !important; 
+    //       color: white !important;
     //     }
-  
+
     //     /* Remove ALL sidebar borders and lines */
     //     .ant-layout-sider,
     //     .ant-layout-sider *,
@@ -562,12 +578,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     //       outline: none !important;
     //       box-shadow: none !important;
     //     }
-        
+
     //     /* Force transparent borders on layout */
     //     .ant-layout {
     //       border: none !important;
     //     }
-        
+
     //     /* Ensure icon container is centered and has spacing */
     //     .menu-icon-container {
     //       padding: 8px;
@@ -578,8 +594,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     //       align-items: center;
     //       justify-content: center;
     //     }
-        
-     
 
     //   `}</style>
     // </ConfigProvider>
