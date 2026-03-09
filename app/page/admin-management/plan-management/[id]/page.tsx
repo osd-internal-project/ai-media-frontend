@@ -222,7 +222,7 @@ export default function PlanDetailPage() {
               {/* <Form.Item name="packageTokenAmount" label="Organization Tokens">
                 <InputNumber className="w-full" />
               </Form.Item> */}
-              <div className="flex gap-4 items-center">
+              {/* <div className="flex gap-4 items-center">
                 <Form.Item>Used in</Form.Item>{" "}
                 <Form.Item
                   name={["detailJson", "duration"]}
@@ -245,7 +245,7 @@ export default function PlanDetailPage() {
                     ]}
                   />
                 </Form.Item>
-              </div>
+              </div> */}
               <Form.Item
                 name={["detailJson", "maxUserAccess"]}
                 label="Max User Access"

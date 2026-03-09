@@ -40,6 +40,7 @@ export interface TPlan {
   borderColor: string | null;
   isDefault: boolean;
   status: boolean;
+  orderIndex?: number;
   prices: TPlanPrice[];
   // Backwards compatibility
   features: TPlanFeature[];

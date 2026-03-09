@@ -3,11 +3,12 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Button, Image } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "@/app/lib/axios/axios";
-import PlanServices from "@/app/services/plan.service";
-import PricingCards from "./components/PricingCards";
-import DetailedComparisonTable from "./components/DetailedComparisonTable";
+import PlanServices from "@/app/services/plan.service"; 
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { TPlan } from "@/app/common/plan.type";
+import DetailedComparisonTable from "@/app/package/components/DetailedComparisonTable";
+import PricingCards from "@/app/components/package/PricingCards";
+ ;
 
 const PackagePage = () => {
   const router = useRouter();

@@ -25,6 +25,15 @@ export const getAdminMenuItems = () => [
       </Link>
     ),
   },
+  {
+    key: "model-pricing",
+    icon: <LayoutDashboard size={16} />,
+    label: (
+      <Link href="/page/admin-management/model-pricing">
+        Model Pricing
+      </Link>
+    ),
+  },
 ];
 
 export const getSelectedAdminKey = (pathname: string) => {
@@ -36,6 +45,9 @@ export const getSelectedAdminKey = (pathname: string) => {
   }
   if (pathname.includes("/admin-management/plan-management")) {
     return "plan-management";
+  }
+  if (pathname.includes("/admin-management/model-pricing")) {
+    return "model-pricing";
   }
   return ""; // default
 };

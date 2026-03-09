@@ -9,6 +9,7 @@ import {
   Button,
   Popconfirm,
   message,
+  Space,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { axiosUser } from "@/app/lib/axios/axios";
@@ -16,6 +17,7 @@ import PackageTransactionServices from "@/app/services/package-transaction.servi
 import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
 import { formatNumber } from "@/app/utils/format";
 import { IPackageTransaction } from "@/app/common/organization.type";
+import { usePathname, useRouter } from "next/navigation";
 
 const { Text } = Typography;
 
@@ -26,6 +28,8 @@ interface OrganizationPackageTabProps {
 const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
   organizationId,
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
@@ -39,7 +43,7 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
       const transData =
         await transactionService.findByOrganizationId(organizationId);
       setTransactions(transData || []);
-// console.log(transData)
+      // console.log(transData)
       const subData =
         await subscriptionService.findByOrganizationId(organizationId);
       setSubscription(subData);
@@ -104,7 +108,8 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
       title: "Price",
       dataIndex: "amountPaid",
       key: "amountPaid",
-      render: (amountPaid, record) => `${record.currency} ${formatNumber(Number(record.amountPaid))}`,
+      render: (amountPaid, record) =>
+        `${record.currency} ${formatNumber(Number(record.amountPaid))}`,
     },
     // {
     //   title: "Credits/Images",
@@ -130,17 +135,27 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
             title="Current Subscription"
             size="small"
             extra={
-              subscription ? (
-                <Popconfirm
-                  title="Renew Subscription"
-                  description="Are you sure you want to renew this subscription for the next billing cycle?"
-                  onConfirm={handleRenew}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button type="primary">Renew Subscription</Button>
-                </Popconfirm>
-              ) : null
+              <Space>
+                {
+                  <Button
+                    type="primary"
+                    onClick={() => router.push(`${pathname}/change-package`)}
+                  >
+                    Change Plan
+                  </Button>
+                }
+                {subscription ? (
+                  <Popconfirm
+                    title="Renew Subscription"
+                    description="Are you sure you want to renew this subscription for the next billing cycle?"
+                    onConfirm={handleRenew}
+                    okText="Yes"
+                    cancelText="No"
+                  >
+                    <Button type="primary">Renew Subscription</Button>
+                  </Popconfirm>
+                ) : null}
+              </Space>
             }
           >
             {subscription ? (
