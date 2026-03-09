@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+:root {
+  --secondary: #0FEAB6;
+}
+
 * {
   font-family: 'Prompt', sans-serif !important;
 }
@@ -24,11 +28,6 @@
   
   .mobile-padding {
     padding: 0.5rem !important;
-  }
-  
-  /* Force sidebar to be hidden on mobile */
-  .ant-layout-sider {
-    display: none !important;
   }
   
   /* Ensure main content takes full width on mobile */
@@ -147,3 +146,14 @@
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-in-out;
 }
+
+.activity-star-button.ant-btn {
+  color: #000000 !important;
+}
+
+.activity-star-button.ant-btn:hover,
+.activity-star-button.ant-btn:focus,
+.activity-star-button.ant-btn:active {
+  color: #facc15 !important;
+}
+

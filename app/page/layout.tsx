@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import PrivateLayout from "../components/PrivateLayout";
+import PrivateLayout from "../components/layout/PrivateLayout";
 
 export const metadata: Metadata = {
   title: "AI CAVE",

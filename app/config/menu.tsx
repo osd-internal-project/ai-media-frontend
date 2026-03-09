@@ -10,6 +10,7 @@ import {
   ShieldUser,
   SlidersHorizontal,
   MessageSquare,
+  FolderOpen,
 } from "lucide-react";
 
 export const MenuSider = [
@@ -26,16 +27,24 @@ export const MenuSider = [
       //   icon: <Bot size={24} />,
       //   label: `Project`,
       // },
-      {
-        key: `project`,
+      // {
+      //   key: `project`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
+      //   icon: <MessageSquare size={22} />,
+      //   label: (
+      //     <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
+      //   ),
+      // },
+          {
+        key: `project-new`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
-        icon: <MessageSquare size={22} />,
+        icon: <FolderOpen size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Projects</span>
         ),
       },
       {
-        key: `settings/template-setting`,
+        key: `settings/template-new`,
         role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
         icon: <SlidersHorizontal size={22} />,
         label: (

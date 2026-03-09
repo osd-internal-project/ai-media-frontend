@@ -47,7 +47,8 @@ export type IProject = {
 
   //old value
   accessImageAmount: number;
-  remainImageAmount: number;
-  accessTokenAmount: number;
-  remainTokenAmount: number;
+    updatedAt?: string;
+    remainImageAmount: number;
+    accessTokenAmount: number;
+    remainTokenAmount: number;
 };
