@@ -53,6 +53,7 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import ProjectGridView from "./component/project-grid-view";
 import ProjectListView from "./component/project-list-view";
 import useResponsive from "@/app/hooks/useResponsive";
+import { JsonObject, JsonValue } from "next-auth/adapters";
 
 const MAX_MEMBERS = 5;
 
@@ -60,6 +61,7 @@ const ProjectsPage = () => {
   const router = useRouter();
   const { data: session } = useSession();
   const { organizationRole } = useOrganization();
+  const [searchForm] = Form.useForm();
   const [messageApi, contextMessageHolder] = message.useMessage();
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);
@@ -78,6 +80,10 @@ const ProjectsPage = () => {
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
     "USER",
   );
+  const [searchValue, setSearchValue] = useState<JsonObject>({
+    name: undefined,
+    status: undefined,
+  });
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organization, setOrganization] = useState<IOrganization | undefined>(
     undefined,
@@ -85,7 +91,7 @@ const ProjectsPage = () => {
   const [form] = Form.useForm();
   const [modal, contextHolder] = Modal.useModal();
   const [editForm] = Form.useForm();
-  const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
+  const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const { isMobile } = useResponsive();
 
   const activeProjects = useMemo(
@@ -116,8 +122,8 @@ const ProjectsPage = () => {
     },
   ];
 
-    const { mode } = useThemeMode();
-    const semantic = getThemeConfig(mode).token ?? {};
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
 
   const onClickProjectAction = (action: string, project: IProject) => {
     console.log("click", action, project);
@@ -176,7 +182,9 @@ const ProjectsPage = () => {
         onOk: async () => {
           setLoading(true);
           try {
-            await projectService.update(project.id, { status: "inactive" as any });
+            await projectService.update(project.id, {
+              status: "inactive" as any,
+            });
             messageApi.success("Project archived successfully");
             fetchProjects();
           } catch (error) {
@@ -367,6 +375,10 @@ const ProjectsPage = () => {
     }
   }, [organizationId]);
 
+  useEffect(() => {
+    fetchProjects();
+  }, [searchValue]);
+
   const fetchOrganizationMembers = async () => {
     try {
       if (organizationId) {
@@ -406,6 +418,7 @@ const ProjectsPage = () => {
         const response = await projectService.findByOrganizationId(
           organizationId,
           session.user.id,
+          searchValue,
         );
         setProjects(response || []);
       }
@@ -436,41 +449,60 @@ const ProjectsPage = () => {
     router.push(`/page/project-new/${projectId}`);
   };
 
-
+  async function handleSearch(search: JsonObject): Promise<void> {
+    setSearchValue((prev) => ({ ...prev, ...search }));
+    // await fetchProjects();
+  }
 
   return (
     <Spin spinning={loading}>
-
-        {contextMessageHolder}
-        {/* Header Section */}
-        <Row align="middle" justify="space-between" gutter={[12, 12]} style={{ minHeight: isMobile ? 56 : 64, display: 'flex',padding: isMobile ? "16px" : "24px" , backgroundColor: semantic.colorBgContainer, borderBottom: `1px solid ${semantic.colorBorder}` }} >
-          <Col flex="1" style={{ display: 'flex', alignItems: 'center' }}>
-            <Typography.Title
-              level={3}
-              style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: isMobile ? 22 : undefined }}
+      {contextMessageHolder}
+      {/* Header Section */}
+      <Row
+        align="middle"
+        justify="space-between"
+        gutter={[12, 12]}
+        style={{
+          minHeight: isMobile ? 56 : 64,
+          display: "flex",
+          padding: isMobile ? "16px" : "24px",
+          backgroundColor: semantic.colorBgContainer,
+          borderBottom: `1px solid ${semantic.colorBorder}`,
+        }}
+      >
+        <Col flex="1" style={{ display: "flex", alignItems: "center" }}>
+          <Typography.Title
+            level={3}
+            style={{
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: isMobile ? 22 : undefined,
+            }}
+          >
+            Projects
+            <Tag
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: isMobile ? "2px 8px" : "4px 10px",
+                borderRadius: 999,
+                backgroundColor: semantic.colorBgTextActive,
+                color: semantic.colorTextSecondary,
+                border: "none",
+                fontSize: isMobile ? 12 : 16,
+                fontWeight: 500,
+                lineHeight: 1,
+                marginInlineEnd: 0,
+              }}
             >
-              Projects
-              <Tag
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: isMobile ? "2px 8px" : "4px 10px",
-                  borderRadius: 999,
-                  backgroundColor: semantic.colorBgTextActive,
-                  color: semantic.colorTextSecondary,
-                  border: "none",
-                  fontSize: isMobile ? 12 : 16,
-                  fontWeight: 500,
-                  lineHeight: 1,
-                  marginInlineEnd: 0,
-                }}
-              >
-                {projects.length}
-              </Tag>
-            </Typography.Title>
-          </Col>
-          <Col flex="none" style={{ display: 'flex', alignItems: 'center' }}>
+              {projects.length}
+            </Tag>
+          </Typography.Title>
+        </Col>
+        <Col flex="none" style={{ display: "flex", alignItems: "center" }}>
           {canCreateProjects(organizationRole) && (
             <Button
               type="primary"
@@ -478,16 +510,35 @@ const ProjectsPage = () => {
               icon={<PlusOutlined />}
               onClick={handleOpen}
               // style={{ backgroundColor: semantic.colorPrimary }}
-              >
-                New Project
-              </Button>
-            )}
-          </Col>
-        </Row>
-        {/* <Divider style={{ margin: 0 }} /> */}
-        {/* Filter/Search Section */}
-        <Row align="middle" justify="space-between" gutter={[8, 8]} style={{ minHeight: 56, display: 'flex', padding: isMobile ? "16px" : "24px" , backgroundColor: semantic.colorBgContainer, borderBottom: `1px solid ${semantic.colorBorder}` }} >
-          <Col xs={24} sm={16} md={18} lg={20} flex="1" style={{ display: 'flex', alignItems: 'center' }}>
+            >
+              New Project
+            </Button>
+          )}
+        </Col>
+      </Row>
+      {/* <Divider style={{ margin: 0 }} /> */}
+      {/* Filter/Search Section */}
+      <Row
+        align="middle"
+        justify="space-between"
+        gutter={[8, 8]}
+        style={{
+          minHeight: 56,
+          display: "flex",
+          padding: isMobile ? "16px" : "24px",
+          backgroundColor: semantic.colorBgContainer,
+          borderBottom: `1px solid ${semantic.colorBorder}`,
+        }}
+      >
+        <Col
+          xs={24}
+          sm={16}
+          md={18}
+          lg={20}
+          flex="1"
+          style={{ display: "flex", alignItems: "center" }}
+        >
+          <Form form={searchForm} onFinish={(value) => handleSearch(value)}>
             <Space
               size={isMobile ? 6 : 16}
               // direction={isMobile ? "vertical" : "horizontal"}
@@ -495,12 +546,14 @@ const ProjectsPage = () => {
             >
               {isMobile ? (
                 <Button
-                  type="default"
+                  onClick={() => searchForm.submit()}
+                  type={"default"}
                   icon={<SearchOutlined style={{ fontSize: 12 }} />}
                   size="small"
                   style={{
                     // width: 28,
                     // height: 28,
+
                     minWidth: 28,
                     borderRadius: 6,
                     border: `1px solid ${semantic.colorBorder}`,
@@ -509,157 +562,200 @@ const ProjectsPage = () => {
                   }}
                 />
               ) : (
-                <Input
-                  placeholder="Search project..."
-                  style={{ width: 380, maxWidth: "100%", borderRadius: 10 }}
-                  prefix={<SearchOutlined style={{ color: semantic.colorTextSecondary }} />}
-                  // value={searchValue}
-                  // onChange={e => setSearchValue(e.target.value)}
-                />
+                <Form.Item name="name">
+                  <Input
+                    placeholder="Search project..."
+                    style={{ width: 380, maxWidth: "100%", borderRadius: 10 }}
+                    onClick={() => console.log("Icon clicked!")}
+                    prefix={
+                      <SearchOutlined
+                        onClick={() => searchForm.submit()}
+                        style={{ color: semantic.colorTextSecondary }}
+                      />
+                    }
+                    onPressEnter={() => searchForm.submit()}
+                  />
+                </Form.Item>
               )}
               <Space size={isMobile ? 2 : 12} wrap>
                 <Button
+                  type={!searchValue["status"] ? "primary" : "default"}
+                  ghost
                   variant="outlined"
                   size={isMobile ? "small" : "middle"}
                   style={{
                     color: semantic.colorTextSecondary,
                     fontWeight: 500,
                   }}
-                >All ({projects.length})</Button>
+                  onClick={() => handleSearch({ status: undefined })}
+                >
+                  All ({projects.length})
+                </Button>
                 <Button
+                  type={searchValue.status === "active" ? "primary" : "default"}
+                  ghost
                   variant="outlined"
                   size={isMobile ? "small" : "middle"}
                   style={{
                     color: semantic.colorTextSecondary,
                     fontWeight: 500,
                   }}
-                >Active ({activeProjects})</Button>
-                 <Button
+                  onClick={() => handleSearch({ status: "active" })}
+                >
+                  Active ({activeProjects})
+                </Button>
+                <Button
+                  type={
+                    searchValue.status === "inactive" ? "primary" : "default"
+                  }
+                  ghost
                   variant="outlined"
                   size={isMobile ? "small" : "middle"}
                   style={{
                     color: semantic.colorTextSecondary,
                     fontWeight: 500,
                   }}
-                >Inactive ({inactiveProjects})</Button>
+                  onClick={() => handleSearch({ status: "inactive" })}
+                >
+                  Inactive ({inactiveProjects})
+                </Button>
               </Space>
             </Space>
-          </Col>
-          <Col xs={24} sm={8} md={6} lg={4} flex="none" style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-            <Space size={isMobile ? 8 : 16}>
-              {!isMobile ? (
-                <Typography.Text style={{ fontSize: 20, color: semantic.colorTextSecondary }}>{projects.length} projects</Typography.Text>
-              ) : null}
-              <Radio.Group
-                value={viewType}
-                onChange={e => setViewType(e.target.value)}
+          </Form>
+        </Col>
+        <Col
+          xs={24}
+          sm={8}
+          md={6}
+          lg={4}
+          flex="none"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isMobile ? "flex-start" : "flex-end",
+          }}
+        >
+          <Space size={isMobile ? 8 : 16}>
+            {!isMobile ? (
+              <Typography.Text
+                style={{ fontSize: 20, color: semantic.colorTextSecondary }}
+              >
+                {projects.length} projects
+              </Typography.Text>
+            ) : null}
+            <Radio.Group
+              value={viewType}
+              onChange={(e) => setViewType(e.target.value)}
+              style={{
+                background: "transparent",
+                borderRadius: 8,
+                padding: isMobile ? "1px" : "3px",
+                border: `1px solid ${semantic.colorBorder}`,
+                display: "flex",
+                gap: isMobile ? 2 : 4,
+              }}
+            >
+              <Radio.Button
+                value="list"
                 style={{
-                  background: 'transparent',
-                  borderRadius: 8,
-                  padding: isMobile ? '1px' : '3px',
-                  border: `1px solid ${semantic.colorBorder}`,
-                  display: 'flex',
-                  gap: isMobile ? 2 : 4,
+                  background:
+                    viewType === "list" ? semantic.colorPrimary : "transparent",
+                  color: viewType === "list" ? "#fff" : semantic.colorTextBase,
+                  borderRadius: isMobile ? 4 : 6,
+                  width: isMobile ? 24 : 32,
+                  height: isMobile ? 24 : 32,
+                  padding: 0,
+                  border: "none",
+                  transition: "background 0.2s",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                <Radio.Button
-                  value="list"
-                  style={{
-                    background: viewType === 'list' ? semantic.colorPrimary : 'transparent',
-                    color: viewType === 'list' ? '#fff' : semantic.colorTextBase,
-                    borderRadius: isMobile ? 4 : 6,
-                    width: isMobile ? 24 : 32,
-                    height: isMobile ? 24 : 32,
-                    padding: 0,
-                    border: 'none',
-                    transition: 'background 0.2s',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <UnorderedListOutlined style={{ fontSize: isMobile ? 14 : 20 }} />
-                </Radio.Button>
-                <Radio.Button
-                  value="grid"
-                  style={{
-                    background: viewType === 'grid' ? semantic.colorPrimary : 'transparent',
-                    color: viewType === 'grid' ? '#fff' : semantic.colorTextBase,
-                    borderRadius: isMobile ? 4 : 6,
-                    width: isMobile ? 24 : 32,
-                    height: isMobile ? 24 : 32,
-                    padding: 0,
-                    border: 'none',
-                    transition: 'background 0.2s',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <AppstoreOutlined style={{ fontSize: isMobile ? 14 : 20 }} />
-                </Radio.Button>
-              </Radio.Group>
-            </Space>
-          </Col>
-        </Row>
-        <Divider style={{ margin: 0 }} />
-        {/* Project List Section */}
-        {loading ? (
-          <div className="text-center text-gray-400">Loading ...</div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-12">
-            <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
-            <h3 className="text-xl text-gray-400 mb-2">No project yet</h3>
-          </div>
-        ) : viewType === 'grid' ? (
-          <ProjectGridView
-            projects={projects}
-            semantic={semantic}
-            onClickProject={onClickProject}
-            formatDate={formatDate}
+                <UnorderedListOutlined
+                  style={{ fontSize: isMobile ? 14 : 20 }}
+                />
+              </Radio.Button>
+              <Radio.Button
+                value="grid"
+                style={{
+                  background:
+                    viewType === "grid" ? semantic.colorPrimary : "transparent",
+                  color: viewType === "grid" ? "#fff" : semantic.colorTextBase,
+                  borderRadius: isMobile ? 4 : 6,
+                  width: isMobile ? 24 : 32,
+                  height: isMobile ? 24 : 32,
+                  padding: 0,
+                  border: "none",
+                  transition: "background 0.2s",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <AppstoreOutlined style={{ fontSize: isMobile ? 14 : 20 }} />
+              </Radio.Button>
+            </Radio.Group>
+          </Space>
+        </Col>
+      </Row>
+      <Divider style={{ margin: 0 }} />
+      {/* Project List Section */}
+      {loading ? (
+        <div className="text-center text-gray-400">Loading ...</div>
+      ) : projects.length === 0 ? (
+        <div className="text-center py-12">
+          <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
+          <h3 className="text-xl text-gray-400 mb-2">No project yet</h3>
+        </div>
+      ) : viewType === "grid" ? (
+        <ProjectGridView
+          projects={projects}
+          semantic={semantic}
+          onClickProject={onClickProject}
+          formatDate={formatDate}
+        />
+      ) : (
+        <ProjectListView
+          projects={projects}
+          semantic={semantic}
+          organizationRole={organizationRole}
+          onClickProject={onClickProject}
+          formatDate={formatDate}
+          canCreateProjects={canCreateProjects}
+          projectActionItems={projectActionItems}
+          onClickProjectAction={onClickProjectAction}
+        />
+      )}
+      {/* Modal Section */}
+      {(open || openEdit) && (
+        <Modal
+          title={openEdit ? "Edit Team" : "Create Project"}
+          open={open || openEdit}
+          onCancel={openEdit ? handleCloseEdit : handleClose}
+          footer={false}
+          okText={openEdit ? "Edit Team" : "Create Project"}
+          width={isMobile ? "92%" : 700}
+        >
+          <ProjectForm
+            form={openEdit ? editForm : form}
+            organization={organization}
+            selectedProject={openEdit ? selectedProject : undefined}
+            projectMembers={projectMembers}
+            setProjectMembers={setProjectMembers}
+            searchTexts={searchTexts}
+            setSearchTexts={setSearchTexts}
+            organizationMembers={organizationMembers}
+            loading={loading}
+            onFinish={openEdit ? onFinishEdit : onFinishAdd}
+            maxMembers={MAX_MEMBERS}
+            mode={openEdit ? "edit" : "create"}
+            formatNumber={formatNumber}
           />
-        ) : (
-          <ProjectListView
-            projects={projects}
-            semantic={semantic}
-            organizationRole={organizationRole}
-            onClickProject={onClickProject}
-            formatDate={formatDate}
-            canCreateProjects={canCreateProjects}
-            projectActionItems={projectActionItems}
-            onClickProjectAction={onClickProjectAction}
-          />
-        )}
-        {/* Modal Section */}
-        {(open || openEdit) && (
-          <Modal
-            title={openEdit ? "Edit Team" : "Create Project"}
-            open={open || openEdit}
-            onCancel={openEdit ? handleCloseEdit : handleClose}
-            footer={false}
-            okText={openEdit ? "Edit Team" : "Create Project"}
-            width={isMobile ? "92%" : 700}
-          >
-            <ProjectForm
-              form={openEdit ? editForm : form}
-              organization={organization}
-              selectedProject={openEdit ? selectedProject : undefined}
-              projectMembers={projectMembers}
-              setProjectMembers={setProjectMembers}
-              searchTexts={searchTexts}
-              setSearchTexts={setSearchTexts}
-              organizationMembers={organizationMembers}
-              loading={loading}
-              onFinish={openEdit ? onFinishEdit : onFinishAdd}
-              maxMembers={MAX_MEMBERS}
-              mode={openEdit ? "edit" : "create"}
-              formatNumber={formatNumber}
-            />
-          </Modal>
-        )}
-        {/* Context Holder for Modal */}
-        {contextHolder}
-
+        </Modal>
+      )}
+      {/* Context Holder for Modal */}
+      {contextHolder}
     </Spin>
   );
 };

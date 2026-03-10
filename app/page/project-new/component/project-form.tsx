@@ -34,7 +34,7 @@ interface ProjectFormProps {
   onFinish: (values: any) => void;
   maxMembers: number;
   mode: "create" | "edit";
-  formatNumber: (num: string | number | undefined) => string;
+  formatNumber: (num: string | number | undefined) =>  React.ReactNode ;
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({

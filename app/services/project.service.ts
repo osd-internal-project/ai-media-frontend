@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import type { IProject } from "../common/project.type";
+import { JsonObject } from "next-auth/adapters";
 
 const ProjectService = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/project";
@@ -15,10 +16,14 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findByOrganizationId: async (organizationId: string, token: string) => {
+    findByOrganizationId: async (
+      organizationId: string,
+      token: string,
+      searchValue: JsonObject,
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/organization/${organizationId}`, {
-          params: { token },
+          params: { token, ...searchValue },
         })
         .then((res) => {
           return res.data;
@@ -50,8 +55,8 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    deleteProject:async (id:string)=>{
-       return await axiosInstance
+    deleteProject: async (id: string) => {
+      return await axiosInstance
         .delete(`${baseUrl}/${id}/remove`)
         .then((res) => {
           return res.data;
@@ -127,10 +132,14 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    hasProjectPermission: async (projectId: string, userId: string, requiredRole: string = 'USER') => {
+    hasProjectPermission: async (
+      projectId: string,
+      userId: string,
+      requiredRole: string = "USER",
+    ) => {
       return await axiosInstance
         .get(`${baseUrl}/${projectId}/permission/${userId}`, {
-          params: { requiredRole }
+          params: { requiredRole },
         })
         .then((res) => res.data)
         .catch((err) => {
