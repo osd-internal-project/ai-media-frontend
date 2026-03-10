@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
+import { BgColorsOutlined, CodeOutlined, FileImageOutlined } from "@ant-design/icons";
 import {
   Bot,
   LayoutTemplate,
@@ -11,7 +11,9 @@ import {
   SlidersHorizontal,
   MessageSquare,
   FolderOpen,
+  PaletteIcon,
 } from "lucide-react";
+import { ColorPicker } from "antd";
 
 export const MenuSider = [
   {
@@ -49,6 +51,14 @@ export const MenuSider = [
         icon: <SlidersHorizontal size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
+        ),
+      },
+         {
+        key: `brand-kit`,
+        role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
+        icon: <PaletteIcon size={22}/>,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Brand Kit</span>
         ),
       },
       // {

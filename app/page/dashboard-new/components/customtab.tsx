@@ -37,11 +37,11 @@ const DashboardCustomTab: FC<DashboardCustomTabProps> = ({
     background: isLightMode ? semantic.colorBgTextActive : semantic.colorBgContainer,
     borderRadius: 50,
     padding: 4,
-    display: "flex",
+    display: "inline-flex",
+    width: "fit-content",
     gap: 6,
     flexWrap: "nowrap",
     overflowX: "auto",
-    maxWidth: "100%",
     scrollbarWidth: "none",
   };
 

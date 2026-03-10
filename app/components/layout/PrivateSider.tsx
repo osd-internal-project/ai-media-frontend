@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Layout, Menu, theme, Image as AntdImage, Button } from "antd";
+import { Layout, Menu, Image as AntdImage, Button } from "antd";
 import { MenuFoldOutlined } from "@ant-design/icons";
 import { MenuSider, renderMenuItems } from "@/app/config/menu";
 import { useThemeMode } from "../ThemeProvider";
@@ -24,9 +24,6 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   organizationRole,
   onClose,
 }) => {
-
-  const { token } = theme.useToken();
-
   const selectedKeys = useMemo(() => {
     return [`${mappedPath}/${currentPathSub}`];
   }, [mappedPath, currentPathSub]);
@@ -37,7 +34,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
 
   return (
     <Sider
-      width={100}
+      width={92}
       trigger={null}
       collapsible
       collapsed={false}
@@ -46,18 +43,18 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100vh",
-        padding: "0 12px",
+        padding: "0 10px",
         position: "relative",
         transition: "background 0.2s cubic-bezier(0.4,0,0.2,1)",
       }}
     >
       {/* Logo */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "20px 0", flexShrink: 0 }}>
+      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 0", flexShrink: 0 }}>
         <AntdImage
           src="/images/logo-1.png"
           alt="OSD Logo"
           preview={false}
-          width={48}
+          width={42}
           style={{ background: "transparent" }}
         />
       </div>

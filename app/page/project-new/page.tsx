@@ -54,6 +54,7 @@ import ProjectGridView from "./component/project-grid-view";
 import ProjectListView from "./component/project-list-view";
 import useResponsive from "@/app/hooks/useResponsive";
 import { JsonObject, JsonValue } from "next-auth/adapters";
+import PageSubHeader from "@/app/components/layout/PageSubHeader";
 
 const MAX_MEMBERS = 5;
 
@@ -458,64 +459,29 @@ const ProjectsPage = () => {
     <Spin spinning={loading}>
       {contextMessageHolder}
       {/* Header Section */}
-      <Row
-        align="middle"
-        justify="space-between"
-        gutter={[12, 12]}
-        style={{
-          minHeight: isMobile ? 56 : 64,
-          display: "flex",
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: semantic.colorBgContainer,
-          borderBottom: `1px solid ${semantic.colorBorder}`,
-        }}
-      >
-        <Col flex="1" style={{ display: "flex", alignItems: "center" }}>
-          <Typography.Title
-            level={3}
-            style={{
-              margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: isMobile ? 22 : undefined,
-            }}
-          >
-            Projects
-            <Tag
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: isMobile ? "2px 8px" : "4px 10px",
-                borderRadius: 999,
-                backgroundColor: semantic.colorBgTextActive,
-                color: semantic.colorTextSecondary,
-                border: "none",
-                fontSize: isMobile ? 12 : 16,
-                fontWeight: 500,
-                lineHeight: 1,
-                marginInlineEnd: 0,
-              }}
-            >
-              {projects.length}
-            </Tag>
-          </Typography.Title>
-        </Col>
-        <Col flex="none" style={{ display: "flex", alignItems: "center" }}>
-          {canCreateProjects(organizationRole) && (
+      <PageSubHeader
+        title="Projects"
+        count={projects.length}
+        background={semantic.colorBgContainer as string}
+        borderColor={semantic.colorBorder as string}
+        titleColor={semantic.colorTextBase as string}
+        subtitleColor={semantic.colorTextSecondary as string}
+        chipBg={semantic.colorBgTextActive as string}
+        chipText={semantic.colorTextSecondary as string}
+        rightSlot={
+          canCreateProjects(organizationRole) ? (
             <Button
               type="primary"
-              size={isMobile ? "small" : "large"}
+              size={isMobile ? "small" : "middle"}
               icon={<PlusOutlined />}
               onClick={handleOpen}
-              // style={{ backgroundColor: semantic.colorPrimary }}
             >
               New Project
             </Button>
-          )}
-        </Col>
-      </Row>
+          ) : null
+        }
+        compact
+      />
       {/* <Divider style={{ margin: 0 }} /> */}
       {/* Filter/Search Section */}
       <Row
@@ -523,9 +489,9 @@ const ProjectsPage = () => {
         justify="space-between"
         gutter={[8, 8]}
         style={{
-          minHeight: 56,
+          minHeight: isMobile ? 46 : 50,
           display: "flex",
-          padding: isMobile ? "16px" : "24px",
+          padding: isMobile ? "10px 12px" : "14px 18px",
           backgroundColor: semantic.colorBgContainer,
           borderBottom: `1px solid ${semantic.colorBorder}`,
         }}
@@ -541,7 +507,8 @@ const ProjectsPage = () => {
           <Form form={searchForm} onFinish={(value) => handleSearch(value)}>
             <Space
               size={isMobile ? 6 : 16}
-              // direction={isMobile ? "vertical" : "horizontal"}
+              align="center"
+              wrap
               style={{ width: "100%" }}
             >
               {isMobile ? (
@@ -562,7 +529,7 @@ const ProjectsPage = () => {
                   }}
                 />
               ) : (
-                <Form.Item name="name">
+                <Form.Item name="name" style={{ marginBottom: 0 }}>
                   <Input
                     placeholder="Search project..."
                     style={{ width: 380, maxWidth: "100%", borderRadius: 10 }}
