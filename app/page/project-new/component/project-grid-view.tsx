@@ -1,9 +1,10 @@
-import React from "react";
-import { Row, Col, Card, Space, Typography, Tooltip, Badge } from "antd";
+import React, { useState } from "react";
+import { Row, Col, Card, Space, Typography, Tooltip, Badge, Dropdown, Button } from "antd";
 import {
   FolderOpenOutlined,
   TeamOutlined,
   CalendarOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { IProject } from "@/app/common/project.type";
 import Quata from "./quata";
@@ -14,10 +15,22 @@ interface ProjectGridViewProps {
   semantic: any;
   onClickProject: (projectId: string) => void;
   formatDate: (dateString: string) => string;
+  showActionMenu?: boolean;
+  projectActionItems?: any[];
+  onClickProjectAction?: (action: string, project: IProject) => void;
 }
 
-const ProjectGridView: React.FC<ProjectGridViewProps> = ({ projects, semantic, onClickProject, formatDate }) => {
-    const { isMobile } = useResponsive();
+const ProjectGridView: React.FC<ProjectGridViewProps> = ({
+  projects,
+  semantic,
+  onClickProject,
+  formatDate,
+  showActionMenu = false,
+  projectActionItems = [],
+  onClickProjectAction,
+}) => {
+  const { isMobile } = useResponsive();
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   return (
     <Row gutter={[12, 12]} style={{ padding: isMobile ? "16px" : "24px"  }}>
       {projects.map((project) => {
@@ -28,15 +41,45 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({ projects, semantic, o
         return (
           <Col xs={24} sm={12} lg={6} key={project.id}>
                 <Card
-                
+              onMouseEnter={() => setHoveredCardId(project.id)}
+              onMouseLeave={() => setHoveredCardId(null)}
               style={{
                 backgroundColor: semantic.colorBgContainer,
                 border: `1px solid ${semantic.colorBorder}`,
                 boxShadow: 'none',
-             
+                cursor: 'pointer',
+                position: 'relative',
               }}
               onClick={() => onClickProject(project.id)}
             >
+              {showActionMenu && projectActionItems.length > 0 && onClickProjectAction ? (
+                <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+                  <Dropdown
+                    disabled={project.status === 'deleted'}
+                    menu={{
+                      items: projectActionItems,
+                      onClick: (e) => {
+                        e.domEvent.stopPropagation();
+                        onClickProjectAction(e.key, project);
+                      },
+                    }}
+                    placement="bottomRight"
+                  >
+                    <Button
+                      type="text"
+                      icon={<MoreOutlined style={{ fontSize: 18 }} />}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        opacity: isMobile || hoveredCardId === project.id ? 1 : 0,
+                        pointerEvents:
+                          isMobile || hoveredCardId === project.id ? 'auto' : 'none',
+                        transition: 'opacity 0.15s ease',
+                        color: semantic.colorTextSecondary,
+                      }}
+                    />
+                  </Dropdown>
+                </div>
+              ) : null}
               <Space align="start" size={6} style={{ width: '100%', gap: 0 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: semantic.colorBgContainer }}>
                   <FolderOpenOutlined style={{ color: semantic.colorPrimary, fontSize: 22 }} />

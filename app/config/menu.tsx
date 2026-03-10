@@ -12,6 +12,7 @@ import {
   MessageSquare,
   FolderOpen,
   PaletteIcon,
+  BookTemplate,
 } from "lucide-react";
 import { ColorPicker } from "antd";
 
@@ -48,7 +49,7 @@ export const MenuSider = [
       {
         key: `settings/template-new`,
         role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
-        icon: <SlidersHorizontal size={22} />,
+        icon: <BookTemplate size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
         ),

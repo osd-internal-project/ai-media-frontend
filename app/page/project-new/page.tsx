@@ -681,6 +681,9 @@ const ProjectsPage = () => {
           semantic={semantic}
           onClickProject={onClickProject}
           formatDate={formatDate}
+          showActionMenu={canCreateProjects(organizationRole)}
+          projectActionItems={projectActionItems}
+          onClickProjectAction={onClickProjectAction}
         />
       ) : (
         <ProjectListView

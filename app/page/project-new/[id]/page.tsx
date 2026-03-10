@@ -33,6 +33,14 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 
+type GenerateTabKey =
+  | "image"
+  | "video"
+  | "omnihumen"
+  | "dreamactor"
+  | "library"
+  | "activity";
+
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
@@ -43,7 +51,7 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
-    "image" | "video" | "omnihumen" | "dreamactor" | "library" | "activity"
+    GenerateTabKey
   >("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -244,6 +252,69 @@ const GenerateImagePage: FC = () => {
   const filteredAIModels = processedModels.filter(
     (model) => activeKey === model.type,
   );
+
+  const tabIconColorByType: Record<GenerateTabKey, string> = {
+    image: "#1890ff",
+    video: semantic.colorPrimary || "#1677ff",
+    omnihumen: semantic.colorSuccess || "#52c41a",
+    dreamactor: semantic.colorWarning || "#faad14",
+    library: "#1890ff",
+    activity: semantic.colorTextSecondary || "#8c8c8c",
+  };
+
+  const renderTabLabel = (
+    key: GenerateTabKey,
+    text: string,
+    icon: React.ReactNode,
+  ) => {
+    const isDarkMode = mode === "dark";
+    const isActive = activeKey === key;
+
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: isMobile ? "5px 9px" : "6px 12px",
+          borderRadius: 8,
+          border:
+            isDarkMode && isActive
+              ? `1px solid ${semantic.colorBorderSecondary || semantic.colorPrimary}`
+              : "1px solid transparent",
+          background: isDarkMode && isActive ? semantic.colorBgElevated : "transparent",
+          color:
+            isDarkMode && isActive
+              ? "#ffffff"
+              : semantic.colorTextSecondary,
+          transition: "all 0.2s ease",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            color: isActive
+              ? tabIconColorByType[key]
+              : semantic.colorTextSecondary,
+          }}
+        >
+          {icon}
+        </span>
+        <Typography.Text
+          style={{
+            color:
+              isDarkMode && isActive
+                ? "#ffffff"
+                : semantic.colorTextSecondary,
+            marginBottom: 0,
+          }}
+        >
+          {text}
+        </Typography.Text>
+      </div>
+    );
+  };
+
   return (
     <div
       className="h-full min-h-0 flex flex-col overflow-hidden"
@@ -292,7 +363,7 @@ const GenerateImagePage: FC = () => {
             minHeight: 0,
             overflow: "hidden",
           }}
-          className="ant-tabs-full"
+          className="ant-tabs-full generate-tabs"
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
          
@@ -304,12 +375,7 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               key: "image",
               forceRender: true,
-              label: (
-                <Space size={8}>
-                  <PictureOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Image Gen</Typography.Text>
-                </Space>
-              ),
+              label: renderTabLabel("image", "Image Gen", <PictureOutlined />),
               children: (
                 <ChatGenerateImage
                   promptGuideOpenStatus={promptGuideOpenStatus}
@@ -329,12 +395,7 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "video",
-              label: (
-                <Space size={8}>
-                  <VideoCameraOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Video Gen</Typography.Text>
-                </Space>
-              ),
+              label: renderTabLabel("video", "Video Gen", <VideoCameraOutlined />),
               children: (
                 <ChatGenerateVideo
                   key={"video"}
@@ -354,12 +415,7 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "omnihumen",
-              label: (
-                <Space size={8}>
-                  <MessageOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>OmniHuman</Typography.Text>
-                </Space>
-              ),
+              label: renderTabLabel("omnihumen", "OmniHuman", <MessageOutlined />),
               children: (
                 <ChatGenerateOmnihumen
                   key={"omnihumen"}
@@ -379,11 +435,10 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "dreamactor",
-              label: (
-                <Space size={8}>
-                  <PlaySquareOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>DreamActor</Typography.Text>
-                </Space>
+              label: renderTabLabel(
+                "dreamactor",
+                "DreamActor",
+                <PlaySquareOutlined />,
               ),
               children: (
                 <ChatGenerateDreamactor
@@ -405,12 +460,7 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "library",
-              label: (
-                <Space size={8}>
-                  <StarOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Library</Typography.Text>
-                </Space>
-              ),
+              label: renderTabLabel("library", "Library", <StarOutlined />),
               children: (
                 <div className="h-full">
                   <PromptLibrary
@@ -424,11 +474,10 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "activity",
-              label: (
-                <Space size={8}>
-                  <FolderOpenOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>All Activity</Typography.Text>
-                </Space>
+              label: renderTabLabel(
+                "activity",
+                "All Activity",
+                <FolderOpenOutlined />,
               ),
               children: (
                 <div className="h-full">

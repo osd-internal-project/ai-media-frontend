@@ -1,6 +1,7 @@
 import { Button, Drawer, Select, Tooltip, Space, Typography, Tag } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
 import React, { useState, type FC } from "react";
+import type { CSSProperties } from "react";
 import type { IProject } from "@/app/common/project.type";
 import type { TAIModel } from "@/app/common/ai-model.type";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -92,8 +93,9 @@ const HeaderGenerateImagePage: FC<props> = ({
 
   return (
     <div
-      className="w-full p-4 pt-0 rounded-t-2xl"
+      className="w-full"
       style={{
+        padding: isMobile ? "10px 12px" : "12px 18px",
         backgroundColor: semantic.colorBgContainer,
         borderBottom: `1px solid ${semantic.colorBorder}`,
       }}
@@ -148,8 +150,20 @@ const HeaderGenerateImagePage: FC<props> = ({
                   style={{
                     minWidth: isMobile ? 160 : isTablet ? 250 : 280,
                     width: "auto",
-                  }}
+                    ["--model-select-bg" as string]: semantic.colorBgContainer,
+                    ["--model-select-border" as string]: semantic.colorBorder,
+                    ["--model-select-text" as string]: semantic.colorTextBase,
+                    ["--model-select-placeholder" as string]:
+                      semantic.colorTextSecondary,
+                    ["--model-select-hover" as string]: semantic.colorBorderSecondary,
+                    ["--model-select-focus" as string]: semantic.colorPrimary,
+                    ["--model-select-arrow" as string]: semantic.colorTextSecondary,
+                  } as CSSProperties}
                   className="dark-select"
+                  dropdownStyle={{
+                    backgroundColor: semantic.colorBgElevated,
+                    color: semantic.colorTextBase,
+                  }}
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id?.toString()}
                   onChange={onAIModelChange}
@@ -395,7 +409,7 @@ const HeaderGenerateImagePage: FC<props> = ({
               >
                 {isMobile ? "Builder" : isTablet ? "Builder" : "Prompt Builder"}
               </Button> */}
-              <Tooltip
+              {/* <Tooltip
                 title={isMobile ? "Prompt Guide" : undefined}
                 placement="top"
               >
@@ -408,7 +422,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                 >
                   {isMobile ? "" : isTablet ? "Guide" : "Prompt Guide"}
                 </Button>
-              </Tooltip>
+              </Tooltip> */}
             </>
           )}
         </div>
