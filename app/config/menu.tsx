@@ -58,7 +58,7 @@ export const MenuSider = [
       //   label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
       // },
       {
-        key: `dashboard`,
+        key: `dashboard-new`,
         role: ["OWNER", "ADMIN","SUPER_ADMIN"],
         icon: <LayoutDashboard size={22} />,
         label: (

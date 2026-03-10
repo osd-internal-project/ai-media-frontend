@@ -15,6 +15,7 @@ export const aiCaveColors = {
   primaryLight: "#E3E2FA", // สีจางของ primary
   primaryDark: "#4B49A1", // สีเข้มของ primary
   secondary: "#0FEAB6",
+  dreamActor: "#0D4DE5",
   accent: "#FF8F00",
   success: "#22C55E",
   warning: "#FF8F00",
@@ -53,6 +54,7 @@ const getSemantic = (mode: "light" | "dark") => {
     success: brand.success,
     warning: brand.warning,
     error: brand.error,
+    dreamActor: brand.dreamActor,
   };
 };
 
