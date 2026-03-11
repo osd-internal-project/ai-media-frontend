@@ -32,7 +32,10 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
   const { isMobile } = useResponsive();
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   return (
-    <Row gutter={[12, 12]} style={{ padding: isMobile ? "16px" : "24px"  }}>
+    <Row
+      gutter={[12, 12]}
+      style={{ padding: isMobile ? "16px" : "24px", margin: 0, width: "100%" }}
+    >
       {projects.map((project) => {
         const creditUsed = (project.accessImageAmount ?? 0) - (project.remainImageAmount ?? 0);
         const creditTotal = project.accessImageAmount ?? 0;

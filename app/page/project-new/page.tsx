@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import ProjectForm from "./component/project-form";
+import ProjectFormModal from "./component/project-form-modal";
 import {
   Row,
   Col,
@@ -487,10 +487,12 @@ const ProjectsPage = () => {
       <Row
         align="middle"
         justify="space-between"
-        gutter={[8, 8]}
+        gutter={0}
         style={{
           minHeight: isMobile ? 46 : 50,
           display: "flex",
+          width: "100%",
+          margin: 0,
           padding: isMobile ? "10px 12px" : "14px 18px",
           backgroundColor: semantic.colorBgContainer,
           borderBottom: `1px solid ${semantic.colorBorder}`,
@@ -699,30 +701,24 @@ const ProjectsPage = () => {
       )}
       {/* Modal Section */}
       {(open || openEdit) && (
-        <Modal
-          title={openEdit ? "Edit Team" : "Create Project"}
+        <ProjectFormModal
           open={open || openEdit}
+          title={openEdit ? "Edit Project" : "Create New Project"}
           onCancel={openEdit ? handleCloseEdit : handleClose}
-          footer={false}
-          okText={openEdit ? "Edit Team" : "Create Project"}
-          width={isMobile ? "92%" : 700}
-        >
-          <ProjectForm
-            form={openEdit ? editForm : form}
-            organization={organization}
-            selectedProject={openEdit ? selectedProject : undefined}
-            projectMembers={projectMembers}
-            setProjectMembers={setProjectMembers}
-            searchTexts={searchTexts}
-            setSearchTexts={setSearchTexts}
-            organizationMembers={organizationMembers}
-            loading={loading}
-            onFinish={openEdit ? onFinishEdit : onFinishAdd}
-            maxMembers={MAX_MEMBERS}
-            mode={openEdit ? "edit" : "create"}
-            formatNumber={formatNumber}
-          />
-        </Modal>
+          form={openEdit ? editForm : form}
+          organization={organization}
+          selectedProject={openEdit ? selectedProject : undefined}
+          projectMembers={projectMembers}
+          setProjectMembers={setProjectMembers}
+          searchTexts={searchTexts}
+          setSearchTexts={setSearchTexts}
+          organizationMembers={organizationMembers}
+          loading={loading}
+          onFinish={openEdit ? onFinishEdit : onFinishAdd}
+          maxMembers={MAX_MEMBERS}
+          mode={openEdit ? "edit" : "create"}
+          formatNumber={formatNumber}
+        />
       )}
       {/* Context Holder for Modal */}
       {contextHolder}

@@ -25,7 +25,7 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
   return (
-      <Row style={{ padding: isMobile ? "16px" : "24px" }}>
+      <Row style={{ padding: isMobile ? "16px" : "24px", margin: 0, width: "100%" }}>
                 <Table
               size={isMobile ? "small" : "middle"}
               dataSource={projects}
@@ -118,15 +118,11 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                   render: (_: any, record: IProject) => {
                     const imageUsed = (record.accessImageAmount ?? 0) - (record.remainImageAmount ?? 0);
                     const imageTotal = record.accessImageAmount ?? 0;
-                    const tokenUsed = (record.accessTokenAmount ?? 0) - (record.remainTokenAmount ?? 0);
-                    const tokenTotal = record.accessTokenAmount ?? 0;
                     return (
                       <div style={{ minWidth: isMobile ? 98 : 120, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
                         <Quata
-                          imageUsed={imageUsed}
-                          imageTotal={imageTotal}
-                          tokenUsed={tokenUsed}
-                          tokenTotal={tokenTotal}
+                          creditUsed={imageUsed}
+                          creditTotal={imageTotal}
                           semantic={semantic}
                           size={"small" }
                         />

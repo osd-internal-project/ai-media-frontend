@@ -13,18 +13,14 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
-  Card,
   Col,
   Empty,
   Form,
   FormInstance,
   Input,
   Modal,
-  Popconfirm,
   Row,
-  Select,
   Space,
-  Tag,
   Typography,
   Upload,
   UploadFile,
@@ -41,6 +37,8 @@ import React, {
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import CustomTab from "./customtab";
+import TemplateFormModal from "./template-form-modal";
+import TemplateItem from "./template-item";
 
 export interface props {
   promptGuideTypes: TPromptGuideType[];
@@ -104,10 +102,8 @@ const PromptGuideComponent: FC<props> = ({
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [typeForm] = Form.useForm();
-  const [guideForm] = Form.useForm();
 
   useEffect(() => {
     const onResize = () => {
@@ -147,37 +143,13 @@ const PromptGuideComponent: FC<props> = ({
     });
   }, [templates, searchQuery, generateType]);
 
-  const getTypeBadgeStyle = (type: TGenerateType | undefined) => {
-    if (type === "video") {
-      return {
-        color: semantic.colorPrimary,
-        background: `${semantic.colorPrimary}1A`,
-        borderColor: `${semantic.colorPrimary}33`,
-      };
-    }
-
-    if (type === "omnihumen") {
-      return {
-        color: semantic.colorSuccess,
-        background: `${semantic.colorSuccess}1A`,
-        borderColor: `${semantic.colorSuccess}33`,
-      };
-    }
-
-    if (type === "dreamactor") {
-      return {
-        color: semantic.colorWarning,
-        background: `${semantic.colorWarning}1A`,
-        borderColor: `${semantic.colorWarning}33`,
-      };
-    }
-
-    return {
-      color: "#1890ff",
-      background: "#e6f7ff",
-      borderColor: "#91d5ff",
-    };
-  };
+  const selectedPromptGuideTypeId = useMemo(() => {
+    if (!selectedPromptGuide?.id) return undefined;
+    const group = promptGuideTypes.find((type) =>
+      (type.promptGuide || []).some((item) => item.id === selectedPromptGuide.id),
+    );
+    return group?.id;
+  }, [promptGuideTypes, selectedPromptGuide]);
 
   const handleAddType = () => {
     typeForm.resetFields();
@@ -189,30 +161,7 @@ const PromptGuideComponent: FC<props> = ({
     setIsTypeModalOpen(false);
   };
 
-  const handleCreateGuide = (values: any) => {
-    if (!selectedTypeId) return;
-
-    const selectedType = promptGuideTypes.find((type) => type.id === selectedTypeId);
-
-    onCreatePromptGuide({
-      ...values,
-      promptGuideTypeId: selectedTypeId,
-      generateType: selectedType?.generateType,
-    });
-    setIsGuideModalOpen(false);
-  };
-
   const openCreateTemplateModal = () => {
-    guideForm.resetFields();
-
-    const firstTypeId = promptGuideTypes[0]?.id;
-    if (firstTypeId) {
-      setSelectedTypeId(firstTypeId);
-      guideForm.setFieldValue("promptGuideTypeId", firstTypeId);
-    } else {
-      setSelectedTypeId(null);
-    }
-
     setIsGuideModalOpen(true);
   };
 
@@ -390,9 +339,9 @@ const PromptGuideComponent: FC<props> = ({
         </div>
 
         <Space wrap style={{ width: isMobile ? "100%" : "auto" }}>
-          {canManage && (
+          {/* {canManage && (
             <Button onClick={handleAddType} block={isMobile}>Add Type</Button>
-          )}
+          )} */}
           {canManage && (
             <Button
               type="primary"
@@ -422,67 +371,15 @@ const PromptGuideComponent: FC<props> = ({
         <Row gutter={[16, 16]}>
           {filteredTemplates.map((template) => (
             <Col key={template.id} xs={24} md={12} lg={8}>
-              <Card
-                style={{
-                  borderColor: semantic.colorBorder,
-                  background: semantic.colorBgContainer,
-                }}
-              >
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <Typography.Title level={5} style={{ marginBottom: 4 }}>
-                      {template.title}
-                    </Typography.Title>
-                    <Typography.Text type="secondary">
-                      {template.typeTitle || "Prompt Template"}
-                    </Typography.Text>
-                  </div>
-                  <Tag style={{ textTransform: "capitalize", ...getTypeBadgeStyle(template.generateType) }}>
-                    {template.generateType}
-                  </Tag>
-                </div>
-
-                <div
-                  style={{
-                    background: semantic.colorBgTextActive,
-                    borderRadius: 10,
-                    padding: 12,
-                    marginBottom: 12,
-                    minHeight: 88,
-                  }}
-                >
-                  <Typography.Paragraph
-                    style={{ margin: 0, fontFamily: "monospace" }}
-                    ellipsis={{ rows: 4 }}
-                  >
-                    {template.textPrompt || "-"}
-                  </Typography.Paragraph>
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <Space size={6} wrap>
-                    <Tag>{template.typeTitle || "General"}</Tag>
-                  </Space>
-
-                  <Space wrap>
-                    {canManage && (
-                      <Button
-                        icon={<EditOutlined />}
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        Edit
-                      </Button>
-                    )}
-                    <Button
-                      type="primary"
-                      icon={<Sparkles size={14} />}
-                      onClick={() => handleEditTemplate(template)}
-                    >
-                      Use
-                    </Button>
-                  </Space>
-                </div>
-              </Card>
+              <TemplateItem
+                title={template.title}
+                textPrompt={template.textPrompt}
+                generateType={template.generateType}
+                categoryLabel={template.typeTitle || "General"}
+                canManage={canManage}
+                onEdit={() => handleEditTemplate(template)}
+                onUse={() => handleEditTemplate(template)}
+              />
             </Col>
           ))}
         </Row>
@@ -512,98 +409,57 @@ const PromptGuideComponent: FC<props> = ({
         </Form>
       </Modal>
 
-      <Modal
-        title="Create Prompt Template"
+      <TemplateFormModal
+        formMode="create"
         open={isGuideModalOpen}
+        isMobile={isMobile}
+        promptGuideTypes={promptGuideTypes}
         onCancel={() => setIsGuideModalOpen(false)}
-        onOk={() => guideForm.submit()}
-        width={isMobile ? "92%" : 620}
-      >
-        <Form form={guideForm} onFinish={handleCreateGuide} layout="vertical">
-          <Form.Item
-            name="promptGuideTypeId"
-            label="Category"
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={promptGuideTypes.map((type) => ({
-                label: type.title,
-                value: type.id,
-              }))}
-              onChange={(value) => setSelectedTypeId(value)}
-            />
-          </Form.Item>
+        onSubmit={(values) => {
+          onCreatePromptGuide(values);
+          setIsGuideModalOpen(false);
+        }}
+      />
 
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="textPrompt"
-            label="Text Prompt"
-            rules={[{ required: true }]}
-          >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-
-          <Form.Item name="status" initialValue={true} hidden>
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title={canManage ? "Edit Prompt Template" : "View Prompt Template"}
-        open={isEditModalOpen}
-        onCancel={() => setIsEditModalOpen(false)}
-        onOk={() => promptGuideForm.submit()}
-        okButtonProps={{ hidden: !canManage }}
-        width={isMobile ? "95%" : 900}
-      >
-        {!selectedPromptGuide ? (
+      {selectedPromptGuide ? (
+        <TemplateFormModal
+          formMode="edit"
+          open={isEditModalOpen}
+          isMobile={isMobile}
+          promptGuideTypes={promptGuideTypes}
+          initialValues={{
+            id: selectedPromptGuide.id,
+            title: selectedPromptGuide.title || "",
+            textPrompt: selectedPromptGuide.textPrompt || "",
+            status: selectedPromptGuide.status,
+            generateType: selectedPromptGuide.generateType,
+            promptGuideTypeId: selectedPromptGuideTypeId,
+          }}
+          onCancel={() => setIsEditModalOpen(false)}
+          onSubmit={(values) => {
+            onUpdatePromptGuide(values);
+            setIsEditModalOpen(false);
+          }}
+          onDelete={
+            canManage
+              ? () => {
+                  onDeletePromptGuide(selectedPromptGuide.id!);
+                  setIsEditModalOpen(false);
+                }
+              : undefined
+          }
+          extraContent={<Form.Item label="Files">{renderFileEditor()}</Form.Item>}
+        />
+      ) : (
+        <Modal
+          title="Edit Prompt Template"
+          open={isEditModalOpen}
+          onCancel={() => setIsEditModalOpen(false)}
+          footer={null}
+        >
           <Empty description="No template selected" />
-        ) : (
-          <Form layout="vertical" form={promptGuideForm} onFinish={onUpdatePromptGuide}>
-            <Form.Item name="id" hidden>
-              <Input />
-            </Form.Item>
-
-            <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-              <Input readOnly={!canManage} />
-            </Form.Item>
-
-            <Form.Item label="Files">{renderFileEditor()}</Form.Item>
-
-            <Form.Item
-              name="textPrompt"
-              label="Text Prompt"
-              rules={[{ required: true }]}
-            >
-              <Input.TextArea rows={6} readOnly={!canManage} />
-            </Form.Item>
-
-            {canManage && (
-              <Space>
-                <Popconfirm
-                  title="Delete this prompt template?"
-                  onConfirm={() => {
-                    onDeletePromptGuide(selectedPromptGuide.id!);
-                    setIsEditModalOpen(false);
-                  }}
-                >
-                  <Button danger icon={<DeleteOutlined />}>
-                    Delete
-                  </Button>
-                </Popconfirm>
-
-                <Button type="primary" htmlType="submit">
-                  Save Changes
-                </Button>
-              </Space>
-            )}
-          </Form>
-        )}
-      </Modal>
+        </Modal>
+      )}
 
     </div>
   );
