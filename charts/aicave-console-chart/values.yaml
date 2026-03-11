@@ -1,0 +1,87 @@
+# Default values for aicave-console
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+appName: aicave-console
+namespace: aicave-prod
+replicaCount: 5
+
+image:
+  repository: docker.io/library/ai-media-fe
+  pullPolicy: Always
+  tag: "v1.0.37"
+
+imagePullSecretName: huawei-swr-secret
+
+containerPort: 80
+
+strategy:
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "32k"
+    nginx.ingress.kubernetes.io/large-client-header-buffers: "4 32k"
+  hosts:
+    - host: www.aicave.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    enabled: true
+    secretName: aicave-console-tls
+
+env:
+  nextauthSecret: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo="
+  version: "2.0.0"
+  authBackendUrl: "http://aicave-user-service:8972/api"
+  apiBaseUrlUser: "https://www.aicave.ai/public/api/v1/user/api"
+  apiBaseUrlReport: "https://www.aicave.ai/public/api/v1/report"
+  apiBaseUrlCore: "https://www.aicave.ai/public/api/v1/core"
+  apiBaseUrlWorker: "https://www.aicave.ai/public/api/v1/worker"
+  apiBaseUrlWebHook: "https://www.aicave.ai"
+  nextauthUrl: "https://www.aicave.ai"
+  keycloakClientId: "eportal-client-id"
+  keycloakClientSecret: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
+  keycloakIssuer: "https://id24.aicave.ai/realms/eportal"
+  authTrustHost: "true"
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "100m"
+  limits:
+    memory: "768Mi"
+    cpu: "500m"
+
+livenessProbe:
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+

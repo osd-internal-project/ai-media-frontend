@@ -1,0 +1,41 @@
+# SIT Environment Values
+# Override specific values for SIT environment
+
+namespace: aicave-sit
+replicaCount: 2
+
+image:
+  tag: "v1.0.25"
+
+ingress:
+  hosts:
+    - host: sit.aicave.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    enabled: true
+    secretName: aicave-console-tls-sit
+
+env:
+  nextauthSecret: "n5yaP7ynm0Qf/JhIJVLXmfQH0zr+YgKwk0TdWo9EFwo="
+  version: "2.0.0"
+  authBackendUrl: "http://aicave-user-service:8972/api"
+  apiBaseUrlUser: "https://sit.aicave.ai/public/api/v1/user/api"
+  apiBaseUrlReport: "https://sit.aicave.ai/public/api/v1/report"
+  apiBaseUrlCore: "https://sit.aicave.ai/public/api/v1/core"
+  apiBaseUrlWorker: "https://sit.aicave.ai/public/api/v1/worker"
+  apiBaseUrlWebHook: "https://sit.aicave.ai/public/api/v1/web-hook"
+  nextauthUrl: "https://sit.aicave.ai"
+  keycloakClientId: "eportal-client-id"
+  keycloakClientSecret: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
+  keycloakIssuer: "https://id24-sit.aicave.ai/realms/eportal"
+  authTrustHost: "true"
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "250m"
