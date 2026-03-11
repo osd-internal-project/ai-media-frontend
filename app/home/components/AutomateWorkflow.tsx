@@ -1,0 +1,182 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+
+const automations = [
+  {
+    image: "/images/automate-workflow/1.png",
+    fallbackColor: "bg-orange-500",
+    label: "Approval routing\nsystem",
+  },
+  {
+    image: "/images/automate-workflow/2.png",
+    fallbackColor: "bg-gray-800",
+    label: "AI risk escalation",
+  },
+  {
+    image: "/images/automate-workflow/3.png",
+    fallbackColor: "bg-blue-100",
+    label: "Multi-Platform\nContent Distribution",
+  },
+  {
+    image: "/images/automate-workflow/4.png",
+    fallbackColor: "bg-pink-300",
+    label: "Campaign batch\ndeployment",
+  },
+];
+
+export default function AutomateWorkflow() {
+  const [windowWidth, setWindowWidth] = useState(1200);
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMd = windowWidth >= 768;
+
+  return (
+    <section
+      style={{
+        position: "relative",
+        width: "100%",
+        paddingTop: "96px",
+        paddingBottom: "128px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        background: "linear-gradient(to bottom, #05070a 0%, #0a0c10 50%, #0a0a0a 100%)", // Matches the deep dark tone
+        overflow: "hidden",
+      }}
+    >
+      {/* Background Watermark Text */}
+      <div
+        style={{
+          position: "absolute",
+          top: "5%",
+          left: 0,
+          right: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          display: "flex",
+          flexDirection: "column",
+          lineHeight: 0.85,
+          paddingLeft: isMd ? "40px" : "16px",
+          width: "200%", // Stretch off-screen
+        }}
+      >
+        <span
+          style={{
+            fontSize: isMd ? "160px" : "80px",
+            fontWeight: 800,
+            color: "rgba(255, 255, 255, 0.02)",
+            letterSpacing: "-0.04em",
+          }}
+        >
+          Automate Your
+        </span>
+        <span
+          style={{
+            fontSize: isMd ? "160px" : "80px",
+            fontWeight: 800,
+            color: "rgba(255, 255, 255, 0.02)",
+            letterSpacing: "-0.04em",
+          }}
+        >
+          Creative Workflow
+        </span>
+      </div>
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: "1200px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "48px",
+        }}
+      >
+        {/* Title Text */}
+        <h2
+          style={{
+            fontSize: isMd ? "36px" : "28px",
+            fontWeight: 600,
+            letterSpacing: "-0.02em",
+            color: "#ffffff",
+            margin: 0,
+            paddingLeft: isMd ? "16px" : "0",
+          }}
+        >
+          Automate Your Creative Workflow
+        </h2>
+
+        {/* 4-Column Image Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMd ? "repeat(4, 1fr)" : "repeat(2, 1fr)",
+            gap: isMd ? "24px" : "16px",
+            padding: isMd ? "0 16px" : "0",
+          }}
+        >
+          {automations.map((auto, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+              }}
+            >
+              {/* Square Image Box */}
+              <div
+                style={{
+                  width: "100%",
+                  aspectRatio: "1/1",
+                  borderRadius: "24px",
+                  overflow: "hidden",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+                  position: "relative",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                <img
+                  src={auto.image}
+                  alt={auto.label.replace("\n", " ")}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    // Fallback to purely colored div if not found
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      parent.className = `${parent.className} ${auto.fallbackColor}`;
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Caption */}
+              <p
+                style={{
+                  color: "#cbd5e1",
+                  fontSize: isMd ? "18px" : "15px",
+                  lineHeight: 1.4,
+                  fontWeight: 400,
+                  margin: 0,
+                  whiteSpace: "pre-line", // Respects \n in the label string
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {auto.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

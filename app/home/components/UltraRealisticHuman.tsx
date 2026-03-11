@@ -1,0 +1,206 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+
+const features = [
+  "Generate human video from a single image",
+  "Animate facial expressions naturally",
+  "Realistic lip-sync from audio input",
+  "Emotion-aware performance generation",
+  "Support text prompts for action & style control",
+  "Create multi-person dialogue scenes",
+  "Ideal for AI spokesperson & presenter videos",
+];
+
+export default function UltraRealisticHuman() {
+  const [windowWidth, setWindowWidth] = useState(1200);
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMd = windowWidth >= 768;
+
+  return (
+    <section
+      style={{
+        position: "relative",
+        width: "100%",
+        paddingTop: "64px",
+        paddingBottom: "96px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        background: "linear-gradient(to bottom, #05070a 0%, #0a0c10 40%, #080a0f 100%)", // Matches the deep dark tone
+        overflow: "hidden",
+      }}
+    >
+      {/* Background Watermark Text - Ultra-Realistic Human */}
+      <div
+        style={{
+          position: "absolute",
+          top: "5%",
+          left: 0,
+          right: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          display: "flex",
+          flexDirection: "column",
+          lineHeight: 0.85,
+          paddingLeft: isMd ? "40px" : "16px",
+          width: "200%", // Allow text to stretch way off screen like in mockup
+        }}
+      >
+        <span
+          style={{
+            fontSize: isMd ? "160px" : "80px",
+            fontWeight: 800,
+            color: "rgba(255, 255, 255, 0.02)",
+            letterSpacing: "-0.04em",
+          }}
+        >
+          Ultra-Realistic Human
+        </span>
+        <span
+          style={{
+            fontSize: isMd ? "160px" : "80px",
+            fontWeight: 800,
+            color: "rgba(255, 255, 255, 0.02)",
+            letterSpacing: "-0.04em",
+          }}
+        >
+          AI Generation
+        </span>
+      </div>
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: "1200px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "48px",
+        }}
+      >
+        {/* Title Text */}
+        <h2
+          style={{
+            fontSize: isMd ? "40px" : "30px",
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "4px",
+            margin: 0,
+            lineHeight: 1.1,
+          }}
+        >
+          <span style={{ color: "#ffffff" }}>Ultra-Realistic Human</span>
+          <span
+            style={{
+              background: "linear-gradient(90deg, #7a73ff 0%, #7cd4d8 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              color: "transparent",
+              marginLeft: isMd ? "16px" : "8px",
+            }}
+          >
+            AI Generation
+          </span>
+        </h2>
+
+        {/* Content Split: Feature List (Left) + Big Image (Right) */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMd ? "1fr 1.2fr" : "1fr",
+            gap: isMd ? "64px" : "32px",
+            alignItems: "center",
+          }}
+        >
+          {/* Left: Description & Feature Checklist */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+            <p
+              style={{
+                color: "#e2e8f0",
+                fontSize: "15px",
+                lineHeight: 1.6,
+                fontWeight: 500,
+                maxWidth: "450px",
+                margin: 0,
+              }}
+            >
+              Create commercial-grade human visuals with exceptional realism and consistency with script-to-human intelligence.
+            </p>
+
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "24px" }}>
+              {features.map((feat, i) => (
+                <li
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: "2px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 5L4 8L11 1" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span
+                    style={{
+                      color: "#e2e8f0",
+                      fontSize: "14px",
+                      fontWeight: 400,
+                      lineHeight: 1.5,
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {feat}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right: Main Highlight Image */}
+          <div
+            style={{
+              width: "100%",
+              borderRadius: "24px",
+              overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.05)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+              position: "relative",
+              display: "flex",
+            }}
+          >
+            <img
+              src="/images/ultra-realistic-human/1.png" // Expected path for actual image if added
+              alt="Ultra-Realistic Human Stage Profile"
+              style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

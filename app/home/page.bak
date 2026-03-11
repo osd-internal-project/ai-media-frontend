@@ -1,0 +1,354 @@
+import React from 'react';
+import {
+    Play,
+    CheckCircle2,
+    Users,
+    Headset,
+    Lock,
+    Globe,
+    MonitorPlay,
+    Image as ImageIcon,
+    Speaker,
+    Mic,
+    Music,
+    Video,
+    Instagram,
+    Twitter,
+    Linkedin,
+    Youtube
+} from 'lucide-react';
+import styles from './page.module.css';
+
+export default function IndexPage() {
+    return (
+        <div className={styles.container}>
+            <div className={styles.glow1}></div>
+            <div className={styles.glow2}></div>
+            <div className={styles.glow3}></div>
+
+            <div className={styles.content}>
+                {/* Navigation */}
+                <nav className={styles.nav}>
+                    <div className={styles.logo}>
+                        <div className={styles.logoIcon}>AI</div>
+                        <span>Ai Media</span>
+                    </div>
+                    <div className={styles.navLinks}>
+                        <span className={styles.navLink}>Home</span>
+                        <span className={styles.navLink}>About</span>
+                        <span className={styles.navLink}>Features</span>
+                        <span className={styles.navLink}>Pricing</span>
+                        <span className={styles.navLink}>Contact</span>
+                    </div>
+                    <div className={styles.navActions}>
+                        <button className={styles.signInBtn}>Sign In</button>
+                        <button className={styles.primaryBtn}>Get Started</button>
+                    </div>
+                </nav>
+
+                {/* Hero Section */}
+                <section className={styles.hero}>
+                    <div className={styles.heroTag}>Discover the Power of AI</div>
+                    <h1 className={styles.heroTitle}>
+                        Everything AI in Image & <br /> Video Generations
+                    </h1>
+                    <p className={styles.heroSubtitle}>
+                        Generate Images and Videos using AI. Edit Photos, Create Avatars and Text to Speech in One Place.
+                    </p>
+                    <div className={styles.heroActions}>
+                        <button className={styles.primaryBtn}>Start Trial</button>
+                        <button className={styles.secondaryBtn}>Learn More</button>
+                    </div>
+
+                    <div className={styles.topImagesGrid}>
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className={styles.topImageWrapper}>
+                                <span className={styles.imgPlaceholder}>image</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Generate Stunning Images */}
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>Generate Stunning Images</h2>
+                        <p className={styles.sectionSubtitle}>
+                            Generate for any use, effortlessly transform text into stunning masterpieces.
+                        </p>
+                    </div>
+
+                    <div className={styles.masonryGrid}>
+                        <div className={`${styles.masonryItem} ${styles.tall}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.short}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.medium}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.tall}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.medium}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.short}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.tall}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                        <div className={`${styles.masonryItem} ${styles.medium}`}>
+                            <span className={styles.imgPlaceholder}>image</span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* AI Image Generation */}
+                <section className={styles.featureSplit}>
+                    <div className={styles.featureImage}>
+                        <span className={styles.imgPlaceholder}>image</span>
+                    </div>
+                    <div className={styles.featureContent}>
+                        <h2 className={styles.featureTitle}>AI Image Generation</h2>
+                        <ul className={styles.featureList}>
+                            {[
+                                'High-Quality Generations',
+                                'Speed',
+                                'Diverse Styles',
+                                'Prompt Engineering',
+                                'Detail Variations',
+                                'Upscaling'
+                            ].map((item, idx) => (
+                                <li key={idx} className={styles.featureListItem}>
+                                    <CheckCircle2 className={styles.checkIcon} />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </section>
+
+                {/* AI Video Generation */}
+                <section className={`${styles.featureSplit} ${styles.reversed}`}>
+                    <div className={styles.featureImage}>
+                        <span className={styles.imgPlaceholder}>image</span>
+                    </div>
+                    <div className={styles.featureContent}>
+                        <h2 className={styles.featureTitle}>AI Video Generation</h2>
+                        <ul className={styles.featureList}>
+                            {[
+                                'Text to Video',
+                                'Image to Video',
+                                'Video to Video',
+                                'Cinematic Camera Motions',
+                                'High Resolution Outputs'
+                            ].map((item, idx) => (
+                                <li key={idx} className={styles.featureListItem}>
+                                    <CheckCircle2 className={styles.checkIcon} />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </section>
+
+                {/* Video Avatar */}
+                <section className={styles.featureSplit}>
+                    <div className={styles.featureImage}>
+                        <span className={styles.imgPlaceholder}>image</span>
+                    </div>
+                    <div className={styles.featureContent}>
+                        <h2 className={styles.featureTitle}>Video Avatar Creation</h2>
+                        <ul className={styles.featureList}>
+                            {[
+                                'Custom Avatar Creation',
+                                'Realistic Motions',
+                                'Lip Syncing capability',
+                                'Multi-Language translation',
+                                'Custom Voice Over support'
+                            ].map((item, idx) => (
+                                <li key={idx} className={styles.featureListItem}>
+                                    <CheckCircle2 className={styles.checkIcon} />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </section>
+
+                {/* AI Music */}
+                <section className={`${styles.featureSplit} ${styles.reversed}`}>
+                    <div className={styles.featureImage}>
+                        <span className={styles.imgPlaceholder}>image</span>
+                    </div>
+                    <div className={styles.featureContent}>
+                        <h2 className={styles.featureTitle}>AI Music & Sound Effects</h2>
+                        <ul className={styles.featureList}>
+                            {[
+                                'Text to Audio Generation',
+                                'Unlimited Generations',
+                                'High Quality Audio export',
+                                'Commercial Use rights',
+                                'Royalty Free Music & SFX'
+                            ].map((item, idx) => (
+                                <li key={idx} className={styles.featureListItem}>
+                                    <CheckCircle2 className={styles.checkIcon} />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </section>
+
+                {/* Enterprise */}
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>Built for Enterprise Teams</h2>
+                        <p className={styles.sectionSubtitle}>Scale content creation across your organization</p>
+                    </div>
+                    <div className={styles.enterpriseGrid}>
+                        <div className={styles.enterpriseCard}>
+                            <Users className={styles.enterpriseIcon} />
+                            <div>
+                                <h3 className={styles.enterpriseCardTitle}>Team Collaboration</h3>
+                                <p className={styles.enterpriseCardDesc}>Work seamlessly with your team members in real-time, share resources and manage projects together efficiently.</p>
+                            </div>
+                        </div>
+                        <div className={styles.enterpriseCard}>
+                            <Headset className={styles.enterpriseIcon} />
+                            <div>
+                                <h3 className={styles.enterpriseCardTitle}>Priority Support</h3>
+                                <p className={styles.enterpriseCardDesc}>Get dedicated 24/7 priority support from our expert team directly alongside account management.</p>
+                            </div>
+                        </div>
+                        <div className={styles.enterpriseCard}>
+                            <Lock className={styles.enterpriseIcon} />
+                            <div>
+                                <h3 className={styles.enterpriseCardTitle}>Your Data is Yours</h3>
+                                <p className={styles.enterpriseCardDesc}>Complete control over your generation data and intellectual property rights secured on enterprise nodes.</p>
+                            </div>
+                        </div>
+                        <div className={styles.enterpriseCard}>
+                            <Globe className={styles.enterpriseIcon} />
+                            <div>
+                                <h3 className={styles.enterpriseCardTitle}>Enterprise Security</h3>
+                                <p className={styles.enterpriseCardDesc}>Advanced SOC-2 compliant infrastructure ensures your workflows and data remain completely protected.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Workflows */}
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>Automate Your Creative Workflow</h2>
+                    </div>
+                    <div className={styles.workflowGrid}>
+                        {[
+                            { title: 'Social Media Content', desc: 'Generate daily posts easily' },
+                            { title: 'Content Creation', desc: 'Scale up your blog assets' },
+                            { title: 'Digital Marketing', desc: 'Create ads variations fast' },
+                            { title: 'Education Materials', desc: 'Engage students visually' }
+                        ].map((item, i) => (
+                            <div key={i} className={styles.workflowCard}>
+                                <div className={styles.workflowImage}>
+                                    <span className={styles.imgPlaceholder}>image</span>
+                                </div>
+                                <h3 className={styles.workflowTitle}>{item.title}</h3>
+                                <p className={styles.workflowDesc}>{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Future Creativity */}
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <h2 className={styles.sectionTitle}>The Future of AI Creativity</h2>
+                    </div>
+                    <div className={styles.futureGrid}>
+                        {[
+                            'Anime Style Generator',
+                            'Cyberpunk Theme',
+                            'Space Exploration',
+                            'Abstract Digital Art',
+                            'Photorealistic Renders',
+                            'Cinematic Landscapes'
+                        ].map((title, i) => (
+                            <div key={i} className={styles.futureCard}>
+                                <span className={styles.imgPlaceholder}>image</span>
+                                <div className={styles.futureCardTitle}>{title}</div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Who is it for */}
+                <section className={styles.whoSection}>
+                    <div className={styles.whoContent}>
+                        <h2 className={styles.whoTitle}>Who is it for?</h2>
+                        <ul className={styles.featureList}>
+                            <li className={styles.featureListItem}>
+                                <CheckCircle2 className={styles.checkIcon} />
+                                <span>Creative Directors</span>
+                            </li>
+                            <li className={styles.featureListItem}>
+                                <CheckCircle2 className={styles.checkIcon} />
+                                <span>Marketing Agencies</span>
+                            </li>
+                            <li className={styles.featureListItem}>
+                                <CheckCircle2 className={styles.checkIcon} />
+                                <span>Social Influencers</span>
+                            </li>
+                            <li className={styles.featureListItem}>
+                                <CheckCircle2 className={styles.checkIcon} />
+                                <span>Filmmakers & Producers</span>
+                            </li>
+                            <li className={styles.featureListItem}>
+                                <CheckCircle2 className={styles.checkIcon} />
+                                <span>Game Developers</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className={styles.whoImage}>
+                        <span className={styles.imgPlaceholder}>image</span>
+                    </div>
+                </section>
+
+                {/* Bottom CTA */}
+                <section className={styles.footerCta}>
+                    <h2 className={styles.footerCtaTitle}>Ready to Accelerate Your Creative Workflow?</h2>
+                    <div className={styles.heroActions} style={{ marginBottom: 0 }}>
+                        <button className={styles.primaryBtn}>Start Trial</button>
+                        <button className={styles.secondaryBtn}>Learn More</button>
+                    </div>
+                </section>
+
+                {/* Footer */}
+                <footer className={styles.footer}>
+                    <div className={styles.logo}>
+                        <div className={styles.logoIcon} style={{ width: 24, height: 24, fontSize: 12 }}>AI</div>
+                        <span style={{ fontSize: 16 }}>Ai Media</span>
+                    </div>
+                    <div className={styles.footerLinks}>
+                        <a href="#" className={styles.footerLink}>Home</a>
+                        <a href="#" className={styles.footerLink}>Explore</a>
+                        <a href="#" className={styles.footerLink}>Pricing</a>
+                        <a href="#" className={styles.footerLink}>Features</a>
+                        <a href="#" className={styles.footerLink}>Privacy Policy</a>
+                        <a href="#" className={styles.footerLink}>Terms of Service</a>
+                    </div>
+                    <div className={styles.socialLinks}>
+                        <Twitter size={20} className={styles.socialIcon} />
+                        <Instagram size={20} className={styles.socialIcon} />
+                        <Linkedin size={20} className={styles.socialIcon} />
+                        <Youtube size={20} className={styles.socialIcon} />
+                    </div>
+                </footer>
+            </div>
+        </div>
+    );
+}
