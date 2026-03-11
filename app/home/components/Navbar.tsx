@@ -9,7 +9,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-80">
           <img
-            src="/images/logo.png"
+            src="/images/logo-1.png"
             alt="Ai Cave Logo"
             className="h-8 w-auto"
           />
