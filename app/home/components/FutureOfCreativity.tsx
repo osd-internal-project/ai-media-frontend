@@ -52,8 +52,8 @@ export default function FutureOfCreativity() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "96px",
-        paddingBottom: "128px",
+        paddingTop: "148px",
+        // paddingBottom: "128px",
         paddingLeft: "16px",
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #0a0a0a 0%, #0d0f12 50%, #080a0f 100%)", // Matches the deep dark tone
@@ -64,7 +64,7 @@ export default function FutureOfCreativity() {
       <div
         style={{
           position: "absolute",
-          top: "8%",
+          top: "6%",
           left: 0,
           right: 0,
           pointerEvents: "none",
@@ -78,11 +78,12 @@ export default function FutureOfCreativity() {
       >
         <span
           style={{
-            fontSize: isMd ? "140px" : "60px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
-            letterSpacing: "-0.02em",
-            textAlign: "center",
+            fontSize: isMd ? "120px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            letterSpacing: "-0.04em",
             whiteSpace: "nowrap",
           }}
         >
@@ -90,11 +91,13 @@ export default function FutureOfCreativity() {
         </span>
         <span
           style={{
-            fontSize: isMd ? "140px" : "60px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
-            letterSpacing: "-0.02em",
-            textAlign: "center",
+            fontSize: isMd ? "120px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           Creativity
@@ -129,9 +132,13 @@ export default function FutureOfCreativity() {
           </h2>
         </div>
 
+        <div style={{
+          paddingBottom: "8px",
+        }} />
         {/* 3x2 Image Card Grid */}
         <div
           style={{
+            paddingTop: "64px",
             display: "grid",
             gridTemplateColumns: isMd ? "repeat(3, 1fr)" : "repeat(2, 1fr)",
             gap: isMd ? "24px" : "16px",

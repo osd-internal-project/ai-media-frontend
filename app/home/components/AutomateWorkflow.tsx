@@ -42,19 +42,38 @@ export default function AutomateWorkflow() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "96px",
-        paddingBottom: "128px",
+        paddingTop: "148px",
+        // paddingBottom: "128px",
         paddingLeft: "16px",
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #05070a 0%, #0a0c10 50%, #0a0a0a 100%)", // Matches the deep dark tone
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: "20%",
+          transform: "translate(-50%, -50%)",
+          width: "600px",
+          height: "300px",
+          borderRadius: "50%",
+          background: `
+            radial-gradient(circle at 40% 50%, rgba(124,212,216,0.6) 0%, rgba(124,212,216,0.3) 30%, rgba(124,212,216,0.1) 55%, rgba(0,0,0,0) 70%),
+            radial-gradient(circle at 70% 50%, rgba(150,230,235,0.5) 0%, rgba(150,230,235,0.2) 35%, rgba(0,0,0,0) 65%)
+          `,
+          filter: "blur(80px)",
+          opacity: 0.5,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* Background Watermark Text */}
       <div
         style={{
           position: "absolute",
-          top: "5%",
+          top: "16%",
           left: 0,
           right: 0,
           pointerEvents: "none",
@@ -62,13 +81,13 @@ export default function AutomateWorkflow() {
           display: "flex",
           flexDirection: "column",
           lineHeight: 0.85,
-          paddingLeft: isMd ? "40px" : "16px",
+          // paddingLeft: isMd ? "40px" : "16px",
           width: "200%", // Stretch off-screen
         }}
       >
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
+            fontSize: isMd ? "120px" : "40px",
             fontWeight: 800,
             color: "rgba(255, 255, 255, 0.02)",
             letterSpacing: "-0.04em",
@@ -78,7 +97,7 @@ export default function AutomateWorkflow() {
         </span>
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
+            fontSize: isMd ? "120px" : "40px",
             fontWeight: 800,
             color: "rgba(255, 255, 255, 0.02)",
             letterSpacing: "-0.04em",
@@ -98,6 +117,7 @@ export default function AutomateWorkflow() {
           display: "flex",
           flexDirection: "column",
           gap: "48px",
+          paddingTop: '32px'
         }}
       >
         {/* Title Text */}
@@ -113,6 +133,9 @@ export default function AutomateWorkflow() {
         >
           Automate Your Creative Workflow
         </h2>
+        <div style={{
+          paddingBottom: "8px",
+        }} />
 
         {/* 4-Column Image Grid */}
         <div

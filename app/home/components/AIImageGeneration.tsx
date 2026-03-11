@@ -31,20 +31,39 @@ export default function AIImageGeneration() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "32px",
-        paddingBottom: "96px",
+        paddingTop: "148px",
+        // paddingBottom: "10px",
         paddingLeft: "16px",
         paddingRight: "16px",
-        // Blends vertically from GenerateSmarter to a very dark base
         background: "linear-gradient(to bottom, rgba(31, 27, 62, 0.4) 0%, #0a0d14 50%, #05070a 100%)",
         overflow: "hidden",
       }}
     >
+      {/* Background radial gradient glow (Added separately so it doesn't blur the text) */}
+      <div
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: "15%",
+          transform: "translate(-50%, -50%)",
+          width: "600px",
+          height: "300px",
+          borderRadius: "50%",
+          background: `
+            radial-gradient(circle at 40% 50%, rgba(120,110,255,0.45) 0%, rgba(120,110,255,0.25) 30%, rgba(120,110,255,0.1) 55%, rgba(0,0,0,0) 70%),
+            radial-gradient(circle at 70% 50%, rgba(120,180,255,0.35) 0%, rgba(120,180,255,0.15) 35%, rgba(0,0,0,0) 65%)
+          `,
+          filter: "blur(80px)",
+          opacity: 1,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* Background Watermark Text - All Image Generation */}
       <div
         style={{
           position: "absolute",
-          top: "10%",
+          top: "18%",
           left: 0,
           right: 0,
           pointerEvents: "none",
@@ -52,25 +71,27 @@ export default function AIImageGeneration() {
           display: "flex",
           flexDirection: "column",
           lineHeight: 0.85,
-          paddingLeft: isMd ? "40px" : "16px",
+          // paddingLeft: isMd ? "40px" : "16px",
         }}
       >
         <span
           style={{
-            fontSize: isMd ? "180px" : "80px",
+            fontSize: isMd ? "80px" : "40px",
             fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            color: "rgba(120, 180, 255, 0.08)",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           All Image
         </span>
         <span
           style={{
-            fontSize: isMd ? "180px" : "80px",
+            fontSize: isMd ? "80px" : "40px",
             fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            color: "rgba(120, 180, 255, 0.08)",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           Generation

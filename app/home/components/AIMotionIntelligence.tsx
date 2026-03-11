@@ -29,8 +29,8 @@ export default function AIMotionIntelligence() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "64px",
-        paddingBottom: "96px",
+        paddingTop: "148px",
+        // paddingBottom: "96px",
         paddingLeft: "16px",
         paddingRight: "16px",
         // Blends vertically from the previous section
@@ -38,41 +38,66 @@ export default function AIMotionIntelligence() {
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "60%",
+          left: "70%",
+          transform: "translate(-50%, -50%)",
+          width: "800px",
+          height: "300px",
+          borderRadius: "50%",
+          background: `
+            radial-gradient(circle at 40% 50%, rgba(120,110,255,0.45) 0%, rgba(120,110,255,0.25) 30%, rgba(120,110,255,0.1) 55%, rgba(0,0,0,0) 70%),
+            radial-gradient(circle at 70% 50%, rgba(120,180,255,0.35) 0%, rgba(120,180,255,0.15) 35%, rgba(0,0,0,0) 65%)
+          `,
+          filter: "blur(80px)",
+          opacity: 1,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* Background Watermark Text - AI Motion Intelligence */}
       <div
         style={{
           position: "absolute",
-          top: "8%",
+          top: "16%",
           left: 0,
           right: 0,
           pointerEvents: "none",
           zIndex: 0,
           display: "flex",
           flexDirection: "column",
-          lineHeight: 0.85,
-          paddingLeft: isMd ? "40px" : "16px",
+          lineHeight: 0.9,
+          // paddingLeft: isMd ? "40px" : "16px",
           width: "200%", // Stretch off-screen
         }}
       >
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            fontSize: isMd ? "100px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
-          AI Motion
+          AI Motion Intelligence for
         </span>
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            fontSize: isMd ? "100px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
-          Intelligence
+          Digital Characters
         </span>
       </div>
 

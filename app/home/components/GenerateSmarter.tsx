@@ -23,12 +23,12 @@ export default function GenerateSmarter() {
   const isMd = windowWidth >= 768;
 
   return (
-    <section
+    <div
       style={{
         position: "relative",
         width: "100%",
         paddingTop: "96px",
-        paddingBottom: "32px",
+        // paddingBottom: "32px",
         paddingLeft: "16px",
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #080c17 40%, rgba(31, 27, 62, 0.4) 100%)", // Blend into next section
@@ -40,11 +40,17 @@ export default function GenerateSmarter() {
         style={{
           position: "absolute",
           top: "30%",
-          left: "50%",
+          left: "70%",
           transform: "translate(-50%, -50%)",
-          width: "800px",
-          height: "500px",
-          background: "radial-gradient(circle, rgba(46,41,120,0.4) 0%, rgba(8,12,23,0) 70%)",
+          width: "900px",
+          height: "400px",
+          borderRadius: "30%",
+          background: `
+      radial-gradient(circle at 40% 50%, rgba(120,110,255,0.45) 0%, rgba(120,110,255,0.25) 30%, rgba(120,110,255,0.1) 55%, rgba(0,0,0,0) 70%),
+      radial-gradient(circle at 70% 50%, rgba(120,180,255,0.35) 0%, rgba(120,180,255,0.15) 35%, rgba(0,0,0,0) 65%)
+    `,
+          filter: "blur(80px)",
+          opacity: 0.9,
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -54,7 +60,7 @@ export default function GenerateSmarter() {
       <div
         style={{
           position: "absolute",
-          top: "60px",
+          top: "84px",
           left: "50%",
           transform: "translateX(-50%)",
           textAlign: "center",
@@ -68,9 +74,11 @@ export default function GenerateSmarter() {
       >
         <span
           style={{
-            fontSize: isMd ? "200px" : "80px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.03)",
+            fontSize: isMd ? "120px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
             whiteSpace: "nowrap",
           }}
@@ -79,9 +87,11 @@ export default function GenerateSmarter() {
         </span>
         <span
           style={{
-            fontSize: isMd ? "200px" : "80px",
+            fontSize: isMd ? "120px" : "40px",
             fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.03)",
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
             whiteSpace: "nowrap",
           }}
@@ -97,7 +107,7 @@ export default function GenerateSmarter() {
           maxWidth: "1200px",
           marginLeft: "auto",
           marginRight: "auto",
-          paddingTop: "140px", // Push the main content down so it perfectly overlaps the middle of the watermark
+          paddingTop: "64px", // Push the main content down so it perfectly overlaps the middle of the watermark
         }}
       >
         {/* Title */}
@@ -127,6 +137,7 @@ export default function GenerateSmarter() {
             justifyContent: "center",
             gap: "12px",
             marginBottom: "64px",
+            paddingTop: "24px",
           }}
         >
           {tabs.map((tab, i) => (
@@ -234,6 +245,6 @@ export default function GenerateSmarter() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

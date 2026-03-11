@@ -66,7 +66,7 @@ export default function Home() {
         <AutomateWorkflow />
         <FutureOfCreativity />
         <WhyAICave />
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </main>
   );

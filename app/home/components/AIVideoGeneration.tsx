@@ -29,19 +29,38 @@ export default function AIVideoGeneration() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "32px",
-        paddingBottom: "96px",
+        paddingTop: "148px",
+        // paddingBottom: "96px",
         paddingLeft: "16px",
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #05070a 0%, #0a1118 40%, #05070a 100%)",
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: "15%",
+          transform: "translate(-50%, -50%)",
+          width: "600px",
+          height: "300px",
+          borderRadius: "50%",
+          background: `
+            radial-gradient(circle at 40% 50%, rgba(124,212,216,0.6) 0%, rgba(124,212,216,0.3) 30%, rgba(124,212,216,0.1) 55%, rgba(0,0,0,0) 70%),
+            radial-gradient(circle at 70% 50%, rgba(150,230,235,0.5) 0%, rgba(150,230,235,0.2) 35%, rgba(0,0,0,0) 65%)
+          `,
+          filter: "blur(80px)",
+          opacity: 0.9,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* Background radial glow */}
       <div
         style={{
           position: "absolute",
-          top: "10%",
+          top: "18%",
           left: "-200px",  // Move left to hide left edge instead of using transform
           width: "800px",
           height: "800px",
@@ -55,7 +74,7 @@ export default function AIVideoGeneration() {
       <div
         style={{
           position: "absolute",
-          top: "5%",
+          top: "16%",
           left: 0,
           right: 0,
           pointerEvents: "none",
@@ -63,12 +82,12 @@ export default function AIVideoGeneration() {
           display: "flex",
           flexDirection: "column",
           lineHeight: 0.85,
-          paddingLeft: isMd ? "40px" : "16px",
+          // paddingLeft: isMd ? "40px" : "16px",
         }}
       >
         <span
           style={{
-            fontSize: isMd ? "180px" : "80px",
+            fontSize: isMd ? "80px" : "40px",
             fontWeight: 800,
             color: "rgba(255, 255, 255, 0.02)",
             letterSpacing: "-0.04em",
@@ -78,7 +97,7 @@ export default function AIVideoGeneration() {
         </span>
         <span
           style={{
-            fontSize: isMd ? "180px" : "80px",
+            fontSize: isMd ? "80px" : "40px",
             fontWeight: 800,
             color: "rgba(255, 255, 255, 0.02)",
             letterSpacing: "-0.04em",

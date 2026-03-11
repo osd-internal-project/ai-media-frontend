@@ -85,19 +85,38 @@ export default function EnterpriseTeams() {
       style={{
         position: "relative",
         width: "100%",
-        paddingTop: "96px",
-        paddingBottom: "96px",
+        paddingTop: "148px",
+        // paddingBottom: "96px",
         paddingLeft: "16px",
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #080a0f 0%, #0a0c10 40%, #05070a 100%)", // Matches the deep dark tone
         overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: "35%",
+          left: "10%",
+          transform: "translate(-50%, -50%)",
+          width: "600px",
+          height: "300px",
+          borderRadius: "50%",
+          background: `
+            radial-gradient(circle at 40% 50%, rgba(120,110,255,0.45) 0%, rgba(120,110,255,0.25) 30%, rgba(120,110,255,0.1) 55%, rgba(0,0,0,0) 70%),
+            radial-gradient(circle at 70% 50%, rgba(120,180,255,0.35) 0%, rgba(120,180,255,0.15) 35%, rgba(0,0,0,0) 65%)
+          `,
+          filter: "blur(80px)",
+          opacity: 1,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* Background Watermark Text - Built for Enterprise Teams */}
       <div
         style={{
           position: "absolute",
-          top: "8%",
+          top: "12%",
           left: 0,
           right: 0,
           pointerEvents: "none",
@@ -105,26 +124,32 @@ export default function EnterpriseTeams() {
           display: "flex",
           flexDirection: "column",
           lineHeight: 0.85,
-          paddingLeft: isMd ? "40px" : "16px",
+          // paddingLeft: isMd ? "40px" : "16px",
           width: "200%", // Stretch off-screen
         }}
       >
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            fontSize: isMd ? "100px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           Built for Enterprise
         </span>
         <span
           style={{
-            fontSize: isMd ? "160px" : "80px",
-            fontWeight: 800,
-            color: "rgba(255, 255, 255, 0.02)",
+            fontSize: isMd ? "100px" : "40px",
+            fontWeight: 900,
+            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
             letterSpacing: "-0.04em",
+            whiteSpace: "nowrap",
           }}
         >
           Teams
@@ -144,7 +169,7 @@ export default function EnterpriseTeams() {
         }}
       >
         {/* Header Section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
           <h2
             style={{
               fontSize: isMd ? "40px" : "30px",
