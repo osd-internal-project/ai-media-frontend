@@ -29,7 +29,7 @@ env:
   nextauthUrl: "https://sit.aicave.ai"
   keycloakClientId: "eportal-client-id"
   keycloakClientSecret: "kovdYL3AAs9v6e3zxNw4o3CbaBwZiCId"
-  keycloakIssuer: "https://id24-sit.aicave.ai/realms/eportal"
+  keycloakIssuer: "https://id24.aicave.ai/realms/eportal"
   authTrustHost: "true"
 
 resources:
