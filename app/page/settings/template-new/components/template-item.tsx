@@ -2,7 +2,7 @@ import type { TGenerateType } from "@/app/common/prompt-guide.type";
 import { EditOutlined } from "@ant-design/icons";
 import { Button, Card, Space, Tag, Typography } from "antd";
 import { Sparkles } from "lucide-react";
-import React, { type FC } from "react";
+import React, { type FC, useState } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 
@@ -80,13 +80,20 @@ const TemplateItem: FC<TemplateItemProps> = ({
 }) => {
 	const { mode } = useThemeMode();
 	const semantic = getThemeConfig(mode).token ?? {};
+	const [isHovered, setIsHovered] = useState(false);
+	const isLight = mode === "light";
 
 	return (
 		<Card
 			size="small"
+			onMouseEnter={() => setIsHovered(true)}
+			onMouseLeave={() => setIsHovered(false)}
 			style={{
-				borderColor: semantic.colorBorder,
-				background: semantic.colorBgContainer,
+				borderColor: isHovered ? semantic.colorPrimaryBorder : semantic.colorBorder,
+				background: isHovered && isLight ? semantic.colorFillAlter : semantic.colorBgContainer,
+				transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+				boxShadow: isHovered ? "0 10px 28px rgba(0,0,0,0.12)" : "none",
+				transition: "all 180ms ease",
 			}}
 		>
 			<Space
@@ -117,8 +124,9 @@ const TemplateItem: FC<TemplateItemProps> = ({
 					style={{
 						borderRadius: 10,
 						padding: 10,
-						background: semantic.colorBgTextActive,
+						background: isHovered ? semantic.colorBgContainerDisabled : semantic.colorBgTextActive,
 						minHeight: 66,
+						transition: "background-color 180ms ease",
 					}}
 				>
 					<Typography.Paragraph
@@ -145,11 +153,16 @@ const TemplateItem: FC<TemplateItemProps> = ({
 					{showActions ? (
 						<Space wrap>
 							{canManage && (
-								<Button icon={<EditOutlined />} onClick={onEdit}>
+								<Button icon={<EditOutlined />} onClick={onEdit} style={{ borderRadius: 10 }}>
 									Edit
 								</Button>
 							)}
-							<Button type="primary" icon={<Sparkles size={14} />} onClick={onUse || onEdit}>
+							<Button
+								type="primary"
+								icon={<Sparkles size={14} />}
+								onClick={onUse || onEdit}
+								style={{ borderRadius: 10 }}
+							>
 								Use
 							</Button>
 						</Space>

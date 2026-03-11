@@ -78,6 +78,8 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   const [activeEditTab, setActiveEditTab] = useState<"settings" | "members">(
     "settings",
   );
+  const [hoveredEditTab, setHoveredEditTab] = useState<"settings" | "members" | null>(null);
+  const [hoveredMemberIndex, setHoveredMemberIndex] = useState<number | null>(null);
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
 
   const maxImage =
@@ -113,6 +115,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
     tab: "settings" | "members",
   ): CSSProperties => {
     const isActive = activeEditTab === tab;
+    const isHovered = hoveredEditTab === tab;
     return {
       flex: 1,
       borderRadius: 999,
@@ -122,19 +125,28 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
         themeMode === "light"
           ? isActive
             ? semantic.colorBgContainer
+            : isHovered
+              ? semantic.colorFillAlter
             : "transparent"
           : isActive
             ? semantic.colorBgTextActive
+            : isHovered
+              ? semantic.colorBgElevated
             : "transparent",
       color:
         themeMode === "light"
-          ? semantic.colorTextBase
+          ? isActive || isHovered
+            ? semantic.colorTextBase
+            : semantic.colorTextSecondary
           : isActive
             ? "#ffffff"
+            : isHovered
+              ? semantic.colorTextBase
             : semantic.colorTextSecondary,
       fontWeight: 500,
       boxShadow: "none",
-      transition: "background-color 220ms ease, color 220ms ease",
+      transform: isHovered ? "translateY(-1px)" : "translateY(0)",
+      transition: "background-color 180ms ease, color 180ms ease, transform 140ms ease",
     };
   };
 
@@ -382,11 +394,20 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
             <Card
               key={index}
               size="small"
+              onMouseEnter={() => setHoveredMemberIndex(index)}
+              onMouseLeave={() => setHoveredMemberIndex(null)}
               style={{
                 marginBottom: 8,
-                borderColor: semantic.colorBorderSecondary,
+                borderColor:
+                  hoveredMemberIndex === index
+                    ? semantic.colorPrimaryBorder
+                    : semantic.colorBorderSecondary,
                 borderRadius: 10,
-                background: semantic.colorFillAlter,
+                background:
+                  hoveredMemberIndex === index
+                    ? semantic.colorBgContainer
+                    : semantic.colorFillAlter,
+                transition: "all 180ms ease",
                
               }}
               styles={{ body: { padding: isMobile ? 10 : 12 } }}
@@ -483,6 +504,8 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                 type="text"
                 icon={<SettingOutlined />}
                 style={getEditTabButtonStyle("settings")}
+                onMouseEnter={() => setHoveredEditTab("settings")}
+                onMouseLeave={() => setHoveredEditTab(null)}
                 onClick={() => setActiveEditTab("settings")}
               >
                 Settings
@@ -491,6 +514,8 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                 type="text"
                 icon={<TeamOutlined />}
                 style={getEditTabButtonStyle("members")}
+                onMouseEnter={() => setHoveredEditTab("members")}
+                onMouseLeave={() => setHoveredEditTab(null)}
                 onClick={() => setActiveEditTab("members")}
               >
                 Members

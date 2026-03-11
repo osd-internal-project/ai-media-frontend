@@ -69,6 +69,9 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                 border: `1px solid ${semantic.colorBorder}`,
                 background: semantic.colorBgContainer,
               }}
+              rowClassName={(record: IProject) =>
+                hoveredRowId === record.id ? "project-list-row-hover" : ""
+              }
               onRow={record => ({
                 onClick: () => onClickProject(record.id),
                 style: { cursor: 'pointer' },
@@ -169,6 +172,8 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                                 ? "auto"
                                 : "none",
                             transition: "opacity 0.15s ease",
+                            borderRadius: 10,
+                            color: semantic.colorTextSecondary,
                           }}
                         />
                       </Dropdown>
@@ -177,6 +182,12 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                 },
               ]}
             />
+            <style>{`
+              .project-list-row-hover > td {
+                background: ${semantic.colorFillAlter} !important;
+                transition: background-color 180ms ease;
+              }
+            `}</style>
           </Row>
   );
 };

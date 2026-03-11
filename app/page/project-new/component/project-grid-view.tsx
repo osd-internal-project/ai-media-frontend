@@ -48,10 +48,12 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
               onMouseLeave={() => setHoveredCardId(null)}
               style={{
                 backgroundColor: semantic.colorBgContainer,
-                border: `1px solid ${semantic.colorBorder}`,
-                boxShadow: 'none',
+                    border: `1px solid ${hoveredCardId === project.id ? semantic.colorPrimaryBorder : semantic.colorBorder}`,
+                    boxShadow: hoveredCardId === project.id ? '0 10px 28px rgba(0,0,0,0.12)' : 'none',
                 cursor: 'pointer',
                 position: 'relative',
+                    transform: hoveredCardId === project.id ? 'translateY(-2px)' : 'translateY(0)',
+                    transition: 'all 180ms ease',
               }}
               onClick={() => onClickProject(project.id)}
             >
@@ -78,6 +80,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           isMobile || hoveredCardId === project.id ? 'auto' : 'none',
                         transition: 'opacity 0.15s ease',
                         color: semantic.colorTextSecondary,
+                        borderRadius: 10,
                       }}
                     />
                   </Dropdown>
