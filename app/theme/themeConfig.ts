@@ -25,8 +25,12 @@ export const aiCaveColors = {
   neutral900: "#191C20",
   neutral800: "#21262B",
   neutral700: "#2A3038",
+  neutral600: "#3A434F",
+  neutral500: "#8C99A9",
+  neutral350: "#D3DAE3",
   neutral300: "#DADEE2",
   neutral200: "#F2F4F5",
+  neutral150: "#FAFBFD",
   neutral100: "#FFFFFF",
 };
 
@@ -42,12 +46,13 @@ const getSemantic = (mode: "light" | "dark") => {
     bgBase: isDark ? brand.neutral900 : brand.neutral100,
     bgContainer: isDark ? brand.neutral800 : brand.neutral100,
     bgElevated: isDark ? brand.neutral700 : brand.neutral200,
+    fieldBg: isDark ? brand.neutral700 : brand.neutral150,
     primaryLight: isDark ? brand.primaryDark : brand.primaryLight,
     colorBgTextActive: isDark ? brand.neutral700 : brand.neutral300,
-    textBase: isDark ? "#F2F4F5" : brand.neutral900,
-    textSecondary: "#8C99A9",
+    textBase: isDark ? brand.neutral200 : brand.neutral900,
+    textSecondary: brand.neutral500,
 
-    border: isDark ? brand.neutral700 : brand.neutral300,
+    border: isDark ? brand.neutral600 : brand.neutral350,
 
     primary: brand.primary,
     secondary: brand.secondary,
@@ -103,13 +108,24 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
       },
 
       Input: {
-        colorBgContainer: semantic.bgElevated,
+        colorBgContainer: semantic.fieldBg,
+        colorBorder: semantic.border,
+        activeBorderColor: semantic.primary,
+        hoverBorderColor: semantic.primary,
+      },
+
+      InputNumber: {
+        colorBgContainer: semantic.fieldBg,
+        colorBorder: semantic.border,
         activeBorderColor: semantic.primary,
         hoverBorderColor: semantic.primary,
       },
 
       Select: {
-        colorBgContainer: semantic.bgElevated,
+        colorBgContainer: semantic.fieldBg,
+        colorBorder: semantic.border,
+        activeBorderColor: semantic.primary,
+        hoverBorderColor: semantic.primary,
       },
 
       Table: {
@@ -126,11 +142,12 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
       Menu: {
         itemBg: semantic.bgContainer,
         itemSelectedBg: semantic.primary,
-        itemSelectedColor: "#ffffff",
+        itemSelectedColor: brand.neutral100,
       },
 
       Modal: {
         contentBg: semantic.bgContainer,
+        headerBg: "transparent",
       },
 
       Drawer: {
