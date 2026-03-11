@@ -545,6 +545,12 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         take: take,
         type: "dreamactor",
       });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "dreamactor",
+      });
     }
   };
 

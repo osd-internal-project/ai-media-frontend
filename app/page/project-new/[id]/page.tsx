@@ -425,7 +425,6 @@ const GenerateImagePage: FC = () => {
                     username={session?.user?.name || ""}
                     setDisableTab={setDisableTab}
                     onSetPromptTextRef={onSetPromptTextRef}
-                    
                   />
                 ),
               },
@@ -437,17 +436,6 @@ const GenerateImagePage: FC = () => {
                 label: renderTabLabel("library", "Library", <StarOutlined />),
                 children: (
                   <div className="h-full">
-                    {/* <PromptLibrary
-                    key={`activity-${activeKey}`}
-                    activeKey={activeKey}
-                    projectId={id}
-                    userId={session?.user?.id}
-                    projectRole={projectRole}
-                    username={session?.user?.name || ""}
-                    selectedAIModel={selectedAIModel}
-                    setDisableTab={setDisableTab}
-                    onSetPromptTextRef={onSetPromptTextRef}
-                  /> */}
                     <PromptLibrary
                       activeKey={activeKey}
                       key={`activity-${activeKey}`}
@@ -465,128 +453,12 @@ const GenerateImagePage: FC = () => {
                   <FolderOpenOutlined />,
                 ),
                 children: (
-                  // <PromptActivity
-                  //   activeKey={activeKey}
-                  //   projectId={id}
-                  //   userId={session?.user?.id}
-                  //   projectRole={projectRole}
-                  //   promptGuideOpenStatus={promptGuideOpenStatus}
-                  //   selectedAIModel={selectedAIModel}
-                  //   username={session?.user?.name || ""}
-                  //   setDisableTab={setDisableTab}
-                  //   onSetPromptTextRef={onSetPromptTextRef}
-                  // />
                   <PromptActivity
                     activeKey={activeKey}
                     key={`activity-${activeKey}`}
                   />
                 ),
               },
-              // {
-              //   disabled: disableTab,
-              //   forceRender: true,
-              //   key: "omnihumen",
-              //   label: (
-              //     <Space size={8}>
-              //       <MessageOutlined />
-              //       <Typography.Text
-              //         style={{ color: "inherit", marginBottom: 0 }}
-              //       >
-              //         OmniHuman
-              //       </Typography.Text>
-              //     </Space>
-              //   ),
-              //   children: (
-              //     <ChatGenerateOmnihumen
-              //       key={"omnihumen"}
-              //       activeKey={activeKey}
-              //       projectId={id}
-              //       userId={session?.user?.id}
-              //       projectRole={projectRole}
-              //       promptGuideOpenStatus={promptGuideOpenStatus}
-              //       selectedAIModel={selectedAIModel}
-              //       username={session?.user?.name || ""}
-              //       setDisableTab={setDisableTab}
-              //       onSetPromptTextRef={onSetPromptTextRef}
-              //     />
-              //   ),
-              // },
-              // {
-              //   disabled: disableTab,
-              //   forceRender: true,
-              //   key: "dreamactor",
-              //   label: (
-              //     <Space size={8}>
-              //       <PlaySquareOutlined />
-              //       <Typography.Text
-              //         style={{ color: "inherit", marginBottom: 0 }}
-              //       >
-              //         DreamActor
-              //       </Typography.Text>
-              //     </Space>
-              //   ),
-              //   children: (
-              //     <ChatGenerateDreamactor
-              //       key={"dreamactor"}
-              //       activeKey={activeKey}
-              //       projectId={id}
-              //       userId={session?.user?.id}
-              //       projectRole={projectRole}
-              //       promptGuideOpenStatus={promptGuideOpenStatus}
-              //       selectedAIModel={selectedAIModel}
-              //       username={session?.user?.name || ""}
-              //       setDisableTab={setDisableTab}
-              //       onSetPromptTextRef={onSetPromptTextRef}
-              //     />
-              //   ),
-              // },
-
-              // {
-              //   disabled: disableTab,
-              //   forceRender: true,
-              //   key: "library",
-              //   label: (
-              //     <Space size={8}>
-              //       <StarOutlined />
-              //       <Typography.Text
-              //         style={{ color: "inherit", marginBottom: 0 }}
-              //       >
-              //         Library
-              //       </Typography.Text>
-              //     </Space>
-              //   ),
-              //   children: (
-              //     <div className="h-full">
-              //       <PromptLibrary
-              //         key={`activity-${activeKey}`}
-              //         activeKey={activeKey}
-              //       />
-              //     </div>
-              //   ),
-              // },
-              // {
-              //   disabled: disableTab,
-              //   forceRender: true,
-              //   key: "activity",
-              //   label: (
-              //     <Space size={8}>
-              //       <FolderOpenOutlined />
-              //       <Typography.Text
-              //         style={{ color: "inherit", marginBottom: 0 }}
-              //       >
-              //         All Activity
-              //       </Typography.Text>
-              //     </Space>
-              //   ),
-              //   children: (
-              //     <div className="h-full">
-              //       <PromptActivity
-              //         activeKey={activeKey}
-              //         key={`activity-${activeKey}`}
-              //       />
-              //     </div>
-              //   ),
-              // },
             ]
             // .filter((item) => !hiddenTabs.includes(item.key))
           }

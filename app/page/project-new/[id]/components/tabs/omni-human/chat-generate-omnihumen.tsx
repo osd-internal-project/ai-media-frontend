@@ -546,6 +546,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         take: take,
         type: "omnihumen",
       });
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "omnihumen",
+      });
     }
   };
 
