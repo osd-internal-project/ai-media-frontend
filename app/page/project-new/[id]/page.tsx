@@ -34,6 +34,14 @@ import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 
+type GenerateTabKey =
+  | "image"
+  | "video"
+  | "omnihumen"
+  | "dreamactor"
+  | "library"
+  | "activity";
+
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
@@ -46,9 +54,7 @@ const GenerateImagePage: FC = () => {
   const masterModelTypeServices = MasterModelTypeServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<
-    "image" | "video" | "omnihumen" | "dreamactor" | "library" | "activity"
-  >("image");
+  const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -185,7 +191,7 @@ const GenerateImagePage: FC = () => {
   // }, [aiModels]);
 
   useEffect(() => {
-console.log(filteredAIModels)
+    console.log(filteredAIModels);
     if (aiModels.length > 0 && !selectedAIModel) {
       const savedModelId = localStorage.getItem(
         `selectedAIModel_${activeKey}_${id}`,
@@ -214,11 +220,68 @@ console.log(filteredAIModels)
         setSelectedAIModel(modelToSelect);
       }
     }
-    const models = aiModels.filter(
-      (model) => activeKey === model.type,
-    );
+    const models = aiModels.filter((model) => activeKey === model.type);
     setFilteredAIModels(models);
   }, [aiModels, activeKey, selectedAIModel, id]);
+
+  const tabIconColorByType: Record<GenerateTabKey, string> = {
+    image: "#1890ff",
+    video: semantic.colorPrimary || "#1677ff",
+    omnihumen: semantic.colorSuccess || "#52c41a",
+    dreamactor: semantic.colorWarning || "#faad14",
+    library: "#1890ff",
+    activity: semantic.colorTextSecondary || "#8c8c8c",
+  };
+
+  const renderTabLabel = (
+    key: GenerateTabKey,
+    text: string,
+    icon: React.ReactNode,
+  ) => {
+    const isDarkMode = mode === "dark";
+    const isActive = activeKey === key;
+
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: isMobile ? "5px 9px" : "6px 12px",
+          borderRadius: 8,
+          border:
+            isDarkMode && isActive
+              ? `1px solid ${semantic.colorBorderSecondary || semantic.colorPrimary}`
+              : "1px solid transparent",
+          background:
+            isDarkMode && isActive ? semantic.colorBgElevated : "transparent",
+          color:
+            isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
+          transition: "all 0.2s ease",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            color: isActive
+              ? tabIconColorByType[key]
+              : semantic.colorTextSecondary,
+          }}
+        >
+          {icon}
+        </span>
+        <Typography.Text
+          style={{
+            color:
+              isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
+            marginBottom: 0,
+          }}
+        >
+          {text}
+        </Typography.Text>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -261,7 +324,7 @@ console.log(filteredAIModels)
             minHeight: 0,
             overflow: "hidden",
           }}
-          className="ant-tabs-full"
+          className="ant-tabs-full generate-tabs"
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
           onChange={(key) =>
@@ -273,15 +336,10 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 key: "image",
                 forceRender: true,
-                label: (
-                  <Space size={8}>
-                    <PictureOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      Image Gen
-                    </Typography.Text>
-                  </Space>
+                label: renderTabLabel(
+                  "image",
+                  "Image Gen",
+                  <PictureOutlined />,
                 ),
                 children: (
                   <ChatGenerateImage
@@ -302,15 +360,10 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 forceRender: true,
                 key: "video",
-                label: (
-                  <Space size={8}>
-                    <VideoCameraOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      Video Gen
-                    </Typography.Text>
-                  </Space>
+                label: renderTabLabel(
+                  "video",
+                  "Video Gen",
+                  <VideoCameraOutlined />,
                 ),
                 children: (
                   <ChatGenerateVideo
@@ -331,15 +384,10 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 forceRender: true,
                 key: "omnihumen",
-                label: (
-                  <Space size={8}>
-                    <MessageOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      OmniHuman
-                    </Typography.Text>
-                  </Space>
+                label: renderTabLabel(
+                  "omnihumen",
+                  "OmniHuman",
+                  <MessageOutlined />,
                 ),
                 children: (
                   <ChatGenerateOmnihumen
@@ -360,15 +408,10 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 forceRender: true,
                 key: "dreamactor",
-                label: (
-                  <Space size={8}>
-                    <PlaySquareOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      DreamActor
-                    </Typography.Text>
-                  </Space>
+                label: renderTabLabel(
+                  "dreamactor",
+                  "DreamActor",
+                  <PlaySquareOutlined />,
                 ),
                 children: (
                   <ChatGenerateDreamactor
@@ -382,6 +425,7 @@ console.log(filteredAIModels)
                     username={session?.user?.name || ""}
                     setDisableTab={setDisableTab}
                     onSetPromptTextRef={onSetPromptTextRef}
+                    
                   />
                 ),
               },
@@ -390,21 +434,23 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 forceRender: true,
                 key: "library",
-                label: (
-                  <Space size={8}>
-                    <StarOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      Library
-                    </Typography.Text>
-                  </Space>
-                ),
+                label: renderTabLabel("library", "Library", <StarOutlined />),
                 children: (
                   <div className="h-full">
+                    {/* <PromptLibrary
+                    key={`activity-${activeKey}`}
+                    activeKey={activeKey}
+                    projectId={id}
+                    userId={session?.user?.id}
+                    projectRole={projectRole}
+                    username={session?.user?.name || ""}
+                    selectedAIModel={selectedAIModel}
+                    setDisableTab={setDisableTab}
+                    onSetPromptTextRef={onSetPromptTextRef}
+                  /> */}
                     <PromptLibrary
-                      key={`activity-${activeKey}`}
                       activeKey={activeKey}
+                      key={`activity-${activeKey}`}
                     />
                   </div>
                 ),
@@ -413,25 +459,134 @@ console.log(filteredAIModels)
                 disabled: disableTab,
                 forceRender: true,
                 key: "activity",
-                label: (
-                  <Space size={8}>
-                    <FolderOpenOutlined />
-                    <Typography.Text
-                      style={{ color: "inherit", marginBottom: 0 }}
-                    >
-                      All Activity
-                    </Typography.Text>
-                  </Space>
+                label: renderTabLabel(
+                  "activity",
+                  "All Activity",
+                  <FolderOpenOutlined />,
                 ),
                 children: (
-                  <div className="h-full">
-                    <PromptActivity
-                      activeKey={activeKey}
-                      key={`activity-${activeKey}`}
-                    />
-                  </div>
+                  // <PromptActivity
+                  //   activeKey={activeKey}
+                  //   projectId={id}
+                  //   userId={session?.user?.id}
+                  //   projectRole={projectRole}
+                  //   promptGuideOpenStatus={promptGuideOpenStatus}
+                  //   selectedAIModel={selectedAIModel}
+                  //   username={session?.user?.name || ""}
+                  //   setDisableTab={setDisableTab}
+                  //   onSetPromptTextRef={onSetPromptTextRef}
+                  // />
+                  <PromptActivity
+                    activeKey={activeKey}
+                    key={`activity-${activeKey}`}
+                  />
                 ),
               },
+              // {
+              //   disabled: disableTab,
+              //   forceRender: true,
+              //   key: "omnihumen",
+              //   label: (
+              //     <Space size={8}>
+              //       <MessageOutlined />
+              //       <Typography.Text
+              //         style={{ color: "inherit", marginBottom: 0 }}
+              //       >
+              //         OmniHuman
+              //       </Typography.Text>
+              //     </Space>
+              //   ),
+              //   children: (
+              //     <ChatGenerateOmnihumen
+              //       key={"omnihumen"}
+              //       activeKey={activeKey}
+              //       projectId={id}
+              //       userId={session?.user?.id}
+              //       projectRole={projectRole}
+              //       promptGuideOpenStatus={promptGuideOpenStatus}
+              //       selectedAIModel={selectedAIModel}
+              //       username={session?.user?.name || ""}
+              //       setDisableTab={setDisableTab}
+              //       onSetPromptTextRef={onSetPromptTextRef}
+              //     />
+              //   ),
+              // },
+              // {
+              //   disabled: disableTab,
+              //   forceRender: true,
+              //   key: "dreamactor",
+              //   label: (
+              //     <Space size={8}>
+              //       <PlaySquareOutlined />
+              //       <Typography.Text
+              //         style={{ color: "inherit", marginBottom: 0 }}
+              //       >
+              //         DreamActor
+              //       </Typography.Text>
+              //     </Space>
+              //   ),
+              //   children: (
+              //     <ChatGenerateDreamactor
+              //       key={"dreamactor"}
+              //       activeKey={activeKey}
+              //       projectId={id}
+              //       userId={session?.user?.id}
+              //       projectRole={projectRole}
+              //       promptGuideOpenStatus={promptGuideOpenStatus}
+              //       selectedAIModel={selectedAIModel}
+              //       username={session?.user?.name || ""}
+              //       setDisableTab={setDisableTab}
+              //       onSetPromptTextRef={onSetPromptTextRef}
+              //     />
+              //   ),
+              // },
+
+              // {
+              //   disabled: disableTab,
+              //   forceRender: true,
+              //   key: "library",
+              //   label: (
+              //     <Space size={8}>
+              //       <StarOutlined />
+              //       <Typography.Text
+              //         style={{ color: "inherit", marginBottom: 0 }}
+              //       >
+              //         Library
+              //       </Typography.Text>
+              //     </Space>
+              //   ),
+              //   children: (
+              //     <div className="h-full">
+              //       <PromptLibrary
+              //         key={`activity-${activeKey}`}
+              //         activeKey={activeKey}
+              //       />
+              //     </div>
+              //   ),
+              // },
+              // {
+              //   disabled: disableTab,
+              //   forceRender: true,
+              //   key: "activity",
+              //   label: (
+              //     <Space size={8}>
+              //       <FolderOpenOutlined />
+              //       <Typography.Text
+              //         style={{ color: "inherit", marginBottom: 0 }}
+              //       >
+              //         All Activity
+              //       </Typography.Text>
+              //     </Space>
+              //   ),
+              //   children: (
+              //     <div className="h-full">
+              //       <PromptActivity
+              //         activeKey={activeKey}
+              //         key={`activity-${activeKey}`}
+              //       />
+              //     </div>
+              //   ),
+              // },
             ]
             // .filter((item) => !hiddenTabs.includes(item.key))
           }

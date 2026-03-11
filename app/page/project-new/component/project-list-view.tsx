@@ -3,7 +3,7 @@ import { Button, Dropdown, Row, Table } from "antd";
 import {
   TeamOutlined,
   FolderOpenOutlined,
-  EllipsisOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -148,7 +148,6 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                   key: 'action',
                   align: 'center',
                   width: 60,
-                  responsive: ['sm'],
                   render: (_: any, record: IProject) => (
                     canCreateProjects(organizationRole) && projectActionItems.length > 0 && onClickProjectAction ? (
                       <Dropdown
@@ -165,11 +164,14 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                         <Button
                           className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !px-2 !py-2 sm:!px-3 sm:!py-2"
                           type="text"
-                          icon={<EllipsisOutlined style={{ fontSize: 18 }} />}
+                          icon={<MoreOutlined style={{ fontSize: 18 }} />}
                           onClick={(e) => e.stopPropagation()}
                           style={{
-                            opacity: hoveredRowId === record.id ? 1 : 0,
-                            pointerEvents: hoveredRowId === record.id ? "auto" : "none",
+                            opacity: isMobile || hoveredRowId === record.id ? 1 : 0,
+                            pointerEvents:
+                              isMobile || hoveredRowId === record.id
+                                ? "auto"
+                                : "none",
                             transition: "opacity 0.15s ease",
                           }}
                         />

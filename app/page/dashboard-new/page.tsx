@@ -46,6 +46,7 @@ import AnalyticsTab from "./components/tabs/analytic/analytic-tab";
 import ApprovalsTab from "./components/tabs/approval/approval-tab";
 import { mockPendingApprovals } from "./components/tabs/approval/static";
 import DashboardCustomTab from "./components/customtab";
+import PageSubHeader from "@/app/components/layout/PageSubHeader";
 
 type QuotaOverride = {
   limitCredit: number;
@@ -570,35 +571,30 @@ const DashboardPage: FC = () => {
 
   return (
     <Layout style={{ width: "100%", background: "transparent" }}>
-      <Layout.Header
-        style={{
-          width: "100%",
-          height: "auto",
-          lineHeight: "normal",
-          padding: "20px 24px",
-          background: token.colorBgContainer,
-        }}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <Typography.Title level={4} style={{ margin: 0 }}>
-              Organization Dashboard
-            </Typography.Title>
-            <Typography.Text type="secondary">
-              Monitor usage and manage resources across all projects
-            </Typography.Text>
-          </div>
-          {approvalRows.length > 0 && (
-            <Badge count={approvalRows.length}>
-              <Button
-                icon={<AlertTriangle size={14} />}
-                onClick={() => setActiveTab("approvals")}
-              >
-                Pending Approvals
-              </Button>
-            </Badge>
-          )}
-        </div>
+      <Layout.Header style={{ width: "100%", height: "auto", lineHeight: "normal", padding: 0 }}>
+        <PageSubHeader
+          title="Organization Dashboard"
+          subtitle="Monitor usage and manage resources across all projects"
+          background={token.colorBgContainer}
+          borderColor={token.colorBorder}
+          titleColor={token.colorTextBase}
+          subtitleColor={token.colorTextSecondary}
+          chipBg={token.colorBgTextActive}
+          chipText={token.colorTextSecondary}
+          rightSlot={
+            approvalRows.length > 0 ? (
+              <Badge count={approvalRows.length}>
+                <Button
+                  icon={<AlertTriangle size={14} />}
+                  onClick={() => setActiveTab("approvals")}
+                >
+                  Pending Approvals
+                </Button>
+              </Badge>
+            ) : null
+          }
+          compact
+        />
       </Layout.Header>
 
       <Layout.Content className="p-3 md:p-6">

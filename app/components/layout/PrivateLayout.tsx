@@ -454,7 +454,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 top: 0,
                 bottom: 0,
                 zIndex: 1300,
-                width: 100,
+                width: 92,
                 background: semantic.colorBgContainer,
                 transform: mobileSiderOpen
                   ? "translateX(0)"

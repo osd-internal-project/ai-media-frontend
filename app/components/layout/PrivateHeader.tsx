@@ -142,9 +142,9 @@ export function PrivateHeader({
   return (
     <Header
       style={{
-        height: isMobile ? 64 : 80,
+        height: isMobile ? 58 : 72,
         borderBottom: `1px solid ${semantic.colorBorder}`,
-        padding: isMobile ? "0 12px" : "0 24px",
+        padding: isMobile ? "0 10px" : "0 20px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -174,7 +174,7 @@ export function PrivateHeader({
             style={{
               padding: isMobile ? 0 : "0 16px",
               minWidth: isMobile ? 40 : undefined,
-              height: isMobile ? 48 : 56,
+              height: isMobile ? 44 : 50,
               display: "flex",
               alignItems: "center",
             }}
