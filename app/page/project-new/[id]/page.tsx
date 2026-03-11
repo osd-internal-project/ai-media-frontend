@@ -24,7 +24,6 @@ import { TPromptGuideType } from "@/app/common/prompt-guide.type";
 import PromptLibrary from "./components/tabs/library/prompt-library";
 import PromptActivity from "./components/tabs/all-activity/prompt-activity";
 import AIModelServices from "@/app/services/ai-model.service";
-import { TAIModel } from "@/app/common/ai-model.type";
 import ChatGenerateImage from "./components/tabs/image-gen/chat-generate-image";
 import ChatGenerateVideo from "./components/tabs/video-gen/chat-generate-video";
 import ChatGenerateOmnihumen from "./components/tabs/omni-human/chat-generate-omnihumen";
@@ -32,14 +31,19 @@ import ChatGenerateDreamactor from "./components/tabs/dream-actor/chat-generate-
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
   // const hiddenTabs = ["omnihumen", "dreamactor"];
   // const promptguideTypeService = PromptGuideTypeServices(axiosCore);
+  const [filteredAIModels, setFilteredAIModels] = useState<TMasterModelType[]>(
+    [],
+  );
   const projectService = ProjectService(axiosCore);
-  const aiModelService = AIModelServices(axiosCore);
+  const masterModelTypeServices = MasterModelTypeServices(axiosCore);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<
@@ -53,9 +57,9 @@ const GenerateImagePage: FC = () => {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
-  const [aiModels, setAIModels] = useState<TAIModel[]>([]);
+  const [aiModels, setAIModels] = useState<TMasterModelType[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<
-    (TAIModel & { capabilities?: string[] }) | undefined
+    (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const { id } = params as { id: string };
   const organizationId = session?.user?.organizationId;
@@ -99,12 +103,6 @@ const GenerateImagePage: FC = () => {
     }
   }, [loadingData]);
 
-  useEffect(() => {
-    if (organizationId) {
-      masterdata();
-    }
-  }, [organizationId]);
-
   const fecthdata = async () => {
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
     if (!id) {
@@ -122,7 +120,9 @@ const GenerateImagePage: FC = () => {
   };
 
   const masterdata = async () => {
-    const models = await aiModelService.findAll();
+    console.log("organizationId", organizationId);
+
+    const models = await masterModelTypeServices.findAll();
     setAIModels(models || []);
   };
 
@@ -137,49 +137,23 @@ const GenerateImagePage: FC = () => {
   ) => {
     setActiveKey(key);
 
-    if (processedModels.length > 0) {
+    if (aiModels.length > 0) {
       const savedModelId = localStorage.getItem(`selectedAIModel_${key}_${id}`);
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(
-          (m) =>
-            m.id === parseInt(savedModelId) &&
-            (key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor"),
+        modelToSelect = aiModels.find(
+          (m) => m.id === parseInt(savedModelId) && key === m.type,
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find(
-          (m) =>
-            m.isDefault &&
-            (key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor"),
-        );
+        modelToSelect = aiModels.find((m) => m.isDefault && key === m.type);
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
-          modelToSelect = processedModels.find((m) =>
-            key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor",
-          );
+          modelToSelect = aiModels.find((m) => key === m.type);
         }
       }
 
@@ -189,49 +163,50 @@ const GenerateImagePage: FC = () => {
     }
   };
 
-  const processedModels = useMemo(() => {
-    const grouped = aiModels.reduce(
-      (acc, model) => {
-        const key = `${model.name}-${model.type}`;
+  // const processedModels = useMemo(() => {
+  //   const grouped = aiModels.reduce(
+  //     (acc, model) => {
+  //       const key = `${model.name}-${model.type}`;
 
-        if (!acc[key]) {
-          acc[key] = {
-            ...model,
-            capabilities: [model.mode],
-          };
-        } else {
-          acc[key].capabilities.push(model.mode);
-        }
+  //       if (!acc[key]) {
+  //         acc[key] = {
+  //           ...model,
+  //           capabilities: [model.mode],
+  //         };
+  //       } else {
+  //         acc[key].capabilities.push(model.mode);
+  //       }
 
-        return acc;
-      },
-      {} as Record<string, TAIModel & { capabilities: string[] }>,
-    );
-    return Object.values(grouped);
-  }, [aiModels]);
+  //       return acc;
+  //     },
+  //     {} as Record<string, TMasterModelType & { capabilities: string[] }>,
+  //   );
+  //   return Object.values(grouped);
+  // }, [aiModels]);
 
   useEffect(() => {
-    if (processedModels.length > 0 && !selectedAIModel) {
+console.log(filteredAIModels)
+    if (aiModels.length > 0 && !selectedAIModel) {
       const savedModelId = localStorage.getItem(
         `selectedAIModel_${activeKey}_${id}`,
       );
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(
+        modelToSelect = aiModels.find(
           (m) => m.id === parseInt(savedModelId) && activeKey === m.type,
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find(
+        modelToSelect = aiModels.find(
           (m) => m.isDefault && activeKey === m.type,
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
-          modelToSelect = processedModels.find((m) => m.type === activeKey);
+          modelToSelect = aiModels.find((m) => m.type === activeKey);
         }
       }
 
@@ -239,11 +214,12 @@ const GenerateImagePage: FC = () => {
         setSelectedAIModel(modelToSelect);
       }
     }
-  }, [processedModels, activeKey, selectedAIModel, id]);
+    const models = aiModels.filter(
+      (model) => activeKey === model.type,
+    );
+    setFilteredAIModels(models);
+  }, [aiModels, activeKey, selectedAIModel, id]);
 
-  const filteredAIModels = processedModels.filter(
-    (model) => activeKey === model.type,
-  );
   return (
     <div
       className="h-full min-h-0 flex flex-col overflow-hidden"
@@ -251,34 +227,27 @@ const GenerateImagePage: FC = () => {
         backgroundColor: semantic.colorBgBase,
       }}
     >
-        <HeaderGenerateImagePage
-          getProject={getProject}
-          activeKey={activeKey}
-          selectedAIModel={selectedAIModel}
-          filteredAIModels={filteredAIModels}
-          onAIModelChange={(value) => {
-            const model = filteredAIModels.find(
-              (m) => m.id === parseInt(value),
+      <HeaderGenerateImagePage
+        getProject={getProject}
+        activeKey={activeKey}
+        selectedAIModel={selectedAIModel}
+        filteredAIModels={filteredAIModels}
+        onAIModelChange={(value) => {
+          const model = filteredAIModels.find((m) => m.id === parseInt(value));
+          setSelectedAIModel(model);
+          if (model) {
+            localStorage.setItem(
+              `selectedAIModel_${activeKey}_${id}`,
+              model.id.toString(),
             );
-            setSelectedAIModel(model);
-            if (model) {
-              localStorage.setItem(
-                `selectedAIModel_${activeKey}_${id}`,
-                model.id.toString(),
-              );
-            }
-          }}
-          promptGuideOpenStatus={promptGuideOpenStatus}
-          onPromptGuideToggle={() =>
-            setPromptGuideOpenStatus(!promptGuideOpenStatus)
           }
-          onSetPromptText={handleSetPromptText}
-        />
-
-
-     
-
- 
+        }}
+        promptGuideOpenStatus={promptGuideOpenStatus}
+        onPromptGuideToggle={() =>
+          setPromptGuideOpenStatus(!promptGuideOpenStatus)
+        }
+        onSetPromptText={handleSetPromptText}
+      />
 
       <div className="flex-1 min-h-0 w-full overflow-hidden">
         <Tabs
@@ -295,153 +264,177 @@ const GenerateImagePage: FC = () => {
           className="ant-tabs-full"
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
-         
           onChange={(key) =>
             onChangeTab(key as "image" | "video" | "library" | "activity")
           }
-          items={[
-            {
-              disabled: disableTab,
-              key: "image",
-              forceRender: true,
-              label: (
-                <Space size={8}>
-                  <PictureOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Image Gen</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <ChatGenerateImage
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  key={`image`}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  username={session?.user?.name || ""}
-                  selectedAIModel={selectedAIModel}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "video",
-              label: (
-                <Space size={8}>
-                  <VideoCameraOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Video Gen</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <ChatGenerateVideo
-                  key={"video"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "omnihumen",
-              label: (
-                <Space size={8}>
-                  <MessageOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>OmniHuman</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <ChatGenerateOmnihumen
-                  key={"omnihumen"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "dreamactor",
-              label: (
-                <Space size={8}>
-                  <PlaySquareOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>DreamActor</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <ChatGenerateDreamactor
-                  key={"dreamactor"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-     
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "library",
-              label: (
-                <Space size={8}>
-                  <StarOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>Library</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <div className="h-full">
-                  <PromptLibrary
-                    key={`activity-${activeKey}`}
+          items={
+            [
+              {
+                disabled: disableTab,
+                key: "image",
+                forceRender: true,
+                label: (
+                  <Space size={8}>
+                    <PictureOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      Image Gen
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <ChatGenerateImage
+                    promptGuideOpenStatus={promptGuideOpenStatus}
+                    key={`image`}
                     activeKey={activeKey}
+                    projectId={id}
+                    userId={session?.user?.id}
+                    projectRole={projectRole}
+                    username={session?.user?.name || ""}
+                    selectedAIModel={selectedAIModel}
+                    setDisableTab={setDisableTab}
+                    onSetPromptTextRef={onSetPromptTextRef}
                   />
-                </div>
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "activity",
-              label: (
-                <Space size={8}>
-                  <FolderOpenOutlined />
-                  <Typography.Text style={{ color: "inherit", marginBottom: 0 }}>All Activity</Typography.Text>
-                </Space>
-              ),
-              children: (
-                <div className="h-full">
-                  <PromptActivity
+                ),
+              },
+              {
+                disabled: disableTab,
+                forceRender: true,
+                key: "video",
+                label: (
+                  <Space size={8}>
+                    <VideoCameraOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      Video Gen
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <ChatGenerateVideo
+                    key={"video"}
                     activeKey={activeKey}
-                    key={`activity-${activeKey}`}
+                    projectId={id}
+                    userId={session?.user?.id}
+                    projectRole={projectRole}
+                    promptGuideOpenStatus={promptGuideOpenStatus}
+                    selectedAIModel={selectedAIModel}
+                    username={session?.user?.name || ""}
+                    setDisableTab={setDisableTab}
+                    onSetPromptTextRef={onSetPromptTextRef}
                   />
-                </div>
-              ),
-            },
-          ]
-          // .filter((item) => !hiddenTabs.includes(item.key))
-        }
+                ),
+              },
+              {
+                disabled: disableTab,
+                forceRender: true,
+                key: "omnihumen",
+                label: (
+                  <Space size={8}>
+                    <MessageOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      OmniHuman
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <ChatGenerateOmnihumen
+                    key={"omnihumen"}
+                    activeKey={activeKey}
+                    projectId={id}
+                    userId={session?.user?.id}
+                    projectRole={projectRole}
+                    promptGuideOpenStatus={promptGuideOpenStatus}
+                    selectedAIModel={selectedAIModel}
+                    username={session?.user?.name || ""}
+                    setDisableTab={setDisableTab}
+                    onSetPromptTextRef={onSetPromptTextRef}
+                  />
+                ),
+              },
+              {
+                disabled: disableTab,
+                forceRender: true,
+                key: "dreamactor",
+                label: (
+                  <Space size={8}>
+                    <PlaySquareOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      DreamActor
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <ChatGenerateDreamactor
+                    key={"dreamactor"}
+                    activeKey={activeKey}
+                    projectId={id}
+                    userId={session?.user?.id}
+                    projectRole={projectRole}
+                    promptGuideOpenStatus={promptGuideOpenStatus}
+                    selectedAIModel={selectedAIModel}
+                    username={session?.user?.name || ""}
+                    setDisableTab={setDisableTab}
+                    onSetPromptTextRef={onSetPromptTextRef}
+                  />
+                ),
+              },
+
+              {
+                disabled: disableTab,
+                forceRender: true,
+                key: "library",
+                label: (
+                  <Space size={8}>
+                    <StarOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      Library
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <div className="h-full">
+                    <PromptLibrary
+                      key={`activity-${activeKey}`}
+                      activeKey={activeKey}
+                    />
+                  </div>
+                ),
+              },
+              {
+                disabled: disableTab,
+                forceRender: true,
+                key: "activity",
+                label: (
+                  <Space size={8}>
+                    <FolderOpenOutlined />
+                    <Typography.Text
+                      style={{ color: "inherit", marginBottom: 0 }}
+                    >
+                      All Activity
+                    </Typography.Text>
+                  </Space>
+                ),
+                children: (
+                  <div className="h-full">
+                    <PromptActivity
+                      activeKey={activeKey}
+                      key={`activity-${activeKey}`}
+                    />
+                  </div>
+                ),
+              },
+            ]
+            // .filter((item) => !hiddenTabs.includes(item.key))
+          }
         />
       </div>
     </div>

@@ -1,17 +1,17 @@
 import { Button, Drawer, Select, Tooltip, Space, Typography, Tag } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
 import React, { useState, type FC } from "react";
-import type { IProject } from "@/app/common/project.type";
-import type { TAIModel } from "@/app/common/ai-model.type";
+import type { IProject } from "@/app/common/project.type"; 
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 export interface props {
   getProject?: IProject;
   activeKey?: string;
-  selectedAIModel?: (TAIModel & { capabilities?: string[] }) | null;
-  filteredAIModels?: TAIModel[];
+  selectedAIModel?: (TMasterModelType & { capabilities?: string[] }) | null;
+  filteredAIModels?: TMasterModelType[];
   onAIModelChange?: (value: string) => void;
   promptGuideOpenStatus?: boolean;
   onPromptGuideToggle?: () => void;
@@ -160,14 +160,14 @@ const HeaderGenerateImagePage: FC<props> = ({
                       <Select.Option
                         key={model.id}
                         value={model.id.toString()}
-                        label={model.name}
+                        label={model.modelType}
                       >
                         <Tooltip
                           title={
                             <div className="p-4 max-w-sm">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="font-medium text-white">
-                                  {model.name}
+                                  {model.modelType}
                                 </div>
                                 {selectedAIModel?.id === model.id && (
                                   <div className="text-blue-400 text-xs">
@@ -354,7 +354,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                                 </div>
                               )}
 
-                              <div className="flex flex-wrap gap-1 mt-2">
+                              {/* <div className="flex flex-wrap gap-1 mt-2">
                                 {model.capabilities?.map(
                                   (capability: string) => (
                                     <span
@@ -365,14 +365,14 @@ const HeaderGenerateImagePage: FC<props> = ({
                                     </span>
                                   ),
                                 )}
-                              </div>
+                              </div> */}
                             </div>
                           }
                           placement="right"
                           overlayStyle={{ maxWidth: "none" }}
                         >
                           <div className="flex items-center justify-between">
-                            <span>{model.name}</span>
+                            <span>{model.modelType}</span>
                             {selectedAIModel?.id === model.id && (
                               <span className="text-blue-400 ml-2">✓</span>
                             )}

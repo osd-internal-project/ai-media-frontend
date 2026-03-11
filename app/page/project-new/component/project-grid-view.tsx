@@ -21,10 +21,10 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({ projects, semantic, o
   return (
     <Row gutter={[12, 12]} style={{ padding: isMobile ? "16px" : "24px"  }}>
       {projects.map((project) => {
-        const imageUsed = (project.accessImageAmount ?? 0) - (project.remainImageAmount ?? 0);
-        const imageTotal = project.accessImageAmount ?? 0;
-        const tokenUsed = (project.accessTokenAmount ?? 0) - (project.remainTokenAmount ?? 0);
-        const tokenTotal = project.accessTokenAmount ?? 0;
+        const creditUsed = (project.accessImageAmount ?? 0) - (project.remainImageAmount ?? 0);
+        const creditTotal = project.accessImageAmount ?? 0;
+        // const tokenUsed = (project.accessTokenAmount ?? 0) - (project.remainTokenAmount ?? 0);
+        // const tokenTotal = project.accessTokenAmount ?? 0;
         return (
           <Col xs={24} sm={12} lg={6} key={project.id}>
                 <Card
@@ -86,10 +86,10 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({ projects, semantic, o
               {/* Quota Bars */}
               <div style={{ marginBottom: 8 }}>
                 <Quata
-                  imageUsed={imageUsed}
-                  imageTotal={imageTotal}
-                  tokenUsed={tokenUsed}
-                  tokenTotal={tokenTotal}
+                  creditUsed={creditUsed}
+                  creditTotal={creditTotal}
+                  // tokenUsed={tokenUsed}
+                  // tokenTotal={tokenTotal}
                   semantic={semantic}
                   size="middle"
                 />

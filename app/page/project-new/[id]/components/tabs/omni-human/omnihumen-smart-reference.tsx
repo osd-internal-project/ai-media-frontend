@@ -1,11 +1,11 @@
 import React, { use, useEffect, useState } from "react";
 import { Tag, Tooltip } from "antd";
-import Image from "next/image";
-import { TAIModel } from "@/app/common/ai-model.type";
+import Image from "next/image"; 
 import { ChevronsRight, Volume2, VolumeX, ChevronRight, ZapIcon, ZapOff, Play } from "lucide-react";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface OmnihumenSmartReferenceProps {
-  selectedAIModel?: TAIModel | null;
+  selectedAIModel?: TMasterModelType | null;
   firstFrameImage?: string;
   referenceImages?: string[]; // Reference images used for generation
   resolution?: string;

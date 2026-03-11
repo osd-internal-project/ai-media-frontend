@@ -16,7 +16,6 @@ import {
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
 import VideoItem from "../video-gen/video-player";
-import { TAIModel } from "@/app/common/ai-model.type";
 import DreamactorSmartReference from "./dreamactor-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
@@ -27,6 +26,7 @@ import ChatDreamactorInput from "@/app/page/project-new/[id]/components/tabs/dre
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface DreamactorChatProps {
   projectId: string;
@@ -41,7 +41,7 @@ interface DreamactorChatProps {
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
-  selectedAIModel: (TAIModel & { capabilities?: string[] }) | undefined;
+  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
   setDisableTab: (disable: boolean) => void;
   onSetPromptTextRef?: React.MutableRefObject<
     ((id: number) => Promise<void>) | null
@@ -184,6 +184,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const [promptGuideTemplates, setPromptGuideTemplates] = useState<
     TPromptGuideTemplate[]
   >([]);
+  const [usedCredit, setUsedCredit] = useState<{
+    total?: number;
+    used?: number;
+  }>({
+    total: undefined,
+    used: undefined,
+  });
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -390,6 +397,23 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       }
     };
 
+    // 7. Event เมื่อเกิด Credit Change
+    const handleCreditChange = (res: {
+      success: boolean;
+      data: {
+        usedCredit: number;
+        totalCredit?: number;
+      };
+    }) => {
+      if (res.success) {
+        console.log("🚀 Credit change:", res.data);
+        setUsedCredit({
+          used: res.data.usedCredit,
+          total: res?.data?.totalCredit,
+        });
+      }
+    };
+
     const handleHistory = (data: {
       success: boolean;
       data: {
@@ -461,7 +485,6 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       }
     };
 
-    
     socket.on("dreamactor-task:created", handleTaskCreated);
     socket.on("task-dreamactor:started", handleTaskStarted);
     socket.on("dreamactor-generate:error", handleError);
@@ -472,6 +495,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     socket.on("worker:dreamactor-error", workerError);
     socket.on("worker:dreamactor-progress", handleProgress);
     socket.on("chat:history", handleHistory);
+    socket.on("chat:used-credit", handleCreditChange);
+
     return () => {
       socket.off("dreamactor-task:created", handleTaskCreated);
       socket.off("task-dreamactor:started", handleTaskStarted);
@@ -482,6 +507,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       socket.off("worker:dreamactor-error", workerError);
       socket.off("worker:dreamactor-progress", handleProgress);
       socket.off("chat:history", handleHistory);
+      socket.off("chat:used-credit", handleCreditChange);
     };
   }, [socket, page, projectId, activeKey]);
 
@@ -518,8 +544,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         skip: skip,
         take: take,
         type: "dreamactor",
-      }); 
-  
+      });
     }
   };
 
@@ -789,7 +814,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     const tempTask = `temp-${Date.now()}`;
     const message = {
       taskId: tempTask,
-      model: selectedAIModel.name,
+      model: selectedAIModel.modelType,
       prompt: values.prompt,
       image: [
         firstImage?.imagePath ? firstImage.imagePath : null,
@@ -885,6 +910,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
             promptGuideTemplates={promptGuideTemplates}
             fetchVideoPromptGuides={fetchDreamactorPromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
+            usedCredit={usedCredit}
           />
         }
         loading={loading}
@@ -898,17 +924,33 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         rightContent={
           <>
             {messages.map((item: Message, index) => (
-              <Flex key={`${item.id}-${index}`} vertical style={{ marginBottom: 8 }}>
+              <Flex
+                key={`${item.id}-${index}`}
+                vertical
+                style={{ marginBottom: 8 }}
+              >
                 <Flex gap={8} align="flex-start">
-                  <Flex vertical style={{ width: "100%", alignItems: "flex-start" }}>
+                  <Flex
+                    vertical
+                    style={{ width: "100%", alignItems: "flex-start" }}
+                  >
                     <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {item.users.username}
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         •
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {new Date(item.createdAt).toLocaleDateString([], {
                           month: "short",
                           day: "numeric",
@@ -933,7 +975,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                         }}
                         styles={{ body: { padding: "8px 12px" } }}
                       >
-                        <Typography.Text style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
+                        <Typography.Text
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            fontSize: 14,
+                            lineHeight: 1.5,
+                          }}
+                        >
                           {item.prompt}
                         </Typography.Text>
                       </Card>
@@ -962,7 +1010,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                     )}
 
                     {(item.genneratedStatus === "FAILED" ||
-                      (item.genneratedStatus === "SUCCESS" && item.imageUrls?.length === 0)) && (
+                      (item.genneratedStatus === "SUCCESS" &&
+                        item.imageUrls?.length === 0)) && (
                       <Card
                         size="small"
                         style={{
@@ -982,20 +1031,26 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                     {item.genneratedStatus === "SUCCESS" &&
                       item.imageUrls &&
                       item.imageUrls.length > 0 && (
-                        <Flex vertical gap={8} style={{ marginTop: 8, width: "100%", maxWidth: 260 }}>
-                          {item.imageUrls.map((videoData: VideoMessage, videoIndex) => (
-                            <VideoItem
-                              key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
-                              videoData={videoData}
-                              onDownloadVideo={onDownloadVideo}
-                              onShareVideo={(id, status) => {
-                                if (item.taskId) {
-                                  onShareVideo(item.taskId, id, status);
-                                }
-                              }}
-                              shareStatus
-                            />
-                          ))}
+                        <Flex
+                          vertical
+                          gap={8}
+                          style={{ marginTop: 8, width: "100%", maxWidth: 260 }}
+                        >
+                          {item.imageUrls.map(
+                            (videoData: VideoMessage, videoIndex) => (
+                              <VideoItem
+                                key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
+                                videoData={videoData}
+                                onDownloadVideo={onDownloadVideo}
+                                onShareVideo={(id, status) => {
+                                  if (item.taskId) {
+                                    onShareVideo(item.taskId, id, status);
+                                  }
+                                }}
+                                shareStatus
+                              />
+                            ),
+                          )}
                         </Flex>
                       )}
                   </Flex>

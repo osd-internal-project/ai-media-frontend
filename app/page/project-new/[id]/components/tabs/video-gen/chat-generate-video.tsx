@@ -23,8 +23,7 @@ import {
 } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
-import VideoItem from "./video-player";
-import { TAIModel } from "@/app/common/ai-model.type";
+import VideoItem from "./video-player"; 
 import VideoSmartReference from "./video-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
@@ -35,6 +34,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import ChatVideoInput from "./chat-video-input";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface VideoChatProps {
   projectId: string;
@@ -49,7 +49,7 @@ interface VideoChatProps {
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
-  selectedAIModel: (TAIModel & { capabilities?: string[] }) | undefined;
+  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
   setDisableTab: (disable: boolean) => void;
   onSetPromptTextRef?: React.MutableRefObject<
     ((id: number) => Promise<void>) | null
@@ -396,6 +396,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         });
       }
     };
+    
     const handleHistory = (data: {
       success: boolean;
       data: {
@@ -859,7 +860,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const tempTask = `temp-${Date.now()}`;
     const message = {
       taskId: tempTask,
-      model: selectedAIModel.name,
+      model: selectedAIModel.modelType,
       prompt: values.prompt,
       image: [
         firstImage?.imagePath ? firstImage.imagePath : null,

@@ -50,8 +50,8 @@ const ModelPricingManagementPage = () => {
       if (record.modelDetails) {
         const details = record.modelDetails;
         calcType = details.calculationType || "FORMULA";
-        if (calcType === "FORMULA") {
-          creditFormula = details.creditFormula || "";
+        if (calcType === "FORMULA" || calcType === "USE_TOKEN" || calcType === "NOT_USE_TOKEN") {
+          creditFormula = details.creditFormula || details.formula || "";
           tokenFormula = details.tokenFormula || "";
         } else if (calcType === "FIXED_PER_SEC") {
           fixedCreditPerSec = details.fixedCreditPerSec || 0;
@@ -96,7 +96,7 @@ const ModelPricingManagementPage = () => {
     try {
       let detailsJson: any = { calculationType: values.calculationType };
       
-      if (values.calculationType === 'FORMULA') {
+      if (values.calculationType === 'FORMULA' || values.calculationType === 'USE_TOKEN' || values.calculationType === 'NOT_USE_TOKEN') {
         detailsJson.creditFormula = values.creditFormula;
         detailsJson.tokenFormula = values.tokenFormula;
       } else if (values.calculationType === 'FIXED_PER_SEC') {
@@ -294,73 +294,53 @@ const ModelPricingManagementPage = () => {
             >
               <Select 
                 options={[
-                  { value: 'FORMULA', label: 'FORMULA (Dynamic Variable Equation)' },
-                  { value: 'FIXED_PER_SEC', label: 'FIXED RATE (Constant Value per sec)' },
-                  { value: 'PIXEL_TIER', label: 'PIXEL TIER (Resolution Based calculation)' },
+                  { value: 'FORMULA', label: 'FORMULA (Normal Evaluated Logic)' },
+                  { value: 'USE_TOKEN', label: 'USE_TOKEN (Uses execution token if available + Fallback formula)' },
+                  { value: 'NOT_USE_TOKEN', label: 'NOT_USE_TOKEN (Ignores generation tokens, calculates by inputs)' },
                 ]}
                 className="w-full"
                 popupClassName="dark-dropdown"
               />
             </Form.Item>
 
-            {calculationType === "FORMULA" && (
+            {(calculationType === "FORMULA" || calculationType === "USE_TOKEN" || calculationType === "NOT_USE_TOKEN") && (
               <div className="mt-4 p-4 border border-blue-900 bg-[#16213e] rounded">
                 <p className="text-sm text-blue-300 mb-4">
-                  Type Javascript variables provided by `body` object.<br/>
+                  Type Javascript variables provided by `body` and `token` object.<br/>
                   <b>Examples:</b> <br/>
                   - <code>body.duration * 42</code><br/>
-                  - <code>(body.width * body.height) / 1000</code><br/>
+                  - <code>(token * (body.generateAudio ? 2 : 1)) / 1024 / 720</code><br/>
                 </p>
-                <Form.Item
-                  name="creditFormula"
-                  label={<span className="text-gray-300">Credit Usage Formula</span>}
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <Input placeholder="e.g., body.duration * 42" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
-                </Form.Item>
-                <Form.Item
-                  name="tokenFormula"
-                  label={<span className="text-gray-300">Token Usage Formula</span>}
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <Input placeholder="e.g., body.duration * 49846.15" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
-                </Form.Item>
-              </div>
-            )}
 
-            {calculationType === "FIXED_PER_SEC" && (
-              <div className="mt-4 p-4 border border-purple-900 bg-[#2d1b4e] rounded grid grid-cols-2 gap-4">
-                <Form.Item
-                  name="fixedCreditPerSec"
-                  label={<span className="text-gray-300">Credits per second</span>}
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <InputNumber className="w-full" min={0} />
-                </Form.Item>
-                <Form.Item
-                  name="fixedTokenPerSec"
-                  label={<span className="text-gray-300">Tokens per second</span>}
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <InputNumber className="w-full" min={0} />
-                </Form.Item>
-              </div>
-            )}
+                {(calculationType === "USE_TOKEN" || calculationType === "FORMULA") && (
+                  <Form.Item
+                    name="tokenFormula"
+                    label={<span className="text-gray-300">{calculationType === "USE_TOKEN" ? "Token Fallback Formula (if token = 0)" : "Token Usage Formula"}</span>}
+                    rules={[{ required: calculationType === "FORMULA", message: "Required" }]}
+                  >
+                    <Input placeholder="e.g., body.duration * 49846.15" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                  </Form.Item>
+                )}
 
-            {calculationType === "PIXEL_TIER" && (
-              <div className="mt-4 p-4 border border-yellow-900 bg-[#3a2a18] rounded">
-                <p className="text-sm text-yellow-300 mb-2">Configure Tier JSON object array containing resolution limits.</p>
-                <Form.Item
-                  name="rawJson"
-                  label={<span className="text-gray-300">Tier Configuration Details (JSON)</span>}
-                  rules={[{ required: true, message: "Required" }]}
-                >
-                  <Input.TextArea 
-                    rows={8} 
-                    className="bg-[#2a2a2e] border-gray-700 text-white font-mono text-sm" 
-                    placeholder='{\n  "tiers": [\n    { "maxPixels": 450000, "creditPerSec": 10, "creditPerSecWithAudio": 15 }\n  ]\n}'
-                  />
-                </Form.Item>
+                {(calculationType === "USE_TOKEN" || calculationType === "NOT_USE_TOKEN") && (
+                  <Form.Item
+                    name="creditFormula"
+                    label={<span className="text-gray-300">Credit Usage Formula</span>}
+                    rules={[{ required: true, message: "Required" }]}
+                  >
+                    <Input placeholder="e.g., token > 0 ? (token * body.duration) : (body.duration * 20)" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                  </Form.Item>
+                )}
+
+                {calculationType === "FORMULA" && (
+                   <Form.Item
+                   name="creditFormula"
+                   label={<span className="text-gray-300">Legacy Formula Base</span>}
+                   rules={[{ required: true, message: "Required" }]}
+                 >
+                   <Input placeholder="e.g., body.duration * 42" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                 </Form.Item>
+                )}
               </div>
             )}
           </div>

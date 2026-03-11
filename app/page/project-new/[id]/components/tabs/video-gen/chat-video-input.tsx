@@ -102,17 +102,49 @@ export default function ChatVideoInput({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
-  const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
-    "1:1": { width: 2048, height: 2048 },
-    "4:3": { width: 2304, height: 1728 },
-    "3:4": { width: 1728, height: 2304 },
-    "16:9": { width: 2560, height: 1440 },
-    "9:16": { width: 1440, height: 2560 },
-    "3:2": { width: 2496, height: 1664 },
-    "2:3": { width: 1664, height: 2496 },
-    "21:9": { width: 3024, height: 1296 },
-  };
+  // const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
+  //   "1:1": { width: 2048, height: 2048 },
+  //   "4:3": { width: 2304, height: 1728 },
+  //   "3:4": { width: 1728, height: 2304 },
+  //   "16:9": { width: 2560, height: 1440 },
+  //   "9:16": { width: 1440, height: 2560 },
+  //   "3:2": { width: 2496, height: 1664 },
+  //   "2:3": { width: 1664, height: 2496 },
+  //   "21:9": { width: 3024, height: 1296 },
+  // };
 
+  const RATIO_SIZE_MAP: Record<
+    string,
+    Record<string, { width: number; height: number }>
+  > = {
+    "480p": {
+      "1:1": { width: 640, height: 640 },
+      "4:3": { width: 752, height: 564 },
+      "3:4": { width: 564, height: 752 },
+      "16:9": { width: 864, height: 496 },
+      "9:16": { width: 496, height: 864 },
+      "21:9": { width: 992, height: 432 },
+      "9:21": { width: 432, height: 992 },
+    },
+    "720p": {
+      "1:1": { width: 960, height: 960 },
+      "4:3": { width: 1112, height: 834 },
+      "3:4": { width: 834, height: 1112 },
+      "16:9": { width: 1280, height: 720 },
+      "9:16": { width: 720, height: 1280 },
+      "21:9": { width: 1470, height: 630 },
+      "9:21": { width: 630, height: 1470 },
+    },
+    "1080p": {
+      "1:1": { width: 1440, height: 1440 },
+      "4:3": { width: 1664, height: 1248 },
+      "3:4": { width: 1248, height: 1664 },
+      "16:9": { width: 1920, height: 1080 },
+      "9:16": { width: 1080, height: 1920 },
+      "21:9": { width: 2205, height: 945 },
+      "9:21": { width: 945, height: 2205 },
+    },
+  };
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -131,7 +163,7 @@ export default function ChatVideoInput({
 
   const handleRatioChange = (ratio: string) => {
     setSelectedRatio(ratio);
-    const baseSize = RATIO_SIZE_MAP[ratio];
+    const baseSize = RATIO_SIZE_MAP[selectedResolution][ratio];
     if (!baseSize) return;
 
     const scaleFactor = selectedResolution === "4k" ? 1.414 : 1;
@@ -146,23 +178,25 @@ export default function ChatVideoInput({
     setSelectedResolution(resolution);
     form.setFieldValue("resolution", resolution);
 
-    const baseSize = RATIO_SIZE_MAP[selectedRatio];
+    const baseSize = RATIO_SIZE_MAP[resolution][selectedRatio];
     if (!baseSize) return;
 
-    const scaleFactor = resolution === "4k" ? 1.414 : 1;
-    const newWidth = Math.round(baseSize.width * scaleFactor);
-    const newHeight = Math.round(baseSize.height * scaleFactor);
+    // const scaleFactor = resolution === "720p" ? 1.414 : 1;
+    const newWidth = Math.round(baseSize.width);
+    const newHeight = Math.round(baseSize.height);
     setSelectedWidth(newWidth);
     setSelectedHeight(newHeight);
     form.setFieldsValue({ width: newWidth, height: newHeight });
   };
 
-  const ratioOptions = Object.keys(RATIO_SIZE_MAP).map((ratio) => ({
-    label: ratio,
-    key: ratio,
-    icon: getRatioIcon(ratio),
-    onClick: () => handleRatioChange(ratio),
-  }));
+  const ratioOptions = Object.keys(RATIO_SIZE_MAP[selectedResolution]).map(
+    (ratio) => ({
+      label: ratio,
+      key: ratio,
+      icon: getRatioIcon(ratio),
+      onClick: () => handleRatioChange(ratio),
+    }),
+  );
 
   const getBase64 = (file: RcFile): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -190,11 +224,7 @@ export default function ChatVideoInput({
     position: "relative",
   };
 
-  const renderUploadTile = (
-    label: string,
-    index: 0 | 1,
-    file?: UploadFile,
-  ) => (
+  const renderUploadTile = (label: string, index: 0 | 1, file?: UploadFile) => (
     <Upload
       listType="picture-card"
       maxCount={1}
@@ -364,7 +394,10 @@ export default function ChatVideoInput({
                 <Flex vertical gap={6}>
                   <Flex justify="space-between">
                     <Typography.Text
-                      style={{ fontSize: 12, color: semantic.colorTextSecondary }}
+                      style={{
+                        fontSize: 12,
+                        color: semantic.colorTextSecondary,
+                      }}
                     >
                       Duration
                     </Typography.Text>
@@ -391,7 +424,13 @@ export default function ChatVideoInput({
                 <Flex gap={8}>
                   <Button
                     onClick={() => setSelectedAudio(!selectedAudio)}
-                    icon={selectedAudio ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                    icon={
+                      selectedAudio ? (
+                        <Volume2 size={14} />
+                      ) : (
+                        <VolumeX size={14} />
+                      )
+                    }
                     style={{
                       borderRadius: 8,
                       borderColor: selectedAudio
@@ -444,8 +483,8 @@ export default function ChatVideoInput({
           >
             <Quata
               title="Quota"
-              imageUsed={usedCredit.used || 0}
-              imageTotal={usedCredit.total || 0}
+              creditUsed={usedCredit.used || 0}
+              creditTotal={usedCredit.total || 0}
               size="small"
             />
           </Card>
@@ -481,7 +520,12 @@ export default function ChatVideoInput({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt="preview"
-          style={{ width: "auto", maxHeight: "80vh", maxWidth: "90vw", borderRadius: 8 }}
+          style={{
+            width: "auto",
+            maxHeight: "80vh",
+            maxWidth: "90vw",
+            borderRadius: 8,
+          }}
           src={previewImage}
         />
       </Modal>

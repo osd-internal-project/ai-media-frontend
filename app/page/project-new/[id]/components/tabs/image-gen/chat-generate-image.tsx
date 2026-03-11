@@ -33,8 +33,7 @@ import {
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
-import PromptGuideServices from "@/app/services/prompt-guide.service";
-import { TAIModel } from "@/app/common/ai-model.type";
+import PromptGuideServices from "@/app/services/prompt-guide.service"; 
 import ImageConfigurationCard from "./image-smart-reference";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PreviewImage from "../../chat-components/preview-image";
@@ -47,6 +46,7 @@ import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface ImageChatProps {
   projectId: string;
@@ -61,7 +61,7 @@ interface ImageChatProps {
   projectRole?: string | null;
   promptGuideOpenStatus?: boolean;
   username?: string;
-  selectedAIModel: (TAIModel & { capabilities?: string[] }) | undefined;
+  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
   setDisableTab: (disable: boolean) => void;
   onSetPromptTextRef?: React.MutableRefObject<
     ((id: number) => Promise<void>) | null
@@ -804,7 +804,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     if (!selectedAIModel) return "Plese select model";
     const message = {
       taskId: `temp-${Date.now()}`,
-      model: selectedAIModel.name,
+      model: selectedAIModel.modelType,
       prompt: values.prompt,
       image: refImage.map((image) => image.imagePath),
       sequentialImageGeneration: "auto",

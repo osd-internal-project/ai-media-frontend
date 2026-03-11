@@ -22,6 +22,7 @@ import {
   type FormInstance,
   type UploadFile,
   Image,
+  Card,
 } from "antd";
 import { RcFile } from "antd/es/upload";
 import {
@@ -35,6 +36,7 @@ import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
+import Quata from "@/app/page/project-new/component/quata";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -70,6 +72,7 @@ type Props = {
   promptGuideTemplates: TPromptGuideTemplate[];
   fetchVideoPromptGuides: () => Promise<void>;
   handleUsePromptGuide: (template: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
 };
 
 export default function ChatDreamactorInput({
@@ -87,13 +90,16 @@ export default function ChatDreamactorInput({
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
+  usedCredit,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const [previewFileType, setPreviewFileType] = useState<"image" | "video">("image");
+  const [previewFileType, setPreviewFileType] = useState<"image" | "video">(
+    "image",
+  );
 
   const handleResolutionChange = (resolution: string) => {
     setSelectedResolution(resolution);
@@ -171,7 +177,11 @@ export default function ChatDreamactorInput({
               <Play size={20} style={{ color: semantic.colorPrimary }} />
               <Typography.Text
                 ellipsis
-                style={{ fontSize: 10, maxWidth: "100%", color: semantic.colorTextSecondary }}
+                style={{
+                  fontSize: 10,
+                  maxWidth: "100%",
+                  color: semantic.colorTextSecondary,
+                }}
               >
                 {file.name}
               </Typography.Text>
@@ -293,7 +303,9 @@ export default function ChatDreamactorInput({
             sectionTitle="Uploads"
             renderContent={
               <Flex vertical gap={8}>
-                <Typography.Text style={{ fontSize: 12, color: semantic.colorTextSecondary }}>
+                <Typography.Text
+                  style={{ fontSize: 12, color: semantic.colorTextSecondary }}
+                >
                   Upload Portrait & Drive Video
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
@@ -301,7 +313,12 @@ export default function ChatDreamactorInput({
                     {renderUploadTile("Portrait *", 0, "image", filesFirst[0])}
                   </div>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Drive Video *", 1, "video", filesLast[0])}
+                    {renderUploadTile(
+                      "Drive Video *",
+                      1,
+                      "video",
+                      filesLast[0],
+                    )}
                   </div>
                 </Space>
               </Flex>
@@ -339,12 +356,20 @@ export default function ChatDreamactorInput({
                       setFastMode(next);
                       form.setFieldValue("fastMode", next);
                     }}
-                    icon={fastMode ? <ZapIcon size={14} /> : <ZapOff size={14} />}
+                    icon={
+                      fastMode ? <ZapIcon size={14} /> : <ZapOff size={14} />
+                    }
                     style={{
                       borderRadius: 8,
-                      borderColor: fastMode ? semantic.colorPrimary : semantic.colorBorder,
-                      background: fastMode ? `${semantic.colorPrimary}1A` : "transparent",
-                      color: fastMode ? semantic.colorPrimary : semantic.colorTextSecondary,
+                      borderColor: fastMode
+                        ? semantic.colorPrimary
+                        : semantic.colorBorder,
+                      background: fastMode
+                        ? `${semantic.colorPrimary}1A`
+                        : "transparent",
+                      color: fastMode
+                        ? semantic.colorPrimary
+                        : semantic.colorTextSecondary,
                     }}
                   >
                     Fast mode
@@ -364,6 +389,22 @@ export default function ChatDreamactorInput({
         </Flex>
 
         <BrandKitSection semantic={semantic}>
+          <Card
+            size="small"
+            style={{
+              borderRadius: 12,
+              borderColor: semantic.colorBorder,
+              background: semantic.colorBgElevated,
+            }}
+            styles={{ body: { padding: "8px 12px" } }}
+          >
+            <Quata
+              title="Quota"
+              creditUsed={usedCredit.used || 0}
+              creditTotal={usedCredit.total || 0}
+              size="small"
+            />
+          </Card>
           <Button
             block
             type="primary"
@@ -397,14 +438,24 @@ export default function ChatDreamactorInput({
           <video
             controls
             autoPlay
-            style={{ width: "auto", maxHeight: "80vh", maxWidth: "90vw", borderRadius: 8 }}
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: 8,
+            }}
             src={previewImage}
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             alt="preview"
-            style={{ width: "auto", maxHeight: "80vh", maxWidth: "90vw", borderRadius: 8 }}
+            style={{
+              width: "auto",
+              maxHeight: "80vh",
+              maxWidth: "90vw",
+              borderRadius: 8,
+            }}
             src={previewImage}
           />
         )}

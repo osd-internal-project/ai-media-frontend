@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Tooltip } from "antd";
-import Image from "next/image";
-import { TAIModel } from "@/app/common/ai-model.type";
+import Image from "next/image"; 
 import {
   Play,
 } from "lucide-react";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface DreamactorSmartReferenceProps {
-  selectedAIModel?: TAIModel | null;
+  selectedAIModel?: TMasterModelType | null;
   firstFrameImage?: string;
   referenceImages?: string[]; // Reference images used for generation
   resolution?: string;

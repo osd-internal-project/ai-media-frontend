@@ -5,10 +5,10 @@ import { FileImageOutlined, VideoCameraOutlined } from "@ant-design/icons";
 type QuataSize = "small" | "middle" | "large";
 
 interface QuataProps {
-	imageUsed: number;
-	imageTotal: number;
-	tokenUsed?: number;
-	tokenTotal?: number;
+	creditUsed: number;
+	creditTotal: number;
+	// tokenUsed?: number;
+	// tokenTotal?: number;
 	semantic?: any;
 	size?: QuataSize;
 	showToken?: boolean;
@@ -23,10 +23,10 @@ const SIZE_MAP: Record<QuataSize, { icon: number; label: number; value: number; 
 };
 
 const Quata: React.FC<QuataProps> = ({
-	imageUsed,
-	imageTotal,
-	tokenUsed = 0,
-	tokenTotal = 0,
+	creditUsed,
+	creditTotal,
+	// tokenUsed = 0,
+	// tokenTotal = 0,
 	semantic,
 	size = "middle",
 	showToken = true,
@@ -35,10 +35,10 @@ const Quata: React.FC<QuataProps> = ({
 }) => {
 	const ui = SIZE_MAP[size];
 
-	const safeImageTotal = Math.max(0, imageTotal);
-	const safeTokenTotal = Math.max(0, tokenTotal);
-	const imagePercent = safeImageTotal > 0 ? Math.round((imageUsed / safeImageTotal) * 100) : 0;
-	const tokenPercent = safeTokenTotal > 0 ? Math.round((tokenUsed / safeTokenTotal) * 100) : 0;
+	const safeImageTotal = Math.max(0, creditTotal);
+	// const safeTokenTotal = Math.max(0, tokenTotal);
+	const creditPercent = safeImageTotal > 0 ? Math.round((creditUsed / safeImageTotal) * 100) : 0;
+	// const tokenPercent = safeTokenTotal > 0 ? Math.round((tokenUsed / safeTokenTotal) * 100) : 0;
 
 	const colorTextBase = semantic?.colorTextBase ?? "#e5e7eb";
 	const colorTextSecondary = semantic?.colorTextSecondary ?? "#94a3b8";
@@ -56,15 +56,15 @@ const Quata: React.FC<QuataProps> = ({
 			<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 				<span style={{ display: "flex", alignItems: "center", gap: ui.gap }}>
 					<FileImageOutlined style={{ fontSize: ui.icon, color: colorTextSecondary }} />
-					<Typography.Text style={{ color: colorTextSecondary, fontSize: ui.label }}>Images</Typography.Text>
+					<Typography.Text style={{ color: colorTextSecondary, fontSize: ui.label }}>Credit</Typography.Text>
 				</span>
 				<Typography.Text strong style={{ color: colorTextBase, fontSize: ui.value }}>
-					{imageUsed}/{safeImageTotal}
+					{creditUsed}/{safeImageTotal}
 				</Typography.Text>
 			</div>
 			{showProgress ? (
 				<Progress
-					percent={imagePercent}
+					percent={creditPercent}
 					size="small"
 					showInfo={false}
 					strokeColor={colorPrimary}
@@ -73,7 +73,7 @@ const Quata: React.FC<QuataProps> = ({
 				/>
 			) : null}
 
-			{showToken ? (
+			{/* {showToken ? (
 				<>
 					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 						<span style={{ display: "flex", alignItems: "center", gap: ui.gap }}>
@@ -97,7 +97,7 @@ const Quata: React.FC<QuataProps> = ({
 						/>
 					) : null}
 				</>
-			) : null}
+			) : null} */}
 		</div>
 	);
 };

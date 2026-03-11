@@ -1,5 +1,6 @@
 export interface TMasterModelType {
   id: number;
+  name: string;
   modelType: string | null;
   type: string | null;
   description: string | null;

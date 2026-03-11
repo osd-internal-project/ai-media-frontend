@@ -267,8 +267,8 @@ export default function ChatImageInput({
           >
             <Quata
               title="Quota"
-              imageUsed={usedCredit.used || 0}
-              imageTotal={usedCredit.total || 0}
+              creditUsed={usedCredit.used || 0}
+              creditTotal={usedCredit.total || 0}
               size="small"
             />
           </Card>
