@@ -97,6 +97,7 @@ const DashboardPage: FC = () => {
       const response = await projectServices.findByOrganizationId(
         organizationId as string,
         session?.user.id as string,
+        {},
       );
       const mapOptions = await response?.map((project: IProject) => {
         return { value: project.id, label: project.name };

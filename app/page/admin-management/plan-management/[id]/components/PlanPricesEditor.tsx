@@ -30,10 +30,11 @@ export const PlanPricesEditor: React.FC<PlanPricesEditorProps> = ({
 
   const handleAddPrice = () => {
     const newPrice: TPlanPrice = {
-      interval: "MONTH",
+      interval: "month",
       price: 0,
       duration: 30,
       creditAllowance: 0,
+      imageAllowance: 0,
       currency: "THB",
       isDefault: false,
       orderIndex: prices.length,
