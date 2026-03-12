@@ -123,10 +123,8 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({ projects, semantic, o
                     return (
                       <div style={{ minWidth: isMobile ? 98 : 120, textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
                         <Quata
-                          imageUsed={imageUsed}
-                          imageTotal={imageTotal}
-                          tokenUsed={tokenUsed}
-                          tokenTotal={tokenTotal}
+                          creditTotal={tokenUsed}
+                          creditUsed={tokenTotal}
                           semantic={semantic}
                           size={"small" }
                         />
