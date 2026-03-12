@@ -1,6 +1,6 @@
 import type { TGenerateType } from "@/app/common/prompt-guide.type";
 import { Button } from "antd";
-import { useTransition, type CSSProperties, type FC } from "react";
+import { useState, useTransition, type CSSProperties, type FC } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 
@@ -24,6 +24,7 @@ const CustomTab: FC<CustomTabProps> = ({ value, onChange }) => {
   const semantic = getThemeConfig(mode).token ?? {};
   const isLightMode = mode === "light";
   const [, startTransition] = useTransition();
+  const [hoveredKey, setHoveredKey] = useState<TabKey | null>(null);
 
   const containerStyle: CSSProperties = {
     background: isLightMode ? semantic.colorBgTextActive : semantic.colorBgContainer,
@@ -39,6 +40,7 @@ const CustomTab: FC<CustomTabProps> = ({ value, onChange }) => {
 
   const getTabButtonStyle = (key: TabKey): CSSProperties => {
     const isActive = value === key;
+    const isHovered = hoveredKey === key;
 
     return {
       borderRadius: 999,
@@ -46,14 +48,27 @@ const CustomTab: FC<CustomTabProps> = ({ value, onChange }) => {
       background: isLightMode
         ? isActive
           ? semantic.colorBgContainer
-          : "transparent"
+          : isHovered
+            ? semantic.colorFillAlter
+            : "transparent"
         : isActive
           ? semantic.colorBgTextActive
-          : "transparent",
-      color: isLightMode ? "#000000" : isActive ? "#ffffff" : semantic.colorTextSecondary,
+          : isHovered
+            ? semantic.colorBgElevated
+            : "transparent",
+      color: isLightMode
+        ? isActive || isHovered
+          ? semantic.colorTextBase
+          : semantic.colorTextSecondary
+        : isActive
+          ? "#ffffff"
+          : isHovered
+            ? semantic.colorTextBase
+            : semantic.colorTextSecondary,
       fontWeight: 500,
       boxShadow: "none",
-      transition: "background-color 220ms ease, color 220ms ease, transform 160ms ease",
+      transition: "background-color 180ms ease, color 180ms ease, transform 140ms ease",
+      transform: isHovered ? "translateY(-1px)" : "translateY(0)",
       willChange: "background-color, color",
     };
   };
@@ -65,6 +80,8 @@ const CustomTab: FC<CustomTabProps> = ({ value, onChange }) => {
           key={tab.key}
           type="text"
           style={getTabButtonStyle(tab.key)}
+          onMouseEnter={() => setHoveredKey(tab.key)}
+          onMouseLeave={() => setHoveredKey(null)}
           onClick={() => {
             startTransition(() => {
               onChange(tab.key);
