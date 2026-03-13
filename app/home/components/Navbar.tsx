@@ -19,10 +19,10 @@ export default function Navbar() {
       {/* Navigation Links and CTA */}
       <div className="flex items-center gap-8">
         <div className="hidden md:flex items-center gap-8">
-          <Link href="#" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
+          <Link href="/home" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
             Home
           </Link>
-          <Link href="#" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
+          <Link href="/features" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
             Features
           </Link>
         </div>
