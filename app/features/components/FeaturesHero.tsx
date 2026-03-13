@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function FeaturesHero() {
     const [windowWidth, setWindowWidth] = useState(1200);
     const [isHovered, setIsHovered] = useState(false);
+    const sectionRef = useRef<HTMLDivElement | null>(null);
+    const [inView, setInView] = useState(false);
 
     useEffect(() => {
         setWindowWidth(window.innerWidth);
@@ -13,11 +15,27 @@ export default function FeaturesHero() {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
+    useEffect(() => {
+        if (!sectionRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setInView(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.25 }
+        );
+        observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     const isMd = windowWidth >= 768;
     const isLg = windowWidth >= 1024;
 
     return (
         <section
+            ref={sectionRef}
             style={{
                 position: "relative",
                 width: "100%",
@@ -30,6 +48,9 @@ export default function FeaturesHero() {
                 paddingLeft: "16px",
                 paddingRight: "16px",
                 overflow: "hidden",
+                opacity: inView ? 1 : 0,
+                transform: inView ? "translateY(0)" : "translateY(32px)",
+                transition: "opacity 0.9s ease, transform 0.9s ease",
             }}
         >
             {/* Full Background Image */}

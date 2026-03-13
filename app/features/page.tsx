@@ -19,6 +19,12 @@ import ImgVidGeneration from "./components/ImgVidGeneration";
 import UltraRealisticHuman from "../home/components/UltraRealisticHuman";
 import UltraRealistic from "./components/UltraRealistic";
 import DynamicCharacter from "./components/DynamicCharacter";
+import GuidedPrompt from "./components/GuidedPrompt";
+import PromptStandardization from "./components/PromptStandardization";
+import RoleAndToken from "./components/RoleAndToken";
+import TeamCollaboration from "./components/TeamCollaboration";
+import SecureCloud from "./components/SecureCloud";
+import Benefits from "./components/Benefits";
 
 export default function FeaturesPage() {
     return (
@@ -32,6 +38,7 @@ export default function FeaturesPage() {
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
+                
             }}
         >
             {/* Ambient Background Glows */}
@@ -82,14 +89,12 @@ export default function FeaturesPage() {
                 <ImgVidGeneration />
                 <UltraRealistic />
                 <DynamicCharacter />
-                <ImageGrid />
-                <StunningGeneration />
-                <AIPowered />
-                <BuiltForCreators />
-                <PremiumServices />
-                <PlatformManagement />
-                <MediaLibrary />
-                <UsedByStyles />
+                <GuidedPrompt />
+                <PromptStandardization />
+                <RoleAndToken />
+                <TeamCollaboration />
+                <SecureCloud />
+                <Benefits />
                 <FeaturesCTA />
                 <Footer />
             </div>

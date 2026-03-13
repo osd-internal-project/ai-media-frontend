@@ -1,10 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function DynamicCharacter() {
+    const sectionRef = useRef<HTMLElement | null>(null);
+    const [inView, setInView] = useState(false);
+    const [hoveredChip, setHoveredChip] = useState<number | null>(null);
+    const [hoveredImage, setHoveredImage] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!sectionRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setInView(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+        observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    const chips = [
+        "Animate characters using reference image + driving video",
+        "Realistic full-body gestures and natural movement",
+        "Stable character identity across multiple scenes",
+        "Flexible control of pose, expression, and action",
+    ];
+
     return (
         <section
+            ref={sectionRef}
             style={{
                 width: "100%",
                 minHeight: "100vh",
@@ -12,7 +40,7 @@ export default function DynamicCharacter() {
                 backgroundImage: "url('/images/feature-page/dynamic-character/bg.png')",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "top left",
-                backgroundSize: "auto 48%",
+                backgroundSize: "auto 30%",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -22,6 +50,9 @@ export default function DynamicCharacter() {
                 paddingLeft: "16px",
                 paddingRight: "16px",
                 overflow: "hidden",
+                opacity: inView ? 1 : 0,
+                transform: inView ? "translateY(0)" : "translateY(32px)",
+                transition: "opacity 0.9s ease, transform 0.9s ease",
             }}
         >
             <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', marginTop: 48, marginBottom: 32 }}>
@@ -84,27 +115,26 @@ export default function DynamicCharacter() {
                             animation: 'marqueeLoop 24s linear infinite',
                         }}
                     >
-                        {[
-                            "Animate characters using reference image + driving video",
-                            "Realistic full-body gestures and natural movement",
-                            "Stable character identity across multiple scenes",
-                            "Flexible control of pose, expression, and action",
-                        ].map((text, idx) => (
+                        {chips.map((text, idx) => (
                             <span
                                 key={idx}
+                                onMouseEnter={() => setHoveredChip(idx)}
+                                onMouseLeave={() => setHoveredChip(null)}
                                 style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     borderRadius: '9999px',
-                                    background: 'rgba(17, 19, 34, 0.8)',
+                                    background: hoveredChip === idx ? 'rgba(99, 102, 241, 0.35)' : 'rgba(17, 19, 34, 0.8)',
                                     border: '1px solid rgba(107, 124, 255, 0.3)',
                                     color: '#D1D5DB',
                                     fontWeight: 500,
                                     fontSize: 18,
                                     padding: '12px 32px',
                                     marginRight: 0,
-                                    boxShadow: '0 0 16px rgba(107,124,255,0.12)',
+                                    boxShadow: hoveredChip === idx ? '0 0 24px rgba(107,124,255,0.28)' : '0 0 16px rgba(107,124,255,0.12)',
                                     gap: 12,
+                                    transform: hoveredChip === idx ? 'translateY(-4px) scale(1.02)' : 'none',
+                                    transition: 'transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
                                 }}
                             >
                                 {/* Tick icon SVG */}
@@ -116,27 +146,26 @@ export default function DynamicCharacter() {
                             </span>
                         ))}
                         {/* Duplicate chips for seamless loop */}
-                        {[
-                            "Animate characters using reference image + driving video",
-                            "Realistic full-body gestures and natural movement",
-                            "Stable character identity across multiple scenes",
-                            "Flexible control of pose, expression, and action",
-                        ].map((text, idx) => (
+                        {chips.map((text, idx) => (
                             <span
                                 key={'loop-'+idx}
+                                onMouseEnter={() => setHoveredChip(idx)}
+                                onMouseLeave={() => setHoveredChip(null)}
                                 style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     borderRadius: '9999px',
-                                    background: 'rgba(17, 19, 34, 0.8)',
+                                    background: hoveredChip === idx ? 'rgba(99, 102, 241, 0.35)' : 'rgba(17, 19, 34, 0.8)',
                                     border: '1px solid rgba(107, 124, 255, 0.3)',
                                     color: '#D1D5DB',
                                     fontWeight: 500,
                                     fontSize: 18,
                                     padding: '12px 32px',
                                     marginRight: 0,
-                                    boxShadow: '0 0 16px rgba(107,124,255,0.12)',
+                                    boxShadow: hoveredChip === idx ? '0 0 24px rgba(107,124,255,0.28)' : '0 0 16px rgba(107,124,255,0.12)',
                                     gap: 12,
+                                    transform: hoveredChip === idx ? 'translateY(-4px) scale(1.02)' : 'none',
+                                    transition: 'transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
                                 }}
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -8,7 +8,7 @@ export default function FeaturesCTA() {
     return (
         <section className="relative w-full py-32 px-6 flex justify-center items-center overflow-hidden">
             {/* Background glow */}
-            <div className="absolute inset-0 bg-[#020308] z-0"></div>
+            <div className="absolute inset-0 z-0"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] max-w-[800px] h-[300px] bg-blue-600/20 blur-[120px] rounded-full z-0"></div>
 
             <div className="relative z-10 flex flex-col items-center text-center max-w-3xl">

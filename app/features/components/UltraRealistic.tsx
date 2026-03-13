@@ -1,18 +1,49 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function UltraRealistic() {
+    const sectionRef = useRef<HTMLElement | null>(null);
+    const [inView, setInView] = useState(false);
+    const [hoveredBullet, setHoveredBullet] = useState<number | null>(null);
+    const [isImageHovered, setIsImageHovered] = useState(false);
+
+    useEffect(() => {
+        if (!sectionRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setInView(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+        observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    const bullets = [
+        "Create expressive, lifelike human videos from minimal input.",
+        "Generate human video from a single reference image",
+        "Audio-driven lip sync with natural facial movement",
+        "Emotion-aware expressions and gestures",
+        "Support multi-person dialogue scenes",
+        "Optional prompt control for style and camera direction",
+        "Maintain consistent character identity across scenes",
+    ];
+
     return (
         <section
+            ref={sectionRef}
             style={{
-                width: "100%",
+                width: "100vw",
                 minHeight: "100vh",
                 height: "100vh",
                 backgroundImage: "url('/images/feature-page/ultra-realistic/bg.svg')",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "right top",
-                backgroundSize: "auto 48%",
+                backgroundSize: "auto 30%",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-end",
@@ -22,6 +53,9 @@ export default function UltraRealistic() {
                 paddingLeft: "16px",
                 paddingRight: "16px",
                 overflow: "hidden",
+                opacity: inView ? 1 : 0,
+                transform: inView ? "translateY(0)" : "translateY(32px)",
+                transition: "opacity 0.9s ease, transform 0.9s ease",
             }}
         >
             {/* Heading on top right */}
@@ -63,48 +97,27 @@ export default function UltraRealistic() {
                 {/* Left column: bullet list */}
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'flex-start', marginLeft: 64 }}>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Create expressive, lifelike human videos from minimal input.
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Generate human video from a single reference image
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Audio-driven lip sync with natural facial movement
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Emotion-aware expressions and gestures
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Support multi-person dialogue scenes
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 18 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Optional prompt control for style and camera direction
-                            </span>
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                            <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                            <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                Maintain consistent character identity across scenes
-                            </span>
-                        </li>
+                        {bullets.map((text, idx) => (
+                            <li
+                                key={idx}
+                                onMouseEnter={() => setHoveredBullet(idx)}
+                                onMouseLeave={() => setHoveredBullet(null)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: 16,
+                                    marginBottom: idx === bullets.length - 1 ? 0 : 18,
+                                    transform: hoveredBullet === idx ? 'translateX(8px)' : 'none',
+                                    opacity: hoveredBullet === null || hoveredBullet === idx ? 1 : 0.6,
+                                    transition: 'transform 0.3s ease, opacity 0.3s ease',
+                                }}
+                            >
+                                <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
+                                <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
+                                    {text}
+                                </span>
+                            </li>
+                        ))}
                     </ul>
                 </div>
                 {/* Right column: image */}
@@ -113,14 +126,18 @@ export default function UltraRealistic() {
                     <img 
                         src={"/images/feature-page/ultra-realistic/content.png"}
                         alt="Ultra Realistic Content"
+                        onMouseEnter={() => setIsImageHovered(true)}
+                        onMouseLeave={() => setIsImageHovered(false)}
                         style={{
                             width: '90%',
                             height: '90%',
                             maxWidth: '100%',
                             maxHeight: '100%',
                             borderRadius: '32px',
-                            boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)',
+                            boxShadow: isImageHovered ? '0 12px 40px 0 rgba(0,0,0,0.28)' : '0 8px 32px 0 rgba(0,0,0,0.18)',
                             objectFit: 'cover',
+                            transform: isImageHovered ? 'translateY(-12px) scale(1.03)' : 'none',
+                            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                         }}
                     />
                     {/* Small absolute image bottom left in this column */}
