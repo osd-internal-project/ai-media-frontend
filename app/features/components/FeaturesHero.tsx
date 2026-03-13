@@ -21,7 +21,7 @@ export default function FeaturesHero() {
             style={{
                 position: "relative",
                 width: "100%",
-                minHeight: "100vh",
+                height: "100vh",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -30,49 +30,22 @@ export default function FeaturesHero() {
                 paddingLeft: "16px",
                 paddingRight: "16px",
                 overflow: "hidden",
-                backgroundColor: "#0a0a0f",
             }}
         >
-            {/* Background Typography */}
+            {/* Full Background Image */}
             <div
                 style={{
                     position: "absolute",
-                    top: 0, right: 0, bottom: '40%', left: 0,
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
                     pointerEvents: "none",
-                    // display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    zIndex: 0,
-                    userSelect: "none",
-                    fontWeight: "bold",
-                    color: "white",
-                    lineHeight: 0.85,
-                    letterSpacing: "-0.05em",
-                    fontFamily: "sans-serif",
-                    opacity: 0.03,
-                    fontSize: "9vw"
-                }}
-            >
-                <div style={{ display: "flex", flexDirection: "column", whiteSpace: "nowrap" }}>
-                    <span >Empower</span>
-                    <span >Your Business</span>
-                    <span >with In-House</span>
-                    <span >Creative Superpowers</span>
-                </div>
-            </div>
-
-            {/* Background Image Layer (over text, behind content) */}
-            <div
-                style={{
-                    position: "absolute",
-                    top: 0, right: 0, bottom: 0, left: 0,
-                    pointerEvents: "none",
-                    backgroundImage: 'url("/images/features-hero/bg.png")',
-                    backgroundSize: "400px",
-                    backgroundPosition: "left 64px",
+                    backgroundImage: 'url("/images/feature-page/features-hero/image1.png")',
+                    backgroundSize: "80vw",
+                    backgroundPosition: "left top",
                     backgroundRepeat: "no-repeat",
-                    zIndex: 1,
+                    zIndex: 0,
                 }}
             />
 
@@ -108,13 +81,13 @@ export default function FeaturesHero() {
                     flexDirection: isMd ? "row" : "column",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    height: "100%",
+                    minHeight: "70vh",
                 }}
             >
                 {/* Left Side Content */}
                 <div
                     style={{
-                        width: isMd ? "55%" : "100%",
+                        width: isMd ? "65%" : "100%",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "flex-start",
@@ -124,7 +97,7 @@ export default function FeaturesHero() {
                 >
                     <h1
                         style={{
-                            fontSize: isLg ? "2.5rem" : isMd ? "3rem" : "2.25rem",
+                            fontSize: isLg ? "3.5rem" : isMd ? "3rem" : "2.75rem",
                             fontWeight: "bold",
                             lineHeight: 1.2,
                             marginBottom: "8px",
@@ -155,54 +128,24 @@ export default function FeaturesHero() {
                             position: "relative",
                         }}
                     >
-                        {/* Handwritten Arrow pointing down-right toward button */}
+                        {/* Handwritten Arrow SVG starting at top-right of button */}
                         <div
                             style={{
                                 position: "absolute",
                                 display: isMd ? "block" : "none",
-                                top: "-70px",
-                                left: "60px",
-                                width: "120px",
-                                height: "70px"
+                                top: "-60px",
+                                right: "-100px",
+                                width: "160px",
+                                height: "100px",
+                                pointerEvents: "none",
+                                zIndex: 20
                             }}
                         >
-                            <svg
-                                viewBox="0 0 120 70"
-                                fill="none"
-                                style={{ width: "100%", height: "100%", overflow: "visible" }}
-                            >
-                                {/* Curvy arrow from top-left toward bottom-right */}
-                                <path
-                                    d="M 10,50 C 25,48 40,40 40,28 C 40,16 25,16 25,28 C 25,40 55,42 85,56"
-                                    stroke="white"
-                                    strokeWidth="1.8"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    opacity="0.85"
-                                />
-                                {/* Arrowhead */}
-                                <path
-                                    d="M 76,51 L 85,56 L 81,46"
-                                    stroke="white"
-                                    strokeWidth="1.8"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    opacity="0.85"
-                                />
-                                {/* "click" label */}
-                                <text
-                                    x="64"
-                                    y="68"
-                                    fill="white"
-                                    fontSize="15"
-                                    fontFamily="'Caveat', cursive, sans-serif"
-                                    opacity="0.9"
-                                    fontStyle="italic"
-                                >
-                                    click
-                                </text>
-                            </svg>
+                            <img
+                                src="/images/feature-page/features-hero/arrow.svg"
+                                alt="Arrow pointing to button"
+                                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                            />
                         </div>
 
                         {/* Star sparkles */}
@@ -280,9 +223,9 @@ export default function FeaturesHero() {
                 {/* Right Side Floating Image (group.png) */}
                 <div
                     style={{
-                        width: isMd ? "45%" : "100%",
+                        width: "auto",
                         display: "flex",
-                        justifyContent: "center",
+                        justifyContent: "flex-end",
                         alignItems: "center",
                         position: "relative",
                         marginTop: isMd ? "0px" : "64px",
@@ -292,14 +235,14 @@ export default function FeaturesHero() {
                     <div
                         style={{
                             position: "relative",
-                            width: "100%",
-                            maxWidth: "320px",
+                            width: isLg ? "480px" : isMd ? "400px" : "320px",
+                            maxWidth: "100%",
                             animation: "float 6s ease-in-out infinite",
                             zIndex: 15,
                         }}
                     >
                         <img
-                            src="/images/features-hero/group.png"
+                            src="/images/feature-page/features-hero/group.png"
                             alt="Features group illustration"
                             style={{
                                 width: "100%",

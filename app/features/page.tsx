@@ -12,10 +12,28 @@ import PlatformManagement from "./components/PlatformManagement";
 import MediaLibrary from "./components/MediaLibrary";
 import UsedByStyles from "./components/UsedByStyles";
 import FeaturesCTA from "./components/FeaturesCTA";
+import AiCaveIntro from "./components/AiCaveIntro";
+import AiCaveMeaning from "./components/AiCaveMeaning";
+import FeaturesCarousel from "./components/FeaturesCarousel";
+import ImgVidGeneration from "./components/ImgVidGeneration";
+import UltraRealisticHuman from "../home/components/UltraRealisticHuman";
+import UltraRealistic from "./components/UltraRealistic";
+import DynamicCharacter from "./components/DynamicCharacter";
 
 export default function FeaturesPage() {
     return (
-        <main style={{ minHeight: "100vh", backgroundColor: "#020308", color: "#ffffff", overflowX: "hidden", position: "relative" }}>
+        <main
+            style={{
+                minHeight: "100vh",
+                color: "#ffffff",
+                overflowX: "hidden",
+                position: "relative",
+                backgroundImage: "url('/images/feature-page/feature-bg.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+            }}
+        >
             {/* Ambient Background Glows */}
             <div
                 style={{
@@ -58,7 +76,12 @@ export default function FeaturesPage() {
             <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
                 <Navbar />
                 <FeaturesHero />
-                <InfiniteAesthetics />
+                <AiCaveIntro />
+                <AiCaveMeaning />
+                <FeaturesCarousel />
+                <ImgVidGeneration />
+                <UltraRealistic />
+                <DynamicCharacter />
                 <ImageGrid />
                 <StunningGeneration />
                 <AIPowered />
