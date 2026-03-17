@@ -202,7 +202,7 @@ jobs:
           NAME="${{ needs.build-and-deploy.outputs.image_name }}"
           VER="${{ needs.build-and-deploy.outputs.image_version }}"
           DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
-          TAG="${NAME}/${DEPLOY_ENV}/v${VER}"
+          TAG="${NAME}/${DEPLOY_ENV}/${VER}"
 
           echo "Tagging deployment: ${TAG}"
           git tag -f "${TAG}" -m "Deployed ${NAME}:${VER} to ${DEPLOY_ENV}"
