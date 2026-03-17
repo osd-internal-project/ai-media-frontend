@@ -196,6 +196,9 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Tag Deployment
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           NAME="${{ needs.build-and-deploy.outputs.image_name }}"
           VER="${{ needs.build-and-deploy.outputs.image_version }}"
           DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
