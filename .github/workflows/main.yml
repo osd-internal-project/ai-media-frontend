@@ -19,6 +19,9 @@ on:
           - uat
           - prod
 
+permissions:
+  contents: write
+
 env:
   DEPLOY_ENV: ${{ inputs.deploy_env || 'sit' }}
 
