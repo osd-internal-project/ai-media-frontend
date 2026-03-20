@@ -16,22 +16,18 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
     },
     findProjectTaskByPage: async (
       projectId: string,
-      organizationId?: string,
-      typeGenerate?: string,
-      skip?: number,
-      take?: number,
-      fristsql?: number,
-      lastsql?: number,
+      query: {
+        organizationId?: string;
+        type?: string;
+        skip?: number;
+        take?: number;
+        fristsql?: number;
+        lastsql?: number;
+        userId?: string;
+      },
     ) => {
-      const params: any = {};
-      if (organizationId) params.organizationId = organizationId;
-      if (typeGenerate) params.type = typeGenerate;
-      if (skip !== undefined) params.skip = skip;
-      if (take !== undefined) params.take = take;
-      if (fristsql !== undefined) params.fristsql = fristsql;
-      if (lastsql !== undefined) params.lastsql = lastsql;
       return await axiosInstance
-        .get(`${baseUrl}/find-product-task/${projectId}`, { params })
+        .get(`${baseUrl}/find-product-task/${projectId}`, { params: query })
         .then((res) => {
           return res.data;
         })

@@ -52,6 +52,7 @@ import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface ImageChatProps {
+  teamView: boolean;
   projectId: string;
   userId?: string;
   activeKey:
@@ -147,6 +148,7 @@ interface Message {
 type NotificationType = "success" | "info" | "warning" | "error";
 
 const ChatGenerateImage: FC<ImageChatProps> = ({
+  teamView,
   projectId,
   userId,
   activeKey,
@@ -238,8 +240,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
   //fetch messages when load tab
   useEffect(() => {
+    setMessages([]);
+    setFristRowSeq(undefined);
+    setLastRowSeq(undefined);
+    isFirstLoad.current = true;
     fetchMessages();
-  }, [projectId, activeKey]);
+  }, [projectId, activeKey, teamView]);
 
   //join room and fetch credit when load tab
   useEffect(() => {
@@ -542,7 +548,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("chat:message-saved");
       socket.off("chat:used-credit", handleCreditChange);
     };
-  }, [socket,  projectId, activeKey]);
+  }, [socket, projectId, activeKey]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -614,13 +620,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   }, [messages.length]);
 
   const fetchMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "image",
-      0,
-      3,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "image",
+      skip: 0,
+      take: 3,
+      ...(!teamView && { userId: userId }),
+    });
     if (data) {
       if (data.length > 0) {
         const seqValues = data
@@ -650,14 +656,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "image",
-      0,
-      1,
-      fristRowSeq,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "image",
+      skip: 0,
+      take: 1,
+      fristsql: fristRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -670,15 +676,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }
   };
   const fetchNewMessage = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "image",
-      0,
-      1,
-      undefined,
-      lastRowSeq,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "image",
+      skip: 0,
+      take: 1,
+      lastsql: lastRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -748,7 +753,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       setIsFetchingHistory(false);
       isFetchingRef.current = false;
     } else {
-      setMessages([...itemsToProcess, ...messages]);
+      setMessages([...itemsToProcess]);
       const isFirstLoadNow = isFirstLoad.current;
       if (
         isFirstLoadNow ||

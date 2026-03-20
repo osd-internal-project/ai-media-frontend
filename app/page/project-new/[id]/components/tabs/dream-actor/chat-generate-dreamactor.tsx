@@ -38,6 +38,7 @@ import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface DreamactorChatProps {
+  teamView: boolean;
   projectId: string;
   userId?: string;
   activeKey:
@@ -115,6 +116,7 @@ interface Message {
 type NotificationType = "success" | "info" | "warning" | "error";
 
 const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
+  teamView,
   projectId,
   userId,
   activeKey,
@@ -208,8 +210,12 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+    setMessages([]);
+    setFristRowSeq(undefined);
+    setLastRowSeq(undefined);
+    isFirstLoad.current = true;
     fetchMessages();
-  }, [projectId, activeKey]);
+  }, [projectId, activeKey, teamView]);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -353,7 +359,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
           const uniqueNewMessages = itemsToProcess.filter(
             (m: Message) => !existingTaskIds.has(m.taskId),
           );
-          return [...uniqueNewMessages, ...prev];
+          return [...uniqueNewMessages];
         });
         const isFirstLoadNow = isFirstLoad.current;
         if (
@@ -380,10 +386,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const fetchMessages = async () => {
     const data: Message[] = await logsService.findProjectTaskByPage(
       projectId,
-      session?.user?.organizationId || "",
-      "dreamactor",
-      0,
-      3,
+      {
+        organizationId: session?.user?.organizationId || "",
+        type: "dreamactor",
+        skip: 0,
+        take: 3,
+        ...(!teamView && { userId: userId }),
+      },
     );
     if (data) {
       if (data.length > 0) {
@@ -416,11 +425,14 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const fetchOldMessages = async () => {
     const data: Message[] = await logsService.findProjectTaskByPage(
       projectId,
-      session?.user?.organizationId || "",
-      "dreamactor",
-      0,
-      undefined,
-      fristRowSeq,
+      {
+        organizationId: session?.user?.organizationId || "",
+        type: "dreamactor",
+        skip: 0,
+        take: 1,
+        fristsql: fristRowSeq,
+        ...(!teamView && { userId: userId }),
+      },
     );
     if (data && data.length > 0) {
       const seqValues = data
@@ -437,12 +449,14 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const fetchNewMessage = async () => {
     const data: Message[] = await logsService.findProjectTaskByPage(
       projectId,
-      session?.user?.organizationId || "",
-      "dreamactor",
-      0,
-      1,
-      undefined,
-      lastRowSeq,
+      {
+        organizationId: session?.user?.organizationId || "",
+        type: "dreamactor",
+        skip: 0,
+        take: 1,
+        lastsql: lastRowSeq,
+        ...(!teamView && { userId: userId }),
+      },
     );
     if (data && data.length > 0) {
       const seqValues = data

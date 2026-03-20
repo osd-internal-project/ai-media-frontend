@@ -55,6 +55,8 @@ const GenerateImagePage: FC = () => {
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
+  const [teamView, setTeamView] = useState<boolean>(true);
+
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -291,6 +293,8 @@ const GenerateImagePage: FC = () => {
       }}
     >
       <HeaderGenerateImagePage
+        teamView={teamView}
+        setTeamView={setTeamView}
         getProject={getProject}
         activeKey={activeKey}
         selectedAIModel={selectedAIModel}
@@ -344,6 +348,7 @@ const GenerateImagePage: FC = () => {
                 ),
                 children: activeKey === "image" && (
                   <ChatGenerateImage
+                    teamView={teamView}
                     promptGuideOpenStatus={promptGuideOpenStatus}
                     key={`image`}
                     activeKey={activeKey}
@@ -370,6 +375,7 @@ const GenerateImagePage: FC = () => {
                 ),
                 children: activeKey === "video" && (
                   <ChatGenerateVideo
+                    teamView={teamView}
                     key={"video"}
                     activeKey={activeKey}
                     projectId={id}
@@ -395,6 +401,7 @@ const GenerateImagePage: FC = () => {
                 ),
                 children: activeKey === "omnihumen" && (
                   <ChatGenerateOmnihumen
+                    teamView={teamView}
                     key={"omnihumen"}
                     activeKey={activeKey}
                     projectId={id}
@@ -420,6 +427,7 @@ const GenerateImagePage: FC = () => {
                 ),
                 children: activeKey === "dreamactor" && (
                   <ChatGenerateDreamactor
+                    teamView={teamView}
                     key={"dreamactor"}
                     activeKey={activeKey}
                     projectId={id}

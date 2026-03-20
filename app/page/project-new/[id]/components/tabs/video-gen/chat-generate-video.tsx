@@ -41,6 +41,7 @@ import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface VideoChatProps {
+  teamView: boolean;
   projectId: string;
   userId?: string;
   activeKey:
@@ -122,6 +123,7 @@ interface Message {
 type NotificationType = "success" | "info" | "warning" | "error";
 
 const ChatGenerateVideo: FC<VideoChatProps> = ({
+  teamView,
   projectId,
   userId,
   activeKey,
@@ -217,8 +219,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+    setMessages([]);
+    setFristRowSeq(undefined);
+    setLastRowSeq(undefined);
+    isFirstLoad.current = true;
     fetchMessages();
-  }, [projectId, activeKey]);
+  }, [projectId, activeKey, teamView]);
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -240,22 +246,22 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     },
     [api],
   );
-    useEffect(() => {
-      fetchCerrentUsedCredit();
-    }, [
-      projectId,
-      activeKey,
-      refImageFrist,
-      refImageLast,
-      selectedResolution,
-      selectedRatio,
-      selectedWidth,
-      selectedHeight,
-      selectedDuration,
-      selectedAudio,
-      draftMode,
-    ]);
- const fetchCerrentUsedCredit = async () => {
+  useEffect(() => {
+    fetchCerrentUsedCredit();
+  }, [
+    projectId,
+    activeKey,
+    refImageFrist,
+    refImageLast,
+    selectedResolution,
+    selectedRatio,
+    selectedWidth,
+    selectedHeight,
+    selectedDuration,
+    selectedAudio,
+    draftMode,
+  ]);
+  const fetchCerrentUsedCredit = async () => {
     const values = form.getFieldsValue();
     if (!selectedAIModel) {
       setCerrentUsedCredit(0);
@@ -354,7 +360,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           const uniqueNewMessages = itemsToProcess.filter(
             (m: Message) => !existingTaskIds.has(m.taskId),
           );
-          return [...uniqueNewMessages, ...prev];
+          return [...uniqueNewMessages];
         });
         const isFirstLoadNow = isFirstLoad.current;
         if (
@@ -379,13 +385,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   );
 
   const fetchMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "video",
-      0,
-      3,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "video",
+      skip: 0,
+      take: 3,
+      ...(!teamView && { userId: userId }),
+    });
     if (data) {
       if (data.length > 0) {
         const seqValues = data
@@ -413,16 +419,16 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       });
     }
   };
- 
-   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "video",
-      0,
-      undefined,
-      fristRowSeq,
-    );
+
+  const fetchOldMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "video",
+      skip: 0,
+      take: 1,
+      fristsql: fristRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -435,15 +441,14 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
   };
   const fetchNewMessage = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "video",
-      0,
-      1,
-      undefined,
-      lastRowSeq,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "video",
+      skip: 0,
+      take: 1,
+      lastsql: lastRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)

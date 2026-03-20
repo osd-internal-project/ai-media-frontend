@@ -39,6 +39,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 interface OmniHumanChatProps {
   projectId: string;
+  teamView: boolean;
   userId?: string;
   activeKey:
     | "image"
@@ -115,6 +116,7 @@ interface Message {
 type NotificationType = "success" | "info" | "warning" | "error";
 
 const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
+  teamView,
   projectId,
   userId,
   activeKey,
@@ -208,8 +210,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+    setMessages([]);
+    setFristRowSeq(undefined);
+    setLastRowSeq(undefined);
+    isFirstLoad.current = true;
     fetchMessages();
-  }, [projectId, activeKey]);
+  }, [projectId, activeKey, teamView]);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -353,7 +359,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           const uniqueNewMessages = itemsToProcess.filter(
             (m: Message) => !existingTaskIds.has(m.taskId),
           );
-          return [...uniqueNewMessages, ...prev];
+          return [...uniqueNewMessages];
         });
         const isFirstLoadNow = isFirstLoad.current;
         if (
@@ -378,13 +384,13 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   );
 
   const fetchMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "omnihumen",
-      0,
-      3,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "omnihumen",
+      skip: 0,
+      take: 3,
+      ...(!teamView && { userId: userId }),
+    });
     if (data) {
       if (data.length > 0) {
         const seqValues = data
@@ -414,14 +420,14 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "omnihumen",
-      0,
-      undefined,
-      fristRowSeq,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "omnihumen",
+      skip: 0,
+      take: 1,
+      fristsql: fristRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -435,15 +441,14 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   };
 
   const fetchNewMessage = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      session?.user?.organizationId || "",
-      "omnihumen",
-      0,
-      1,
-      undefined,
-      lastRowSeq,
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "omnihumen",
+      skip: 0,
+      take: 1,
+      lastsql: lastRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)

@@ -1,13 +1,24 @@
-import { Button, Drawer, Select, Tooltip, Space, Typography, Tag } from "antd";
+import {
+  Button,
+  Drawer,
+  Select,
+  Tooltip,
+  Space,
+  Typography,
+  Tag,
+  Switch,
+} from "antd";
 import { BulbOutlined } from "@ant-design/icons";
 import React, { CSSProperties, useState, type FC } from "react";
-import type { IProject } from "@/app/common/project.type"; 
+import type { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 export interface props {
+  teamView?: boolean;
+  setTeamView?: (value: boolean) => void;
   getProject?: IProject;
   activeKey?: string;
   selectedAIModel?: (TMasterModelType & { capabilities?: string[] }) | null;
@@ -19,6 +30,8 @@ export interface props {
 }
 
 const HeaderGenerateImagePage: FC<props> = ({
+  teamView,
+  setTeamView,
   getProject,
   activeKey,
   selectedAIModel,
@@ -108,12 +121,13 @@ const HeaderGenerateImagePage: FC<props> = ({
 
       {/* Controls section */}
       <div
-        className={`flex ${isMobile
+        className={`flex ${
+          isMobile
             ? "flex-col space-y-4"
             : isTablet
               ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
               : "justify-between items-center"
-          }`}
+        }`}
       >
         {/* Desktop/Tablet: Title on left */}
         {!isMobile && (
@@ -124,13 +138,30 @@ const HeaderGenerateImagePage: FC<props> = ({
 
         {/* Controls wrapper */}
         <div
-          className={`flex ${isMobile
+          className={`flex ${
+            isMobile
               ? "items-center gap-1 justify-end flex-nowrap"
               : isTablet
                 ? "flex-wrap gap-3 justify-end"
                 : "items-center gap-4"
-            }`}
+          }`}
         >
+          <div>
+            {" "}
+            <span
+              className="text-sm font-medium"
+              style={{ color: semantic.colorTextSecondary }}
+            >
+              {`View : `}
+            </span>{" "}
+            <Switch
+              checkedChildren="Team"
+              unCheckedChildren="Persnal"
+              defaultChecked
+              value={teamView}
+              onChange={setTeamView}
+            />
+          </div>
           {(activeKey === "image" ||
             activeKey === "video" ||
             activeKey === "omnihumen" ||
@@ -146,18 +177,23 @@ const HeaderGenerateImagePage: FC<props> = ({
                 </span>
                 <Select
                   size="middle"
-                  style={{
-                    minWidth: isMobile ? 160 : isTablet ? 250 : 280,
-                    width: "auto",
-                    ["--model-select-bg" as string]: semantic.colorBgContainer,
-                    ["--model-select-border" as string]: semantic.colorBorder,
-                    ["--model-select-text" as string]: semantic.colorTextBase,
-                    ["--model-select-placeholder" as string]:
-                      semantic.colorTextSecondary,
-                    ["--model-select-hover" as string]: semantic.colorBorderSecondary,
-                    ["--model-select-focus" as string]: semantic.colorPrimary,
-                    ["--model-select-arrow" as string]: semantic.colorTextSecondary,
-                  } as CSSProperties}
+                  style={
+                    {
+                      minWidth: isMobile ? 160 : isTablet ? 250 : 280,
+                      width: "auto",
+                      ["--model-select-bg" as string]:
+                        semantic.colorBgContainer,
+                      ["--model-select-border" as string]: semantic.colorBorder,
+                      ["--model-select-text" as string]: semantic.colorTextBase,
+                      ["--model-select-placeholder" as string]:
+                        semantic.colorTextSecondary,
+                      ["--model-select-hover" as string]:
+                        semantic.colorBorderSecondary,
+                      ["--model-select-focus" as string]: semantic.colorPrimary,
+                      ["--model-select-arrow" as string]:
+                        semantic.colorTextSecondary,
+                    } as CSSProperties
+                  }
                   className="dark-select"
                   dropdownStyle={{
                     backgroundColor: semantic.colorBgElevated,
@@ -170,50 +206,50 @@ const HeaderGenerateImagePage: FC<props> = ({
                 >
                   {filteredAIModels
                     ? filteredAIModels.map((model) => (
-                      <Select.Option
-                        key={model.id}
-                        value={model.id.toString()}
-                        label={model.modelType}
-                      >
-                        <Tooltip
-                          title={
-                            <div className="p-4 max-w-sm">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="font-medium text-white">
-                                  {model.modelType}
+                        <Select.Option
+                          key={model.id}
+                          value={model.id.toString()}
+                          label={model.modelType}
+                        >
+                          <Tooltip
+                            title={
+                              <div className="p-4 max-w-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="font-medium text-white">
+                                    {model.modelType}
+                                  </div>
+                                  {selectedAIModel?.id === model.id && (
+                                    <div className="text-blue-400 text-xs">
+                                      ✓ Selected
+                                    </div>
+                                  )}
                                 </div>
-                                {selectedAIModel?.id === model.id && (
-                                  <div className="text-blue-400 text-xs">
-                                    ✓ Selected
+
+                                {model.modelDetails?.description && (
+                                  <div className="text-gray-300 text-sm leading-relaxed mb-3">
+                                    {model.modelDetails.description}
                                   </div>
                                 )}
-                              </div>
 
-                              {model.modelDetails?.description && (
-                                <div className="text-gray-300 text-sm leading-relaxed mb-3">
-                                  {model.modelDetails.description}
-                                </div>
-                              )}
+                                {model.modelDetails?.modelId && (
+                                  <div className="mb-3">
+                                    <div className="text-gray-400 text-xs mb-1">
+                                      Model ID
+                                    </div>
+                                    <div className="text-gray-200 text-sm font-mono">
+                                      {model.modelDetails.modelId}
+                                    </div>
+                                  </div>
+                                )}
 
-                              {model.modelDetails?.modelId && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Model ID
-                                  </div>
-                                  <div className="text-gray-200 text-sm font-mono">
-                                    {model.modelDetails.modelId}
-                                  </div>
-                                </div>
-                              )}
-
-                              {model.modelDetails?.pricing && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Pricing
-                                  </div>
-                                  <div className="flex gap-4">
-                                    {model.modelDetails.pricing
-                                      .imageToVideo && (
+                                {model.modelDetails?.pricing && (
+                                  <div className="mb-3">
+                                    <div className="text-gray-400 text-xs mb-1">
+                                      Pricing
+                                    </div>
+                                    <div className="flex gap-4">
+                                      {model.modelDetails.pricing
+                                        .imageToVideo && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Image-to-video
@@ -228,8 +264,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                    {model.modelDetails.pricing
-                                      .textToVideo && (
+                                      {model.modelDetails.pricing
+                                        .textToVideo && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Text-to-video
@@ -244,8 +280,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                    {model.modelDetails.pricing
-                                      .imageToImage && (
+                                      {model.modelDetails.pricing
+                                        .imageToImage && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Image-to-image
@@ -260,8 +296,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                    {model.modelDetails.pricing
-                                      .textToImage && (
+                                      {model.modelDetails.pricing
+                                        .textToImage && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Text-to-image
@@ -276,16 +312,16 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {(model.modelDetails?.limitations?.resolution ||
-                                model.modelDetails?.limitations?.duration ||
-                                model.modelDetails?.limitations?.frameRate ||
-                                model.modelDetails?.limitations
-                                  ?.concurrentTasks ||
-                                model.modelDetails?.limitations?.rpm) && (
+                                {(model.modelDetails?.limitations?.resolution ||
+                                  model.modelDetails?.limitations?.duration ||
+                                  model.modelDetails?.limitations?.frameRate ||
+                                  model.modelDetails?.limitations
+                                    ?.concurrentTasks ||
+                                  model.modelDetails?.limitations?.rpm) && (
                                   <div className="mb-3">
                                     <div className="text-gray-400 text-xs mb-1">
                                       Limitations
@@ -293,51 +329,51 @@ const HeaderGenerateImagePage: FC<props> = ({
                                     <div className="space-y-1">
                                       {model.modelDetails.limitations
                                         ?.resolution && (
-                                          <div className="text-gray-300 text-sm">
-                                            <span className="text-gray-400">
-                                              Resolution:
-                                            </span>{" "}
-                                            {model.modelDetails.limitations.resolution.join(
-                                              ", ",
-                                            )}
-                                          </div>
-                                        )}
+                                        <div className="text-gray-300 text-sm">
+                                          <span className="text-gray-400">
+                                            Resolution:
+                                          </span>{" "}
+                                          {model.modelDetails.limitations.resolution.join(
+                                            ", ",
+                                          )}
+                                        </div>
+                                      )}
                                       {model.modelDetails.limitations
                                         ?.duration && (
-                                          <div className="text-gray-300 text-sm">
-                                            <span className="text-gray-400">
-                                              Duration:
-                                            </span>{" "}
-                                            {
-                                              model.modelDetails.limitations
-                                                .duration
-                                            }
-                                          </div>
-                                        )}
+                                        <div className="text-gray-300 text-sm">
+                                          <span className="text-gray-400">
+                                            Duration:
+                                          </span>{" "}
+                                          {
+                                            model.modelDetails.limitations
+                                              .duration
+                                          }
+                                        </div>
+                                      )}
                                       {model.modelDetails.limitations
                                         ?.frameRate && (
-                                          <div className="text-gray-300 text-sm">
-                                            <span className="text-gray-400">
-                                              Frame rate:
-                                            </span>{" "}
-                                            {
-                                              model.modelDetails.limitations
-                                                .frameRate
-                                            }
-                                          </div>
-                                        )}
+                                        <div className="text-gray-300 text-sm">
+                                          <span className="text-gray-400">
+                                            Frame rate:
+                                          </span>{" "}
+                                          {
+                                            model.modelDetails.limitations
+                                              .frameRate
+                                          }
+                                        </div>
+                                      )}
                                       {model.modelDetails.limitations
                                         ?.concurrentTasks && (
-                                          <div className="text-gray-300 text-sm">
-                                            <span className="text-gray-400">
-                                              Concurrent tasks:
-                                            </span>{" "}
-                                            {
-                                              model.modelDetails.limitations
-                                                .concurrentTasks
-                                            }
-                                          </div>
-                                        )}
+                                        <div className="text-gray-300 text-sm">
+                                          <span className="text-gray-400">
+                                            Concurrent tasks:
+                                          </span>{" "}
+                                          {
+                                            model.modelDetails.limitations
+                                              .concurrentTasks
+                                          }
+                                        </div>
+                                      )}
                                       {model.modelDetails.limitations?.rpm && (
                                         <div className="text-gray-300 text-sm">
                                           <span className="text-gray-400">
@@ -350,24 +386,25 @@ const HeaderGenerateImagePage: FC<props> = ({
                                   </div>
                                 )}
 
-                              {model.modelDetails?.status && (
-                                <div className="mb-3">
-                                  <div className="text-gray-400 text-xs mb-1">
-                                    Status
-                                  </div>
-                                  <div
-                                    className={`inline-block px-2 py-1 text-xs rounded ${model.modelDetails.status ===
+                                {model.modelDetails?.status && (
+                                  <div className="mb-3">
+                                    <div className="text-gray-400 text-xs mb-1">
+                                      Status
+                                    </div>
+                                    <div
+                                      className={`inline-block px-2 py-1 text-xs rounded ${
+                                        model.modelDetails.status ===
                                         "Activated"
-                                        ? "bg-green-600 text-white"
-                                        : "bg-gray-600 text-gray-200"
+                                          ? "bg-green-600 text-white"
+                                          : "bg-gray-600 text-gray-200"
                                       }`}
-                                  >
-                                    {model.modelDetails.status}
+                                    >
+                                      {model.modelDetails.status}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* <div className="flex flex-wrap gap-1 mt-2">
+                                {/* <div className="flex flex-wrap gap-1 mt-2">
                                 {model.capabilities?.map(
                                   (capability: string) => (
                                     <span
@@ -379,20 +416,20 @@ const HeaderGenerateImagePage: FC<props> = ({
                                   ),
                                 )}
                               </div> */}
+                              </div>
+                            }
+                            placement="right"
+                            overlayStyle={{ maxWidth: "none" }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{model.modelType}</span>
+                              {selectedAIModel?.id === model.id && (
+                                <span className="text-blue-400 ml-2">✓</span>
+                              )}
                             </div>
-                          }
-                          placement="right"
-                          overlayStyle={{ maxWidth: "none" }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>{model.modelType}</span>
-                            {selectedAIModel?.id === model.id && (
-                              <span className="text-blue-400 ml-2">✓</span>
-                            )}
-                          </div>
-                        </Tooltip>
-                      </Select.Option>
-                    ))
+                          </Tooltip>
+                        </Select.Option>
+                      ))
                     : []}
                 </Select>
               </div>
@@ -427,7 +464,6 @@ const HeaderGenerateImagePage: FC<props> = ({
         </div>
       </div>
 
-     
       <Drawer
         title={
           <div className="flex items-center gap-2">
