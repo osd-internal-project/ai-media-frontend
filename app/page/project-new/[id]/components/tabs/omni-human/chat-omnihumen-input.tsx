@@ -89,7 +89,7 @@ export default function ChatOmnihumenInput({
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
-  usedCredit
+  usedCredit,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -404,6 +404,7 @@ export default function ChatOmnihumenInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"
+              cerrentUsedCredit={0}
             />
           </Card>
           <Button

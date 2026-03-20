@@ -486,6 +486,7 @@ export default function ChatVideoInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"
+              cerrentUsedCredit={0}
             />
           </Card>
           <Button

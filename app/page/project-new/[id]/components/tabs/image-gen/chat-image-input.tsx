@@ -48,6 +48,8 @@ type Props = {
   fetchImagePromptGuides: () => void;
   handleUsePromptGuide: (prompt: TPromptGuide) => void;
   usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
+  fetchCerrentUsedCredit: () => void;
 };
 
 export default function ChatImageInput({
@@ -73,6 +75,8 @@ export default function ChatImageInput({
   fetchImagePromptGuides,
   handleUsePromptGuide,
   usedCredit,
+  cerrentUsedCredit,
+  fetchCerrentUsedCredit,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -170,7 +174,7 @@ export default function ChatImageInput({
         width: newWidth,
         height: newHeight,
       });
-    }
+     }
   };
 
   return (
@@ -186,6 +190,7 @@ export default function ChatImageInput({
         form={form}
         onFinish={handleSendMessage}
         autoComplete="off"
+        onChange={fetchCerrentUsedCredit}
         style={{
           height: "100%",
           minHeight: 0,
@@ -269,6 +274,7 @@ export default function ChatImageInput({
               title="Quota"
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
+              cerrentUsedCredit={cerrentUsedCredit}
               size="small"
             />
           </Card>

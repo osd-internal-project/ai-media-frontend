@@ -27,6 +27,7 @@ import type { RcFile } from "antd/es/upload";
 
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
+import GenerateServices from "@/app/services/generate.service";
 import Avatars from "@/public/images/Avatar.jpg";
 import {
   TPromptGuideType,
@@ -164,6 +165,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const promptGuideService = PromptGuideServices(axiosCore);
   const galleryService = GalleryServices(axiosCore);
   const logsService = LogsServices(axiosCore);
+  const generateServices = GenerateServices(axiosCore);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
@@ -216,6 +218,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     total: undefined,
     used: undefined,
   });
+  const [cerrentUsedCredit, setCerrentUsedCredit] = useState<number>(0);
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
@@ -232,9 +235,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  //fetch messages when load tab
   useEffect(() => {
     fetchMessages();
   }, [projectId, activeKey]);
+
+  //join room and fetch credit when load tab
   useEffect(() => {
     if (activeKey === "image") {
       if (socket) {
@@ -248,33 +255,22 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       isFirstLoad.current = true;
       // loadMoreMessages(0, false, currentId);
     }
+    fetchCredit();
   }, [socket, projectId, activeKey]);
 
-  // const loadMoreMessages = (
-  //   page: number,
-  //   isLoadMore: boolean,
-  //   currentId?: string,
-  // ) => {
-  //   if (socket) {
-  //     setDisableTab(true);
-  //     // const skip = 0
-  //     // const take = page === 0 ? initialPageSize : historyPageSize;
-  //     // currentLimitRef.current = take;
-  //     // socket.emit("chat:get-history", {
-  //     //   projectId,
-  //     //   organizationId: session?.user?.organizationId,
-  //     //   skip: skip,
-  //     //   take: take,
-  //     //   type: "image",
-  //     // });
-  //     socket.emit("chat:get-used-credit", {
-  //       projectId,
-  //       organizationId: session?.user?.organizationId,
-  //       userId: userId,
-  //       type: "image",
-  //     });
-  //   }
-  // };
+  //fetch credit when change parameter
+  useEffect(() => {
+    fetchCerrentUsedCredit();
+  }, [
+    projectId,
+    activeKey,
+    refImage,
+    selectedResolution,
+    selectedMaximumImage,
+    selectedRatio,
+    selectedWidth,
+    selectedHeight,
+  ]);
 
   const openNotificationWithIcon = (
     type: NotificationType,
@@ -307,21 +303,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       data: Message;
     }) => {
       console.log("🚀 Task started:", data);
-      // อัพเดท message ใน state
-      // setMessages((prev) =>
-      //   prev.map((msg) =>
-      //     msg.taskId === data.taskId
-      //       ? {
-      //         ...msg,
-      //         genneratedStatus: "PROCESSING",
-      //         percentage: 10,
-      //       }
-      //       : msg,
-      //   ),
-      // );
+
       if (data.status === 200) {
         setMessages((prev) => {
-          const index = prev.findIndex((msg) => msg.taskId === data.data.taskId);
+          const index = prev.findIndex(
+            (msg) => msg.taskId === data.data.taskId,
+          );
           if (index !== -1) {
             return prev.map((msg, i) =>
               i === index ? { ...msg, ...data.data } : msg,
@@ -346,7 +333,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       percentage: number;
     }) => {
       console.log("📊 Progress:", data);
-      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (processMessage) {
         // อัพเดท progress ใน UI
         setMessages((prev) =>
@@ -363,10 +352,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       } else {
         fetchNewMessage();
       }
+      fetchCredit();
     };
     const workerStarted = (data: { taskId: string; status: string }) => {
       console.log("🚀 Worker started:", data);
-      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (processMessage) {
         // อัพเดท message ใน state
         setMessages((prev) =>
@@ -383,6 +375,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       } else {
         fetchNewMessage();
       }
+      fetchCredit();
     };
 
     // 4. Event เมื่อสร้างภาพแต่ละรูปเสร็จ
@@ -393,7 +386,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       imageId: string;
     }) => {
       console.log("🖼️ Image complete:", data);
-      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (processMessage) {
         // เพิ่มรูปภาพที่สร้างเสร็จแล้วเข้าไปใน message
         setMessages((prev) =>
@@ -419,6 +414,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       } else {
         fetchNewMessage();
       }
+      fetchCredit();
     };
 
     // 5. Event เมื่อ task เสร็จสมบูรณ์
@@ -448,7 +444,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       };
     }) => {
       console.log("✅ Task complete:", data);
-      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (processMessage) {
         // อัพเดท message เป็น SUCCESS
         setMessages((prev) =>
@@ -470,6 +468,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       } else {
         fetchNewMessage();
       }
+      fetchCredit();
     };
 
     // 6. Event เมื่อเกิด error
@@ -482,7 +481,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
       openNotificationWithIcon("error", error.message || "Generation failed");
       setSubmitting(false);
-      const message = messagesRef.current.find((msg) => msg.taskId === error.taskId);
+      const message = messagesRef.current.find(
+        (msg) => msg.taskId === error.taskId,
+      );
       if (message) {
         // อัพเดท message เป็น FAIL
         setMessages((prev) =>
@@ -501,84 +502,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }
     };
 
-    // const handleHistory = (data: {
-    //   success: boolean;
-    //   data: {
-    //     messages: Message[];
-    //   };
-    // }) => {
-    //   setDisableTab(false);
-    //   if (data.success) {
-    //     const messageData = data.data.messages;
-    //     if (isFetchingHistory) {
-    //       isLoadingMoreRef.current = true;
-    //     }
-    //     if (messageData.length < currentLimitRef.current) {
-    //       setHasMore(false);
-    //     }
-    //     if (messageData.length === 0) {
-    //       if (isFetchingHistory) {
-    //         setIsFetchingHistory(false);
-    //         isFetchingRef.current = false;
-    //       }
-    //       setLoading(false);
-    //       return;
-    //     }
-    //     const itemsToProcess = [...messageData].reverse();
-    //     const topId = itemsToProcess[0].id;
-    //     if (topId) {
-    //       setCurrentId(String(topId));
-    //     }
-
-    //     if (isFetchingHistory) {
-    //       setMessages((prev) => {
-    //         const existingTaskIds = new Set(prev.map((m) => m.id));
-    //         const uniqueNewMessages = itemsToProcess.filter(
-    //           (m: Message) => !existingTaskIds.has(m.id),
-    //         );
-
-    //         if (uniqueNewMessages.length === 0) {
-    //           setHasMore(false);
-    //           return prev;
-    //         }
-    //         return [...uniqueNewMessages, ...prev];
-    //       });
-    //       isFirstLoad.current = false;
-    //       setLoading(false);
-    //       setIsFetchingHistory(false);
-    //       isFetchingRef.current = false;
-    //     } else {
-    //       setMessages(itemsToProcess);
-    //       const isFirstLoadNow = isFirstLoad.current;
-    //       if (
-    //         isFirstLoadNow ||
-    //         isAtBottomRef.current ||
-    //         shouldAutoScrollRef.current
-    //       ) {
-    //         setTimeout(() => {
-    //           bottomRef.current?.scrollIntoView({
-    //             behavior: isFirstLoadNow ? "instant" : "smooth",
-    //           });
-    //         }, 100);
-    //       }
-    //       if (isFirstLoad.current) {
-    //         shouldAutoScrollRef.current = true;
-    //       }
-    //       isFirstLoad.current = false;
-
-    //       // if (isFirstLoadNow) {
-    //       //   shouldAutoScrollRef.current = true;
-    //       // }
-    //       setLoading(false);
-    //     }
-    //   } else {
-    //     if (isFetchingHistory) {
-    //       setIsFetchingHistory(false);
-    //       isFetchingRef.current = false;
-    //     }
-    //     setLoading(false);
-    //   }
-    // };
     // 6. Event เมื่อเกิด Credit Change
     const handleCreditChange = (res: {
       success: boolean;
@@ -594,20 +517,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         });
       }
     };
-    // const handleNewMessage = (data: { success: boolean; data: Message }) => {
-    //   console.log("📩 New message:", data);
-    //   if (data.success && data.data) {
-    //     setMessages((prev) => {
-    //       // Check if message already exists
-    //       const exists = prev.some((msg) => msg.id === data.data.id || (msg.taskId && msg.taskId === data.data.taskId));
-    //       if (exists) {
-    //         return prev;
-    //       }
-    //       return [...prev, data.data];
-    //     });
-    //     shouldAutoScrollRef.current = true;
-    //   }
-    // };
 
     socket.on("task:started", handleTaskStarted);
     socket.on("task:created", handleTaskCreated);
@@ -725,6 +634,18 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         }
       }
       generateMssage(data, "reload");
+    }
+    fetchCredit();
+  };
+
+  const fetchCredit = async () => {
+    if (socket) {
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "image",
+      });
     }
   };
 
@@ -1145,7 +1066,37 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }
     }
   }
+  const fetchCerrentUsedCredit = async () => {
+    const values = form.getFieldsValue();
+    if (!selectedAIModel) {
+      setCerrentUsedCredit(0);
+      return;
+    }
 
+    const message = {
+      model: selectedAIModel.modelType,
+      prompt: values.prompt,
+      image: refImage.map((image) => image.imagePath),
+      sequentialImageGeneration: "auto",
+      size: selectedResolution,
+      maxImages: selectedMaximumImage,
+      watermark: false,
+      ratio: selectedRatio,
+      projectId: projectId,
+      userId: userId,
+      width: selectedWidth,
+      height: selectedHeight,
+      imageGenerateType: groupMode,
+      typeGenerate: "image",
+      organizationId: session?.user?.organizationId,
+    };
+    const credit = await generateServices.getCreditPreSend(message);
+    if (credit) {
+      setCerrentUsedCredit(credit);
+    } else {
+      setCerrentUsedCredit(0);
+    }
+  };
   return (
     <Flex
       vertical
@@ -1189,6 +1140,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             fetchImagePromptGuides={fetchImagePromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
+            cerrentUsedCredit={cerrentUsedCredit}
+            fetchCerrentUsedCredit={fetchCerrentUsedCredit}
           />
         }
         loading={loading}

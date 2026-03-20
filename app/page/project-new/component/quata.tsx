@@ -5,75 +5,116 @@ import { FileImageOutlined, VideoCameraOutlined } from "@ant-design/icons";
 type QuataSize = "small" | "middle" | "large";
 
 interface QuataProps {
-	creditUsed: number;
-	creditTotal: number;
-	// tokenUsed?: number;
-	// tokenTotal?: number;
-	semantic?: any;
-	size?: QuataSize;
-	showToken?: boolean;
-	showProgress?: boolean;
-	title?: string;
+  creditUsed: number;
+  creditTotal: number;
+  cerrentUsedCredit: number | 0;
+
+  // tokenUsed?: number;
+  // tokenTotal?: number;
+  semantic?: any;
+  size?: QuataSize;
+  showToken?: boolean;
+  showProgress?: boolean;
+  title?: string;
 }
 
-const SIZE_MAP: Record<QuataSize, { icon: number; label: number; value: number; gap: number }> = {
-	small: { icon: 10, label: 10, value: 10, gap: 0 },
-	middle: { icon: 14, label: 11, value: 11, gap: 4 },
-	large: { icon: 16, label: 12, value: 12, gap: 6 },
+const SIZE_MAP: Record<
+  QuataSize,
+  { icon: number; label: number; value: number; gap: number }
+> = {
+  small: { icon: 10, label: 10, value: 10, gap: 0 },
+  middle: { icon: 14, label: 11, value: 11, gap: 4 },
+  large: { icon: 16, label: 12, value: 12, gap: 6 },
 };
 
 const Quata: React.FC<QuataProps> = ({
-	creditUsed,
-	creditTotal,
-	// tokenUsed = 0,
-	// tokenTotal = 0,
-	semantic,
-	size = "middle",
-	showToken = true,
-	showProgress = true,
-	title,
+  creditUsed,
+  creditTotal,
+  cerrentUsedCredit,
+  // tokenUsed = 0,
+  // tokenTotal = 0,
+  semantic,
+  size = "middle",
+  showToken = true,
+  showProgress = true,
+  title,
 }) => {
-	const ui = SIZE_MAP[size];
+  const ui = SIZE_MAP[size];
 
-	const safeImageTotal = Math.max(0, creditTotal);
-	// const safeTokenTotal = Math.max(0, tokenTotal);
-	const creditPercent = safeImageTotal > 0 ? Math.round((creditUsed / safeImageTotal) * 100) : 0;
-	// const tokenPercent = safeTokenTotal > 0 ? Math.round((tokenUsed / safeTokenTotal) * 100) : 0;
+  const safeImageTotal = Math.max(0, creditTotal);
+  // const safeTokenTotal = Math.max(0, tokenTotal);
+  const creditPercent =
+    safeImageTotal > 0
+      ? Math.round((creditUsed + cerrentUsedCredit / safeImageTotal) * 100)
+      : 0;
+  // const tokenPercent = safeTokenTotal > 0 ? Math.round((tokenUsed / safeTokenTotal) * 100) : 0;
 
-	const colorTextBase = semantic?.colorTextBase ?? "#e5e7eb";
-	const colorTextSecondary = semantic?.colorTextSecondary ?? "#94a3b8";
-	const colorPrimary = semantic?.colorPrimary ?? "#5b6bf9";
-	const colorTrail = semantic?.colorPrimaryBg ?? semantic?.colorBorder ?? "rgba(148,163,184,.25)";
+  const colorTextBase = semantic?.colorTextBase ?? "#e5e7eb";
+  const colorTextSecondary = semantic?.colorTextSecondary ?? "#94a3b8";
+  const colorPrimary = semantic?.colorPrimary ?? "#5b6bf9";
+  const colorTrail =
+    semantic?.colorPrimaryBg ??
+    semantic?.colorBorder ??
+    "rgba(148,163,184,.25)";
 
-	return (
-		<div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: ui.gap }}>
-			{title ? (
-				<Typography.Text style={{ color: colorTextSecondary, fontSize: ui.label, fontWeight: 600 }}>
-					{title}
-				</Typography.Text>
-			) : null}
+  return (
+    <div
+      style={{
+        textAlign: "left",
+        display: "flex",
+        flexDirection: "column",
+        gap: ui.gap,
+      }}
+    >
+      {title ? (
+        <Typography.Text
+          style={{
+            color: colorTextSecondary,
+            fontSize: ui.label,
+            fontWeight: 600,
+          }}
+        >
+          {title}
+        </Typography.Text>
+      ) : null}
 
-			<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-				<span style={{ display: "flex", alignItems: "center", gap: ui.gap }}>
-					<FileImageOutlined style={{ fontSize: ui.icon, color: colorTextSecondary }} />
-					<Typography.Text style={{ color: colorTextSecondary, fontSize: ui.label }}>Credit</Typography.Text>
-				</span>
-				<Typography.Text strong style={{ color: colorTextBase, fontSize: ui.value }}>
-					{creditUsed}/{safeImageTotal}
-				</Typography.Text>
-			</div>
-			{showProgress ? (
-				<Progress
-					percent={creditPercent}
-					size="small"
-					showInfo={false}
-					strokeColor={colorPrimary}
-					trailColor={colorTrail}
-					style={{ margin: 0, padding: 0 }}
-				/>
-			) : null}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: ui.gap }}>
+          <FileImageOutlined
+            style={{ fontSize: ui.icon, color: colorTextSecondary }}
+          />
+          <Typography.Text
+            style={{ color: colorTextSecondary, fontSize: ui.label }}
+          >
+            Credit
+          </Typography.Text>
+        </span>
+        <Typography.Text
+          strong
+          style={{ color: colorTextBase, fontSize: ui.value }}
+        >
+          {creditUsed}
+          <strong style={{ color: colorPrimary }}> +{cerrentUsedCredit || 0}</strong>/{safeImageTotal}
+        </Typography.Text>
+      </div>
+      {showProgress ? (
+        <Progress
+          percent={creditPercent}
+          size="small"
+          showInfo={false}
+          strokeColor={colorPrimary}
+          trailColor={colorTrail}
+          style={{ margin: 0, padding: 0 }}
+        />
+      ) : null}
 
-			{/* {showToken ? (
+      {/* {showToken ? (
 				<>
 					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 						<span style={{ display: "flex", alignItems: "center", gap: ui.gap }}>
@@ -98,8 +139,8 @@ const Quata: React.FC<QuataProps> = ({
 					) : null}
 				</>
 			) : null} */}
-		</div>
-	);
+    </div>
+  );
 };
 
 export default Quata;
