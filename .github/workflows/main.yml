@@ -8,6 +8,22 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy env'
+        required: true
+        type: choice
+        default: sit
+        options:
+          - sit
+          - uat
+          - prod
+
+permissions:
+  contents: write
+
+env:
+  DEPLOY_ENV: ${{ inputs.deploy_env || 'sit' }}
 
 jobs:
   build-and-deploy:
@@ -33,7 +49,7 @@ jobs:
           echo "ver=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
           echo "📦 Package: $(jq -r .name package.json)"
           echo "📦 Version: $(jq -r .version package.json)"
-          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
+          echo "🌍 Deploy Env: ${{ env.DEPLOY_ENV }}"
 
       # ---------------------------------------------------------------------
       # Build Docker image
@@ -92,7 +108,7 @@ jobs:
             --docker-server=swr.ap-southeast-2.myhuaweicloud.com \
             --docker-username=ap-southeast-2@HPUAGIPPWFA7YCNYJIGE \
             --docker-password=${{ secrets.HUAWEI_REGISTRY_PASSWORD }} \
-            --namespace=aicave-${{ secrets.DEPLOY_ENV }} \
+            --namespace=aicave-${{ env.DEPLOY_ENV }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       # ---------------------------------------------------------------------
@@ -100,7 +116,7 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Fix Stuck Helm Release
         run: |
-          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
           NS="aicave-${DEPLOY_ENV}"
           RELEASE="aicave-console"
           STATUS=$(helm status ${RELEASE} -n ${NS} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "not-found")
@@ -111,12 +127,21 @@ jobs:
           fi
 
       # ---------------------------------------------------------------------
+      # Set Chart appVersion from package.json
+      # ---------------------------------------------------------------------
+      - name: Set Chart appVersion
+        run: |
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
+          sed -i "s/^appVersion:.*/appVersion: \"${VER}\"/" charts/aicave-console-chart/Chart.yaml
+          echo "Set appVersion to ${VER} in charts/aicave-console-chart/Chart.yaml"
+
+      # ---------------------------------------------------------------------
       # Helm upgrade (runs on self-hosted runner with cluster access)
       # ---------------------------------------------------------------------
       - name: Helm Upgrade
         run: |
           set -e
-          DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
           NAME="${{ needs.build-and-deploy.outputs.image_name }}"
           VER="${{ needs.build-and-deploy.outputs.image_version }}"
 
@@ -141,7 +166,7 @@ jobs:
       - name: Debug on Failure
         if: failure()
         run: |
-          NS="aicave-${{ secrets.DEPLOY_ENV }}"
+          NS="aicave-${{ env.DEPLOY_ENV }}"
           echo "====== POD STATUS ======"
           kubectl get pods -n ${NS} -l app=aicave-console -o wide
 
@@ -165,6 +190,23 @@ jobs:
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/aicave-console \
-            -n aicave-${{ secrets.DEPLOY_ENV }}
-          kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
+            -n aicave-${{ env.DEPLOY_ENV }}
+          kubectl get pods -n aicave-${{ env.DEPLOY_ENV }} \
             -l app=aicave-console
+
+      # ---------------------------------------------------------------------
+      # Tag deployment for rollback reference
+      # ---------------------------------------------------------------------
+      - name: Tag Deployment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          NAME="${{ needs.build-and-deploy.outputs.image_name }}"
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
+          TAG="${NAME}/${DEPLOY_ENV}/${VER}"
+
+          echo "Tagging deployment: ${TAG}"
+          git tag -f "${TAG}" -m "Deployed ${NAME}:${VER} to ${DEPLOY_ENV}"
+          git push origin "${TAG}" --force
