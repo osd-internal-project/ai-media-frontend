@@ -336,12 +336,13 @@ const GenerateImagePage: FC = () => {
                 disabled: disableTab,
                 key: "image",
                 forceRender: true,
+                destroyOnHidden: true,
                 label: renderTabLabel(
                   "image",
                   "Image Gen",
                   <PictureOutlined />,
                 ),
-                children: (
+                children: activeKey === "image" && (
                   <ChatGenerateImage
                     promptGuideOpenStatus={promptGuideOpenStatus}
                     key={`image`}
@@ -359,13 +360,15 @@ const GenerateImagePage: FC = () => {
               {
                 disabled: disableTab,
                 forceRender: true,
+                destroyOnHidden: true,
+
                 key: "video",
                 label: renderTabLabel(
                   "video",
                   "Video Gen",
                   <VideoCameraOutlined />,
                 ),
-                children: (
+                children: activeKey === "video" && (
                   <ChatGenerateVideo
                     key={"video"}
                     activeKey={activeKey}
@@ -383,13 +386,14 @@ const GenerateImagePage: FC = () => {
               {
                 disabled: disableTab,
                 forceRender: true,
+                destroyOnHidden: true,
                 key: "omnihumen",
                 label: renderTabLabel(
                   "omnihumen",
                   "OmniHuman",
                   <MessageOutlined />,
                 ),
-                children: (
+                children: activeKey === "omnihumen" && (
                   <ChatGenerateOmnihumen
                     key={"omnihumen"}
                     activeKey={activeKey}
@@ -407,13 +411,14 @@ const GenerateImagePage: FC = () => {
               {
                 disabled: disableTab,
                 forceRender: true,
+                destroyOnHidden: true,
                 key: "dreamactor",
                 label: renderTabLabel(
                   "dreamactor",
                   "DreamActor",
                   <PlaySquareOutlined />,
                 ),
-                children: (
+                children: activeKey === "dreamactor" && (
                   <ChatGenerateDreamactor
                     key={"dreamactor"}
                     activeKey={activeKey}

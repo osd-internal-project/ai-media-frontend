@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState, type FC } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  type FC,
+} from "react";
 import {
   Card,
   Flex,
@@ -10,7 +17,6 @@ import {
 } from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
-  TPromptGuideType,
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
@@ -22,6 +28,8 @@ import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import GenerateServices from "@/app/services/generate.service";
+import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
 import ChatOmnihumenInput from "./chat-omnihumen-input";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -101,6 +109,7 @@ interface Message {
   resolution: string;
   ratio: string;
   imageUrls: VideoMessage[];
+  seq?: number;
 }
 
 type NotificationType = "success" | "info" | "warning" | "error";
@@ -124,9 +133,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [api, contextHolderNoti] = notification.useNotification();
   const [messageApi, contextHolder] = message.useMessage();
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
-  // const promptguideService = PromptGuideServices(axiosCore);
   const promptGuideService = PromptGuideServices(axiosCore);
   const galleryService = GalleryServices(axiosCore);
+  const logsService = LogsServices(axiosCore);
+  const generateServices = GenerateServices(axiosCore);
+
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [filesFirst, setFilesFirst] = useState<UploadFile[]>([]);
@@ -134,9 +145,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(0);
-  const [currentId, setCurrentId] = useState<string | undefined>("");
-  // Removed unused currentPrompt and firstFrameImage
+  const [cerrentUsedCredit, setCerrentUsedCredit] = useState<number>(0);
 
   // Refs
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -153,10 +162,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
   const [fastMode, setFastMode] = useState<boolean>(false);
-  const [selectedDurationType, setSelectedDurationType] = useState<{
-    value: string;
-    label: string;
-  }>({ value: "Seconds", label: "Seconds" });
   const [selectedDuration, setSelectedDuration] = useState<number>(6);
   const [refImageFrist, setRefImageFrist] = useState<
     {
@@ -177,6 +182,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     }[]
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
+  const isFetchingRef = useRef<boolean>(false);
   const [draftMode, setDraftMode] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedWidth, setSelectedWidth] = useState<number>(1920);
@@ -193,6 +199,18 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     used: undefined,
   });
 
+  const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
+  const [lastRowSeq, setLastRowSeq] = useState<number | undefined>(undefined);
+  const messagesRef = useRef<Message[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [projectId, activeKey]);
+
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -205,15 +223,15 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  const openNotificationWithIcon = (
-    type: NotificationType,
-    message: string,
-  ) => {
-    api[type]({
-      message: type,
-      description: message,
-    });
-  };
+  const openNotificationWithIcon = useCallback(
+    (type: NotificationType, message: string) => {
+      api[type]({
+        message: type,
+        description: message,
+      });
+    },
+    [api],
+  );
 
   useEffect(() => {
     form.setFieldValue("duration", selectedDuration);
@@ -221,7 +239,226 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   }, []);
 
   useEffect(() => {
+    fetchCerrentUsedCredit();
+  }, [
+    projectId,
+    activeKey,
+    refImageFrist,
+    refImageLast,
+    selectedResolution,
+    selectedRatio,
+    selectedWidth,
+    selectedHeight,
+    selectedDuration,
+    fastMode,
+    draftMode,
+  ]);
+
+  const fetchCerrentUsedCredit = async () => {
+    const values = form.getFieldsValue();
+    if (!selectedAIModel) {
+      setCerrentUsedCredit(0);
+      return;
+    }
+    const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
+    const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+    const tempTask = `temp-${Date.now()}`;
+    const message = {
+      taskId: tempTask,
+      model: selectedAIModel.modelType,
+      prompt: values.prompt,
+      image: [
+        firstImage?.imagePath ? firstImage.imagePath : null,
+        lastImage?.imagePath ? lastImage.imagePath : null,
+      ],
+      sequentialImageGeneration: "auto",
+      size: selectedResolution,
+      maxImages: 0,
+      watermark: false,
+      ratio: selectedRatio,
+      projectId: projectId,
+      userId: userId,
+      width: selectedWidth,
+      height: selectedHeight,
+      imageGenerateType: "",
+      typeGenerate: "omnihumen",
+      duration: selectedDuration,
+      draft: draftMode,
+      organizationId: session?.user?.organizationId,
+    };
+    const credit = await generateServices.getCreditPreSend(message);
+    if (credit) {
+      setCerrentUsedCredit(credit);
+    } else {
+      setCerrentUsedCredit(0);
+    }
+  };
+
+  const generateMessage = useCallback(
+    (messageData: Message[], type: string) => {
+      setDisableTab(false);
+      if (isFetchingHistory || type === "loadmore") {
+        isLoadingMoreRef.current = true;
+      }
+      if (messageData.length < currentLimitRef.current) {
+        setHasMore(false);
+      }
+      if (messageData.length === 0) {
+        if (isFetchingHistory) {
+          setIsFetchingHistory(false);
+          isFetchingRef.current = false;
+        }
+        setLoading(false);
+        return;
+      }
+      const itemsToProcess = [...messageData].reverse();
+
+      if (type === "loadmore") {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.id));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.id),
+          );
+
+          if (uniqueNewMessages.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
+          return [...uniqueNewMessages, ...prev];
+        });
+        isFirstLoad.current = false;
+        setLoading(false);
+        setIsFetchingHistory(false);
+        isFetchingRef.current = false;
+      } else if (type === "newmore") {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.taskId));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.taskId),
+          );
+
+          if (uniqueNewMessages.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
+          return [...prev, ...uniqueNewMessages];
+        });
+        isFirstLoad.current = false;
+        setLoading(false);
+        setIsFetchingHistory(false);
+        isFetchingRef.current = false;
+      } else {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.taskId));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.taskId),
+          );
+          return [...uniqueNewMessages, ...prev];
+        });
+        const isFirstLoadNow = isFirstLoad.current;
+        if (
+          isFirstLoadNow ||
+          isAtBottomRef.current ||
+          shouldAutoScrollRef.current
+        ) {
+          setTimeout(() => {
+            bottomRef.current?.scrollIntoView({
+              behavior: isFirstLoadNow ? "instant" : "smooth",
+            });
+          }, 100);
+        }
+        if (isFirstLoad.current) {
+          shouldAutoScrollRef.current = true;
+        }
+        isFirstLoad.current = false;
+        setLoading(false);
+      }
+    },
+    [isFetchingHistory, setDisableTab],
+  );
+
+  const fetchMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "omnihumen",
+      0,
+      3,
+    );
+    if (data) {
+      if (data.length > 0) {
+        const seqValues = data
+          .map((p) => p.seq)
+          .filter((s) => s !== undefined && s !== null);
+        if (seqValues && seqValues.length > 0) {
+          const minSeq = Math.min(...seqValues);
+          const maxSeq = Math.max(...seqValues);
+          setFristRowSeq(minSeq);
+          setLastRowSeq(maxSeq);
+        }
+      }
+      generateMessage(data, "reload");
+    }
+    fetchCredit();
+  };
+
+  const fetchCredit = async () => {
+    if (socket) {
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "image",
+      });
+    }
+  };
+
+  const fetchOldMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "omnihumen",
+      0,
+      undefined,
+      fristRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const minSeq = Math.min(...seqValues);
+        setFristRowSeq(minSeq);
+      }
+      generateMessage(data, "loadmore");
+    }
+  };
+
+  const fetchNewMessage = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "omnihumen",
+      0,
+      1,
+      undefined,
+      lastRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const maxSeq = Math.max(...seqValues);
+        setLastRowSeq(maxSeq);
+      }
+      generateMessage(data, "newmore");
+    }
+  };
+
+  useEffect(() => {
     if (!socket || activeKey !== "omnihumen") return;
+
     const handleTaskCreated = (data: {
       taskId: string;
       message: string;
@@ -229,55 +466,57 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       data: Message;
     }) => {
       console.log("✅ Task created:", data);
-      setMessages((prev) => {
-        const exists = prev.some((msg) => msg.taskId === data.taskId);
-        if (exists) {
-          return prev;
-        }
-        return [...prev, data.data];
-      });
-      shouldAutoScrollRef.current = true;
       setSubmitting(false);
     };
 
     const handleTaskStarted = (data: {
       status: number;
-      data: {
-        taskId: string;
-        projectId: string;
-        userId: string;
-        prompt: string;
-        typeGenerate: string;
-        genneratedStatus: string;
-        status: boolean;
-        omnihumenTaskId: string;
-        message: string;
-      };
+      data: Message;
       oldTaskId: string;
     }) => {
       console.log("🚀 Task started:", data.data.taskId);
       if (data.status === 200) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.taskId === data.oldTaskId
-              ? {
-                  ...msg,
-                  genneratedStatus: "PROCESSING",
-                  percentage: 10,
-                  taskId: data.data.taskId,
-                }
-              : msg,
-          ),
-        );
+        setMessages((prev) => {
+          const index = prev.findIndex(
+            (msg) =>
+              msg.taskId === data.oldTaskId || msg.taskId === data.data.taskId,
+          );
+          if (index !== -1) {
+            return prev.map((msg, i) =>
+              i === index ? { ...msg, ...data.data } : msg,
+            );
+          }
+          return [...prev, data.data];
+        });
       } else {
         setMessages((prev) =>
           prev.filter((msg) => msg.taskId !== data.oldTaskId),
         );
       }
+      shouldAutoScrollRef.current = true;
     };
 
     const workerTaskStarted = (data: { taskId: string; timestamp: string }) => {
       console.log("🚀 Worker started:", data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: 10,
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerUrlSuccess = (data: {
@@ -286,23 +525,31 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚓 Worker video url success:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  {
-                    imageUrl: data.videoUrl,
-                    thumbnailUrl:
-                      "https://placehold.co/600x400/000000/FFFFFF/png",
-                  },
-                ],
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl:
+                        "https://placehold.co/600x400/000000/FFFFFF/png",
+                    },
+                  ],
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerUploadSuccess = (data: {
@@ -312,19 +559,30 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚕 Worker video upload success:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
-                ],
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl: data.thumbnailUrl,
+                    },
+                  ],
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerComplete = (data: {
@@ -333,48 +591,46 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚀 Task complete:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
-    const workerError = (data: {
-      taskId: string;
-      success: boolean;
-      timestamp: string;
-    }) => {
-      console.log("🚀 Task error:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "FAILED",
-              }
-            : msg,
-        ),
-      );
-    };
+
     const handleProgress = (data: { taskId: string; timestamp: string }) => {
       console.log("📊 Progress:", data.taskId);
-
-      // อัพเดท progress ใน UI
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     // 6. Event เมื่อเกิด error
@@ -384,15 +640,25 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       details?: any;
     }) => {
       console.error("❌ Error:", error);
-
       openNotificationWithIcon("error", error.message || "Generation failed");
       setSubmitting(false);
 
       if (error.taskId) {
-        // อัพเดท message เป็น FAIL
-        setMessages((prev) =>
-          prev.filter((msg) => msg.taskId !== error.taskId),
-        );
+        const msg = messagesRef.current.find((m) => m.taskId === error.taskId);
+        if (msg) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.taskId === error.taskId
+                ? {
+                    ...m,
+                    genneratedStatus: "FAIL",
+                  }
+                : m,
+            ),
+          );
+        } else {
+          fetchNewMessage();
+        }
       }
     };
 
@@ -413,79 +679,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       }
     };
 
-    const handleHistory = (data: {
-      success: boolean;
-      data: {
-        messages: Message[];
-      };
-    }) => {
-      setDisableTab(false);
-      if (data.success) {
-        const messageData = data.data.messages;
-        if (isFetchingHistory) {
-          isLoadingMoreRef.current = true;
-        }
-        if (messageData.length < currentLimitRef.current) {
-          setHasMore(false);
-        }
-        if (messageData.length === 0) {
-          setIsFetchingHistory(false);
-          setLoading(false);
-          isFirstLoad.current = false;
-          return;
-        }
-
-        const itemsToProcess = [...messageData].reverse();
-
-        const topId = itemsToProcess[0].id;
-        if (topId) {
-          setCurrentId(String(topId));
-        }
-
-        if (isFetchingHistory) {
-          setMessages((prev) => {
-            const existingTaskIds = new Set(prev.map((m) => m.id));
-            const uniqueNewMessages = itemsToProcess.filter(
-              (m: Message) => !existingTaskIds.has(m.id),
-            );
-
-            if (uniqueNewMessages.length === 0) {
-              setHasMore(false);
-              return prev;
-            }
-
-            return [...uniqueNewMessages, ...prev];
-          });
-          isFirstLoad.current = false;
-          setIsFetchingHistory(false);
-          setLoading(false);
-        } else {
-          setMessages(itemsToProcess);
-          if (
-            isFirstLoad.current ||
-            isAtBottomRef.current ||
-            shouldAutoScrollRef.current
-          ) {
-            const isFirst = isFirstLoad.current;
-            setTimeout(() => {
-              if (isFirst && chatContainerRef.current) {
-                chatContainerRef.current.scrollTop =
-                  chatContainerRef.current.scrollHeight;
-              } else {
-                bottomRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }
-            }, 100);
-          }
-          if (isFirstLoad.current) {
-            shouldAutoScrollRef.current = true;
-          }
-          isFirstLoad.current = false;
-          setLoading(false);
-        }
-      }
-    };
     socket.on("omnihumen-task:created", handleTaskCreated);
     socket.on("task-omnihumen:started", handleTaskStarted);
     socket.on("omnihumen-generate:error", handleError);
@@ -493,9 +686,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
-    socket.on("worker:omnihumen-error", workerError);
     socket.on("worker:omnihumen-progress", handleProgress);
-    socket.on("chat:history", handleHistory);
     socket.on("chat:used-credit", handleCreditChange);
 
     return () => {
@@ -505,12 +696,10 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       socket.off("worker:omnihumen-url-success", workerUrlSuccess);
       socket.off("worker:omnihumen-upload-success", workerUploadSuccess);
       socket.off("worker:omnihumen-complete", workerComplete);
-      socket.off("worker:omnihumen-error", workerError);
       socket.off("worker:omnihumen-progress", handleProgress);
-      socket.off("chat:history", handleHistory);
       socket.off("chat:used-credit", handleCreditChange);
     };
-  }, [socket, page, projectId, activeKey]);
+  }, [socket, projectId, activeKey]);
 
   useEffect(() => {
     if (activeKey === "omnihumen") {
@@ -523,37 +712,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       }
       setLoading(true);
       isFirstLoad.current = true;
-      loadMoreMessages(0, false, currentId);
     }
   }, [socket, projectId, activeKey]);
-
-  const loadMoreMessages = (
-    page: number,
-    isLoadMore: boolean,
-    currentId?: string,
-  ) => {
-    if (socket) {
-      setDisableTab(true);
-      const skip =
-        page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
-      const take = page === 0 ? initialPageSize : historyPageSize;
-      currentLimitRef.current = take;
-
-      socket.emit("chat:get-history", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        skip: skip,
-        take: take,
-        type: "omnihumen",
-      });
-      socket.emit("chat:get-used-credit", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        userId: userId,
-        type: "omnihumen",
-      });
-    }
-  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -561,12 +721,16 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
-    if (target.scrollTop <= 50 && hasMore && !loading && !isFirstLoad.current) {
+    if (
+      target.scrollTop === 0 &&
+      !loading &&
+      !isFirstLoad.current &&
+      !isFetchingRef.current
+    ) {
+      isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadMoreMessages(nextPage, true);
+      fetchOldMessages();
     }
   };
 
@@ -597,8 +761,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         session?.user?.organizationId || "",
       );
       if (!response) throw new Error("Download failed or response is empty");
-      // console.log(response);
-      // const filename = response.name || "image.jpg";
       const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
@@ -650,7 +812,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const handleUploadChange = async ({
     index,
     file,
-    fileList: newFileList,
     status,
   }: {
     index: number;
@@ -804,7 +965,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     }
   }
 
-  const onRemoveFile = (file: UploadFile) => {
+  const onRemoveFile = (_file: UploadFile) => {
     // setRefImageFrist((prev) => prev.filter((f) => f.uid !== file.uid));
     // UploadsServices(axiosWorker).remove(file.uid);
   };
@@ -889,7 +1050,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       <GenerateTwoPaneLayout
         semantic={semantic}
         isMobile={isMobile}
-        projectRole={projectRole}
+        projectRole={projectRole || undefined}
         fallbackDescription="You need USER or ADMIN role to use the omnihumen chat feature."
         leftPanel={
           <ChatOmnihumenInput
@@ -917,6 +1078,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             fetchVideoPromptGuides={fetchOmnihumenPromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
+            cerrentUsedCredit={cerrentUsedCredit}
           />
         }
         loading={loading}
@@ -1018,6 +1180,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
                     )}
 
                     {(item.genneratedStatus === "FAILED" ||
+                      item.genneratedStatus === "FAIL" ||
                       (item.genneratedStatus === "SUCCESS" &&
                         item.imageUrls?.length === 0)) && (
                       <Card

@@ -184,8 +184,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(0);
-  const [currentId, setCurrentId] = useState<string | undefined>("");
+  // const [page, setPage] = useState<number>(0);
+  // const [currentId, setCurrentId] = useState<string | undefined>("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
@@ -542,7 +542,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("chat:message-saved");
       socket.off("chat:used-credit", handleCreditChange);
     };
-  }, [socket, page, projectId, activeKey]);
+  }, [socket,  projectId, activeKey]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -633,7 +633,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           setLastRowSeq(maxSeq);
         }
       }
-      generateMssage(data, "reload");
+      generateMessage(data, "reload");
     }
     fetchCredit();
   };
@@ -666,7 +666,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         const minSeq = Math.min(...seqValues);
         setFristRowSeq(minSeq);
       }
-      generateMssage(data, "loadmore");
+      generateMessage(data, "loadmore");
     }
   };
   const fetchNewMessage = async () => {
@@ -687,10 +687,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         const maxSeq = Math.max(...seqValues);
         setLastRowSeq(maxSeq);
       }
-      generateMssage(data, "newmore");
+      generateMessage(data, "newmore");
     }
   };
-  const generateMssage = (messageData: Message[], type: string) => {
+  const generateMessage = (messageData: Message[], type: string) => {
     setDisableTab(false);
     // const messageData = messages.messages;
     if (isFetchingHistory || type === "loadmore") {
@@ -708,10 +708,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       return;
     }
     const itemsToProcess = [...messageData].reverse();
-    const topId = itemsToProcess[0].id;
-    if (topId) {
-      setCurrentId(String(topId));
-    }
+    // const topId = itemsToProcess[0].id;
+    // if (topId) {
+    //   setCurrentId(String(topId));
+    // }
 
     if (type === "loadmore") {
       setMessages((prev) => {

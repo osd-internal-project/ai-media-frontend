@@ -72,6 +72,7 @@ type Props = {
   fetchVideoPromptGuides: () => Promise<void>;
   handleUsePromptGuide: (template: TPromptGuide) => void;
   usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
 };
 
 export default function ChatVideoInput({
@@ -98,6 +99,7 @@ export default function ChatVideoInput({
   fetchVideoPromptGuides,
   handleUsePromptGuide,
   usedCredit,
+  cerrentUsedCredit,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -486,7 +488,7 @@ export default function ChatVideoInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"
-              cerrentUsedCredit={0}
+              cerrentUsedCredit={cerrentUsedCredit}
             />
           </Card>
           <Button

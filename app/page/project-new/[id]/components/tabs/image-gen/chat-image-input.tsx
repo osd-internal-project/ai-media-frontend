@@ -190,7 +190,7 @@ export default function ChatImageInput({
         form={form}
         onFinish={handleSendMessage}
         autoComplete="off"
-        onChange={fetchCerrentUsedCredit}
+        // onChange={fetchCerrentUsedCredit}
         style={{
           height: "100%",
           minHeight: 0,
@@ -275,7 +275,8 @@ export default function ChatImageInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               cerrentUsedCredit={cerrentUsedCredit}
-              size="small"
+              size="small" 
+              
             />
           </Card>
           <Button

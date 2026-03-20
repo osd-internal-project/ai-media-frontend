@@ -2,6 +2,8 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useMemo,
+  useCallback,
   type FC,
 } from "react";
 import { PermissionGuard } from "../../../../../../components/PermissionGuard";
@@ -23,7 +25,9 @@ import {
 } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
-import VideoItem from "./video-player"; 
+import LogsServices from "@/app/services/logs.service";
+import GenerateServices from "@/app/services/generate.service";
+import VideoItem from "./video-player";
 import VideoSmartReference from "./video-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
@@ -112,6 +116,7 @@ interface Message {
   resolution: string;
   ratio: string;
   imageUrls: VideoMessage[];
+  seq?: number;
 }
 
 type NotificationType = "success" | "info" | "warning" | "error";
@@ -135,9 +140,10 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const [api, contextHolderNoti] = notification.useNotification();
   const [messageApi, contextHolder] = message.useMessage();
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
-  // const promptguideService = PromptGuideServices(axiosCore);
   const promptGuideService = PromptGuideServices(axiosCore);
   const galleryService = GalleryServices(axiosCore);
+  const logsService = LogsServices(axiosCore);
+  const generateServices = GenerateServices(axiosCore);
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [filesFirst, setFilesFirst] = useState<UploadFile[]>([]);
@@ -145,8 +151,10 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(0);
-  const [currentId, setCurrentId] = useState<string | undefined>("");
+  const [cerrentUsedCredit, setCerrentUsedCredit] = useState<number>(0);
+
+  // const [page, setPage] = useState<number>(0);
+  // const [currentId, setCurrentId] = useState<string | undefined>("");
   // Removed unused currentPrompt and firstFrameImage
 
   // Refs
@@ -158,7 +166,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   const initialPageSize = 3;
-  const historyPageSize = 1;
+  // const historyPageSize = 1;
   const currentLimitRef = useRef<number>(initialPageSize);
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
@@ -199,6 +207,18 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     total: undefined,
     used: undefined,
   });
+
+  const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
+  const [lastRowSeq, setLastRowSeq] = useState<number | undefined>(undefined);
+  const messagesRef = useRef<Message[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [projectId, activeKey]);
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -211,16 +231,230 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  const openNotificationWithIcon = (
-    type: NotificationType,
-    message: string,
-  ) => {
-    api[type]({
-      message: type,
-      description: message,
-    });
+  const openNotificationWithIcon = useCallback(
+    (type: NotificationType, message: string) => {
+      api[type]({
+        message: type,
+        description: message,
+      });
+    },
+    [api],
+  );
+    useEffect(() => {
+      fetchCerrentUsedCredit();
+    }, [
+      projectId,
+      activeKey,
+      refImageFrist,
+      refImageLast,
+      selectedResolution,
+      selectedRatio,
+      selectedWidth,
+      selectedHeight,
+      selectedDuration,
+      selectedAudio,
+      draftMode,
+    ]);
+ const fetchCerrentUsedCredit = async () => {
+    const values = form.getFieldsValue();
+    if (!selectedAIModel) {
+      setCerrentUsedCredit(0);
+      return;
+    }
+    const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
+    const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+    const tempTask = `temp-${Date.now()}`;
+    const message = {
+      taskId: tempTask,
+      model: selectedAIModel.modelType,
+      prompt: values.prompt,
+      image: [
+        firstImage?.imagePath ? firstImage.imagePath : null,
+        lastImage?.imagePath ? lastImage.imagePath : null,
+      ],
+      sequentialImageGeneration: "auto",
+      size: selectedResolution,
+      maxImages: 0,
+      watermark: false,
+      ratio: selectedRatio,
+      projectId: projectId,
+      userId: userId,
+      width: selectedWidth,
+      height: selectedHeight,
+      imageGenerateType: "",
+      typeGenerate: "video",
+      duration: selectedDuration,
+      generateAudio: selectedAudio,
+      draft: draftMode,
+      organizationId: session?.user?.organizationId,
+    };
+    const credit = await generateServices.getCreditPreSend(message);
+    if (credit) {
+      setCerrentUsedCredit(credit);
+    } else {
+      setCerrentUsedCredit(0);
+    }
+  };
+  const generateMessage = useCallback(
+    (messageData: Message[], type: string) => {
+      setDisableTab(false);
+      if (isFetchingHistory || type === "loadmore") {
+        isLoadingMoreRef.current = true;
+      }
+      if (messageData.length < currentLimitRef.current) {
+        setHasMore(false);
+      }
+      if (messageData.length === 0) {
+        if (isFetchingHistory) {
+          setIsFetchingHistory(false);
+          isFetchingRef.current = false;
+        }
+        setLoading(false);
+        return;
+      }
+      const itemsToProcess = [...messageData].reverse();
+
+      if (type === "loadmore") {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.id));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.id),
+          );
+
+          if (uniqueNewMessages.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
+          return [...uniqueNewMessages, ...prev];
+        });
+        isFirstLoad.current = false;
+        setLoading(false);
+        setIsFetchingHistory(false);
+        isFetchingRef.current = false;
+      } else if (type === "newmore") {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.taskId));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.taskId),
+          );
+
+          if (uniqueNewMessages.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
+          return [...prev, ...uniqueNewMessages];
+        });
+        isFirstLoad.current = false;
+        setLoading(false);
+        setIsFetchingHistory(false);
+        isFetchingRef.current = false;
+      } else {
+        setMessages((prev) => {
+          const existingTaskIds = new Set(prev.map((m) => m.taskId));
+          const uniqueNewMessages = itemsToProcess.filter(
+            (m: Message) => !existingTaskIds.has(m.taskId),
+          );
+          return [...uniqueNewMessages, ...prev];
+        });
+        const isFirstLoadNow = isFirstLoad.current;
+        if (
+          isFirstLoadNow ||
+          isAtBottomRef.current ||
+          shouldAutoScrollRef.current
+        ) {
+          setTimeout(() => {
+            bottomRef.current?.scrollIntoView({
+              behavior: isFirstLoadNow ? "instant" : "smooth",
+            });
+          }, 100);
+        }
+        if (isFirstLoad.current) {
+          shouldAutoScrollRef.current = true;
+        }
+        isFirstLoad.current = false;
+        setLoading(false);
+      }
+    },
+    [isFetchingHistory, setDisableTab],
+  );
+
+  const fetchMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "video",
+      0,
+      3,
+    );
+    if (data) {
+      if (data.length > 0) {
+        const seqValues = data
+          .map((p) => p.seq)
+          .filter((s) => s !== undefined && s !== null);
+        if (seqValues && seqValues.length > 0) {
+          const minSeq = Math.min(...seqValues);
+          const maxSeq = Math.max(...seqValues);
+          setFristRowSeq(minSeq);
+          setLastRowSeq(maxSeq);
+        }
+      }
+      generateMessage(data, "reload");
+    }
+    fetchCredit();
   };
 
+  const fetchCredit = async () => {
+    if (socket) {
+      socket.emit("chat:get-used-credit", {
+        projectId,
+        organizationId: session?.user?.organizationId,
+        userId: userId,
+        type: "image",
+      });
+    }
+  };
+ 
+   const fetchOldMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "video",
+      0,
+      undefined,
+      fristRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const minSeq = Math.min(...seqValues);
+        setFristRowSeq(minSeq);
+      }
+      generateMessage(data, "loadmore");
+    }
+  };
+  const fetchNewMessage = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "video",
+      0,
+      1,
+      undefined,
+      lastRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const maxSeq = Math.max(...seqValues);
+        setLastRowSeq(maxSeq);
+      }
+      generateMessage(data, "newmore");
+    }
+  };
   useEffect(() => {
     if (!socket || activeKey !== "video") return;
     const handleTaskCreated = (data: {
@@ -230,55 +464,57 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       data: Message;
     }) => {
       console.log("✅ Task created:", data);
-      setMessages((prev) => {
-        const exists = prev.some((msg) => msg.taskId === data.taskId);
-        if (exists) {
-          return prev;
-        }
-        return [...prev, data.data];
-      });
-      shouldAutoScrollRef.current = true;
       setSubmitting(false);
     };
 
     const handleTaskStarted = (data: {
       status: number;
-      data: {
-        taskId: string;
-        projectId: string;
-        userId: string;
-        prompt: string;
-        typeGenerate: string;
-        genneratedStatus: string;
-        status: boolean;
-        videoTaskId: string;
-        message: string;
-      };
+      data: Message;
       oldTaskId: string;
     }) => {
       console.log("🚀 Task started:", data.data.taskId);
       if (data.status === 200) {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.taskId === data.oldTaskId
-              ? {
-                  ...msg,
-                  genneratedStatus: "PROCESSING",
-                  percentage: 10,
-                  taskId: data.data.taskId,
-                }
-              : msg,
-          ),
-        );
+        setMessages((prev) => {
+          const index = prev.findIndex(
+            (msg) =>
+              msg.taskId === data.oldTaskId || msg.taskId === data.data.taskId,
+          );
+          if (index !== -1) {
+            return prev.map((msg, i) =>
+              i === index ? { ...msg, ...data.data } : msg,
+            );
+          }
+          return [...prev, data.data];
+        });
       } else {
         setMessages((prev) =>
           prev.filter((msg) => msg.taskId !== data.oldTaskId),
         );
       }
+      shouldAutoScrollRef.current = true;
     };
 
     const workerTaskStarted = (data: { taskId: string; timestamp: string }) => {
       console.log("🚀 Worker started:", data.taskId);
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: 10,
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerUrlSuccess = (data: {
@@ -287,23 +523,31 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚓 Worker video url success:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  {
-                    imageUrl: data.videoUrl,
-                    thumbnailUrl:
-                      "https://placehold.co/600x400/000000/FFFFFF/png",
-                  },
-                ],
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl:
+                        "https://placehold.co/600x400/000000/FFFFFF/png",
+                    },
+                  ],
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerUploadSuccess = (data: {
@@ -313,19 +557,30 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚕 Worker video upload success:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-                imageUrls: [
-                  { imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl },
-                ],
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl: data.thumbnailUrl,
+                    },
+                  ],
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const workerComplete = (data: {
@@ -334,50 +589,73 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       timestamp: string;
     }) => {
       console.log("🚀 Task complete:", data.taskId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "SUCCESS",
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "SUCCESS",
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
     const handleProgress = (data: { taskId: string; timestamp: string }) => {
       console.log("📊 Progress:", data.taskId);
-
-      // อัพเดท progress ใน UI
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-              }
-            : msg,
-        ),
+      const processMessage = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
       );
+      if (processMessage) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
+      fetchCredit();
     };
 
-    // 6. Event เมื่อเกิด error
     const handleError = (error: {
       taskId?: string;
       message: string;
       details?: any;
     }) => {
       console.error("❌ Error:", error);
-
       openNotificationWithIcon("error", error.message || "Generation failed");
       setSubmitting(false);
 
       if (error.taskId) {
-        // อัพเดท message เป็น FAIL
-        setMessages((prev) =>
-          prev.filter((msg) => msg.taskId !== error.taskId),
-        );
+        const msg = messagesRef.current.find((m) => m.taskId === error.taskId);
+        if (msg) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.taskId === error.taskId
+                ? {
+                    ...m,
+                    genneratedStatus: "FAIL",
+                  }
+                : m,
+            ),
+          );
+        } else {
+          fetchNewMessage();
+        }
       }
     };
     // 7. Event เมื่อเกิด Credit Change
@@ -396,88 +674,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         });
       }
     };
-    
-    const handleHistory = (data: {
-      success: boolean;
-      data: {
-        messages: Message[];
-      };
-    }) => {
-      setDisableTab(false);
-      if (data.success) {
-        const messageData = data.data.messages;
-        if (isFetchingHistory) {
-          isLoadingMoreRef.current = true;
-        }
-        if (messageData.length < currentLimitRef.current) {
-          setHasMore(false);
-        }
-        if (messageData.length === 0) {
-          if (isFetchingHistory) {
-            setIsFetchingHistory(false);
-            isFetchingRef.current = false;
-          }
-          setLoading(false);
-          isFirstLoad.current = false;
-          return;
-        }
-        const itemsToProcess = [...messageData].reverse();
-        const topId = itemsToProcess[0].id;
-        if (topId) {
-          setCurrentId(String(topId));
-        }
-
-        if (isFetchingHistory) {
-          setMessages((prev) => {
-            const existingTaskIds = new Set(prev.map((m) => m.id));
-            const uniqueNewMessages = itemsToProcess.filter(
-              (m: Message) => !existingTaskIds.has(m.id),
-            );
-
-            if (uniqueNewMessages.length === 0) {
-              setHasMore(false);
-              return prev;
-            }
-            return [...uniqueNewMessages, ...prev];
-          });
-          isFirstLoad.current = false;
-          setIsFetchingHistory(false);
-          isFetchingRef.current = false; // Add this
-          setLoading(false);
-        } else {
-          setMessages(itemsToProcess);
-          if (
-            isFirstLoad.current ||
-            isAtBottomRef.current ||
-            shouldAutoScrollRef.current
-          ) {
-            const isFirst = isFirstLoad.current;
-            setTimeout(() => {
-              if (isFirst && chatContainerRef.current) {
-                chatContainerRef.current.scrollTop =
-                  chatContainerRef.current.scrollHeight;
-              } else {
-                bottomRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }
-            }, 100);
-          }
-          if (isFirstLoad.current) {
-            shouldAutoScrollRef.current = true;
-          }
-          isFirstLoad.current = false;
-          setLoading(false);
-        }
-      } else {
-        // Handle failure case
-        if (isFetchingHistory) {
-          setIsFetchingHistory(false);
-          isFetchingRef.current = false;
-        }
-        setLoading(false);
-      }
-    };
 
     socket.on("video-task:created", handleTaskCreated);
     socket.on("task-video:started", handleTaskStarted);
@@ -487,8 +683,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     socket.on("worker:video-upload-success", workerUploadSuccess);
     socket.on("worker:video-complete", workerComplete);
     socket.on("worker:video-progress", handleProgress);
-    socket.on("chat:history", handleHistory);
     socket.on("chat:used-credit", handleCreditChange);
+
     return () => {
       socket.off("video-task:created", handleTaskCreated);
       socket.off("task-video:started", handleTaskStarted);
@@ -497,10 +693,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       socket.off("worker:video-upload-success", workerUploadSuccess);
       socket.off("worker:video-complete", workerComplete);
       socket.off("worker:video-progress", handleProgress);
-      socket.off("chat:history", handleHistory);
       socket.off("chat:used-credit", handleCreditChange);
     };
-  }, [socket, page, projectId, activeKey]);
+  }, [socket, projectId, activeKey]);
 
   useEffect(() => {
     if (activeKey === "video") {
@@ -513,37 +708,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       }
       setLoading(true);
       isFirstLoad.current = true;
-      loadMoreMessages(0, false, currentId);
     }
   }, [socket, projectId, activeKey]);
-
-  const loadMoreMessages = (
-    page: number,
-    isLoadMore: boolean,
-    currentId?: string,
-  ) => {
-    if (socket) {
-      setDisableTab(true);
-      const skip =
-        page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
-      const take = page === 0 ? initialPageSize : historyPageSize;
-      currentLimitRef.current = take;
-
-      socket.emit("chat:get-history", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        skip: skip,
-        take: take,
-        type: "video",
-      });
-      socket.emit("chat:get-used-credit", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        userId: userId,
-        type: "video",
-      });
-    }
-  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -552,8 +718,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       50;
     isAtBottomRef.current = isAtBottom;
     if (
-      target.scrollTop <= 50 &&
-      hasMore &&
+      target.scrollTop === 0 &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
@@ -561,9 +726,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadMoreMessages(nextPage, true);
+      fetchOldMessages();
     }
   };
 
@@ -972,6 +1135,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             fetchVideoPromptGuides={fetchVideoPromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
+            cerrentUsedCredit={cerrentUsedCredit}
           />
         }
         loading={loading}
@@ -985,17 +1149,33 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         rightContent={
           <>
             {messages.map((item: Message, index) => (
-              <Flex key={`${item.id}-${index}`} vertical style={{ marginBottom: 8 }}>
+              <Flex
+                key={`${item.id}-${index}`}
+                vertical
+                style={{ marginBottom: 8 }}
+              >
                 <Flex gap={8} align="flex-start">
-                  <Flex vertical style={{ width: "100%", alignItems: "flex-start" }}>
+                  <Flex
+                    vertical
+                    style={{ width: "100%", alignItems: "flex-start" }}
+                  >
                     <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {item.users.username}
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         •
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {new Date(item.createdAt).toLocaleDateString([], {
                           month: "short",
                           day: "numeric",
@@ -1020,7 +1200,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                         }}
                         styles={{ body: { padding: "8px 12px" } }}
                       >
-                        <Typography.Text style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.5 }}>
+                        <Typography.Text
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            fontSize: 14,
+                            lineHeight: 1.5,
+                          }}
+                        >
                           {item.prompt}
                         </Typography.Text>
                       </Card>
@@ -1032,7 +1218,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                       resolution={item.generateConfig?.resolution}
                       ratio={item.generateConfig?.ratio}
                       duration={item.generateConfig?.duration}
-                      isMultiImage={item.imageUrls ? item.imageUrls.length > 1 : false}
+                      isMultiImage={
+                        item.imageUrls ? item.imageUrls.length > 1 : false
+                      }
                       generateAudio={item.generateConfig?.generateAudio}
                     />
 
@@ -1053,7 +1241,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                     )}
 
                     {(item.genneratedStatus === "FAILED" ||
-                      (item.genneratedStatus === "SUCCESS" && item.imageUrls?.length === 0)) && (
+                      (item.genneratedStatus === "SUCCESS" &&
+                        item.imageUrls?.length === 0)) && (
                       <Card
                         size="small"
                         style={{
@@ -1073,20 +1262,26 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
                     {item.genneratedStatus === "SUCCESS" &&
                       item.imageUrls &&
                       item.imageUrls.length > 0 && (
-                        <Flex vertical gap={8} style={{ marginTop: 8, width: "100%", maxWidth: 260 }}>
-                          {item.imageUrls.map((videoData: VideoMessage, videoIndex) => (
-                            <VideoItem
-                              key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
-                              videoData={videoData}
-                              onDownloadVideo={onDownloadVideo}
-                              onShareVideo={(id, status) => {
-                                if (item.taskId) {
-                                  onShareVideo(item.taskId, id, status);
-                                }
-                              }}
-                              shareStatus
-                            />
-                          ))}
+                        <Flex
+                          vertical
+                          gap={8}
+                          style={{ marginTop: 8, width: "100%", maxWidth: 260 }}
+                        >
+                          {item.imageUrls.map(
+                            (videoData: VideoMessage, videoIndex) => (
+                              <VideoItem
+                                key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
+                                videoData={videoData}
+                                onDownloadVideo={onDownloadVideo}
+                                onShareVideo={(id, status) => {
+                                  if (item.taskId) {
+                                    onShareVideo(item.taskId, id, status);
+                                  }
+                                }}
+                                shareStatus
+                              />
+                            ),
+                          )}
                         </Flex>
                       )}
                   </Flex>
