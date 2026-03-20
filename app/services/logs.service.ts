@@ -14,11 +14,36 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-
+    findProjectTaskByPage: async (
+      projectId: string,
+      organizationId?: string,
+      typeGenerate?: string,
+      skip?: number,
+      take?: number,
+      fristsql?: number,
+      lastsql?: number,
+    ) => {
+      const params: any = {};
+      if (organizationId) params.organizationId = organizationId;
+      if (typeGenerate) params.type = typeGenerate;
+      if (skip !== undefined) params.skip = skip;
+      if (take !== undefined) params.take = take;
+      if (fristsql !== undefined) params.fristsql = fristsql;
+      if (lastsql !== undefined) params.lastsql = lastsql;
+      return await axiosInstance
+        .get(`${baseUrl}/find-product-task/${projectId}`, { params })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
     findImageByPage: async (
       projectId: string,
       skip?: number,
-      take?: number
+      take?: number,
     ) => {
       const params: any = {};
       if (skip !== undefined) params.skip = skip;
@@ -33,20 +58,24 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findImageByFristId: async (projectId: string, fristId: string) => {
-      const params: any = {};
-      if (fristId !== undefined) params.fristid = fristId;
-      return await axiosInstance
-        .get(`${baseUrl}/find-image/${projectId}/frist`, { params })
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
-    },
-    findvideoByPage: async (projectId: string, skip?: number, take?: number) => {
+    // findImageByFristId: async (projectId: string, fristId: string) => {
+    //   const params: any = {};
+    //   if (fristId !== undefined) params.fristid = fristId;
+    //   return await axiosInstance
+    //     .get(`${baseUrl}/find-image/${projectId}/frist`, { params })
+    //     .then((res) => {
+    //       return res.data;
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //       return;
+    //     });
+    // },
+    findvideoByPage: async (
+      projectId: string,
+      skip?: number,
+      take?: number,
+    ) => {
       const params: any = {};
       if (skip !== undefined) params.skip = skip;
       if (take !== undefined) params.take = take;
