@@ -33,7 +33,9 @@ import {
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
-import PromptGuideServices from "@/app/services/prompt-guide.service"; 
+import PromptGuideServices from "@/app/services/prompt-guide.service";
+import LogsServices from "@/app/services/logs.service";
+
 import ImageConfigurationCard from "./image-smart-reference";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PreviewImage from "../../chat-components/preview-image";
@@ -138,6 +140,7 @@ interface Message {
   resolution: string;
   ratio: string;
   imageUrls: ImageMessage[];
+  seq?: number;
 }
 
 type NotificationType = "success" | "info" | "warning" | "error";
@@ -160,6 +163,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
   const promptGuideService = PromptGuideServices(axiosCore);
   const galleryService = GalleryServices(axiosCore);
+  const logsService = LogsServices(axiosCore);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
@@ -192,6 +196,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const [promptGuideTemplates, setPromptGuideTemplates] = useState<
     TPromptGuideTemplate[]
   >([]);
+  const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
+  const [lastRowSeq, setLastRowSeq] = useState<number | undefined>(undefined);
   const [refImage, setRefImage] = useState<
     {
       name: string;
@@ -203,12 +209,18 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   >([]);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
   const isFetchingRef = useRef<boolean>(false);
-  const [usedCredit, setUsedCredit] = useState<{ total?: number; used?: number }>(
-    {
-      total: undefined,
-      used: undefined,
-    },
-  );
+  const [usedCredit, setUsedCredit] = useState<{
+    total?: number;
+    used?: number;
+  }>({
+    total: undefined,
+    used: undefined,
+  });
+  const messagesRef = useRef<Message[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -220,7 +232,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
+  useEffect(() => {
+    fetchMessages();
+  }, [projectId, activeKey]);
   useEffect(() => {
     if (activeKey === "image") {
       if (socket) {
@@ -232,36 +246,35 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }
       setLoading(true);
       isFirstLoad.current = true;
-      loadMoreMessages(0, false, currentId);
+      // loadMoreMessages(0, false, currentId);
     }
   }, [socket, projectId, activeKey]);
 
-  const loadMoreMessages = (
-    page: number,
-    isLoadMore: boolean,
-    currentId?: string,
-  ) => {
-    if (socket) {
-      setDisableTab(true);
-      const skip =
-        page === 0 ? 0 : initialPageSize + (page - 1) * historyPageSize;
-      const take = page === 0 ? initialPageSize : historyPageSize;
-      currentLimitRef.current = take;
-      socket.emit("chat:get-history", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        skip: skip,
-        take: take,
-        type: "image",
-      });
-      socket.emit("chat:get-used-credit", {
-        projectId,
-        organizationId: session?.user?.organizationId,
-        userId: userId,
-        type: "image",
-      });
-    }
-  };
+  // const loadMoreMessages = (
+  //   page: number,
+  //   isLoadMore: boolean,
+  //   currentId?: string,
+  // ) => {
+  //   if (socket) {
+  //     setDisableTab(true);
+  //     // const skip = 0
+  //     // const take = page === 0 ? initialPageSize : historyPageSize;
+  //     // currentLimitRef.current = take;
+  //     // socket.emit("chat:get-history", {
+  //     //   projectId,
+  //     //   organizationId: session?.user?.organizationId,
+  //     //   skip: skip,
+  //     //   take: take,
+  //     //   type: "image",
+  //     // });
+  //     socket.emit("chat:get-used-credit", {
+  //       projectId,
+  //       organizationId: session?.user?.organizationId,
+  //       userId: userId,
+  //       type: "image",
+  //     });
+  //   }
+  // };
 
   const openNotificationWithIcon = (
     type: NotificationType,
@@ -308,9 +321,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       // );
       if (data.status === 200) {
         setMessages((prev) => {
-          const exists = prev.some((msg) => msg.taskId === data.data.taskId);
-          if (exists) {
-            return prev;
+          const index = prev.findIndex((msg) => msg.taskId === data.data.taskId);
+          if (index !== -1) {
+            return prev.map((msg, i) =>
+              i === index ? { ...msg, ...data.data } : msg,
+            );
           }
           return [...prev, data.data];
         });
@@ -331,35 +346,43 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       percentage: number;
     }) => {
       console.log("📊 Progress:", data);
-
-      // อัพเดท progress ใน UI
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: data.percentage,
-              }
-            : msg,
-        ),
-      );
+      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      if (processMessage) {
+        // อัพเดท progress ใน UI
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: data.percentage,
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
     };
-
     const workerStarted = (data: { taskId: string; status: string }) => {
       console.log("🚀 Worker started:", data);
-      // อัพเดท message ใน state
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.taskId === data.taskId
-            ? {
-                ...msg,
-                genneratedStatus: "PROCESSING",
-                percentage: 10,
-              }
-            : msg,
-        ),
-      );
+      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      if (processMessage) {
+        // อัพเดท message ใน state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.taskId === data.taskId
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  percentage: 10,
+                }
+              : msg,
+          ),
+        );
+      } else {
+        fetchNewMessage();
+      }
     };
 
     // 4. Event เมื่อสร้างภาพแต่ละรูปเสร็จ
@@ -370,28 +393,32 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       imageId: string;
     }) => {
       console.log("🖼️ Image complete:", data);
+      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      if (processMessage) {
+        // เพิ่มรูปภาพที่สร้างเสร็จแล้วเข้าไปใน message
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.taskId === data.taskId) {
+              const newImageUrls = [...(msg.imageUrls || [])];
+              newImageUrls.push({
+                id: data.imageId,
+                imageUrl: data.imageUrl,
+                status: false,
+              });
 
-      // เพิ่มรูปภาพที่สร้างเสร็จแล้วเข้าไปใน message
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.taskId === data.taskId) {
-            const newImageUrls = [...(msg.imageUrls || [])];
-            newImageUrls.push({
-              id: data.imageId,
-              imageUrl: data.imageUrl,
-              status: false,
-            });
-
-            return {
-              ...msg,
-              imageUrls: newImageUrls,
-              genneratedStatus: "PROCESSING",
-              percentage: 90,
-            };
-          }
-          return msg;
-        }),
-      );
+              return {
+                ...msg,
+                imageUrls: newImageUrls,
+                genneratedStatus: "PROCESSING",
+                percentage: 90,
+              };
+            }
+            return msg;
+          }),
+        );
+      } else {
+        fetchNewMessage();
+      }
     };
 
     // 5. Event เมื่อ task เสร็จสมบูรณ์
@@ -421,24 +448,28 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       };
     }) => {
       console.log("✅ Task complete:", data);
-
-      // อัพเดท message เป็น SUCCESS
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.taskId === data.taskId) {
-            return {
-              ...msg,
-              genneratedStatus: "SUCCESS",
-              imageUrls: data.data.imageUrl.map((img) => ({
-                id: img,
-                imageUrl: img,
-                status: false,
-              })),
-            };
-          }
-          return msg;
-        }),
-      );
+      const processMessage = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      if (processMessage) {
+        // อัพเดท message เป็น SUCCESS
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.taskId === data.taskId) {
+              return {
+                ...msg,
+                genneratedStatus: "SUCCESS",
+                imageUrls: data.data.imageUrl.map((img) => ({
+                  id: img,
+                  imageUrl: img,
+                  status: false,
+                })),
+              };
+            }
+            return msg;
+          }),
+        );
+      } else {
+        fetchNewMessage();
+      }
     };
 
     // 6. Event เมื่อเกิด error
@@ -451,96 +482,104 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
       openNotificationWithIcon("error", error.message || "Generation failed");
       setSubmitting(false);
-
-      if (error.taskId) {
+      const message = messagesRef.current.find((msg) => msg.taskId === error.taskId);
+      if (message) {
         // อัพเดท message เป็น FAIL
         setMessages((prev) =>
-          prev.filter((msg) => msg.taskId !== error.taskId),
-        );
-      }
-    };
- 
-     
-
-    const handleHistory = (data: {
-      success: boolean;
-      data: {
-        messages: Message[];
-      };
-    }) => {
-      setDisableTab(false);
-      if (data.success) {
-        const messageData = data.data.messages;
-        if (isFetchingHistory) {
-          isLoadingMoreRef.current = true;
-        }
-        if (messageData.length < currentLimitRef.current) {
-          setHasMore(false);
-        }
-        if (messageData.length === 0) {
-          if (isFetchingHistory) {
-            setIsFetchingHistory(false);
-            isFetchingRef.current = false;
-          }
-          setLoading(false);
-          return;
-        }
-        const itemsToProcess = [...messageData].reverse();
-        const topId = itemsToProcess[0].id;
-        if (topId) {
-          setCurrentId(String(topId));
-        }
-
-        if (isFetchingHistory) {
-          setMessages((prev) => {
-            const existingTaskIds = new Set(prev.map((m) => m.id));
-            const uniqueNewMessages = itemsToProcess.filter(
-              (m: Message) => !existingTaskIds.has(m.id),
-            );
-
-            if (uniqueNewMessages.length === 0) {
-              setHasMore(false);
-              return prev;
+          prev.map((msg) => {
+            if (msg.taskId === error.taskId) {
+              return {
+                ...msg,
+                genneratedStatus: "FAIL",
+              };
             }
-            return [...uniqueNewMessages, ...prev];
-          });
-          isFirstLoad.current = false;
-          setLoading(false);
-          setIsFetchingHistory(false);
-          isFetchingRef.current = false;
-        } else {
-          setMessages(itemsToProcess);
-          const isFirstLoadNow = isFirstLoad.current;
-          if (
-            isFirstLoadNow ||
-            isAtBottomRef.current ||
-            shouldAutoScrollRef.current
-          ) {
-            setTimeout(() => {
-              bottomRef.current?.scrollIntoView({
-                behavior: isFirstLoadNow ? "instant" : "smooth",
-              });
-            }, 100);
-          }
-          if (isFirstLoad.current) {
-            shouldAutoScrollRef.current = true;
-          }
-          isFirstLoad.current = false;
-
-          // if (isFirstLoadNow) {
-          //   shouldAutoScrollRef.current = true;
-          // }
-          setLoading(false);
-        }
+            return msg;
+          }),
+        );
       } else {
-        if (isFetchingHistory) {
-          setIsFetchingHistory(false);
-          isFetchingRef.current = false;
-        }
-        setLoading(false);
+        fetchNewMessage();
       }
     };
-   // 6. Event เมื่อเกิด Credit Change
+
+    // const handleHistory = (data: {
+    //   success: boolean;
+    //   data: {
+    //     messages: Message[];
+    //   };
+    // }) => {
+    //   setDisableTab(false);
+    //   if (data.success) {
+    //     const messageData = data.data.messages;
+    //     if (isFetchingHistory) {
+    //       isLoadingMoreRef.current = true;
+    //     }
+    //     if (messageData.length < currentLimitRef.current) {
+    //       setHasMore(false);
+    //     }
+    //     if (messageData.length === 0) {
+    //       if (isFetchingHistory) {
+    //         setIsFetchingHistory(false);
+    //         isFetchingRef.current = false;
+    //       }
+    //       setLoading(false);
+    //       return;
+    //     }
+    //     const itemsToProcess = [...messageData].reverse();
+    //     const topId = itemsToProcess[0].id;
+    //     if (topId) {
+    //       setCurrentId(String(topId));
+    //     }
+
+    //     if (isFetchingHistory) {
+    //       setMessages((prev) => {
+    //         const existingTaskIds = new Set(prev.map((m) => m.id));
+    //         const uniqueNewMessages = itemsToProcess.filter(
+    //           (m: Message) => !existingTaskIds.has(m.id),
+    //         );
+
+    //         if (uniqueNewMessages.length === 0) {
+    //           setHasMore(false);
+    //           return prev;
+    //         }
+    //         return [...uniqueNewMessages, ...prev];
+    //       });
+    //       isFirstLoad.current = false;
+    //       setLoading(false);
+    //       setIsFetchingHistory(false);
+    //       isFetchingRef.current = false;
+    //     } else {
+    //       setMessages(itemsToProcess);
+    //       const isFirstLoadNow = isFirstLoad.current;
+    //       if (
+    //         isFirstLoadNow ||
+    //         isAtBottomRef.current ||
+    //         shouldAutoScrollRef.current
+    //       ) {
+    //         setTimeout(() => {
+    //           bottomRef.current?.scrollIntoView({
+    //             behavior: isFirstLoadNow ? "instant" : "smooth",
+    //           });
+    //         }, 100);
+    //       }
+    //       if (isFirstLoad.current) {
+    //         shouldAutoScrollRef.current = true;
+    //       }
+    //       isFirstLoad.current = false;
+
+    //       // if (isFirstLoadNow) {
+    //       //   shouldAutoScrollRef.current = true;
+    //       // }
+    //       setLoading(false);
+    //     }
+    //   } else {
+    //     if (isFetchingHistory) {
+    //       setIsFetchingHistory(false);
+    //       isFetchingRef.current = false;
+    //     }
+    //     setLoading(false);
+    //   }
+    // };
+    // 6. Event เมื่อเกิด Credit Change
     const handleCreditChange = (res: {
       success: boolean;
       data: {
@@ -575,10 +614,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     socket.on("worker:started", workerStarted);
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
-    socket.on("worker:error", handleError); 
+    socket.on("worker:error", handleError);
     socket.on("worker:complete", handleTaskComplete);
     socket.on("generate:error", handleError);
-    socket.on("chat:history", handleHistory);
+    // socket.on("chat:history", handleHistory);
     socket.on("chat:used-credit", handleCreditChange);
 
     return () => {
@@ -588,9 +627,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("worker:progress", handleProgress);
       socket.off("worker:image-complete", handleImageComplete);
       socket.off("worker:error", handleError);
-      socket.off("worker:complete", handleTaskComplete); 
+      socket.off("worker:complete", handleTaskComplete);
       socket.off("generate:error", handleError);
-      socket.off("chat:history", handleHistory);
+      // socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
       socket.off("chat:used-credit", handleCreditChange);
     };
@@ -602,9 +641,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
+    isAtBottomRef.current = isAtBottom;
     if (
-      target.scrollTop <= 50 &&
-      hasMore &&
+      target.scrollTop === 0 &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
@@ -612,9 +651,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadMoreMessages(nextPage, true);
+      // const nextPage = page + 1;
+      // setPage(nextPage);
+      // loadMoreMessages(nextPage, true);
+      fetchOldMessages();
     }
   };
 
@@ -637,24 +677,23 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       setPromptGuideTemplates(templates);
     }
   }
-  // useEffect(() => {
-  //   console.log("aa")
-  //   if (isLoadingMoreRef.current && chatContainerRef.current) {
-  //     const newScrollHeight = chatContainerRef.current.scrollHeight;
-  //     const scrollDiff = newScrollHeight - scrollHeightRef.current;
+  useEffect(() => {
+    if (isLoadingMoreRef.current && chatContainerRef.current) {
+      const newScrollHeight = chatContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - scrollHeightRef.current;
 
-  //     chatContainerRef.current.style.scrollBehavior = "auto";
-  //     chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.style.scrollBehavior = "auto";
+      chatContainerRef.current.scrollTop = scrollDiff;
 
-  //     requestAnimationFrame(() => {
-  //       if (chatContainerRef.current) {
-  //         chatContainerRef.current.style.scrollBehavior = "smooth";
-  //       }
-  //     });
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = "smooth";
+        }
+      });
 
-  //     isLoadingMoreRef.current = false;
-  //   }
-  // }, [messages]);
+      isLoadingMoreRef.current = false;
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (shouldAutoScrollRef.current && messages.length > 0) {
@@ -664,6 +703,154 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }, 100);
     }
   }, [messages.length]);
+
+  const fetchMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "image",
+      0,
+      3,
+    );
+    if (data) {
+      if (data.length > 0) {
+        const seqValues = data
+          .map((p) => p.seq)
+          .filter((s) => s !== undefined && s !== null);
+        if (seqValues && seqValues.length > 0) {
+          const minSeq = Math.min(...seqValues);
+          const maxSeq = Math.max(...seqValues);
+          setFristRowSeq(minSeq);
+          setLastRowSeq(maxSeq);
+        }
+      }
+      generateMssage(data, "reload");
+    }
+  };
+
+  const fetchOldMessages = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "image",
+      0,
+      1,
+      fristRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const minSeq = Math.min(...seqValues);
+        setFristRowSeq(minSeq);
+      }
+      generateMssage(data, "loadmore");
+    }
+  };
+  const fetchNewMessage = async () => {
+    const data: Message[] = await logsService.findProjectTaskByPage(
+      projectId,
+      session?.user?.organizationId || "",
+      "image",
+      0,
+      1,
+      undefined,
+      lastRowSeq,
+    );
+    if (data && data.length > 0) {
+      const seqValues = data
+        .map((p) => p.seq)
+        .filter((s) => s !== undefined && s !== null);
+      if (seqValues && seqValues.length > 0) {
+        const maxSeq = Math.max(...seqValues);
+        setLastRowSeq(maxSeq);
+      }
+      generateMssage(data, "newmore");
+    }
+  };
+  const generateMssage = (messageData: Message[], type: string) => {
+    setDisableTab(false);
+    // const messageData = messages.messages;
+    if (isFetchingHistory || type === "loadmore") {
+      isLoadingMoreRef.current = true;
+    }
+    if (messageData.length < currentLimitRef.current) {
+      setHasMore(false);
+    }
+    if (messageData.length === 0) {
+      if (isFetchingHistory) {
+        setIsFetchingHistory(false);
+        isFetchingRef.current = false;
+      }
+      setLoading(false);
+      return;
+    }
+    const itemsToProcess = [...messageData].reverse();
+    const topId = itemsToProcess[0].id;
+    if (topId) {
+      setCurrentId(String(topId));
+    }
+
+    if (type === "loadmore") {
+      setMessages((prev) => {
+        const existingTaskIds = new Set(prev.map((m) => m.id));
+        const uniqueNewMessages = itemsToProcess.filter(
+          (m: Message) => !existingTaskIds.has(m.id),
+        );
+
+        if (uniqueNewMessages.length === 0) {
+          setHasMore(false);
+          return prev;
+        }
+        return [...uniqueNewMessages, ...prev];
+      });
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
+    } else if (type === "newmore") {
+      setMessages((prev) => {
+        const existingTaskIds = new Set(prev.map((m) => m.taskId));
+        const uniqueNewMessages = itemsToProcess.filter(
+          (m: Message) => !existingTaskIds.has(m.taskId),
+        );
+
+        if (uniqueNewMessages.length === 0) {
+          setHasMore(false);
+          return prev;
+        }
+        return [...prev, ...uniqueNewMessages];
+      });
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
+    } else {
+      setMessages([...itemsToProcess, ...messages]);
+      const isFirstLoadNow = isFirstLoad.current;
+      if (
+        isFirstLoadNow ||
+        isAtBottomRef.current ||
+        shouldAutoScrollRef.current
+      ) {
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({
+            behavior: isFirstLoadNow ? "instant" : "smooth",
+          });
+        }, 100);
+      }
+      if (isFirstLoad.current) {
+        shouldAutoScrollRef.current = true;
+      }
+      isFirstLoad.current = false;
+
+      // if (isFirstLoadNow) {
+      //   shouldAutoScrollRef.current = true;
+      // }
+      setLoading(false);
+    }
+  };
 
   const handleUploadChange: UploadProps["onChange"] = async ({
     file,
@@ -802,8 +989,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const handleFormSubmit = async (values: any) => {
     // สร้าง temporary message สำหรับแสดงใน UI ทันที
     if (!selectedAIModel) return "Plese select model";
+    const currentTaskId = `temp-${Date.now()}`;
     const message = {
-      taskId: `temp-${Date.now()}`,
+      taskId: currentTaskId,
       model: selectedAIModel.modelType,
       prompt: values.prompt,
       image: refImage.map((image) => image.imagePath),
@@ -821,8 +1009,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       organizationId: session?.user?.organizationId,
     };
     const tempMessage = {
-      id: `temp-${Date.now()}`,
-      taskId: `temp-${Date.now()}`,
+      id: currentTaskId,
+      taskId: currentTaskId,
       projectId: projectId,
       userId: userId,
       prompt: values.prompt,
@@ -970,10 +1158,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       {contextHolder}
       {contextHolderNoti}
       {previewImage && (
-        <PreviewImage
-          closePreview={closePreview}
-          previewImage={previewImage}
-        />
+        <PreviewImage closePreview={closePreview} previewImage={previewImage} />
       )}
       <GenerateTwoPaneLayout
         semantic={semantic}
@@ -1017,17 +1202,33 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         rightContent={
           <>
             {messages.map((message: Message, index) => (
-              <Flex key={`${message.id}-${index}`} vertical style={{ marginBottom: 8 }}>
+              <Flex
+                key={`${message.id}-${index}`}
+                vertical
+                style={{ marginBottom: 8 }}
+              >
                 <Flex gap={8} align="flex-start">
-                  <Flex vertical style={{ width: "100%", alignItems: "flex-start" }}>
+                  <Flex
+                    vertical
+                    style={{ width: "100%", alignItems: "flex-start" }}
+                  >
                     <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {message.users.username}
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         •
                       </Typography.Text>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {new Date(message.createdAt).toLocaleDateString([], {
                           month: "short",
                           day: "numeric",
@@ -1111,79 +1312,93 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
                     {message.genneratedStatus === "SUCCESS" &&
                       message.imageUrls &&
                       message.imageUrls.length > 0 && (
-                        <Row gutter={[8, 8]} style={{ marginTop: 8, width: "100%" }}>
+                        <Row
+                          gutter={[8, 8]}
+                          style={{ marginTop: 8, width: "100%" }}
+                        >
                           <Image.PreviewGroup>
-                            {message.imageUrls.map((imgUrl: ImageMessage, i) => (
-                              <Col key={imgUrl.id} xs={12} sm={8} md={6}>
-                                <div
-                                  style={{
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    borderRadius: 8,
-                                    background: "rgba(0,0,0,0.25)",
-                                    aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
-                                  }}
-                                >
-                                  <Image
-                                    src={imgUrl.imageUrl}
-                                    alt={`Generated ${i + 1}`}
-                                    width="100%"
-                                    height="100%"
+                            {message.imageUrls.map(
+                              (imgUrl: ImageMessage, i) => (
+                                <Col key={imgUrl.id} xs={12} sm={8} md={6}>
+                                  <div
                                     style={{
-                                      width: "100%",
-                                      height: "100%",
-                                      objectFit: "cover",
-                                    }}
-                                  />
-                                  <Flex
-                                    gap={4}
-                                    style={{
-                                      position: "absolute",
-                                      top: 8,
-                                      right: 8,
-                                      zIndex: 10,
+                                      position: "relative",
+                                      overflow: "hidden",
+                                      borderRadius: 8,
+                                      background: "rgba(0,0,0,0.25)",
+                                      aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
                                     }}
                                   >
-                                    <Button
-                                      size="small"
-                                      icon={<Download size={14} />}
+                                    <Image
+                                      src={imgUrl.imageUrl}
+                                      alt={`Generated ${i + 1}`}
+                                      width="100%"
+                                      height="100%"
                                       style={{
-                                        background: "rgba(0,0,0,0.6)",
-                                        color: "#fff",
-                                        border: "none",
-                                      }}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        onDownloadImage(imgUrl.fileName || "image.jpg", imgUrl.id);
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
                                       }}
                                     />
-                                    <Button
-                                      size="small"
-                                      icon={
-                                        imgUrl.status === true ? (
-                                          <LikeFilled style={{ color: "#f59e0b" }} />
-                                        ) : (
-                                          <LikeOutlined />
-                                        )
-                                      }
+                                    <Flex
+                                      gap={4}
                                       style={{
-                                        background: "rgba(0,0,0,0.6)",
-                                        color: "#fff",
-                                        border: "none",
+                                        position: "absolute",
+                                        top: 8,
+                                        right: 8,
+                                        zIndex: 10,
                                       }}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (imgUrl.id && message.taskId) {
-                                          onShareImage(message.taskId, imgUrl.id, imgUrl.status);
+                                    >
+                                      <Button
+                                        size="small"
+                                        icon={<Download size={14} />}
+                                        style={{
+                                          background: "rgba(0,0,0,0.6)",
+                                          color: "#fff",
+                                          border: "none",
+                                        }}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          onDownloadImage(
+                                            imgUrl.fileName || "image.jpg",
+                                            imgUrl.id,
+                                          );
+                                        }}
+                                      />
+                                      <Button
+                                        size="small"
+                                        icon={
+                                          imgUrl.status === true ? (
+                                            <LikeFilled
+                                              style={{ color: "#f59e0b" }}
+                                            />
+                                          ) : (
+                                            <LikeOutlined />
+                                          )
                                         }
-                                      }}
-                                    />
-                                  </Flex>
-                                </div>
-                              </Col>
-                            ))}
+                                        style={{
+                                          background: "rgba(0,0,0,0.6)",
+                                          color: "#fff",
+                                          border: "none",
+                                        }}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (imgUrl.id && message.taskId) {
+                                            onShareImage(
+                                              message.taskId,
+                                              imgUrl.id,
+                                              imgUrl.status,
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    </Flex>
+                                  </div>
+                                </Col>
+                              ),
+                            )}
                           </Image.PreviewGroup>
                         </Row>
                       )}
@@ -1194,7 +1409,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           </>
         }
       />
-
     </Flex>
   );
 };

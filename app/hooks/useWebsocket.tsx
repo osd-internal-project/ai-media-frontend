@@ -22,7 +22,7 @@ interface UseWebSocketReturn {
 
 // Global singleton instance
 let socketInstance: Socket | null = null;
-let listeners: { [key: string]: Function[] } = {};
+// let listeners: { [key: string]: Function[] } = {};
 
 export const useWebSocket = (
     options: UseWebSocketOptions = {}

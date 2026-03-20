@@ -403,7 +403,7 @@ const ProjectsPage = () => {
     //     pageSize: 3
     //   });
     // }
-    router.push(`/page/project/${projectId}`);
+    router.push(`/page/project-new/${projectId}`);
   };
 
   return (
