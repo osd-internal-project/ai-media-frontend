@@ -34,11 +34,11 @@ export default function TopGenThisMonth({ users, colors }: TopGenThisMonthProps)
 								{user.fullname}
 							</Typography.Text>
 							<Typography.Text type="secondary" style={{ fontSize: 12 }}>
-								{user.usedImage}/{user.limitImage}
+								{user.usedCredit}/{user.limitCredit}
 							</Typography.Text>
 						</div>
 						<Progress
-							percent={Math.min((user.usedImage / Math.max(user.limitImage, 1)) * 100, 100)}
+							percent={Math.min((user.usedCredit / Math.max(user.limitCredit, 1)) * 100, 100)}
 							showInfo={false}
 							strokeColor={colors.progress}
 						/>

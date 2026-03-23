@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
 import type {
   IDashboardCreditPerMonthAndType,
+  IDashboardGeneratedPerMonthAndType,
   IDashboardOrganizationSummary,
   IDashboardOverviewSummary,
   IDashboardProject,
@@ -98,86 +99,35 @@ const DashboardPage: FC = () => {
     Record<string, "approved" | "denied">
   >({});
 
-  //Dashboard Data
+  //Dashboard Overview Data
   const [overviewSummary, setOverviewSummary] =
     useState<IDashboardOverviewSummary>();
   const [usedCreditPerMonth, setUsedCreditPerMonth] = useState<
     IDashboardCreditPerMonthAndType[]
   >([]);
   const [usedCreditByType, setUsedCreditByType] = useState<ByTypeItem[]>([]);
+
+  //Dashboard Analytics Data
+  const [generatedPerMonth, setGeneratedPerMonth] = useState<
+    IDashboardGeneratedPerMonthAndType[]
+  >([]);
+  const [generatedByType, setGeneratedCreditByType] =
+    useState<IDashboardGeneratedPerMonthAndType>();
+
   useEffect(() => {
     if (!organizationId || !session?.user?.id) return;
 
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [organizationSummary, projectSummary, userSummary, projectList] =
-          await Promise.all([
-            dashboardServices.findDashboardSummaryOrganization(
-              organizationId,
-              params,
-            ),
-            dashboardServices.findDashboardSummaryProject(
-              organizationId,
-              params,
-            ),
-            dashboardServices.findDashboardSummaryUser(organizationId, params),
-            projectServices.findByOrganizationId(
-              organizationId,
-              session.user.id,
-              {},
-            ),
-          ]);
-
-        setOrganization(organizationSummary);
-        setSummaryByProject(projectSummary || []);
-        setSummaryByUser(userSummary || []);
-        setProjects(projectList || []);
-        // setProjectOptions(
-        //   (projectList || []).map((project: IProject) => ({
-        //     value: project.id,
-        //     label: project.name,
-        //   })),
-        // );
-
-        const overviewSummary = await dashboardServices.findOverviewSummary(
+        const resProjects = await projectServices.findByOrganizationId(
           organizationId,
-          params,
+          session.user.id,
+          {},
         );
-        setOverviewSummary(overviewSummary);
-
-        const creditPerMonthAndType =
-          (await dashboardServices.findUsedCreditPerMonth(
-            organizationId,
-            params,
-          )) || [];
-        setUsedCreditPerMonth(creditPerMonthAndType);
-        const monthly = dayjs().format("YYYY-MM");
-        const creditThisMonth = creditPerMonthAndType.find(
-          (data) => data.month === monthly,
-        );
-        if (creditThisMonth) {
-          const result = Object.entries(creditThisMonth)
-            .map(([key, val]) => ({
-              name: key,
-              value: val,
-            }))
-            .filter((data) => data.name !== "month")
-            .map((item, index) => ({
-              ...item,
-              color:
-                item.name === "image"
-                  ? token.colorPrimary
-                  : item.name === "video"
-                    ? token.colorInfo
-                    : item.name === "omnihuman"
-                      ? token.colorWarning
-                      : item.name === "dreamactor"
-                        ? token.colorError
-                        : token.colorError,
-            }));
-          setUsedCreditByType(result);
-        }
+        setProjects(resProjects || []);
+        await fetchOverview();
+        await fetchAnalytics();
       } finally {
         setLoading(false);
       }
@@ -192,6 +142,66 @@ const DashboardPage: FC = () => {
     session?.user?.id,
   ]);
 
+  const fetchOverview = async () => {
+    if (!organizationId || !session?.user?.id) return;
+
+    const overviewSummary = await dashboardServices.findOverviewSummary(
+      organizationId,
+      params,
+    );
+    setOverviewSummary(overviewSummary);
+
+    const creditPerMonthAndType =
+      (await dashboardServices.countUsedCreditPerMonth(
+        organizationId,
+        params,
+      )) || [];
+    setUsedCreditPerMonth(creditPerMonthAndType);
+    const monthly = dayjs().format("YYYY-MM");
+    const creditThisMonth = creditPerMonthAndType.find(
+      (data) => data.month === monthly,
+    );
+    if (creditThisMonth) {
+      const result = Object.entries(creditThisMonth)
+        .map(([key, val]) => ({
+          name: key,
+          value: val,
+        }))
+        .filter((data) => data.name !== "month")
+        .map((item, index) => ({
+          ...item,
+          color:
+            item.name === "image"
+              ? token.colorPrimary
+              : item.name === "video"
+                ? token.colorInfo
+                : item.name === "omnihuman"
+                  ? token.colorWarning
+                  : item.name === "dreamactor"
+                    ? token.colorError
+                    : token.colorError,
+        }));
+      setUsedCreditByType(result);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    if (!organizationId || !session?.user?.id) return;
+
+    const creditPerMonthAndType =
+      (await dashboardServices.countGeneratedPerMonth(
+        organizationId,
+        params,
+      )) || [];
+    setGeneratedPerMonth(creditPerMonthAndType);
+    const monthly = dayjs().format("YYYY-MM");
+    const generatedThisMonth = creditPerMonthAndType.find(
+      (data) => data.month === monthly,
+    );
+    if (generatedThisMonth) {
+      setGeneratedCreditByType(generatedThisMonth);
+    }
+  };
   const userRows = useMemo<DashboardUserRow[]>(() => {
     const memberMap = new Map<string, DashboardUserRow>();
     projects.forEach((project) => {
@@ -396,9 +406,9 @@ const DashboardPage: FC = () => {
     setApprovalDecisions((prev) => ({ ...prev, [user.userId]: "denied" }));
   };
 
-  const handleApproveAll = () => {
-    approvalRows.forEach((user) => handleApprove(user));
-  };
+  // const handleApproveAll = () => {
+  //   approvalRows.forEach((user) => handleApprove(user));
+  // };
 
   const handleDenyAll = () => {
     approvalRows.forEach((user) => handleDeny(user));
@@ -454,7 +464,7 @@ const DashboardPage: FC = () => {
       render: (role: string) => <Tag>{role}</Tag>,
     },
     {
-      title: "Video Credit",
+      title: " Credit",
       key: "credit",
       render: (_: unknown, record: DashboardUserRow) => {
         const pct = (record.usedCredit / Math.max(record.limitCredit, 1)) * 100;
@@ -473,26 +483,26 @@ const DashboardPage: FC = () => {
         );
       },
     },
-    {
-      title: "Image",
-      key: "image",
-      render: (_: unknown, record: DashboardUserRow) => {
-        const pct = (record.usedImage / Math.max(record.limitImage, 1)) * 100;
-        return (
-          <div className="min-w-[180px]">
-            <div className="flex justify-between text-xs mb-1">
-              <span>{formatNumber(record.usedImage)}</span>
-              <span>{formatNumber(record.limitImage)}</span>
-            </div>
-            <Progress
-              percent={Math.min(pct, 100)}
-              showInfo={false}
-              strokeColor={pct >= 80 ? token.colorWarning : token.colorSuccess}
-            />
-          </div>
-        );
-      },
-    },
+    // {
+    //   title: "Image",
+    //   key: "image",
+    //   render: (_: unknown, record: DashboardUserRow) => {
+    //     const pct = (record.usedImage / Math.max(record.limitImage, 1)) * 100;
+    //     return (
+    //       <div className="min-w-[180px]">
+    //         <div className="flex justify-between text-xs mb-1">
+    //           <span>{formatNumber(record.usedImage)}</span>
+    //           <span>{formatNumber(record.limitImage)}</span>
+    //         </div>
+    //         <Progress
+    //           percent={Math.min(pct, 100)}
+    //           showInfo={false}
+    //           strokeColor={pct >= 80 ? token.colorWarning : token.colorSuccess}
+    //         />
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       title: "Status",
       key: "status",
@@ -511,11 +521,11 @@ const DashboardPage: FC = () => {
     {
       title: "Action",
       key: "action",
-      render: (_: unknown, record: DashboardUserRow) => (
-        <Button size="small" onClick={() => openQuotaModal(record)}>
-          Manage Quota
-        </Button>
-      ),
+      // render: (_: unknown, record: DashboardUserRow) => (
+      //   <Button size="small" onClick={() => openQuotaModal(record)}>
+      //     Manage Quota
+      //   </Button>
+      // ),
     },
   ];
 
@@ -539,24 +549,24 @@ const DashboardPage: FC = () => {
       key: "members",
       render: (members: IProject["members"]) => members?.length || 0,
     },
-    {
-      title: "Image Usage",
-      key: "image",
-      render: (_: unknown, record: IProject) => {
-        const used = Number(record.usedImageAllowance || 0);
-        const limit = Number(record.limitImageAllowance || 0);
-        const pct = (used / Math.max(limit, 1)) * 100;
-        return (
-          <div className="min-w-[160px]">
-            <div className="flex justify-between text-xs mb-1">
-              <span>{formatNumber(used)}</span>
-              <span>{formatNumber(limit)}</span>
-            </div>
-            <Progress percent={Math.min(pct, 100)} showInfo={false} />
-          </div>
-        );
-      },
-    },
+    // {
+    //   title: "Image Usage",
+    //   key: "image",
+    //   render: (_: unknown, record: IProject) => {
+    //     const used = Number(record.usedImageAllowance || 0);
+    //     const limit = Number(record.limitImageAllowance || 0);
+    //     const pct = (used / Math.max(limit, 1)) * 100;
+    //     return (
+    //       <div className="min-w-[160px]">
+    //         <div className="flex justify-between text-xs mb-1">
+    //           <span>{formatNumber(used)}</span>
+    //           <span>{formatNumber(limit)}</span>
+    //         </div>
+    //         <Progress percent={Math.min(pct, 100)} showInfo={false} />
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       title: "Credit Usage",
       key: "credit",
@@ -666,18 +676,18 @@ const DashboardPage: FC = () => {
           subtitleColor={token.colorTextSecondary}
           chipBg={token.colorBgTextActive}
           chipText={token.colorTextSecondary}
-          rightSlot={
-            approvalRows.length > 0 ? (
-              <Badge count={approvalRows.length}>
-                <Button
-                  icon={<AlertTriangle size={14} />}
-                  onClick={() => setActiveTab("approvals")}
-                >
-                  Pending Approvals
-                </Button>
-              </Badge>
-            ) : null
-          }
+          // rightSlot={
+          //   approvalRows.length > 0 ? (
+          //     <Badge count={approvalRows.length}>
+          //       <Button
+          //         icon={<AlertTriangle size={14} />}
+          //         onClick={() => setActiveTab("approvals")}
+          //       >
+          //         Pending Approvals
+          //       </Button>
+          //     </Badge>
+          //   ) : null
+          // }
           compact
         />
       </Layout.Header>
@@ -748,9 +758,11 @@ const DashboardPage: FC = () => {
               projects={projects}
               token={token}
               formatNumber={formatNumber}
+              generatedByType={generatedByType}
+              generatedPerMonth={generatedPerMonth}
             />
           )}
-          {activeTab === "approvals" && (
+          {/* {activeTab === "approvals" && (
             <ApprovalsTab
               loading={loading}
               pendingApprovals={approvalRows}
@@ -760,7 +772,7 @@ const DashboardPage: FC = () => {
               onApproveAll={handleApproveAll}
               onDenyAll={handleDenyAll}
             />
-          )}
+          )} */}
         </div>
       </Layout.Content>
 

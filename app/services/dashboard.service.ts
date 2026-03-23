@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 import {
   IDashboardCreditPerMonthAndType,
+  IDashboardGeneratedPerMonthAndType,
   IDashboardOrganizationSummary,
   IDashboardOverviewSummary,
   IDashboardProject,
@@ -28,12 +29,28 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    findUsedCreditPerMonth: async (
+    countUsedCreditPerMonth: async (
       organizationId: string,
       params: any,
     ): Promise<IDashboardCreditPerMonthAndType[]> => {
       return await axiosInstance
         .get(`${baseUrl}/credit-per-month-and-type/${organizationId}`, {
+          params: params,
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    countGeneratedPerMonth: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardGeneratedPerMonthAndType[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/generated-per-month-and-type/${organizationId}`, {
           params: params,
         })
         .then((res) => {

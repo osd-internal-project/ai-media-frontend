@@ -116,4 +116,11 @@ export interface IDashboardCreditPerMonthAndType {
   video: number;
   omnihuman: number;
   dreamactor: number;
+} 
+export interface IDashboardGeneratedPerMonthAndType {
+  month: string;
+  image: number;
+  video: number;
+  omnihuman: number;
+  dreamactor: number;
 }

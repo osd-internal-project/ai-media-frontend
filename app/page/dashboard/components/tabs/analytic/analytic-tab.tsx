@@ -1,19 +1,22 @@
 import React from "react";
 import { Card, Col, Row, Space, Typography } from "antd";
-import { Film, Image as ImageIcon, TrendingUp, UserCircle, Video } from "lucide-react";
+import {
+  Film,
+  Image as ImageIcon,
+  TrendingUp,
+  UserCircle,
+  Video,
+} from "lucide-react";
 import type { AnalyticsTabProps } from "../types";
 import MontlyGenVolChart from "./montly-gen-vol-chart";
 import ProjectImgQoutaUsageChart from "./project-img-qouta-usage-chart";
 import TopGenThisMonth from "./top-gen-this-month";
 import {
-  buildAnalyticsMetricCards,
-  buildMonthlyGenerationData,
+  buildAnalyticsMetricCards, 
   buildProjectUsageData,
   buildTopGeneratorsData,
   mockAnalyticsMetricCards,
-  mockAnalyticsUsers,
-  mockMonthlyGenerationData,
-  mockProjectUsageData,
+  mockAnalyticsUsers,  
 } from "./static";
 
 export default function AnalyticsTab({
@@ -22,6 +25,8 @@ export default function AnalyticsTab({
   summaryByProject,
   projects,
   token,
+  generatedByType,
+  generatedPerMonth,
 }: AnalyticsTabProps) {
   const shouldUseMock =
     !loading &&
@@ -32,12 +37,12 @@ export default function AnalyticsTab({
   const usersSource = shouldUseMock ? mockAnalyticsUsers : userRows;
   const analyticsCards = shouldUseMock
     ? mockAnalyticsMetricCards
-    : buildAnalyticsMetricCards(usersSource, summaryByProject);
+    : buildAnalyticsMetricCards(generatedByType);
   const monthlyData = shouldUseMock
-    ? mockMonthlyGenerationData
-    : buildMonthlyGenerationData(usersSource);
+    ? []
+    : generatedPerMonth;
   const projectUsageData = shouldUseMock
-    ? mockProjectUsageData
+    ? []
     : buildProjectUsageData(projects);
   const topGenerators = buildTopGeneratorsData(usersSource);
 
@@ -66,7 +71,10 @@ export default function AnalyticsTab({
               <Card loading={loading}>
                 <div className="flex items-center justify-between mb-2">
                   <Icon size={16} color={color} />
-                  <span style={{ fontSize: 10, color: token.colorSuccess }} className="flex items-center gap-1">
+                  <span
+                    style={{ fontSize: 10, color: token.colorSuccess }}
+                    className="flex items-center gap-1"
+                  >
                     <TrendingUp size={12} /> {item.change}
                   </span>
                 </div>
@@ -91,6 +99,7 @@ export default function AnalyticsTab({
                 image: token.colorPrimary,
                 video: token.colorInfo,
                 human: token.colorWarning,
+                dream: token.colorError,
                 axis: token.colorTextSecondary,
                 grid: token.colorBorder,
                 tooltipBg: token.colorBgContainer,

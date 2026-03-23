@@ -1,4 +1,7 @@
-import { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
+import {
+  IDashboardCreditPerMonthAndType,
+  IDashboardGeneratedPerMonthAndType,
+} from "@/app/common/dashbaord";
 import type { IProject } from "@/app/common/project.type";
 
 export type DashboardUserRow = {
@@ -53,6 +56,8 @@ export type AnalyticsTabProps = {
   projects: IProject[];
   token: any;
   formatNumber: (value: string | number | undefined) => React.ReactNode;
+  generatedByType: IDashboardGeneratedPerMonthAndType | undefined;
+  generatedPerMonth: IDashboardGeneratedPerMonthAndType[];
 };
 
 export type ApprovalsTabProps = {
