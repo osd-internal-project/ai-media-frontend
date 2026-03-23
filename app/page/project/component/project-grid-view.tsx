@@ -140,8 +140,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                   // tokenUsed={tokenUsed}
                   // tokenTotal={tokenTotal}
                   semantic={semantic}
-                  size="middle"
-                />
+                  size="middle" cerrentUsedCredit={0}                />
               </div>
               {/* Footer: Members and Date */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 13, color: semantic.colorTextSecondary, marginTop: 4 }}>

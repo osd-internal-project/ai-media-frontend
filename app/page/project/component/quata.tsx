@@ -48,7 +48,13 @@ const Quata: React.FC<QuataProps> = ({
       ? Math.round(((creditUsed + cerrentUsedCredit) / safeImageTotal) * 100)
       : 0;
   // const tokenPercent = safeTokenTotal > 0 ? Math.round((tokenUsed / safeTokenTotal) * 100) : 0;
-console.log(creditUsed,cerrentUsedCredit,creditUsed+cerrentUsedCredit,safeImageTotal, creditPercent);
+  console.log(
+    creditUsed,
+    cerrentUsedCredit,
+    creditUsed + cerrentUsedCredit,
+    safeImageTotal,
+    creditPercent,
+  );
 
   const colorTextBase = semantic?.colorTextBase ?? "#e5e7eb";
   const colorTextSecondary = semantic?.colorTextSecondary ?? "#94a3b8";
@@ -101,7 +107,15 @@ console.log(creditUsed,cerrentUsedCredit,creditUsed+cerrentUsedCredit,safeImageT
           style={{ color: colorTextBase, fontSize: ui.value }}
         >
           {creditUsed}
-          <strong style={{ color: colorPrimary }}> +{cerrentUsedCredit || 0}</strong>/{safeImageTotal}
+          {cerrentUsedCredit && cerrentUsedCredit > 0 ? (
+            <strong style={{ color: colorPrimary }}>
+              {" "}
+              +{cerrentUsedCredit || 0}
+            </strong>
+          ) : (
+            ""
+          )}
+          /{safeImageTotal}
         </Typography.Text>
       </div>
       {showProgress ? (
