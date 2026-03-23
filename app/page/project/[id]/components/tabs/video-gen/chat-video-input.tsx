@@ -1,34 +1,35 @@
 import React, { useState, type CSSProperties } from "react";
 import {
-  Eye,
-  ImagePlus,
-  Play,
-  RefreshCcw,
-  Video,
-  X,
-  Zap,
-  ZapIcon,
-  ZapOff,
-} from "lucide-react";
-import {
   Button,
+  Card,
   Flex,
   Form,
-  InputNumber,
+  Image,
   Modal,
+  Slider,
   Space,
   Typography,
   Upload,
   type FormInstance,
   type UploadFile,
-  Image,
-  Card,
 } from "antd";
+import {
+  Check,
+  ImagePlus,
+  RectangleHorizontal,
+  RectangleVertical,
+  Square,
+  Volume2,
+  VolumeX,
+  X,
+  Zap,
+} from "lucide-react";
 import { RcFile } from "antd/es/upload";
 import {
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
+import Quata from "@/app/page/project/component/quata";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
@@ -36,7 +37,6 @@ import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
-import Quata from "@/app/page/project-new/component/quata";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -64,9 +64,8 @@ type Props = {
   selectedDuration: number;
   setDraftMode: (draftMode: boolean) => void;
   draftMode: boolean;
-  setFastMode: (fastMode: boolean) => void;
-  fastMode: boolean;
-  onRemoveFile: (file: UploadFile) => void;
+  setSelectedAudio: (audio: boolean) => void;
+  selectedAudio: boolean;
   setSelectedWidth: (width: number) => void;
   setSelectedHeight: (height: number) => void;
   promptGuideTemplates: TPromptGuideTemplate[];
@@ -76,7 +75,9 @@ type Props = {
   cerrentUsedCredit: number;
 };
 
-export default function ChatDreamactorInput({
+export default function ChatVideoInput({
+  selectedRatio,
+  setSelectedRatio,
   selectedResolution,
   setSelectedResolution,
   form,
@@ -86,8 +87,14 @@ export default function ChatDreamactorInput({
   handleSendMessage,
   isLoadingUpload,
   submitting,
-  setFastMode,
-  fastMode,
+  setSelectedDuration,
+  selectedDuration,
+  setDraftMode,
+  draftMode,
+  setSelectedAudio,
+  selectedAudio,
+  setSelectedWidth,
+  setSelectedHeight,
   promptGuideTemplates,
   fetchVideoPromptGuides,
   handleUsePromptGuide,
@@ -97,16 +104,101 @@ export default function ChatDreamactorInput({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
+  // const RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
+  //   "1:1": { width: 2048, height: 2048 },
+  //   "4:3": { width: 2304, height: 1728 },
+  //   "3:4": { width: 1728, height: 2304 },
+  //   "16:9": { width: 2560, height: 1440 },
+  //   "9:16": { width: 1440, height: 2560 },
+  //   "3:2": { width: 2496, height: 1664 },
+  //   "2:3": { width: 1664, height: 2496 },
+  //   "21:9": { width: 3024, height: 1296 },
+  // };
+
+  const RATIO_SIZE_MAP: Record<
+    string,
+    Record<string, { width: number; height: number }>
+  > = {
+    "480p": {
+      "1:1": { width: 640, height: 640 },
+      "4:3": { width: 752, height: 564 },
+      "3:4": { width: 564, height: 752 },
+      "16:9": { width: 864, height: 496 },
+      "9:16": { width: 496, height: 864 },
+      "21:9": { width: 992, height: 432 },
+      "9:21": { width: 432, height: 992 },
+    },
+    "720p": {
+      "1:1": { width: 960, height: 960 },
+      "4:3": { width: 1112, height: 834 },
+      "3:4": { width: 834, height: 1112 },
+      "16:9": { width: 1280, height: 720 },
+      "9:16": { width: 720, height: 1280 },
+      "21:9": { width: 1470, height: 630 },
+      "9:21": { width: 630, height: 1470 },
+    },
+    "1080p": {
+      "1:1": { width: 1440, height: 1440 },
+      "4:3": { width: 1664, height: 1248 },
+      "3:4": { width: 1248, height: 1664 },
+      "16:9": { width: 1920, height: 1080 },
+      "9:16": { width: 1080, height: 1920 },
+      "21:9": { width: 2205, height: 945 },
+      "9:21": { width: 945, height: 2205 },
+    },
+  };
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const [previewFileType, setPreviewFileType] = useState<"image" | "video">(
-    "image",
-  );
+
+  const getRatioIcon = (ratio: string) => {
+    switch (ratio) {
+      case "1:1":
+        return <Square size={14} />;
+      case "9:16":
+      case "3:4":
+      case "2:3":
+        return <RectangleVertical size={14} />;
+      default:
+        return <RectangleHorizontal size={14} />;
+    }
+  };
+
+  const handleRatioChange = (ratio: string) => {
+    setSelectedRatio(ratio);
+    const baseSize = RATIO_SIZE_MAP[selectedResolution][ratio];
+    if (!baseSize) return;
+
+    const scaleFactor = selectedResolution === "4k" ? 1.414 : 1;
+    const newWidth = Math.round(baseSize.width * scaleFactor);
+    const newHeight = Math.round(baseSize.height * scaleFactor);
+    setSelectedWidth(newWidth);
+    setSelectedHeight(newHeight);
+    form.setFieldsValue({ width: newWidth, height: newHeight, ratio });
+  };
 
   const handleResolutionChange = (resolution: string) => {
     setSelectedResolution(resolution);
     form.setFieldValue("resolution", resolution);
+
+    const baseSize = RATIO_SIZE_MAP[resolution][selectedRatio];
+    if (!baseSize) return;
+
+    // const scaleFactor = resolution === "720p" ? 1.414 : 1;
+    const newWidth = Math.round(baseSize.width);
+    const newHeight = Math.round(baseSize.height);
+    setSelectedWidth(newWidth);
+    setSelectedHeight(newHeight);
+    form.setFieldsValue({ width: newWidth, height: newHeight });
   };
+
+  const ratioOptions = Object.keys(RATIO_SIZE_MAP[selectedResolution]).map(
+    (ratio) => ({
+      label: ratio,
+      key: ratio,
+      icon: getRatioIcon(ratio),
+      onClick: () => handleRatioChange(ratio),
+    }),
+  );
 
   const getBase64 = (file: RcFile): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -120,13 +212,7 @@ export default function ChatDreamactorInput({
     if (!file.url && !file.preview && file.originFileObj) {
       file.preview = await getBase64(file.originFileObj as RcFile);
     }
-
-    const source = file.url || (file.preview as string) || "";
-    const isVideo =
-      file.type?.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(file.name);
-
-    setPreviewImage(source);
-    setPreviewFileType(isVideo ? "video" : "image");
+    setPreviewImage(file.url || (file.preview as string) || "");
     setPreviewOpen(true);
   };
 
@@ -140,12 +226,7 @@ export default function ChatDreamactorInput({
     position: "relative",
   };
 
-  const renderUploadTile = (
-    label: string,
-    index: 0 | 1,
-    type: "image" | "video",
-    file?: UploadFile,
-  ) => (
+  const renderUploadTile = (label: string, index: 0 | 1, file?: UploadFile) => (
     <Upload
       listType="picture-card"
       maxCount={1}
@@ -168,45 +249,22 @@ export default function ChatDreamactorInput({
     >
       {file ? (
         <>
-          {type === "video" ? (
-            <Flex
-              vertical
-              align="center"
-              justify="center"
-              gap={4}
-              style={{ width: "100%", height: "100%", padding: 8 }}
-            >
-              <Play size={20} style={{ color: semantic.colorPrimary }} />
-              <Typography.Text
-                ellipsis
-                style={{
-                  fontSize: 10,
-                  maxWidth: "100%",
-                  color: semantic.colorTextSecondary,
-                }}
-              >
-                {file.name}
-              </Typography.Text>
-            </Flex>
-          ) : (
-            <Image
-              src={
-                file.url ||
-                file.thumbUrl ||
-                (file.originFileObj
-                  ? URL.createObjectURL(file.originFileObj)
-                  : undefined)
-              }
-              alt={label}
-              preview={false}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
-          )}
-
+          <Image
+            src={
+              file.url ||
+              file.thumbUrl ||
+              (file.originFileObj
+                ? URL.createObjectURL(file.originFileObj)
+                : undefined)
+            }
+            alt={label}
+            preview={false}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
           <Flex
             gap={6}
             style={{
@@ -222,22 +280,9 @@ export default function ChatDreamactorInput({
                 event.stopPropagation();
                 openPreview(file);
               }}
-              icon={<Eye size={12} />}
-            />
-            <Button
-              size="small"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                handleUploadChange({
-                  index,
-                  file,
-                  fileList: [],
-                  status: "remove",
-                });
-              }}
-              icon={<RefreshCcw size={12} />}
-            />
+            >
+              View
+            </Button>
             <Button
               size="small"
               danger
@@ -264,7 +309,7 @@ export default function ChatDreamactorInput({
           gap={4}
           style={{ color: semantic.colorTextSecondary }}
         >
-          {type === "video" ? <Video size={16} /> : <ImagePlus size={16} />}
+          <ImagePlus size={16} />
           <Typography.Text
             style={{ fontSize: 11, color: semantic.colorTextSecondary }}
           >
@@ -278,7 +323,7 @@ export default function ChatDreamactorInput({
   return (
     <Flex vertical style={{ height: "100%", minHeight: 0 }}>
       <Form
-        name="dreamactor-gen"
+        name="video-gen"
         form={form}
         onFinish={handleSendMessage}
         autoComplete="off"
@@ -308,19 +353,14 @@ export default function ChatDreamactorInput({
                 <Typography.Text
                   style={{ fontSize: 12, color: semantic.colorTextSecondary }}
                 >
-                  Upload Portrait & Drive Video
+                  Upload Frames *
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Portrait *", 0, "image", filesFirst[0])}
+                    {renderUploadTile("First Frame", 0, filesFirst[0])}
                   </div>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile(
-                      "Drive Video *",
-                      1,
-                      "video",
-                      filesLast[0],
-                    )}
+                    {renderUploadTile("Last Frame", 1, filesLast[0])}
                   </div>
                 </Space>
               </Flex>
@@ -329,7 +369,7 @@ export default function ChatDreamactorInput({
 
           <PromptSection
             semantic={semantic}
-            placeholder="Describe what you want to actor video...\n\nBe specific about style, lighting, mood, and details for best results."
+            placeholder="Describe what you want to video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}
             maxLength={2000}
           />
@@ -344,47 +384,90 @@ export default function ChatDreamactorInput({
           <SettingSection
             semantic={semantic}
             selectedResolution={selectedResolution}
+            selectedRatio={selectedRatio}
             handleResolutionChange={handleResolutionChange}
+            ratioOptions={ratioOptions}
+            getRatioIcon={getRatioIcon}
             showModeSection={false}
-            showRatioSection={false}
             showCountSection={false}
-            resolutionOptions={["720p", "1080p"]}
+            resolutionOptions={["480p", "720p", "1080p"]}
             extraContent={
               <>
+                <Flex vertical gap={6}>
+                  <Flex justify="space-between">
+                    <Typography.Text
+                      style={{
+                        fontSize: 12,
+                        color: semantic.colorTextSecondary,
+                      }}
+                    >
+                      Duration
+                    </Typography.Text>
+                    <Typography.Text
+                      style={{ fontSize: 12, color: semantic.colorPrimary }}
+                    >
+                      {selectedDuration}s
+                    </Typography.Text>
+                  </Flex>
+                  <Slider
+                    min={1}
+                    max={12}
+                    value={selectedDuration}
+                    onChange={(value) => {
+                      if (typeof value === "number") {
+                        setSelectedDuration(value);
+                        form.setFieldValue("duration", value);
+                      }
+                    }}
+                    tooltip={{ open: false }}
+                  />
+                </Flex>
+
                 <Flex gap={8}>
                   <Button
-                    onClick={() => {
-                      const next = !fastMode;
-                      setFastMode(next);
-                      form.setFieldValue("fastMode", next);
-                    }}
+                    onClick={() => setSelectedAudio(!selectedAudio)}
                     icon={
-                      fastMode ? <ZapIcon size={14} /> : <ZapOff size={14} />
+                      selectedAudio ? (
+                        <Volume2 size={14} />
+                      ) : (
+                        <VolumeX size={14} />
+                      )
                     }
                     style={{
                       borderRadius: 8,
-                      borderColor: fastMode
+                      borderColor: selectedAudio
                         ? semantic.colorPrimary
                         : semantic.colorBorder,
-                      background: fastMode
+                      background: selectedAudio
                         ? `${semantic.colorPrimary}1A`
                         : "transparent",
-                      color: fastMode
+                      color: selectedAudio
                         ? semantic.colorPrimary
                         : semantic.colorTextSecondary,
                     }}
                   >
-                    Fast mode
+                    Enable Audio
+                  </Button>
+
+                  <Button
+                    onClick={() => setDraftMode(!draftMode)}
+                    icon={draftMode ? <Check size={14} /> : undefined}
+                    style={{
+                      borderRadius: 8,
+                      borderColor: draftMode
+                        ? semantic.colorPrimary
+                        : semantic.colorBorder,
+                      background: draftMode
+                        ? `${semantic.colorPrimary}1A`
+                        : "transparent",
+                      color: draftMode
+                        ? semantic.colorPrimary
+                        : semantic.colorTextSecondary,
+                    }}
+                  >
+                    Draft mode
                   </Button>
                 </Flex>
-
-                <Form.Item name="seed" style={{ margin: 0 }}>
-                  <InputNumber
-                    placeholder="(Optional) Seed"
-                    style={{ width: "100%" }}
-                    controls={false}
-                  />
-                </Form.Item>
               </>
             }
           />
@@ -423,7 +506,7 @@ export default function ChatDreamactorInput({
             icon={<Zap size={16} fill="currentColor" />}
             loading={submitting}
           >
-            Generate
+            Generate Video
           </Button>
         </BrandKitSection>
       </Form>
@@ -437,31 +520,17 @@ export default function ChatDreamactorInput({
         destroyOnHidden
         width="auto"
       >
-        {previewFileType === "video" ? (
-          <video
-            controls
-            autoPlay
-            style={{
-              width: "auto",
-              maxHeight: "80vh",
-              maxWidth: "90vw",
-              borderRadius: 8,
-            }}
-            src={previewImage}
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt="preview"
-            style={{
-              width: "auto",
-              maxHeight: "80vh",
-              maxWidth: "90vw",
-              borderRadius: 8,
-            }}
-            src={previewImage}
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt="preview"
+          style={{
+            width: "auto",
+            maxHeight: "80vh",
+            maxWidth: "90vw",
+            borderRadius: 8,
+          }}
+          src={previewImage}
+        />
       </Modal>
     </Flex>
   );

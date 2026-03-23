@@ -1,28 +1,15 @@
-import {
-  Button,
-  Drawer,
-  Select,
-  Tooltip,
-  Space,
-  Typography,
-  Tag,
-  Switch,
-} from "antd";
+import { Button, Drawer, Select, Tooltip, Space } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
-import React, { CSSProperties, useState, type FC } from "react";
+import React, { useState, useEffect, type FC } from "react";
+import { LightbulbIcon } from "lucide-react";
 import type { IProject } from "@/app/common/project.type";
-import useResponsive from "@/app/hooks/useResponsive";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
-import { TMasterModelType } from "@/app/common/master-model-type.type";
+import type { TAIModel } from "@/app/common/ai-model.type";
 
 export interface props {
-  teamView?: boolean;
-  setTeamView?: (value: boolean) => void;
   getProject?: IProject;
   activeKey?: string;
-  selectedAIModel?: (TMasterModelType & { capabilities?: string[] }) | null;
-  filteredAIModels?: TMasterModelType[];
+  selectedAIModel?: (TAIModel & { capabilities?: string[] }) | null;
+  filteredAIModels?: TAIModel[];
   onAIModelChange?: (value: string) => void;
   promptGuideOpenStatus?: boolean;
   onPromptGuideToggle?: () => void;
@@ -30,8 +17,6 @@ export interface props {
 }
 
 const HeaderGenerateImagePage: FC<props> = ({
-  teamView,
-  setTeamView,
   getProject,
   activeKey,
   selectedAIModel,
@@ -43,9 +28,20 @@ const HeaderGenerateImagePage: FC<props> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [promptBuilderOpen, setPromptBuilderOpen] = useState(false);
-  const { isMobile, isTablet } = useResponsive();
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth < 1400 && window.innerWidth >= 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   const showDrawer = () => {
     setOpen(true);
@@ -64,54 +60,23 @@ const HeaderGenerateImagePage: FC<props> = ({
   // };
 
   const TitleSection = () => (
-    <div className="flex flex-col gap-1">
-      <Space size={8} align="center" wrap>
-        <Typography.Title
-          level={isMobile || isTablet ? 4 : 3}
-          style={{ margin: 0, color: semantic.colorTextBase }}
-        >
-          {getProject?.name || "Project"}
-        </Typography.Title>
-        <Tag
-          style={{
-            marginInlineEnd: 0,
-            border: "none",
-            borderRadius: 999,
-            color:
-              (getProject?.status || "").toLowerCase() === "deleted"
-                ? semantic.colorError
-                : semantic.colorSuccess,
-            backgroundColor: semantic.colorBgTextActive,
-            fontWeight: 600,
-            fontSize: 12,
-            padding: "0 8px",
-          }}
-        >
-          {(getProject?.status || "active").toLowerCase() === "deleted"
-            ? "Deleted"
-            : "Active"}
-        </Tag>
-      </Space>
-      <Typography.Text
-        style={{
-          color: semantic.colorTextSecondary,
-          fontSize: isMobile || isTablet ? 13 : 14,
-        }}
+    <div className="flex flex-col">
+      <span
+        className={`font-bold ${isMobile || isTablet ? "text-xl" : "text-2xl"}`}
       >
-        Shake up your creativity with image generation
-      </Typography.Text>
+        {`${getProject?.name}`}
+      </span>
+      <span
+        className={`text-[#9B9C9E] ${isMobile || isTablet ? "text-sm" : "text-md"
+          }`}
+      >
+        {`Shake up your creativity with image generation`}
+      </span>
     </div>
   );
 
   return (
-    <div
-      className="w-full"
-      style={{
-        padding: isMobile ? "10px 12px" : "12px 18px",
-        backgroundColor: semantic.colorBgContainer,
-        borderBottom: `1px solid ${semantic.colorBorder}`,
-      }}
-    >
+    <div className="bg-black w-full p-4 pt-0 rounded-t-2xl">
       {/* Mobile: Title at top */}
       {isMobile && (
         <div className="mb-4">
@@ -121,13 +86,12 @@ const HeaderGenerateImagePage: FC<props> = ({
 
       {/* Controls section */}
       <div
-        className={`flex ${
-          isMobile
+        className={`flex ${isMobile
             ? "flex-col space-y-4"
             : isTablet
               ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
               : "justify-between items-center"
-        }`}
+          }`}
       >
         {/* Desktop/Tablet: Title on left */}
         {!isMobile && (
@@ -138,30 +102,13 @@ const HeaderGenerateImagePage: FC<props> = ({
 
         {/* Controls wrapper */}
         <div
-          className={`flex ${
-            isMobile
+          className={`flex ${isMobile
               ? "items-center gap-1 justify-end flex-nowrap"
               : isTablet
                 ? "flex-wrap gap-3 justify-end"
                 : "items-center gap-4"
-          }`}
+            }`}
         >
-          <div>
-            {" "}
-            <span
-              className="text-sm font-medium"
-              style={{ color: semantic.colorTextSecondary }}
-            >
-              {`View : `}
-            </span>{" "}
-            <Switch
-              checkedChildren="Team"
-              unCheckedChildren="Persnal"
-              defaultChecked
-              value={teamView}
-              onChange={setTeamView}
-            />
-          </div>
           {(activeKey === "image" ||
             activeKey === "video" ||
             activeKey === "omnihumen" ||
@@ -169,36 +116,16 @@ const HeaderGenerateImagePage: FC<props> = ({
             <>
               {/* AI Model Selection */}
               <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: semantic.colorTextSecondary }}
-                >
+                <span className="text-sm font-medium text-gray-600">
                   AI Model:
                 </span>
                 <Select
                   size="middle"
-                  style={
-                    {
-                      minWidth: isMobile ? 160 : isTablet ? 250 : 280,
-                      width: "auto",
-                      ["--model-select-bg" as string]:
-                        semantic.colorBgContainer,
-                      ["--model-select-border" as string]: semantic.colorBorder,
-                      ["--model-select-text" as string]: semantic.colorTextBase,
-                      ["--model-select-placeholder" as string]:
-                        semantic.colorTextSecondary,
-                      ["--model-select-hover" as string]:
-                        semantic.colorBorderSecondary,
-                      ["--model-select-focus" as string]: semantic.colorPrimary,
-                      ["--model-select-arrow" as string]:
-                        semantic.colorTextSecondary,
-                    } as CSSProperties
-                  }
-                  className="dark-select"
-                  dropdownStyle={{
-                    backgroundColor: semantic.colorBgElevated,
-                    color: semantic.colorTextBase,
+                  style={{
+                    minWidth: isMobile ? 160 : isTablet ? 250 : 280,
+                    width: "auto",
                   }}
+                  className="dark-select"
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id?.toString()}
                   onChange={onAIModelChange}
@@ -206,50 +133,50 @@ const HeaderGenerateImagePage: FC<props> = ({
                 >
                   {filteredAIModels
                     ? filteredAIModels.map((model) => (
-                        <Select.Option
-                          key={model.id}
-                          value={model.id.toString()}
-                          label={model.modelType}
-                        >
-                          <Tooltip
-                            title={
-                              <div className="p-4 max-w-sm">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="font-medium text-white">
-                                    {model.modelType}
-                                  </div>
-                                  {selectedAIModel?.id === model.id && (
-                                    <div className="text-blue-400 text-xs">
-                                      ✓ Selected
-                                    </div>
-                                  )}
+                      <Select.Option
+                        key={model.id}
+                        value={model.id.toString()}
+                        label={model.name}
+                      >
+                        <Tooltip
+                          title={
+                            <div className="p-4 max-w-sm">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium text-white">
+                                  {model.name}
                                 </div>
-
-                                {model.modelDetails?.description && (
-                                  <div className="text-gray-300 text-sm leading-relaxed mb-3">
-                                    {model.modelDetails.description}
+                                {selectedAIModel?.id === model.id && (
+                                  <div className="text-blue-400 text-xs">
+                                    ✓ Selected
                                   </div>
                                 )}
+                              </div>
 
-                                {model.modelDetails?.modelId && (
-                                  <div className="mb-3">
-                                    <div className="text-gray-400 text-xs mb-1">
-                                      Model ID
-                                    </div>
-                                    <div className="text-gray-200 text-sm font-mono">
-                                      {model.modelDetails.modelId}
-                                    </div>
+                              {model.modelDetails?.description && (
+                                <div className="text-gray-300 text-sm leading-relaxed mb-3">
+                                  {model.modelDetails.description}
+                                </div>
+                              )}
+
+                              {model.modelDetails?.modelId && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Model ID
                                   </div>
-                                )}
+                                  <div className="text-gray-200 text-sm font-mono">
+                                    {model.modelDetails.modelId}
+                                  </div>
+                                </div>
+                              )}
 
-                                {model.modelDetails?.pricing && (
-                                  <div className="mb-3">
-                                    <div className="text-gray-400 text-xs mb-1">
-                                      Pricing
-                                    </div>
-                                    <div className="flex gap-4">
-                                      {model.modelDetails.pricing
-                                        .imageToVideo && (
+                              {model.modelDetails?.pricing && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Pricing
+                                  </div>
+                                  <div className="flex gap-4">
+                                    {model.modelDetails.pricing
+                                      .imageToVideo && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Image-to-video
@@ -264,8 +191,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                      {model.modelDetails.pricing
-                                        .textToVideo && (
+                                    {model.modelDetails.pricing
+                                      .textToVideo && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Text-to-video
@@ -280,8 +207,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                      {model.modelDetails.pricing
-                                        .imageToImage && (
+                                    {model.modelDetails.pricing
+                                      .imageToImage && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Image-to-image
@@ -296,8 +223,8 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                      {model.modelDetails.pricing
-                                        .textToImage && (
+                                    {model.modelDetails.pricing
+                                      .textToImage && (
                                         <div>
                                           <div className="text-gray-300 text-xs">
                                             Text-to-image
@@ -312,16 +239,16 @@ const HeaderGenerateImagePage: FC<props> = ({
                                           </div>
                                         </div>
                                       )}
-                                    </div>
                                   </div>
-                                )}
+                                </div>
+                              )}
 
-                                {(model.modelDetails?.limitations?.resolution ||
-                                  model.modelDetails?.limitations?.duration ||
-                                  model.modelDetails?.limitations?.frameRate ||
-                                  model.modelDetails?.limitations
-                                    ?.concurrentTasks ||
-                                  model.modelDetails?.limitations?.rpm) && (
+                              {(model.modelDetails?.limitations?.resolution ||
+                                model.modelDetails?.limitations?.duration ||
+                                model.modelDetails?.limitations?.frameRate ||
+                                model.modelDetails?.limitations
+                                  ?.concurrentTasks ||
+                                model.modelDetails?.limitations?.rpm) && (
                                   <div className="mb-3">
                                     <div className="text-gray-400 text-xs mb-1">
                                       Limitations
@@ -329,51 +256,51 @@ const HeaderGenerateImagePage: FC<props> = ({
                                     <div className="space-y-1">
                                       {model.modelDetails.limitations
                                         ?.resolution && (
-                                        <div className="text-gray-300 text-sm">
-                                          <span className="text-gray-400">
-                                            Resolution:
-                                          </span>{" "}
-                                          {model.modelDetails.limitations.resolution.join(
-                                            ", ",
-                                          )}
-                                        </div>
-                                      )}
+                                          <div className="text-gray-300 text-sm">
+                                            <span className="text-gray-400">
+                                              Resolution:
+                                            </span>{" "}
+                                            {model.modelDetails.limitations.resolution.join(
+                                              ", ",
+                                            )}
+                                          </div>
+                                        )}
                                       {model.modelDetails.limitations
                                         ?.duration && (
-                                        <div className="text-gray-300 text-sm">
-                                          <span className="text-gray-400">
-                                            Duration:
-                                          </span>{" "}
-                                          {
-                                            model.modelDetails.limitations
-                                              .duration
-                                          }
-                                        </div>
-                                      )}
+                                          <div className="text-gray-300 text-sm">
+                                            <span className="text-gray-400">
+                                              Duration:
+                                            </span>{" "}
+                                            {
+                                              model.modelDetails.limitations
+                                                .duration
+                                            }
+                                          </div>
+                                        )}
                                       {model.modelDetails.limitations
                                         ?.frameRate && (
-                                        <div className="text-gray-300 text-sm">
-                                          <span className="text-gray-400">
-                                            Frame rate:
-                                          </span>{" "}
-                                          {
-                                            model.modelDetails.limitations
-                                              .frameRate
-                                          }
-                                        </div>
-                                      )}
+                                          <div className="text-gray-300 text-sm">
+                                            <span className="text-gray-400">
+                                              Frame rate:
+                                            </span>{" "}
+                                            {
+                                              model.modelDetails.limitations
+                                                .frameRate
+                                            }
+                                          </div>
+                                        )}
                                       {model.modelDetails.limitations
                                         ?.concurrentTasks && (
-                                        <div className="text-gray-300 text-sm">
-                                          <span className="text-gray-400">
-                                            Concurrent tasks:
-                                          </span>{" "}
-                                          {
-                                            model.modelDetails.limitations
-                                              .concurrentTasks
-                                          }
-                                        </div>
-                                      )}
+                                          <div className="text-gray-300 text-sm">
+                                            <span className="text-gray-400">
+                                              Concurrent tasks:
+                                            </span>{" "}
+                                            {
+                                              model.modelDetails.limitations
+                                                .concurrentTasks
+                                            }
+                                          </div>
+                                        )}
                                       {model.modelDetails.limitations?.rpm && (
                                         <div className="text-gray-300 text-sm">
                                           <span className="text-gray-400">
@@ -386,25 +313,24 @@ const HeaderGenerateImagePage: FC<props> = ({
                                   </div>
                                 )}
 
-                                {model.modelDetails?.status && (
-                                  <div className="mb-3">
-                                    <div className="text-gray-400 text-xs mb-1">
-                                      Status
-                                    </div>
-                                    <div
-                                      className={`inline-block px-2 py-1 text-xs rounded ${
-                                        model.modelDetails.status ===
-                                        "Activated"
-                                          ? "bg-green-600 text-white"
-                                          : "bg-gray-600 text-gray-200"
-                                      }`}
-                                    >
-                                      {model.modelDetails.status}
-                                    </div>
+                              {model.modelDetails?.status && (
+                                <div className="mb-3">
+                                  <div className="text-gray-400 text-xs mb-1">
+                                    Status
                                   </div>
-                                )}
+                                  <div
+                                    className={`inline-block px-2 py-1 text-xs rounded ${model.modelDetails.status ===
+                                        "Activated"
+                                        ? "bg-green-600 text-white"
+                                        : "bg-gray-600 text-gray-200"
+                                      }`}
+                                  >
+                                    {model.modelDetails.status}
+                                  </div>
+                                </div>
+                              )}
 
-                                {/* <div className="flex flex-wrap gap-1 mt-2">
+                              <div className="flex flex-wrap gap-1 mt-2">
                                 {model.capabilities?.map(
                                   (capability: string) => (
                                     <span
@@ -415,21 +341,21 @@ const HeaderGenerateImagePage: FC<props> = ({
                                     </span>
                                   ),
                                 )}
-                              </div> */}
                               </div>
-                            }
-                            placement="right"
-                            overlayStyle={{ maxWidth: "none" }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span>{model.modelType}</span>
-                              {selectedAIModel?.id === model.id && (
-                                <span className="text-blue-400 ml-2">✓</span>
-                              )}
                             </div>
-                          </Tooltip>
-                        </Select.Option>
-                      ))
+                          }
+                          placement="right"
+                          overlayStyle={{ maxWidth: "none" }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{model.name}</span>
+                            {selectedAIModel?.id === model.id && (
+                              <span className="text-blue-400 ml-2">✓</span>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </Select.Option>
+                    ))
                     : []}
                 </Select>
               </div>
@@ -445,29 +371,30 @@ const HeaderGenerateImagePage: FC<props> = ({
               >
                 {isMobile ? "Builder" : isTablet ? "Builder" : "Prompt Builder"}
               </Button> */}
-              {/* <Tooltip
+              <Tooltip
                 title={isMobile ? "Prompt Guide" : undefined}
                 placement="top"
               >
                 <Button
                   size={isMobile ? "small" : "middle"}
                   type="link"
-                  style={{ color: semantic.colorTextSecondary }}
-                  icon={<BulbOutlined />}
+                  className="!text-[#686B6E]"
+                  icon={<LightbulbIcon className="w-4 h-4" />}
                   onClick={showDrawer}
                 >
                   {isMobile ? "" : isTablet ? "Guide" : "Prompt Guide"}
                 </Button>
-              </Tooltip> */}
+              </Tooltip>
             </>
           )}
         </div>
       </div>
 
+     
       <Drawer
         title={
           <div className="flex items-center gap-2">
-            <BulbOutlined />
+            <LightbulbIcon className="w-5 h-5" />
             <span>Prompt Guide</span>
           </div>
         }

@@ -24,7 +24,7 @@ import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
-import Quata from "@/app/page/project-new/component/quata";
+import Quata from "@/app/page/project/component/quata";
 type Props = {
   setGroupMode: (groupMode: string) => void;
   groupMode: string;

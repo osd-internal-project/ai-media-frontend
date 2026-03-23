@@ -1,21 +1,14 @@
 import React from "react";
-import {
-  Card,
-  Col,
-  Progress,
-  Row,
-  Space,
-  Typography,
-  theme,
-} from "antd";
+import { Card, Col, Progress, Row, Space, Typography, theme } from "antd";
 import { TrendingUp } from "lucide-react";
 import { aiCaveColors } from "@/app/theme/themeConfig";
 import type { OverviewTabProps } from "../types";
 import GenerationTrendChart from "./generation-trend-chart";
 import ByTypeChart from "./by-type-chart";
-import { generationData, typeDistributionBase } from "./static";
+// import { typeDistributionBase } from "./static";
 import ResourceAlert from "./resource-alert";
 import PendingApprovalCard from "./pending-approval";
+import dayjs from "dayjs";
 
 export default function OverviewTab({
   loading,
@@ -26,21 +19,10 @@ export default function OverviewTab({
   onApprove,
   onDeny,
   setActiveTab,
+  usedCreditPerMonth,
+  usedCreditByType,
 }: OverviewTabProps) {
   const { token } = theme.useToken();
-  const typeDistribution = typeDistributionBase.map((item, index) => ({
-    ...item,
-    color:
-      item.name === "DreamActor"
-        ? aiCaveColors.dreamActor
-        : index === 0
-        ? token.colorPrimary
-        : index === 1
-          ? token.colorInfo
-          : index === 2
-            ? token.colorWarning
-            : token.colorSuccess,
-  }));
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size={16}>
@@ -74,7 +56,10 @@ export default function OverviewTab({
 
               {typeof card.progress === "number" ? (
                 <>
-                  <Progress percent={Math.min(card.progress, 100)} showInfo={false} />
+                  <Progress
+                    percent={Math.min(card.progress, 100)}
+                    showInfo={false}
+                  />
                   <Typography.Text type="secondary" style={{ fontSize: 11 }}>
                     {card.sub} · {card.progress.toFixed(0)}% used
                   </Typography.Text>
@@ -85,7 +70,10 @@ export default function OverviewTab({
                     {card.sub}
                   </Typography.Text>
                   {card.trend && (
-                    <span className="ml-auto flex items-center gap-1" style={{ fontSize: 11, color: token.colorSuccess }}>
+                    <span
+                      className="ml-auto flex items-center gap-1"
+                      style={{ fontSize: 11, color: token.colorSuccess }}
+                    >
                       <TrendingUp size={12} />
                       {card.trend}
                     </span>
@@ -96,17 +84,21 @@ export default function OverviewTab({
           </Col>
         ))}
       </Row>
-
       <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} lg={16} className="flex">
-          <Card title="Generation Trends" loading={loading} style={{ height: "100%", width: "100%" }}>
+          <Card
+            title="Generation Trends"
+            loading={loading}
+            style={{ height: "100%", width: "100%" }}
+          >
             <Space direction="vertical" style={{ width: "100%" }} size={12}>
               <GenerationTrendChart
-                data={generationData}
+                data={usedCreditPerMonth}
                 colors={{
                   image: token.colorPrimary,
                   video: token.colorInfo,
                   human: token.colorWarning,
+                  dreamactor: token.colorError,
                   axis: token.colorTextSecondary,
                   grid: token.colorBorder,
                   tooltipBg: token.colorBgContainer,
@@ -116,16 +108,60 @@ export default function OverviewTab({
               />
               <Space size={14} wrap>
                 <Space size={6}>
-                  <span style={{ width: 10, height: 10, borderRadius: 999, background: token.colorPrimary, display: "inline-block" }} />
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>Image</Typography.Text>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: token.colorPrimary,
+                      display: "inline-block",
+                    }}
+                  />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Image
+                  </Typography.Text>
                 </Space>
                 <Space size={6}>
-                  <span style={{ width: 10, height: 10, borderRadius: 999, background: token.colorInfo, display: "inline-block" }} />
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>Video</Typography.Text>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: token.colorInfo,
+                      display: "inline-block",
+                    }}
+                  />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Video
+                  </Typography.Text>
                 </Space>
                 <Space size={6}>
-                  <span style={{ width: 10, height: 10, borderRadius: 999, background: token.colorWarning, display: "inline-block" }} />
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>Human</Typography.Text>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: token.colorWarning,
+                      display: "inline-block",
+                    }}
+                  />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Human
+                  </Typography.Text>
+                </Space>
+                <Space size={6}>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: aiCaveColors.dreamActor,
+                      display: "inline-block",
+                    }}
+                  />
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Dream
+                  </Typography.Text>
                 </Space>
               </Space>
             </Space>
@@ -133,18 +169,25 @@ export default function OverviewTab({
         </Col>
 
         <Col xs={24} lg={8} className="flex">
-          <Card title="By Type" loading={loading} style={{ height: "100%", width: "100%" }}>
+          <Card
+            title="By Type"
+            loading={loading}
+            style={{ height: "100%", width: "100%" }}
+          >
             <Space direction="vertical" style={{ width: "100%" }} size={8}>
               <ByTypeChart
-                data={typeDistribution}
+                data={usedCreditByType}
                 colors={{
                   tooltipBg: token.colorBgContainer,
                   tooltipBorder: token.colorBorder,
                   tooltipText: token.colorTextBase,
                 }}
               />
-              {typeDistribution.map((item) => (
-                <div className="flex items-center justify-between" key={item.name}>
+              {usedCreditByType.map((item) => (
+                <div
+                  className="flex items-center justify-between"
+                  key={item.name}
+                >
                   <Space size={8}>
                     <span
                       style={{
@@ -166,9 +209,9 @@ export default function OverviewTab({
           </Card>
         </Col>
       </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12} className="flex">
+      {/* Hide Tabs */}
+      {/* <Row gutter={[16, 16]}>
+        <Col xs={24} lg={24} className="flex">
           <ResourceAlert
             alertUsers={alertUsers}
             openQuotaModal={openQuotaModal}
@@ -183,7 +226,7 @@ export default function OverviewTab({
             setActiveTab={setActiveTab}
           />
         </Col>
-      </Row>
+      </Row> */}
     </Space>
   );
 }

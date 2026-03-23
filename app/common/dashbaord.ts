@@ -1,3 +1,5 @@
+import { ICreditBalance, IOrganizationSubscription } from "./organization.type";
+
 export type LogHistory = {
   id: string;
   taskId?: string;
@@ -92,4 +94,26 @@ export interface IDashboardOrganizationSummary {
   usedCredit: number;
   remainImageAmount: number;
   remainTokenAmount: number;
+}
+//NEW
+export interface IDashboardOverviewSummary {
+  totalProject: number;
+  totalActiveProject: number;
+  totalMember: number;
+  adminMember: number;
+  usedImage: number;
+  usedCredit: number;
+  monthlyusedImage: number;
+  monthlyusedCredit: number;
+  creditAllowance: number;
+  currentCycleBalance: number;
+  usedCreditPercent: number;
+}
+
+export interface IDashboardCreditPerMonthAndType {
+  month: string;
+  image: number;
+  video: number;
+  omnihuman: number;
+  dreamactor: number;
 }

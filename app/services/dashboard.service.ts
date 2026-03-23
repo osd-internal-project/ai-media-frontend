@@ -1,6 +1,8 @@
 import { AxiosInstance } from "axios";
 import {
+  IDashboardCreditPerMonthAndType,
   IDashboardOrganizationSummary,
+  IDashboardOverviewSummary,
   IDashboardProject,
   IDashboardTableUser,
   IDashboardUser,
@@ -9,6 +11,40 @@ import {
 const DashboardServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/dashboard";
   return {
+    //NEW
+    findOverviewSummary: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardOverviewSummary> => {
+      return await axiosInstance
+        .get(`${baseUrl}/overview-summary/${organizationId}`, {
+          params: params,
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findUsedCreditPerMonth: async (
+      organizationId: string,
+      params: any,
+    ): Promise<IDashboardCreditPerMonthAndType[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/credit-per-month-and-type/${organizationId}`, {
+          params: params,
+        })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    //OLD
     findDashboardSummaryOrganization: async (
       organizationId: string,
       params: any,

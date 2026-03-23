@@ -1,9 +1,10 @@
 import React, { useState, type CSSProperties } from "react";
 import {
-  AudioLines,
   Eye,
   ImagePlus,
+  Play,
   RefreshCcw,
+  Video,
   X,
   Zap,
   ZapIcon,
@@ -35,7 +36,7 @@ import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
-import Quata from "@/app/page/project-new/component/quata";
+import Quata from "@/app/page/project/component/quata";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -75,7 +76,7 @@ type Props = {
   cerrentUsedCredit: number;
 };
 
-export default function ChatOmnihumenInput({
+export default function ChatDreamactorInput({
   selectedResolution,
   setSelectedResolution,
   form,
@@ -98,9 +99,9 @@ export default function ChatOmnihumenInput({
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const [previewFileType, setPreviewFileType] = useState<
-    "image" | "audio" | "video"
-  >("image");
+  const [previewFileType, setPreviewFileType] = useState<"image" | "video">(
+    "image",
+  );
 
   const handleResolutionChange = (resolution: string) => {
     setSelectedResolution(resolution);
@@ -121,14 +122,11 @@ export default function ChatOmnihumenInput({
     }
 
     const source = file.url || (file.preview as string) || "";
-    const isAudio =
-      file.type?.startsWith("audio/") ||
-      /\.(mp3|wav|ogg|m4a)$/i.test(file.name);
     const isVideo =
       file.type?.startsWith("video/") || /\.(mp4|mov|webm)$/i.test(file.name);
 
     setPreviewImage(source);
-    setPreviewFileType(isAudio ? "audio" : isVideo ? "video" : "image");
+    setPreviewFileType(isVideo ? "video" : "image");
     setPreviewOpen(true);
   };
 
@@ -145,7 +143,7 @@ export default function ChatOmnihumenInput({
   const renderUploadTile = (
     label: string,
     index: 0 | 1,
-    type: "image" | "audio",
+    type: "image" | "video",
     file?: UploadFile,
   ) => (
     <Upload
@@ -170,7 +168,7 @@ export default function ChatOmnihumenInput({
     >
       {file ? (
         <>
-          {type === "audio" ? (
+          {type === "video" ? (
             <Flex
               vertical
               align="center"
@@ -178,7 +176,7 @@ export default function ChatOmnihumenInput({
               gap={4}
               style={{ width: "100%", height: "100%", padding: 8 }}
             >
-              <AudioLines size={20} style={{ color: semantic.colorPrimary }} />
+              <Play size={20} style={{ color: semantic.colorPrimary }} />
               <Typography.Text
                 ellipsis
                 style={{
@@ -266,11 +264,7 @@ export default function ChatOmnihumenInput({
           gap={4}
           style={{ color: semantic.colorTextSecondary }}
         >
-          {type === "audio" ? (
-            <AudioLines size={16} />
-          ) : (
-            <ImagePlus size={16} />
-          )}
+          {type === "video" ? <Video size={16} /> : <ImagePlus size={16} />}
           <Typography.Text
             style={{ fontSize: 11, color: semantic.colorTextSecondary }}
           >
@@ -284,7 +278,7 @@ export default function ChatOmnihumenInput({
   return (
     <Flex vertical style={{ height: "100%", minHeight: 0 }}>
       <Form
-        name="omnihumen-gen"
+        name="dreamactor-gen"
         form={form}
         onFinish={handleSendMessage}
         autoComplete="off"
@@ -314,14 +308,19 @@ export default function ChatOmnihumenInput({
                 <Typography.Text
                   style={{ fontSize: 12, color: semantic.colorTextSecondary }}
                 >
-                  Upload Portrait & Audio
+                  Upload Portrait & Drive Video
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
                   <div style={{ flex: 1 }}>
                     {renderUploadTile("Portrait *", 0, "image", filesFirst[0])}
                   </div>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Audio File *", 1, "audio", filesLast[0])}
+                    {renderUploadTile(
+                      "Drive Video *",
+                      1,
+                      "video",
+                      filesLast[0],
+                    )}
                   </div>
                 </Space>
               </Flex>
@@ -330,7 +329,7 @@ export default function ChatOmnihumenInput({
 
           <PromptSection
             semantic={semantic}
-            placeholder="Describe what you want to human video...\n\nBe specific about style, lighting, mood, and details for best results."
+            placeholder="Describe what you want to actor video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}
             maxLength={2000}
           />
@@ -438,22 +437,7 @@ export default function ChatOmnihumenInput({
         destroyOnHidden
         width="auto"
       >
-        {previewFileType === "audio" ? (
-          <div
-            style={{
-              padding: 16,
-              borderRadius: 8,
-              background: semantic.colorBgContainer,
-            }}
-          >
-            <audio
-              controls
-              autoPlay
-              style={{ width: 320 }}
-              src={previewImage}
-            />
-          </div>
-        ) : previewFileType === "video" ? (
+        {previewFileType === "video" ? (
           <video
             controls
             autoPlay

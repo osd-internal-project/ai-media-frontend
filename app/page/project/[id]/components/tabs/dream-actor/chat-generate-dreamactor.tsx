@@ -31,7 +31,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import GenerateServices from "@/app/services/generate.service";
 import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
-import ChatDreamactorInput from "@/app/page/project-new/[id]/components/tabs/dream-actor/chat-dreamactor-input";
+import ChatDreamactorInput from "@/app/page/project/[id]/components/tabs/dream-actor/chat-dreamactor-input";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";

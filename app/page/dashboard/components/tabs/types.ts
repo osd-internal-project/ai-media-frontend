@@ -1,3 +1,4 @@
+import { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
 import type { IProject } from "@/app/common/project.type";
 
 export type DashboardUserRow = {
@@ -73,4 +74,12 @@ export type OverviewTabProps = {
   onApprove: (user: PendingApproval) => void;
   onDeny: (user: PendingApproval) => void;
   setActiveTab: (tab: string) => void;
+  usedCreditPerMonth: IDashboardCreditPerMonthAndType[];
+  usedCreditByType: ByTypeItem[];
+};
+
+export type ByTypeItem = {
+  name: string;
+  value: number;
+  color: string;
 };

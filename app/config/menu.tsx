@@ -39,7 +39,7 @@ export const MenuSider = [
       //   ),
       // },
           {
-        key: `project-new`,
+        key: `project`,
         role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
         icon: <FolderOpen size={22} />,
         label: (
@@ -69,7 +69,7 @@ export const MenuSider = [
       //   label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
       // },
       {
-        key: `dashboard-new`,
+        key: `dashboard`,
         role: ["OWNER", "ADMIN","SUPER_ADMIN"],
         icon: <LayoutDashboard size={22} />,
         label: (

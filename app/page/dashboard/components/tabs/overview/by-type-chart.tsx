@@ -1,10 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { ByTypeItem } from "../types";
 
-type ByTypeItem = {
-	name: string;
-	value: number;
-	color: string;
-};
+
 
 type ByTypeChartProps = {
 	data: ByTypeItem[];
