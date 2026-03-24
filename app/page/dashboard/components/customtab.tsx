@@ -29,7 +29,7 @@ const DashboardCustomTab: FC<DashboardCustomTabProps> = ({
     { key: "overview", label: "Overview" },
     { key: "users", label: "Users", total: usersTotal },
     { key: "projects", label: "Projects", total: projectsTotal },
-    { key: "analytics", label: "Analytics" },
+    // { key: "analytics", label: "Analytics" },
     // { key: "approvals", label: "Approvals", total: approvalsTotal },
   ];
 

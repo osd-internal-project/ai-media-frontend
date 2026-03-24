@@ -98,12 +98,12 @@ export function PrivateHeader({
       ),
     })),
     { type: "divider" as const },
-    {
-      key: "add",
-      icon: <PlusOutlined />,
-      label: "Add Organization",
-      onClick: handleOpenCreateOrg,
-    },
+    // {
+    //   key: "add",
+    //   icon: <PlusOutlined />,
+    //   label: "Add Organization",
+    //   onClick: handleOpenCreateOrg,
+    // },
     {
       key: "settings",
       icon: <SettingOutlined />,
