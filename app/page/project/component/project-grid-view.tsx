@@ -37,8 +37,8 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
       style={{ padding: isMobile ? "16px" : "24px", margin: 0, width: "100%" }}
     >
       {projects.map((project) => {
-        const creditUsed = (project.accessImageAmount ?? 0) - (project.remainImageAmount ?? 0);
-        const creditTotal = project.accessImageAmount ?? 0;
+        const creditUsed = project.members.reduce((acc, member) => acc + member.usedCreditAllowance, 0);
+        const creditTotal = project.limitCreditAllowance ?? 0;
         // const tokenUsed = (project.accessTokenAmount ?? 0) - (project.remainTokenAmount ?? 0);
         // const tokenTotal = project.accessTokenAmount ?? 0;
         return (
