@@ -270,6 +270,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   }, [
     projectId,
     activeKey,
+    selectedAIModel,
     refImage,
     selectedResolution,
     selectedMaximumImage,
@@ -1096,6 +1097,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       organizationId: session?.user?.organizationId,
     };
     const credit = await generateServices.getCreditPreSend(message);
+
     if (credit) {
       setCerrentUsedCredit(credit);
     } else {
