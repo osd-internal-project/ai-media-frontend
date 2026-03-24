@@ -1,4 +1,4 @@
-import { UserCog, LockKeyholeOpen, LayoutDashboard } from "lucide-react";
+import { UserCog, LockKeyholeOpen, LayoutDashboard, Gem } from "lucide-react";
 import Link from "next/link";
 
 export const getAdminMenuItems = () => [
@@ -18,7 +18,7 @@ export const getAdminMenuItems = () => [
   },
   {
     key: "plan-management",
-    icon: <LayoutDashboard size={16} />,
+    icon: <Gem size={16} />,
     label: (
       <Link href="/page/admin-management/plan-management">
         Plan Management

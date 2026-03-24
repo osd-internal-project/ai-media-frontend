@@ -25,12 +25,16 @@ import {
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
+import {
+  ICreditBalance,
+  IOrganizationSubscription,
+} from "@/app/common/organization.type";
+import { IProject } from "@/app/common/project.type";
 
 type ProjectMember = {
   userId: string;
   role: "ADMIN" | "USER" | "VIEWER";
-  maxImages?: number;
-  maxToken?: number;
+  limitCreditAllowance?: number;
 };
 
 type SearchTexts = { [key: number]: string };
@@ -41,7 +45,7 @@ interface ProjectFormProps {
   onCancel: () => void;
   form: FormInstance;
   organization: any;
-  selectedProject?: any;
+  selectedProject?: IProject | undefined;
   projectMembers: ProjectMember[];
   setProjectMembers: React.Dispatch<React.SetStateAction<ProjectMember[]>>;
   searchTexts: SearchTexts;
@@ -51,7 +55,10 @@ interface ProjectFormProps {
   onFinish: (values: any) => void;
   maxMembers: number;
   mode: "create" | "edit";
-  formatNumber: (num: string | number | undefined) =>  React.ReactNode ;
+  formatNumber: (num: string | number | undefined) => React.ReactNode;
+  organizationSubscription: IOrganizationSubscription | undefined;
+  creditBalance: ICreditBalance | undefined;
+  assignedCredit: number;
 }
 
 const ProjectFormModal: React.FC<ProjectFormProps> = ({
@@ -71,6 +78,9 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   maxMembers,
   mode,
   formatNumber,
+  organizationSubscription,
+  creditBalance,
+  assignedCredit,
 }) => {
   const { mode: themeMode } = useThemeMode();
   const { isMobile } = useResponsive();
@@ -78,21 +88,27 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   const [activeEditTab, setActiveEditTab] = useState<"settings" | "members">(
     "settings",
   );
-  const [hoveredEditTab, setHoveredEditTab] = useState<"settings" | "members" | null>(null);
-  const [hoveredMemberIndex, setHoveredMemberIndex] = useState<number | null>(null);
+  const [hoveredEditTab, setHoveredEditTab] = useState<
+    "settings" | "members" | null
+  >(null);
+  const [hoveredMemberIndex, setHoveredMemberIndex] = useState<number | null>(
+    null,
+  );
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
-
-  const maxImage =
+  const [creditAllowance, setCreditAllowance] = useState<number>(0);
+  const maxCredit =
     mode === "edit"
-      ? (organization?.remainImageAmount || 0) +
-        (selectedProject?.accessImageAmount || 0)
-      : organization?.remainImageAmount || 0;
-
-  const maxToken =
-    mode === "edit"
-      ? (organization?.remainTokenAmount || 0) +
-        (selectedProject?.accessTokenAmount || 0)
-      : organization?.remainTokenAmount || 0;
+      ? (organizationSubscription?.creditAllowance || 0) +
+        (selectedProject?.limitCreditAllowance || 0) +
+        (creditBalance?.onTopBalance || 0) -
+        assignedCredit
+      : (organizationSubscription?.creditAllowance || 0) +
+        (creditBalance?.onTopBalance || 0);
+  // const maxImage =
+  //   mode === "edit"
+  //     ? (organization?.remainImageAmount || 0) +
+  //       (selectedProject?.accessImageAmount || 0)
+  //     : organization?.remainImageAmount || 0;
 
   const modalSubtitle =
     mode === "edit"
@@ -127,12 +143,12 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
             ? semantic.colorBgContainer
             : isHovered
               ? semantic.colorFillAlter
-            : "transparent"
+              : "transparent"
           : isActive
             ? semantic.colorBgTextActive
             : isHovered
               ? semantic.colorBgElevated
-            : "transparent",
+              : "transparent",
       color:
         themeMode === "light"
           ? isActive || isHovered
@@ -142,11 +158,12 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
             ? "#ffffff"
             : isHovered
               ? semantic.colorTextBase
-            : semantic.colorTextSecondary,
+              : semantic.colorTextSecondary,
       fontWeight: 500,
       boxShadow: "none",
       transform: isHovered ? "translateY(-1px)" : "translateY(0)",
-      transition: "background-color 180ms ease, color 180ms ease, transform 140ms ease",
+      transition:
+        "background-color 180ms ease, color 180ms ease, transform 140ms ease",
     };
   };
 
@@ -167,8 +184,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
       {
         userId: selectedUserToAdd,
         role: "USER",
-        maxImages: 0,
-        maxToken: 0,
+        limitCreditAllowance: 0,
       },
     ]);
     setSelectedUserToAdd("");
@@ -176,8 +192,6 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
 
   const renderSettings = () => (
     <Space direction="vertical" size={12} style={{ width: "100%" }}>
-
-
       <Form.Item
         label="Project Name"
         name="name"
@@ -187,7 +201,11 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
         <Input placeholder="Enter project name" />
       </Form.Item>
 
-      <Form.Item label="Description" name="description" style={{ marginBottom: 12 }}>
+      <Form.Item
+        label="Description"
+        name="description"
+        style={{ marginBottom: 12 }}
+      >
         <Input.TextArea rows={3} placeholder="Enter project description" />
       </Form.Item>
 
@@ -210,81 +228,38 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
         >
           Generation Limits
         </Typography.Text>
-
         <Row gutter={12}>
-          <Col xs={24} md={8}>
+          <Col span={12}>
             <Form.Item
               label={
                 <span>
-                  Image Limit {" "}
+                  Credit Generataions{" "}
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Max: {formatNumber(maxImage)}
+                    Max: {formatNumber(maxCredit)}
                   </Typography.Text>
                 </span>
               }
-              name="accessImageAmount"
+              name="limitCreditAllowance"
               style={{ marginBottom: 12 }}
               rules={[
                 { required: true, message: "Please enter image amount" },
                 {
                   type: "number",
-                  max: maxImage,
-                  message: `Cannot exceed available image (${formatNumber(maxImage)})`,
+                  max: maxCredit,
+                  message: `Cannot exceed available credit (${formatNumber(maxCredit)})`,
                 },
               ]}
             >
               <InputNumber
+                // onChange={(value) => {
+                //   setCreditAllowance(value || 0);
+                // }}
                 min={0}
                 style={{ width: "100%" }}
                 placeholder={
-                  maxImage === 0 ? "No image available" : "Enter image amount"
-                }
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Form.Item
-              label="Video Limit"
-              name="videoLimit"
-              style={{ marginBottom: 12 }}
-              tooltip="Video limit is UI-only currently. Backend does not persist this field yet."
-            >
-              <InputNumber
-                min={0}
-                style={{ width: "100%" }}
-                placeholder="Video limit"
-                disabled
-              />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} md={8}>
-            <Form.Item
-              label={
-                <span>
-                  Token Limit {" "}
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Max: {formatNumber(maxToken)}
-                  </Typography.Text>
-                </span>
-              }
-              name="accessTokenAmount"
-              style={{ marginBottom: 12 }}
-              rules={[
-                { required: true, message: "Please enter token amount" },
-                {
-                  type: "number",
-                  max: maxToken,
-                  message: `Cannot exceed available token (${formatNumber(maxToken)})`,
-                },
-              ]}
-            >
-              <InputNumber
-                min={0}
-                style={{ width: "100%" }}
-                placeholder={
-                  maxToken === 0 ? "No token available" : "Enter token amount"
+                  maxCredit === 0
+                    ? "No credit available"
+                    : "Enter credit amount"
                 }
               />
             </Form.Item>
@@ -303,7 +278,8 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
           styles={{ body: { padding: "10px 12px" } }}
         >
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Note: These limits can be adjusted later. Users will need approval from administrators to exceed these limits.
+            Note: These limits can be adjusted later. Users will need approval
+            from administrators to exceed these limits.
           </Typography.Text>
         </Card>
       )}
@@ -326,7 +302,9 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
         </Typography.Text> */}
       </div>
 
-      <div style={{ width: "100%", display: "flex", gap: 8, alignItems: "center" }}>
+      <div
+        style={{ width: "100%", display: "flex", gap: 8, alignItems: "center" }}
+      >
         <Select
           showSearch
           style={{
@@ -372,8 +350,25 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
           borderColor: semantic.colorBorder,
           borderRadius: 12,
           background: semantic.colorBgContainer,
-           minHeight: 300,
+          minHeight: 300,
         }}
+        title={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography.Text
+              type="secondary"
+              style={{ fontSize: 12 }}
+            ></Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Max Credit : {creditAllowance}
+            </Typography.Text>
+          </div>
+        }
       >
         {projectMembers.length === 0 ? (
           <div
@@ -386,7 +381,9 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
               gap: 6,
             }}
           >
-            <TeamOutlined style={{ fontSize: 22, color: semantic.colorTextSecondary }} />
+            <TeamOutlined
+              style={{ fontSize: 22, color: semantic.colorTextSecondary }}
+            />
             <Typography.Text type="secondary">No members yet</Typography.Text>
           </div>
         ) : (
@@ -408,16 +405,20 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                     ? semantic.colorBgContainer
                     : semantic.colorFillAlter,
                 transition: "all 180ms ease",
-               
               }}
               styles={{ body: { padding: isMobile ? 10 : 12 } }}
             >
               <Row gutter={8} align="middle" wrap={false}>
                 <Col flex="none">
-                  <UserOutlined style={{ color: semantic.colorTextSecondary, marginTop: 2 }} />
+                  <UserOutlined
+                    style={{ color: semantic.colorTextSecondary, marginTop: 2 }}
+                  />
                 </Col>
                 <Col flex="auto" style={{ minWidth: 0 }}>
-                  <Typography.Text strong style={{ color: semantic.colorTextBase }}>
+                  <Typography.Text
+                    strong
+                    style={{ color: semantic.colorTextBase }}
+                  >
                     {getMemberUser(member.userId)?.fullname || "Unknown user"}
                   </Typography.Text>
                   <Typography.Text
@@ -427,22 +428,59 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                     {getMemberUser(member.userId)?.email || member.userId}
                   </Typography.Text>
                 </Col>
-
                 <Col flex="none">
-                  <Tag
-                    style={{
-                      color: semantic.colorPrimary,
-                      borderRadius: 999,
-                      padding: "0 10px",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      textTransform: "capitalize",
-                      whiteSpace: "nowrap",
-                      marginInlineEnd: 0,
-                    }}
+                  <Typography.Text
+                    type="secondary"
+                    style={{ display: "block", fontSize: 12 }}
                   >
-                    {member.role.toLowerCase()}
-                  </Tag>
+                    Credit
+                  </Typography.Text>
+                  <InputNumber
+                    min={0}
+                    defaultValue={0}
+                    size="small"
+                    placeholder="user credit"
+                    value={member?.limitCreditAllowance}
+                    onChange={(value) => {
+                      const newCredit = Number(value) || 0;
+                      if (!isNaN(newCredit) && newCredit >= 0) {
+                        setProjectMembers(
+                          projectMembers.map((m, i) =>
+                            i === index
+                              ? { ...m, limitCreditAllowance: newCredit }
+                              : m,
+                          ),
+                        );
+                      }
+                    }}
+                  />
+                </Col>
+                <Col flex="none">
+                  <Typography.Text
+                    type="secondary"
+                    style={{ display: "block", fontSize: 12 }}
+                  >
+                    Role
+                  </Typography.Text>
+                  <div></div>
+                  <Select
+                    // styles={{ width: "100%" }}
+                    size="small"
+                    value={member.role}
+                    style={{ width: "100px" }}
+                    options={[
+                      { value: "OWNER", label: "Owner" },
+                      { value: "ADMIN", label: "Admin" },
+                      { value: "USER", label: "User" },
+                    ]}
+                    onChange={(e) => {
+                      setProjectMembers(
+                        projectMembers.map((m, i) =>
+                          i === index ? { ...m, role: e } : m,
+                        ),
+                      );
+                    }}
+                  />
                 </Col>
 
                 <Col flex="none">
@@ -450,7 +488,9 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                     type="text"
                     icon={<CloseOutlined />}
                     onClick={() => {
-                      setProjectMembers(projectMembers.filter((_, i) => i !== index));
+                      setProjectMembers(
+                        projectMembers.filter((_, i) => i !== index),
+                      );
                     }}
                   />
                 </Col>
@@ -461,7 +501,8 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
       </Card>
 
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-        Team members will have access to this project and share generation limits.
+        Team members will have access to this project and share generation
+        limits.
       </Typography.Text>
     </Space>
   );
@@ -470,7 +511,14 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
     <Modal
       title={
         <Space direction="vertical" size={0}>
-          <Typography.Title level={3} style={{ display: "block", color: semantic.colorTextBase, marginBottom: 0 }}>
+          <Typography.Title
+            level={3}
+            style={{
+              display: "block",
+              color: semantic.colorTextBase,
+              marginBottom: 0,
+            }}
+          >
             {title}
           </Typography.Title>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
@@ -516,13 +564,22 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                 style={getEditTabButtonStyle("members")}
                 onMouseEnter={() => setHoveredEditTab("members")}
                 onMouseLeave={() => setHoveredEditTab(null)}
-                onClick={() => setActiveEditTab("members")}
+                onClick={() => {
+                  setCreditAllowance(
+                    form.getFieldValue("limitCreditAllowance") || 0,
+                  );
+                  setActiveEditTab("members");
+                }}
               >
                 Members
               </Button>
             </div>
-
-            {activeEditTab === "settings" ? renderSettings() : renderMembers()}
+            <div hidden={activeEditTab === "members"}>
+              {renderSettings()}
+            </div>
+            <div hidden={activeEditTab === "settings"}>
+              {renderMembers()}
+            </div>
           </Space>
         ) : (
           <Space direction="vertical" size={12} style={{ width: "100%" }}>
@@ -530,10 +587,22 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
           </Space>
         )}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            marginTop: 12,
+          }}
+        >
           <Button onClick={onCancel}>Cancel</Button>
-          <Button loading={loading} type="primary" htmlType="submit" size="large">
-            {mode === "edit" ? "Save Changes" : "Create Project"}
+          <Button
+            loading={loading}
+            type="primary"
+            htmlType="submit"
+            size="large"
+          >
+            {mode === "edit" ? "Save Change" : "Create Project"}
           </Button>
         </div>
       </Form>

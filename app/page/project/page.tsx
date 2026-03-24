@@ -45,7 +45,11 @@ import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import { canCreateProjects } from "../../utils/permissions";
 import OrganizationServices from "@/app/services/organization.service";
-import { IOrganization } from "@/app/common/organization.type";
+import {
+  ICreditBalance,
+  IOrganization,
+  IOrganizationSubscription,
+} from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -55,6 +59,8 @@ import ProjectListView from "./component/project-list-view";
 import useResponsive from "@/app/hooks/useResponsive";
 import { JsonObject, JsonValue } from "next-auth/adapters";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
+import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
 
 const MAX_MEMBERS = 5;
 
@@ -67,15 +73,22 @@ const ProjectsPage = () => {
   const projectService = ProjectService(axiosCore);
   const userServices = UserServices(axiosUser);
   const organizationService = OrganizationServices(axiosUser);
+  const organizationSubscriptionService =
+    OrganizationSubscriptionServices(axiosUser);
+  const creditBalanceService = CreditBalanceServices(axiosUser);
+
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [selectedProject, setSelectedProject] = useState<IProject | null>(null);
+  const [selectedProject, setSelectedProject] = useState<IProject | undefined>(
+    undefined,
+  );
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [organizationMembers, setOrganizationMembers] = useState<any[]>([]);
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
+  const [assignedCredit, setAssignedCredit] = useState<number>(0);
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "USER" | "VIEWER">(
@@ -89,6 +102,12 @@ const ProjectsPage = () => {
   const [organization, setOrganization] = useState<IOrganization | undefined>(
     undefined,
   );
+  const [organizationSubscription, setOrganizationSubscription] = useState<
+    IOrganizationSubscription | undefined
+  >(undefined);
+  const [creditBalance, setCreditBalance] = useState<
+    ICreditBalance | undefined
+  >(undefined);
   const [form] = Form.useForm();
   const [modal, contextHolder] = Modal.useModal();
   const [editForm] = Form.useForm();
@@ -142,8 +161,7 @@ const ProjectsPage = () => {
         project.members?.map((member: any) => ({
           userId: member.userId,
           role: member.role || "USER",
-          maxToken: member.maxToken,
-          maxImages: member.maxImages,
+          limitCreditAllowance: member.limitCreditAllowance,
         })) || [];
       console.log("Setting project members:", members);
       setProjectMembers(members);
@@ -241,28 +259,18 @@ const ProjectsPage = () => {
         setLoading(false);
         return;
       }
-      const maxTokenAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxToken),
+      const maxCreditAll = projectMembers.reduce(
+        (per, total) => (total = per + total.limitCreditAllowance),
         0,
       );
-      const maxImageAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxImages),
-        0,
-      );
-      if (maxTokenAll > values.accessTokenAmount) {
-        messageApi.error("Max token  is too high");
+      if (maxCreditAll > values.limitCreditAllowance) {
+        messageApi.error("Max credit is too high");
         setLoading(false);
         return;
       }
-      if (maxImageAll > values.accessImageAmount) {
-        messageApi.error(" Max image is too high");
-        setLoading(false);
-        return;
-      }
+
       const projectData = {
         ...values,
-        remainImageAmount: values.accessImageAmount - maxImageAll,
-        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
         members: projectMembers.filter((m) => m.userId),
         organizationId: organizationId,
       };
@@ -273,14 +281,14 @@ const ProjectsPage = () => {
       });
 
       if (response) {
-        const remainImageAmount =
-          (organization?.remainImageAmount || 0) - response.accessImageAmount;
-        const remainTokenAmount =
-          (organization?.remainTokenAmount || 0) - response.accessTokenAmount;
-        await organizationService.update(organization.organizationId, {
-          remainImageAmount,
-          remainTokenAmount,
-        });
+        // const remainImageAmount =
+        //   (organization?.remainImageAmount || 0) - response.accessImageAmount;
+        // const remainTokenAmount =
+        //   (organization?.remainTokenAmount || 0) - response.accessTokenAmount;
+        // await organizationService.update(organization.organizationId, {
+        //   remainImageAmount,
+        //   remainTokenAmount,
+        // });
         messageApi.success("Project created successfully");
         setOpen(false);
         setProjectMembers([]);
@@ -299,56 +307,31 @@ const ProjectsPage = () => {
   const onFinishEdit = async (values: any) => {
     setLoading(true);
     try {
+      const project = form.getFieldsValue(); 
       if (!organization) {
         messageApi.error("Organization not found");
         setLoading(false);
         return;
       }
-      const maxTokenAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxToken),
+      const maxCreditAll = projectMembers.reduce(
+        (per, total) => (total = per + total.limitCreditAllowance),
         0,
       );
-      const maxImageAll = projectMembers.reduce(
-        (per, total) => (total = per + total.maxImages),
-        0,
-      );
-      if (maxTokenAll > values.accessTokenAmount) {
-        messageApi.error("Max token  is too high");
-        setLoading(false);
-        return;
-      }
-      if (maxImageAll > values.accessImageAmount) {
-        messageApi.error(" Max image is too high");
+      if (maxCreditAll > project.limitCreditAllowance) {
+        messageApi.error("Max credit is too high");
         setLoading(false);
         return;
       }
       const projectData = {
-        name: values.name,
-        description: values.description,
-        accessTokenAmount: values.accessTokenAmount,
-        accessImageAmount: values.accessImageAmount,
-        remainImageAmount: values.accessImageAmount - maxImageAll,
-        remainTokenAmount: values.accessTokenAmount - maxTokenAll,
+        ...values,
         members: projectMembers.filter((m) => m.userId),
       };
-
+      console.log(projectData, maxCreditAll);
       const updateResponse = await projectService.update(
         values.id,
         projectData,
       );
       if (updateResponse) {
-        const remainImageAmount =
-          (organization?.remainImageAmount || 0) +
-          (selectedProject?.accessImageAmount || 0) -
-          updateResponse.accessImageAmount;
-        const remainTokenAmount =
-          (organization?.remainTokenAmount || 0) +
-          (selectedProject?.accessTokenAmount || 0) -
-          updateResponse.accessTokenAmount;
-        await organizationService.update(organization.organizationId, {
-          remainImageAmount,
-          remainTokenAmount,
-        });
         messageApi.success("Project updated successfully");
       }
       setOpenEdit(false);
@@ -386,6 +369,15 @@ const ProjectsPage = () => {
         const organization = await organizationService.findById(organizationId);
         console.log(organization);
         setOrganization(organization);
+
+        const subscription =
+          await organizationSubscriptionService.findByOrganizationId(
+            organizationId,
+          );
+        setOrganizationSubscription(subscription);
+        const creditBalance =
+          await creditBalanceService.findByOrganizationId(organizationId);
+        setCreditBalance(creditBalance);
       }
     } catch (error) {
       console.error("Failed to fetch organization :", error);
@@ -422,6 +414,10 @@ const ProjectsPage = () => {
           searchValue,
         );
         setProjects(response || []);
+        const totalAssignedCredit = response?.reduce((total, project) => {
+          return total + project.limitCreditAllowance;
+        }, 0);
+        setAssignedCredit(totalAssignedCredit);
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -718,6 +714,9 @@ const ProjectsPage = () => {
           maxMembers={MAX_MEMBERS}
           mode={openEdit ? "edit" : "create"}
           formatNumber={formatNumber}
+          organizationSubscription={organizationSubscription}
+          creditBalance={creditBalance}
+          assignedCredit={assignedCredit}
         />
       )}
       {/* Context Holder for Modal */}

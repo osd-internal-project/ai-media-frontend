@@ -20,7 +20,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
       organizationId: string,
       token: string,
       searchValue: JsonObject,
-    ) => {
+    ): Promise<IProject[]> => {
       return await axiosInstance
         .get(`${baseUrl}/organization/${organizationId}`, {
           params: { token, ...searchValue },
@@ -30,7 +30,7 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
         })
         .catch((err) => {
           console.log(err);
-          return;
+          return [];
         });
     },
     create: async (value: IProject) => {
