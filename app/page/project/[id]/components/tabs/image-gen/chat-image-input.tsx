@@ -5,14 +5,7 @@ import {
   Square,
   Zap,
 } from "lucide-react";
-import {
-  Button,
-  Card,
-  Flex,
-  Form,
-  FormInstance,
-  type UploadFile,
-} from "antd";
+import { Button, Card, Flex, Form, FormInstance, type UploadFile } from "antd";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import {
   TPromptGuide,
@@ -27,7 +20,7 @@ import SettingSection from "../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
 type Props = {
   setGroupMode: (groupMode: string | undefined) => void;
-  groupMode: string;
+  groupMode: string | undefined;
   setSelectedRatio: (ratio: string) => void;
   selectedRatio: string;
   setSelectedResolution: (resolution: string) => void;
@@ -174,7 +167,7 @@ export default function ChatImageInput({
         width: newWidth,
         height: newHeight,
       });
-     }
+    }
   };
 
   return (
@@ -245,7 +238,6 @@ export default function ChatImageInput({
             setSelectedMaximumImage={setSelectedMaximumImage}
             ratioSizeMap={RATIO_SIZE_MAP}
           />
-
         </Flex>
 
         <Flex
@@ -275,8 +267,7 @@ export default function ChatImageInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               cerrentUsedCredit={cerrentUsedCredit}
-              size="small" 
-              
+              size="small"
             />
           </Card>
           <Button
