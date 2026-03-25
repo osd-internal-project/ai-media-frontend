@@ -15,6 +15,7 @@ export type TPromptGuide = {
   id?: number;
   title?: string;
   textPrompt?: string;
+  description?: string;
   type?: string;
   typeName?: string;
   status: boolean;

@@ -1,7 +1,7 @@
 import type {
   TGenerateType,
   TPromptGuide,
-  TPromptGuideType
+  TPromptGuideType,
 } from "@/app/common/prompt-guide.type";
 import {
   DeleteOutlined,
@@ -39,8 +39,13 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import CustomTab from "./customtab";
 import TemplateFormModal from "./template-form-modal";
 import TemplateItem from "./template-item";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 export interface props {
+  searchQuery: string;
+  allModel: TMasterModelType[];
+  setSearchQuery: (value: string) => void;
+  promptGuilds: TPromptGuide[];
   promptGuideTypes: TPromptGuideType[];
   promptGuideForm: FormInstance;
   onSelectPromptGuide: (id: number) => void;
@@ -73,6 +78,10 @@ type FlatTemplate = TPromptGuide & {
 };
 
 const PromptGuideComponent: FC<props> = ({
+  searchQuery,
+  allModel,
+  setSearchQuery,
+  promptGuilds,
   promptGuideTypes,
   promptGuideForm,
   onSelectPromptGuide,
@@ -98,7 +107,6 @@ const PromptGuideComponent: FC<props> = ({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -116,45 +124,47 @@ const PromptGuideComponent: FC<props> = ({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const templates = useMemo<FlatTemplate[]>(
-    () =>
-      promptGuideTypes.flatMap((group) =>
-        (group.promptGuide || []).map((item) => ({
-          ...item,
-          typeTitle: group.title,
-        })),
-      ),
-    [promptGuideTypes],
-  );
+  // const templates = useMemo<FlatTemplate[]>(
+  //   () =>
+  //     promptGuideTypes.flatMap((group) =>
+  //       (group.promptGuide || []).map((item) => ({
+  //         ...item,
+  //         typeTitle: group.title,
+  //       })),
+  //     ),
+  //   [promptGuideTypes],
+  // );
 
-  const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
-      const q = searchQuery.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        template.title?.toLowerCase().includes(q) ||
-        template.textPrompt?.toLowerCase().includes(q) ||
-        template.typeTitle?.toLowerCase().includes(q);
+  // const filteredTemplates = useMemo(() => {
+  //   return promptGuilds.filter((template) => {
+  //     const q = searchQuery.trim().toLowerCase();
+  //     const matchesSearch =
+  //       !q ||
+  //       template.title?.toLowerCase().includes(q) ||
+  //       template.textPrompt?.toLowerCase().includes(q) ||
+  //       template.type?.toLowerCase().includes(q);
 
-      const matchesType =
-        generateType === "all" || template.generateType === generateType;
+  //     const matchesType =
+  //       generateType === "all" || template.generateType === generateType;
 
-      return matchesSearch && matchesType;
-    });
-  }, [templates, searchQuery, generateType]);
+  //     return matchesSearch && matchesType;
+  //   });
+  // }, [promptGuilds, searchQuery, generateType]);
 
   const selectedPromptGuideTypeId = useMemo(() => {
     if (!selectedPromptGuide?.id) return undefined;
     const group = promptGuideTypes.find((type) =>
-      (type.promptGuide || []).some((item) => item.id === selectedPromptGuide.id),
+      (type.promptGuide || []).some(
+        (item) => item.id === selectedPromptGuide.id,
+      ),
     );
     return group?.id;
   }, [promptGuideTypes, selectedPromptGuide]);
 
-  const handleAddType = () => {
-    typeForm.resetFields();
-    setIsTypeModalOpen(true);
-  };
+  // const handleAddType = () => {
+  //   typeForm.resetFields();
+  //   setIsTypeModalOpen(true);
+  // };
 
   const handleCreateType = (values: any) => {
     onCreatePromptGuideType(values);
@@ -166,9 +176,9 @@ const PromptGuideComponent: FC<props> = ({
   };
 
   const handleTabChange = (value: TGenerateType | "all") => {
-    if (value === "all") {
-      setSearchQuery("");
-    }
+    // if (value === "all") {
+    //   setSearchQuery("");
+    // }
     handleSelectGenerateType(value);
   };
 
@@ -177,7 +187,6 @@ const PromptGuideComponent: FC<props> = ({
     onSelectPromptGuide(template.id);
     setIsEditModalOpen(true);
   };
-
 
   const renderImageUpload = () => (
     <Upload
@@ -367,15 +376,15 @@ const PromptGuideComponent: FC<props> = ({
         <CustomTab value={generateType} onChange={handleTabChange} />
       </div>
 
-      {filteredTemplates.length > 0 ? (
+      {promptGuilds.length > 0 ? (
         <Row gutter={[16, 16]}>
-          {filteredTemplates.map((template) => (
+          {promptGuilds.map((template) => (
             <Col key={template.id} xs={24} md={12} lg={8}>
               <TemplateItem
                 title={template.title}
                 textPrompt={template.textPrompt}
                 generateType={template.generateType}
-                categoryLabel={template.typeTitle || "General"}
+                categoryLabel={template.type || "General"}
                 canManage={canManage}
                 onEdit={() => handleEditTemplate(template)}
                 onUse={() => handleEditTemplate(template)}
@@ -410,6 +419,7 @@ const PromptGuideComponent: FC<props> = ({
       </Modal>
 
       <TemplateFormModal
+        allModel={allModel}
         formMode="create"
         open={isGuideModalOpen}
         isMobile={isMobile}
@@ -423,6 +433,7 @@ const PromptGuideComponent: FC<props> = ({
 
       {selectedPromptGuide ? (
         <TemplateFormModal
+          allModel={allModel}
           formMode="edit"
           open={isEditModalOpen}
           isMobile={isMobile}
@@ -448,7 +459,9 @@ const PromptGuideComponent: FC<props> = ({
                 }
               : undefined
           }
-          extraContent={<Form.Item label="Files">{renderFileEditor()}</Form.Item>}
+          extraContent={
+            <Form.Item label="Files">{renderFileEditor()}</Form.Item>
+          }
         />
       ) : (
         <Modal
@@ -460,7 +473,6 @@ const PromptGuideComponent: FC<props> = ({
           <Empty description="No template selected" />
         </Modal>
       )}
-
     </div>
   );
 };

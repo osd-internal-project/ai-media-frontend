@@ -24,6 +24,8 @@ import { canManageTemplates } from "@/app/utils/permissions";
 import { RcFile, UploadChangeParam, UploadProps } from "antd/es/upload";
 import UploadsServices from "@/app/services/uploads.service";
 import { useSession } from "next-auth/react";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -34,6 +36,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const [api, contextHolderNoti] = notification.useNotification();
   const [modal, contextHolder] = Modal.useModal();
   const promptguideServices = useMemo(() => PromptGuideServices(axiosCore), []);
+  const masterModelTypeServices = useMemo(
+    () => MasterModelTypeServices(axiosCore),
+    [],
+  );
+
   const promptguideTypeServices = useMemo(
     () => PromptGuideTypeServices(axiosCore),
     [],
@@ -44,47 +51,32 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const canManage = canManageTemplates(organizationRole || "");
 
   const [promptGuideForm] = Form.useForm();
+  const [promptGuilds, setPromptGuilds] = useState<TPromptGuide[]>([]);
+  const [allPromptGuilds, setAllPromptGuilds] = useState<TPromptGuide[]>([]);
+
   const [selectedPromptGuide, setSelectedPromptGuide] =
     useState<TPromptGuide | null>(null);
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     [],
   );
+  const [allModel, setAllModel] = useState<TMasterModelType[]>([]);
   const [generateType, setGenerateType] = useState<TGenerateType | "all">(
     "all",
   );
   const [loading, setLoading] = useState(false);
-
-  const fetchPromptGuideTypes = useCallback(async () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const fetchPromptGuideTypes = async () => {
     if (!organizationId) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      // if (generateType === "all") {
-      //   // const generateTypes: TGenerateType[] = [
-      //   //   "image",
-      //   //   "video",
-      //   //   "omnihumen",
-      //   //   "dreamactor",
-      //   // ];
-
-      //   // const results = await Promise.all(
-      //   //   generateTypes.map((type) =>
-      //   //     promptguideTypeServices.findAll(organizationId, type),
-      //   //   ),
-      //   // );
-
-      //   setPromptGuideTypes(results.flat().filter(Boolean) as TPromptGuideType[]);
-      // } else {
-      //   const promptGuideTypes = await promptguideTypeServices.findAll(
-      //     organizationId,
-      //     generateType,
-      //   );
-      //   setPromptGuideTypes(promptGuideTypes || []);
-      // }
+      await fetchPromptGuilds(generateType);
       const promptGuideTypes = await promptguideTypeServices.findAll();
-      console.log("promptGuideTypes", promptGuideTypes);
+      const models = await masterModelTypeServices.findAll();
+      setAllModel(models);
+      // console.log(models);
       setPromptGuideTypes(promptGuideTypes || []);
     } catch (error) {
       console.error("Error fetching prompt guide types:", error);
@@ -92,7 +84,38 @@ const TemplateSettingPage: FC = (): ReactElement => {
     } finally {
       setLoading(false);
     }
-  }, [organizationId, promptguideTypeServices, generateType]);
+  };
+
+  const fetchPromptGuilds = async (generateType: string) => {
+    if (!organizationId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      // const models = await masterModelTypeServices.findAll();
+      // setAllModel(models)
+      const promptGuilds =
+        await promptguideServices.findByOrganization(organizationId);
+      // console.log("promptGuilds", promptGuilds);
+      if (generateType === "all") {
+        setPromptGuilds(promptGuilds || []);
+        setAllPromptGuilds(promptGuilds || []);
+      } else {
+        const filterPromptGuilds = promptGuilds.filter(
+          (promptGuild: TPromptGuide) =>
+            promptGuild.generateType === generateType && promptGuild.title,
+        );
+        setPromptGuilds(filterPromptGuilds || []);
+        setAllPromptGuilds(filterPromptGuilds || []);
+      }
+    } catch (error) {
+      console.error("Error fetching prompt guilds:", error);
+      setPromptGuilds([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [firstFrame, setFirstFrame] = useState<UploadFile[]>([]);
   const [lastFrame, setLastFrame] = useState<UploadFile[]>([]);
@@ -166,6 +189,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
   };
 
   useEffect(() => {
+    // setSearchQuery("");
     setSelectedPromptGuide(null);
     promptGuideForm.resetFields();
     setRefImage([]);
@@ -174,13 +198,21 @@ const TemplateSettingPage: FC = (): ReactElement => {
     setLastFrame([]);
 
     if (organizationId) {
+      console.log(organizationId);
       fetchPromptGuideTypes();
     } else {
       setPromptGuideTypes([]);
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationId, fetchPromptGuideTypes]);
+  }, [organizationId, generateType]);
+
+  useEffect(() => {
+    const newFilter = allPromptGuilds.filter((promptGuild: TPromptGuide) =>
+      promptGuild?.title?.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+    setPromptGuilds(newFilter);
+  }, [searchQuery]);
 
   const openNotificationWithIcon = (
     type: NotificationType,
@@ -204,6 +236,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
     console.log("values", refImage);
     const updatePromptGuide = await promptguideServices.update(values.id!, {
       ...values,
+      organizationId,
       promptGuideImages: refImage.map((image) => image.uid),
     });
 
@@ -280,6 +313,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
     }
   };
   function handleSelectGenerateType(value: TGenerateType | "all"): void {
+    setSearchQuery("");
     setGenerateType(value);
   }
 
@@ -482,6 +516,10 @@ const TemplateSettingPage: FC = (): ReactElement => {
       {contextHolderNoti}
       <Spin spinning={loading}>
         <PromptGuideComponent
+          searchQuery={searchQuery}
+          allModel={allModel}
+          setSearchQuery={setSearchQuery}
+          promptGuilds={promptGuilds}
           promptGuideTypes={promptGuideTypes}
           promptGuideForm={promptGuideForm}
           onSelectPromptGuide={onSelectPromptGuide}

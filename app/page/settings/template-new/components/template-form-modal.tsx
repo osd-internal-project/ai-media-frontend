@@ -41,8 +41,10 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import TemplateItem from "./template-item";
 import { Image } from "lucide-react";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
 type TemplateFormModalProps = {
   formMode: "create" | "edit";
+  allModel: TMasterModelType[];
   open: boolean;
   isMobile: boolean;
   promptGuideTypes: TPromptGuideType[];
@@ -92,20 +94,6 @@ const extractPromptVariables = (prompt: string) => {
   return Array.from(unique);
 };
 
-const MODELS_BY_TYPE: Record<TGenerateType, string[]> = {
-  image: ["seedream-4.5-25128", "seedream-5.0", "flux-dev", "flux-pro"],
-  video: ["video-gen-pro", "kling-1.5", "video-gen-turbo"],
-  omnihumen: ["omnihumen-v2", "omnihumen-v3"],
-  dreamactor: ["dreamactor-pro", "dreamactor-lite"],
-};
-
-const getModelsByType = (type?: TGenerateType): string[] => {
-  if (type === "video") return MODELS_BY_TYPE.video;
-  if (type === "omnihumen") return MODELS_BY_TYPE.omnihumen;
-  if (type === "dreamactor") return MODELS_BY_TYPE.dreamactor;
-  return MODELS_BY_TYPE.image;
-};
-
 const TYPE_META: Record<
   TGenerateType,
   { label: string; icon: React.ReactNode; color: string }
@@ -122,6 +110,7 @@ const TYPE_META: Record<
 
 const TemplateFormModal: FC<TemplateFormModalProps> = ({
   formMode,
+  allModel,
   open,
   isMobile,
   promptGuideTypes,
@@ -149,21 +138,25 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
   );
 
   const modelOptions = useMemo(() => {
-    return getModelsByType(selectedType?.generateType).map((model: string) => ({
-      label: model,
-      value: model,
-    }));
+    return allModel
+      .filter(
+        (item: TMasterModelType) => item.type === selectedType?.generateType,
+      )
+      .map((item: TMasterModelType) => ({
+        label: item.modelType,
+        value: item.modelType,
+      }));
   }, [selectedType?.generateType]);
-
-//   const generateTypeOptions = useMemo(() => {
-//     const uniqueTypes = Array.from(
-//       new Set(promptGuideTypes.map((item) => item.generateType)),
-//     );
-//     return uniqueTypes.map((value) => ({
-//       label: value.charAt(0).toUpperCase() + value.slice(1),
-//       value,
-//     }));
-//   }, [promptGuideTypes]);
+// console.log(modelOptions)
+  //   const generateTypeOptions = useMemo(() => {
+  //     const uniqueTypes = Array.from(
+  //       new Set(promptGuideTypes.map((item) => item.generateType)),
+  //     );
+  //     return uniqueTypes.map((value) => ({
+  //       label: value.charAt(0).toUpperCase() + value.slice(1),
+  //       value,
+  //     }));
+  //   }, [promptGuideTypes]);
 
   const categoryOptions = useMemo(() => {
     return promptGuideTypes.map((type) => ({
@@ -222,8 +215,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       status: initialValues?.status ?? true,
       generateType: fallbackType?.generateType,
       promptGuideTypeId: fallbackTypeId,
-      model:
-        initialValues?.model || getModelsByType(fallbackType?.generateType)[0],
+      model: initialValues?.model || "",
     });
     setActiveTab("edit");
   };
@@ -259,13 +251,14 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
         message.error("Please select category");
         return;
       }
-
       onSubmit({
         ...(values.id ? { id: values.id } : {}),
         title: values.title?.trim(),
         textPrompt: values.textPrompt?.trim(),
         promptGuideTypeId: type.id,
         generateType: type.generateType,
+        description: values.description,
+        model: values.model,
         status: values.status ?? true,
       });
 
@@ -366,6 +359,14 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 width: "100%",
               }}
             >
+              <Form.Item
+                name="id"
+                label="id"
+                style={{ marginBottom: 0 }}
+                hidden
+              >
+                <Input />
+              </Form.Item>
               <Form.Item
                 name="title"
                 label="Template Name"
