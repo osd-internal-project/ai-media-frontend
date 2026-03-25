@@ -4,14 +4,7 @@ import {
   TPromptGuide,
   TPromptGuideType,
 } from "@/app/common/prompt-guide.type";
-import {
-  Form,
-  message,
-  Modal,
-  notification,
-  Spin,
-  UploadFile,
-} from "antd";
+import { Form, message, Modal, notification, Spin, UploadFile } from "antd";
 import React, {
   useCallback,
   useEffect,
@@ -56,7 +49,9 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const [promptGuideTypes, setPromptGuideTypes] = useState<TPromptGuideType[]>(
     [],
   );
-  const [generateType, setGenerateType] = useState<TGenerateType | "all">("all");
+  const [generateType, setGenerateType] = useState<TGenerateType | "all">(
+    "all",
+  );
   const [loading, setLoading] = useState(false);
 
   const fetchPromptGuideTypes = useCallback(async () => {
@@ -66,28 +61,31 @@ const TemplateSettingPage: FC = (): ReactElement => {
     }
     setLoading(true);
     try {
-      if (generateType === "all") {
-        const generateTypes: TGenerateType[] = [
-          "image",
-          "video",
-          "omnihumen",
-          "dreamactor",
-        ];
+      // if (generateType === "all") {
+      //   // const generateTypes: TGenerateType[] = [
+      //   //   "image",
+      //   //   "video",
+      //   //   "omnihumen",
+      //   //   "dreamactor",
+      //   // ];
 
-        const results = await Promise.all(
-          generateTypes.map((type) =>
-            promptguideTypeServices.findAll(organizationId, type),
-          ),
-        );
+      //   // const results = await Promise.all(
+      //   //   generateTypes.map((type) =>
+      //   //     promptguideTypeServices.findAll(organizationId, type),
+      //   //   ),
+      //   // );
 
-        setPromptGuideTypes(results.flat().filter(Boolean) as TPromptGuideType[]);
-      } else {
-        const promptGuideTypes = await promptguideTypeServices.findAll(
-          organizationId,
-          generateType,
-        );
-        setPromptGuideTypes(promptGuideTypes || []);
-      }
+      //   setPromptGuideTypes(results.flat().filter(Boolean) as TPromptGuideType[]);
+      // } else {
+      //   const promptGuideTypes = await promptguideTypeServices.findAll(
+      //     organizationId,
+      //     generateType,
+      //   );
+      //   setPromptGuideTypes(promptGuideTypes || []);
+      // }
+      const promptGuideTypes = await promptguideTypeServices.findAll();
+      console.log("promptGuideTypes", promptGuideTypes);
+      setPromptGuideTypes(promptGuideTypes || []);
     } catch (error) {
       console.error("Error fetching prompt guide types:", error);
       setPromptGuideTypes([]);
@@ -130,7 +128,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
         }));
 
         // For video type, separate into firstFrame (index 1) and lastFrame (index 2)
-        if (generateType === "video" || generateType === "omnihumen" || generateType === "dreamactor") {
+        if (
+          generateType === "video" ||
+          generateType === "omnihumen" ||
+          generateType === "dreamactor"
+        ) {
           console.log("promptGuideImages", promptGuideImages);
           const firstFrameFiles = promptGuideImages
             .filter((img: any) => img.index === 1)
@@ -219,7 +221,8 @@ const TemplateSettingPage: FC = (): ReactElement => {
     if (generateType === "all") {
       modal.warning({
         title: "Select generator type",
-        content: "Please select a specific generator type before creating a prompt type.",
+        content:
+          "Please select a specific generator type before creating a prompt type.",
       });
       return;
     }
@@ -255,7 +258,9 @@ const TemplateSettingPage: FC = (): ReactElement => {
         ...values,
         organizationId,
         status: true,
-        generateType: values.generateType || (generateType === "all" ? "image" : generateType),
+        generateType:
+          values.generateType ||
+          (generateType === "all" ? "image" : generateType),
       });
       modal.success({ title: "Success", content: "Created prompt guide" });
       fetchPromptGuideTypes();
