@@ -70,3 +70,48 @@
 .dark-select .ant-select-arrow {
   color: var(--model-select-arrow) !important;
 }
+
+.image-item {
+  position: relative;
+}
+
+.image-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 6px;
+  border-radius: 8px;
+
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.2s ease;
+}
+
+.image-item:hover .image-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.image-item img {
+  transition: transform 0.25s ease;
+}
+
+.image-item:hover img {
+  transform: scale(1.05);
+}
+.image-item:hover video {
+  transform: scale(1.05);
+}
+
+ .action-bar-btn {
+  transition: background 0.18s;
+}
+.action-bar-btn.like-btn:hover {
+  background: #f59e0b !important; /* Updated color */
+}
+.action-bar-btn.delete-btn:hover {
+  background: #ff4d4f !important;
+}
+.action-bar-btn.default-btn:hover {
+  background: rgba(80,80,80,0.95) !important;
+}

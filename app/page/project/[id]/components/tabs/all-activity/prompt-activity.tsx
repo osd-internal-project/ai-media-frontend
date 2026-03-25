@@ -18,6 +18,11 @@ import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import {
+  StarFilled,
+  StarOutlined,
+
+} from "@ant-design/icons";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -141,8 +146,7 @@ const PromptActivity: FC<props> = ({
     if (normalized === "image") {
       return {
         color: "#1890ff",
-        background: "#e6f7ff",
-        borderColor: "#91d5ff",
+        background: `$#1890ff1A`,
       };
     }
 
@@ -150,28 +154,23 @@ const PromptActivity: FC<props> = ({
       return {
         color: semantic.colorPrimary,
         background: `${semantic.colorPrimary}1A`,
-        borderColor: `${semantic.colorPrimary}33`,
       };
     }
     if (normalized === "omnihumen" || normalized === "omnihuman") {
       return {
         color: semantic.colorSuccess,
         background: `${semantic.colorSuccess}1A`,
-        borderColor: `${semantic.colorSuccess}33`,
       };
     }
     if (normalized === "dreamactor") {
       return {
         color: semantic.colorWarning,
         background: `${semantic.colorWarning}1A`,
-        borderColor: `${semantic.colorWarning}33`,
       };
     }
 
     return {
       color: "#1890ff",
-      background: "#e6f7ff",
-      borderColor: "#91d5ff",
     };
   };
 
@@ -261,20 +260,42 @@ const PromptActivity: FC<props> = ({
       key: "actions",
       width: 100,
       render: (_, record) => {
-        const isInLibrary = Boolean(record?.status);
-
-        if (isInLibrary) return null;
-
+        const isLiked = Boolean(record?.status);
         return (
           <Button
             icon={
               loadingButton === record.id ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isLiked ? (
+                <StarFilled size={16} style={{ color: "#f59e0b" }} />
               ) : (
-                <Star size={16} />
+                <StarOutlined style={{ color: "#d9d9d9" }} size={16} />
               )
             }
-            onClick={() => onSubmitToLibrary(record)}
+            onClick={() => {
+              if (loadingButton === record.id) return;
+              if (isLiked) {
+                // Unlike
+                setLoadingButton(record.id);
+                galleryservices.updateStatus(record.id, false)
+                  .then(() => {
+                    setData((prev) => {
+                      const updated = prev.data.map((entry) =>
+                        entry.id === record.id ? { ...entry, status: false } : entry
+                      );
+                      return { ...prev, data: updated };
+                    });
+                    api.success({ message: "Removed from library" });
+                  })
+                  .catch(() => {
+                    api.error({ message: "Failed to remove from library" });
+                  })
+                  .finally(() => setLoadingButton(null));
+              } else {
+                // Like
+                onSubmitToLibrary(record);
+              }
+            }}
             loading={loadingButton === record.id}
             type="text"
             shape="circle"

@@ -1,4 +1,10 @@
-import React, { useEffect, useState, type FC, type ReactElement } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  type FC,
+  type ReactElement,
+} from "react";
 import {
   Image,
   Card,
@@ -11,8 +17,9 @@ import {
   Tag,
   message,
   Typography,
+  Empty,
 } from "antd";
-import { Download, ExternalLink, Loader, Star, Trash2 } from "lucide-react";
+import { Download, ExternalLink, Loader, Trash2 } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -25,36 +32,6 @@ export interface props {
   activeKey: string;
 }
 
-const mockLibraryData = [
-  {
-    id: "mock-lib-1",
-    typeGenerate: "image",
-    imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
-    prompt: "A cinematic neon city skyline at night, ultra-detailed, volumetric lighting",
-    fileName: "mock-image-1.jpg",
-    createdAt: "2026-03-01T10:30:00.000Z",
-    generateConfig: { modelName: "Flux Pro" },
-  },
-  {
-    id: "mock-lib-2",
-    typeGenerate: "video",
-    imageUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    prompt: "Smooth cinematic pan over a futuristic laboratory with holographic displays",
-    fileName: "mock-video-1.mp4",
-    createdAt: "2026-03-02T08:15:00.000Z",
-    generateConfig: { modelName: "Runway Gen-3" },
-  },
-  {
-    id: "mock-lib-3",
-    typeGenerate: "dreamactor",
-    imageUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    prompt: "Portrait speaking naturally with soft studio lighting and realistic lip-sync",
-    fileName: "mock-dreamactor-1.mp4",
-    createdAt: "2026-03-03T14:05:00.000Z",
-    generateConfig: { modelName: "DreamActor v2" },
-  },
-];
-
 const PromptLibrary: FC<props> = ({
   shouldRefetch,
   activeKey,
@@ -63,104 +40,132 @@ const PromptLibrary: FC<props> = ({
   const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
+
   const organizationId = session?.user?.organizationId || "";
   const galleryservices = GalleryServices(axiosCore);
+
+  const [selected, setSelected] = useState<any>(null);
+
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const pageSize = 9;
+
   const [getData, setData] = useState<{ data: any[]; total: number }>({
     data: [],
     total: 0,
   });
+
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingDownload, setLoadingDownload] = useState<boolean>(false);
 
   const [api, contextHolders] = notification.useNotification();
+
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+
   const secondaryActionStyle = {
     backgroundColor: aiCaveColors.secondary,
     borderColor: aiCaveColors.secondary,
     color: semantic.colorBgBase,
   };
 
+  // =========================
+  // FETCH
+  // =========================
   useEffect(() => {
     if (activeKey === "library" && loading) {
-      fectData();
+      fetchData();
     }
   }, [loading, page]);
 
   useEffect(() => {
     if (activeKey === "library" && shouldRefetch) {
-      fectData();
+      fetchData();
     }
   }, [shouldRefetch]);
 
-  const fectData = async () => {
+  const fetchData = async () => {
     if (!session) return;
+
     const id = params.id as string;
+
     const res = await galleryservices.findById(
       id,
       organizationId,
       page,
       pageSize,
-      true,
+      true
     );
+
     setTotal(res.total);
     setData({ data: res.data, total: res.total });
     setLoading(false);
   };
 
+  // =========================
+  // SELECT ITEM (RESTORED)
+  // =========================
+  const onSelectItem = (item: any) => {
+    setSelected(item);
+  };
+
+  // =========================
+  // DOWNLOAD (FIXED)
+  // =========================
   const onDownloadFile = async (fileName: string, imageId: string) => {
     setLoadingDownload(true);
+
     try {
       const response = await galleryservices.downloadFile(
         imageId,
-        session?.user?.organizationId || "",
+        session?.user?.organizationId || ""
       );
-      if (!response) throw new Error("Download failed or response is empty");
-      // console.log(response);
-      // const filename = response.name || "image.jpg";
+
+      if (!response) throw new Error("Download failed");
+
       const url = URL.createObjectURL(response);
       const link = document.createElement("a");
+
       link.href = url;
-      link.download = fileName;
+      link.download = fileName || "file";
+
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+
       URL.revokeObjectURL(url);
 
-      message.success("Image downloaded successfully");
+      message.success("Downloaded successfully");
     } catch (error) {
-      console.error("Download error:", error);
+      console.error(error);
       message.error("Download failed");
     }
+
     setLoadingDownload(false);
   };
 
-  const handleOpenResult = (record: any) => {
-    const resultUrl = record?.imageUrl || record?.thumbnailUrl;
-    if (!resultUrl) return;
-    window.open(resultUrl, "_blank", "noopener,noreferrer");
-  };
-
+  // =========================
+  // DELETE
+  // =========================
   const handleRemoveFromLibrary = async (record: any) => {
     try {
       await galleryservices.updateStatus(record.id, false);
+
       setData((prev) => ({
         ...prev,
         data: prev.data.filter((item) => item.id !== record.id),
       }));
+
       setTotal((prev) => Math.max(0, prev - 1));
-      api.success({
-        message: "Removed",
-        description: "Removed from library",
-      });
-    } catch (error) {
-      console.error("Remove from library failed:", error);
-      api.error({
-        message: "Failed",
-        description: "Failed to remove from library",
-      });
+
+      if (selected?.id === record.id) {
+        setSelected(null);
+      }
+
+      api.success({ message: "Removed" });
+    } catch {
+      api.error({ message: "Failed to remove" });
     }
   };
-
   const getTypeBadgeStyle = (type: string) => {
     const normalized = (type || "image").toLowerCase();
 
@@ -193,74 +198,106 @@ const PromptLibrary: FC<props> = ({
     };
   };
 
+  // =========================
+  // OPEN
+  // =========================
+  const handleOpenResult = (record: any) => {
+    const url = record?.imageUrl || record?.thumbnailUrl;
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  // =========================
+  // PREVIEW
+  // =========================
   const renderPreview = (record: any) => {
-    if (record.typeGenerate === "image") {
+    const isVideo =
+      record.typeGenerate === "video" ||
+      record.typeGenerate === "dreamactor";
+
+    if (!isVideo) {
       return (
         <Image
           src={record.imageUrl}
-          alt={record.prompt || "result"}
           preview={false}
-          width="100%"
-          height="100%"
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       );
     }
 
+    // เพิ่ม preload="auto" และย้าย event ไปที่ parent div
     return (
       <video
+        ref={(el) => {
+          videoRefs.current[record.id] = el;
+        }}
         src={record.imageUrl}
-        controls
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="w-full h-full object-cover"
       />
     );
   };
 
-  const isMockPreview = !loading && getData.data.length === 0;
-  const displayItems = isMockPreview ? mockLibraryData : getData.data;
-  const displayTotal = isMockPreview ? mockLibraryData.length : total;
+  const displayItems = getData.data;
 
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="h-full min-h-0 overflow-auto p-4">
       {contextHolders}
+
       {loading ? (
         <Flex align="center" justify="center" style={{ height: "100%" }}>
-          <Loader className="w-5 h-5 animate-spin" />
+          <Loader className="animate-spin" />
         </Flex>
       ) : (
         <Flex vertical gap={16}>
-          <Flex align="center" justify="space-between">
+          {/* HEADER */}
+          <Flex justify="space-between" align="center">
             <div>
               <Typography.Title level={4} style={{ margin: 0 }}>
                 Library
               </Typography.Title>
               <Typography.Text type="secondary">
-                {displayTotal} item{displayTotal !== 1 ? "s" : ""} saved
+                {total} items
               </Typography.Text>
             </div>
-            {isMockPreview ? (
-              <Flex align="center" gap={6}>
-                <Star size={14} style={{ color: semantic.colorWarning }} />
-                <Typography.Text type="secondary">Mock preview data</Typography.Text>
-              </Flex>
-            ) : null}
           </Flex>
 
+          {/* GRID */}
           <Row gutter={[16, 16]}>
             {displayItems.map((item) => (
               <Col key={item.id} xs={24} md={12} lg={8}>
                 <Card
+                  onClick={() => onSelectItem(item)}
+                  styles={{ body: { padding: 0 } }}
                   style={{
                     overflow: "hidden",
                     borderColor: semantic.colorBorder,
                     background: semantic.colorBgContainer,
                   }}
-                  styles={{ body: { padding: 0 } }}
                 >
-                  <div className="group" style={{ position: "relative", aspectRatio: "16 / 9" }}>
+                  <div
+                    className="group relative aspect-video"
+                    onMouseEnter={() => {
+                      const v = videoRefs.current[item.id];
+                      if (v) v.play();
+                    }}
+                    onMouseLeave={() => {
+                      const v = videoRefs.current[item.id];
+                      if (v) {
+                        v.pause();
+                        v.currentTime = 0;
+                      }
+                    }}
+                  >
                     {renderPreview(item)}
 
-                    <Tag
+                   <Tag
                       style={{
                         position: "absolute",
                         left: 8,
@@ -272,59 +309,63 @@ const PromptLibrary: FC<props> = ({
                       {item.typeGenerate}
                     </Tag>
 
+                    {/* ACTION BAR */}
                     <Flex
-                      align="center"
-                      justify="center"
-                      gap={8}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        transition: "opacity 0.2s ease",
-                        background: "rgba(0,0,0,0.45)",
-                      }}
-                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 pointer-events-auto md:pointer-events-none md:group-hover:pointer-events-auto"
-                    >
+  align="center"
+  justify="center"
+  gap={8}
+  className="
+    absolute inset-0
+    bg-black/20
+    opacity-0
+    md:group-hover:opacity-100
+    transition-opacity
+    pointer-events-auto
+  "
+>
                       <Button
-                        shape="circle"
-                        icon={
-                          loadingDownload ? (
-                            <Loader className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Download size={16} />
-                          )
-                        }
-                        onClick={() => onDownloadFile(item.fileName || "result", item.id)}
-                        disabled={isMockPreview}
+                        icon={<Download size={16} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDownloadFile(
+                            item.fileName || "file",
+                            item.id
+                          );
+                        }}
                         style={secondaryActionStyle}
                       />
+
                       <Button
-                        shape="circle"
                         icon={<ExternalLink size={16} />}
-                        onClick={() => handleOpenResult(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenResult(item);
+                        }}
                         style={secondaryActionStyle}
                       />
+
                       <Button
-                        shape="circle"
-                        danger
                         icon={<Trash2 size={16} />}
-                        onClick={() => handleRemoveFromLibrary(item)}
-                        disabled={isMockPreview}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveFromLibrary(item);
+                        }}
                         style={secondaryActionStyle}
                       />
                     </Flex>
                   </div>
 
+                  {/* FOOTER */}
                   <div style={{ padding: 12 }}>
-                    <Typography.Paragraph
-                      ellipsis={{ rows: 2 }}
-                      style={{ marginBottom: 8, minHeight: 40 }}
-                    >
+                    <Typography.Paragraph ellipsis={{ rows: 2 }}>
                       {item.prompt || "-"}
                     </Typography.Paragraph>
-                    <Flex justify="space-between" align="center">
+
+                    <Flex justify="space-between">
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {item?.generateConfig?.modelName || "Unknown model"}
+                        {item?.generateConfig?.modelName || "Unknown"}
                       </Typography.Text>
+
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                         {item?.createdAt
                           ? new Date(item.createdAt).toLocaleDateString()
@@ -337,22 +378,25 @@ const PromptLibrary: FC<props> = ({
             ))}
           </Row>
 
-          <Flex justify="center" style={{ paddingTop: 4 }}>
+          {/* PAGINATION */}
+          <Flex justify="center">
             <Pagination
               current={page}
-              total={displayTotal}
+              total={total}
               pageSize={pageSize}
-              onChange={(nextPage) => {
-                setPage(nextPage);
+              onChange={(p) => {
+                setPage(p);
                 setLoading(true);
               }}
               showSizeChanger={false}
-              disabled={isMockPreview}
             />
           </Flex>
+
+          {/* EMPTY */}
+          {!displayItems.length && <Empty />}
         </Flex>
       )}
-      </div>
+    </div>
   );
 };
 

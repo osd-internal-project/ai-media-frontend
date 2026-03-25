@@ -39,6 +39,9 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import ChatVideoInput from "./chat-video-input";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import VideoMessageItem from "./result-item";
+import VideoResultItem from "./result-item";
+import ResultHeader from "./result-header";
 
 interface VideoChatProps {
   teamView: boolean;
@@ -83,14 +86,14 @@ interface UserMessage {
 }
 
 export interface VideoMessage {
-  id?: string | undefined;
+  id?: string;
   imageUrl: string;
   thumbnailUrl?: string;
   status?: boolean;
   fileName?: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   taskId: string;
   projectId: string;
@@ -1153,146 +1156,23 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         bottomRef={bottomRef}
         rightContent={
           <>
-            {messages.map((item: Message, index) => (
-              <Flex
-                key={`${item.id}-${index}`}
-                vertical
-                style={{ marginBottom: 8 }}
-              >
-                <Flex gap={8} align="flex-start">
-                  <Flex
-                    vertical
-                    style={{ width: "100%", alignItems: "flex-start" }}
-                  >
-                    <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {item.users.username}
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        •
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {new Date(item.createdAt).toLocaleDateString([], {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}{" "}
-                        {new Date(item.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Typography.Text>
-                    </Flex>
-
-                    {item.prompt && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 2,
-                          borderRadius: 14,
-                          borderTopLeftRadius: 6,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgContainer,
-                        }}
-                        styles={{ body: { padding: "8px 12px" } }}
-                      >
-                        <Typography.Text
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {item.prompt}
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    <VideoSmartReference
-                      selectedAIModel={selectedAIModel}
-                      referenceImages={item.referenceImages}
-                      resolution={item.generateConfig?.resolution}
-                      ratio={item.generateConfig?.ratio}
-                      duration={item.generateConfig?.duration}
-                      isMultiImage={
-                        item.imageUrls ? item.imageUrls.length > 1 : false
-                      }
-                      generateAudio={item.generateConfig?.generateAudio}
-                    />
-
-                    {(item.genneratedStatus === "PENDING" ||
-                      item.genneratedStatus === "PROCESSING") && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgElevated,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <AiImageLoader />
-                      </Card>
-                    )}
-
-                    {(item.genneratedStatus === "FAILED" ||
-                      (item.genneratedStatus === "SUCCESS" &&
-                        item.imageUrls?.length === 0)) && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorErrorBorder,
-                          background: semantic.colorErrorBg,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <Typography.Text style={{ color: semantic.colorError }}>
-                          Generate failed
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    {item.genneratedStatus === "SUCCESS" &&
-                      item.imageUrls &&
-                      item.imageUrls.length > 0 && (
-                        <Flex
-                          vertical
-                          gap={8}
-                          style={{ marginTop: 8, width: "100%", maxWidth: 260 }}
-                        >
-                          {item.imageUrls.map(
-                            (videoData: VideoMessage, videoIndex) => (
-                              <VideoItem
-                                key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
-                                videoData={videoData}
-                                onDownloadVideo={onDownloadVideo}
-                                onShareVideo={(id, status) => {
-                                  if (item.taskId) {
-                                    onShareVideo(item.taskId, id, status);
-                                  }
-                                }}
-                                shareStatus
-                              />
-                            ),
-                          )}
-                        </Flex>
-                      )}
-                  </Flex>
-                </Flex>
-              </Flex>
-            ))}
+                    <ResultHeader
+  messages={messages}
+  onClear={() => setMessages([])}/>
+      {messages.map((item, index) => (
+  <VideoResultItem
+    key={item.id || item.taskId || index}
+    message={item}
+    index={index}
+    semantic={semantic}
+    aiCaveColors={{ dreamActor: "#8b5cf6" }} // หรือเอาจาก theme จริงก็ได้
+    onShareVideo={onShareVideo}
+    onDownloadVideo={onDownloadVideo}
+    setMessages={setMessages}
+    selectedAIModel={selectedAIModel}   
+        />
+        
+))}
           </>
         }
       />
