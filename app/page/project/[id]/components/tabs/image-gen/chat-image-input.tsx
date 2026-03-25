@@ -26,7 +26,7 @@ import PromptTemplateSection from "../../tab-layout/generate-section/promt-templ
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
 type Props = {
-  setGroupMode: (groupMode: string) => void;
+  setGroupMode: (groupMode: string | undefined) => void;
   groupMode: string;
   setSelectedRatio: (ratio: string) => void;
   selectedRatio: string;

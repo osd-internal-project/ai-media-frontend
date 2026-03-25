@@ -19,10 +19,12 @@ import {
   Image,
   Tag,
   Typography,
+  Divider,
 } from "antd";
-import { LikeOutlined, LoadingOutlined, LikeFilled } from "@ant-design/icons";
+import { LikeOutlined, LoadingOutlined, LikeFilled, PictureOutlined, CopyOutlined, DownloadOutlined, DeleteOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
+
 // import Image from "next/image";
-import { Download } from "lucide-react";
+import { Download, ImageOff, StarIcon } from "lucide-react";
 import type { RcFile } from "antd/es/upload";
 
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
@@ -47,11 +49,14 @@ import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import ActionBar from "./action-bar";
+import ResultHeader from "./result-header";
+import ResultItem from "./image-result-item";
 
-interface ImageChatProps {
+export interface ImageChatProps {
   teamView: boolean;
   projectId: string;
   userId?: string;
@@ -88,7 +93,7 @@ const conicColors: ProgressProps["strokeColor"] = {
   "100%": "#9D5BF9",
 };
 
-interface UserMessage {
+export interface UserMessage {
   id?: number;
   userId?: string;
   username: string;
@@ -109,14 +114,14 @@ interface UserMessage {
   recentOrganizationId?: string;
 }
 
-interface ImageMessage {
+export interface ImageMessage {
   id: string;
   imageUrl: string;
   status: boolean;
   fileName?: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   taskId: string;
   projectId: string;
@@ -1126,7 +1131,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         leftPanel={
           <ChatImageInput
             setGroupMode={setGroupMode}
-            groupMode={groupMode}
+            groupMode={groupMode || ""}
             setSelectedRatio={setSelectedRatio}
             selectedRatio={selectedRatio}
             setSelectedResolution={setSelectedResolution}
@@ -1161,211 +1166,27 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         bottomRef={bottomRef}
         rightContent={
           <>
-            {messages.map((message: Message, index) => (
-              <Flex
-                key={`${message.id}-${index}`}
-                vertical
-                style={{ marginBottom: 8 }}
-              >
-                <Flex gap={8} align="flex-start">
-                  <Flex
-                    vertical
-                    style={{ width: "100%", alignItems: "flex-start" }}
-                  >
-                    <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {message.users.username}
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        •
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {new Date(message.createdAt).toLocaleDateString([], {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}{" "}
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Typography.Text>
-                    </Flex>
+            {/* Chat Header  */}
+            <ResultHeader
+  messages={messages}
+  onClear={() => setMessages([])}
+            />
+            {/* item */}
+           {messages.map((message: Message, index) => (
 
-                    {message.prompt && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 2,
-                          borderRadius: 14,
-                          borderTopLeftRadius: 6,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgContainer,
-                        }}
-                        styles={{
-                          body: {
-                            padding: "8px 12px",
-                          },
-                        }}
-                      >
-                        <Typography.Text
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {message.prompt}
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    <ImageConfigurationCard
-                      generateConfig={message.generateConfig}
-                      referenceImages={message.referenceImages}
-                    />
-
-                    {(message.genneratedStatus === "PENDING" ||
-                      message.genneratedStatus === "PROCESSING") && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgElevated,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <AiImageLoader />
-                      </Card>
-                    )}
-
-                    {(message.genneratedStatus === "FAILED" ||
-                      (message.genneratedStatus === "SUCCESS" &&
-                        !message.imageUrls)) && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorErrorBorder,
-                          background: semantic.colorErrorBg,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <Typography.Text style={{ color: semantic.colorError }}>
-                          Generate failed
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    {message.genneratedStatus === "SUCCESS" &&
-                      message.imageUrls &&
-                      message.imageUrls.length > 0 && (
-                        <Row
-                          gutter={[8, 8]}
-                          style={{ marginTop: 8, width: "100%" }}
-                        >
-                          <Image.PreviewGroup>
-                            {message.imageUrls.map(
-                              (imgUrl: ImageMessage, i) => (
-                                <Col key={imgUrl.id} xs={12} sm={8} md={6}>
-                                  <div
-                                    style={{
-                                      position: "relative",
-                                      overflow: "hidden",
-                                      borderRadius: 8,
-                                      background: "rgba(0,0,0,0.25)",
-                                      aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
-                                    }}
-                                  >
-                                    <Image
-                                      src={imgUrl.imageUrl}
-                                      alt={`Generated ${i + 1}`}
-                                      width="100%"
-                                      height="100%"
-                                      style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                      }}
-                                    />
-                                    <Flex
-                                      gap={4}
-                                      style={{
-                                        position: "absolute",
-                                        top: 8,
-                                        right: 8,
-                                        zIndex: 10,
-                                      }}
-                                    >
-                                      <Button
-                                        size="small"
-                                        icon={<Download size={14} />}
-                                        style={{
-                                          background: "rgba(0,0,0,0.6)",
-                                          color: "#fff",
-                                          border: "none",
-                                        }}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          onDownloadImage(
-                                            imgUrl.fileName || "image.jpg",
-                                            imgUrl.id,
-                                          );
-                                        }}
-                                      />
-                                      <Button
-                                        size="small"
-                                        icon={
-                                          imgUrl.status === true ? (
-                                            <LikeFilled
-                                              style={{ color: "#f59e0b" }}
-                                            />
-                                          ) : (
-                                            <LikeOutlined />
-                                          )
-                                        }
-                                        style={{
-                                          background: "rgba(0,0,0,0.6)",
-                                          color: "#fff",
-                                          border: "none",
-                                        }}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          if (imgUrl.id && message.taskId) {
-                                            onShareImage(
-                                              message.taskId,
-                                              imgUrl.id,
-                                              imgUrl.status,
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    </Flex>
-                                  </div>
-                                </Col>
-                              ),
-                            )}
-                          </Image.PreviewGroup>
-                        </Row>
-                      )}
-                  </Flex>
-                </Flex>
-              </Flex>
-            ))}
+       
+  <ResultItem
+  key={message.id}
+  message={message}
+  index={index}
+  semantic={semantic}
+  aiCaveColors={aiCaveColors}
+  onShareImage={onShareImage}
+  onDownloadImage={onDownloadImage}
+  setMessages={setMessages}
+  messageApi={messageApi}
+/>
+))}
           </>
         }
       />

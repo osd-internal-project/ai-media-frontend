@@ -59,7 +59,7 @@ const getSemantic = (mode: "light" | "dark") => {
     success: brand.success,
     warning: brand.warning,
     error: brand.error,
-    dreamActor: brand.dreamActor,
+    colorDreamActor: brand.dreamActor,
   };
 };
 
