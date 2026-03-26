@@ -10,12 +10,12 @@ const PromptGuideTypeServices = (axiosInstance: AxiosInstance) => {
     findAll: async (
       organizationId?: string,
       generateType?: string,
+      model?: string,
     ): Promise<TPromptGuideType[]> => {
-      const url = organizationId
-        ? `${baseUrl}?organizationId=${organizationId}&generateType=${generateType}`
-        : `${baseUrl}?generateType=${generateType}`;
       return await axiosInstance
-        .get(url)
+        .get(baseUrl, {
+          params: { organizationId, generateType, model },
+        })
         .then((res) => {
           return res.data;
         })
