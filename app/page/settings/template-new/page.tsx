@@ -156,7 +156,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
           generateType === "omnihumen" ||
           generateType === "dreamactor"
         ) {
-          console.log("promptGuideImages", promptGuideImages);
+          // console.log("promptGuideImages", promptGuideImages);
           const firstFrameFiles = promptGuideImages
             .filter((img: any) => img.index === 1)
             .map((img: any) => ({
@@ -165,7 +165,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
               status: "completed" as const,
               url: img.url,
             }));
-          console.log("firstFrameFiles", firstFrameFiles);
+          // console.log("firstFrameFiles", firstFrameFiles);
           const lastFrameFiles = promptGuideImages
             .filter((img: any) => img.index === 2)
             .map((img: any) => ({
@@ -174,7 +174,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
               status: "completed" as const,
               url: img.url,
             }));
-          console.log("lastFrameFiles", lastFrameFiles);
+          // console.log("lastFrameFiles", lastFrameFiles);
           setFirstFrame(firstFrameFiles);
           setLastFrame(lastFrameFiles);
         } else {
@@ -198,7 +198,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
     setLastFrame([]);
 
     if (organizationId) {
-      console.log(organizationId);
+      // console.log(organizationId);
       fetchPromptGuideTypes();
     } else {
       setPromptGuideTypes([]);
@@ -232,8 +232,6 @@ const TemplateSettingPage: FC = (): ReactElement => {
   };
 
   const onUpdatePromptGuide = async (values: TPromptGuide): Promise<void> => {
-    console.log("values", refImage.length);
-    console.log("values", refImage);
     const updatePromptGuide = await promptguideServices.update(values.id!, {
       ...values,
       organizationId,
@@ -348,6 +346,8 @@ const TemplateSettingPage: FC = (): ReactElement => {
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));
+          setIsLoadingUpload(false);
+
           return;
         }
       }
@@ -427,6 +427,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
             });
           } catch (error) {
             openNotificationWithIcon("error", String(error));
+            setIsLoadingFirstFrame(false);
             return;
           }
         }
@@ -480,6 +481,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
             });
           } catch (error) {
             openNotificationWithIcon("error", String(error));
+            setIsLoadingLastFrame(false);
             return;
           }
         }

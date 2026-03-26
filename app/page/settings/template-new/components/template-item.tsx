@@ -157,14 +157,14 @@ const TemplateItem: FC<TemplateItemProps> = ({
 									Edit
 								</Button>
 							)}
-							<Button
+							{/* <Button
 								type="primary"
 								icon={<Sparkles size={14} />}
 								onClick={onUse || onEdit}
 								style={{ borderRadius: 10 }}
 							>
 								Use
-							</Button>
+							</Button> */}
 						</Space>
 					) : (
 						showUseBadge && (

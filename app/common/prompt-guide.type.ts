@@ -32,6 +32,8 @@ export type TPromptGuide = {
     status: string;
     index: number;
   }[];
+  model?:string
+  promptGuideType?: TPromptType;
 };
 export type TPromptGuideType = {
   id: number;
@@ -59,4 +61,5 @@ export type TPromptGuideImage = {
   createdAt?: string | Date;
   updatedAt?: string | Date;
   promptGuideId?: number;
+  model?:string
 };

@@ -124,33 +124,6 @@ const PromptGuideComponent: FC<props> = ({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // const templates = useMemo<FlatTemplate[]>(
-  //   () =>
-  //     promptGuideTypes.flatMap((group) =>
-  //       (group.promptGuide || []).map((item) => ({
-  //         ...item,
-  //         typeTitle: group.title,
-  //       })),
-  //     ),
-  //   [promptGuideTypes],
-  // );
-
-  // const filteredTemplates = useMemo(() => {
-  //   return promptGuilds.filter((template) => {
-  //     const q = searchQuery.trim().toLowerCase();
-  //     const matchesSearch =
-  //       !q ||
-  //       template.title?.toLowerCase().includes(q) ||
-  //       template.textPrompt?.toLowerCase().includes(q) ||
-  //       template.type?.toLowerCase().includes(q);
-
-  //     const matchesType =
-  //       generateType === "all" || template.generateType === generateType;
-
-  //     return matchesSearch && matchesType;
-  //   });
-  // }, [promptGuilds, searchQuery, generateType]);
-
   const selectedPromptGuideTypeId = useMemo(() => {
     if (!selectedPromptGuide?.id) return undefined;
     const group = promptGuideTypes.find((type) =>
@@ -383,9 +356,10 @@ const PromptGuideComponent: FC<props> = ({
               <TemplateItem
                 title={template.title}
                 textPrompt={template.textPrompt}
-                generateType={template.generateType}
-                categoryLabel={template.type || "General"}
+                generateType={template.generateType || ""}
+                categoryLabel={template?.promptGuideType?.title || "General"}
                 canManage={canManage}
+                model={template.model || ""}
                 onEdit={() => handleEditTemplate(template)}
                 onUse={() => handleEditTemplate(template)}
               />
@@ -445,6 +419,7 @@ const PromptGuideComponent: FC<props> = ({
             status: selectedPromptGuide.status,
             generateType: selectedPromptGuide.generateType,
             promptGuideTypeId: selectedPromptGuideTypeId,
+            model: selectedPromptGuide?.model || "",
           }}
           onCancel={() => setIsEditModalOpen(false)}
           onSubmit={(values) => {

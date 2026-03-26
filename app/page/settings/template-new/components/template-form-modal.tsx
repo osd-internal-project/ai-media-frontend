@@ -146,17 +146,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
         label: item.modelType,
         value: item.modelType,
       }));
-  }, [selectedType?.generateType]);
-// console.log(modelOptions)
-  //   const generateTypeOptions = useMemo(() => {
-  //     const uniqueTypes = Array.from(
-  //       new Set(promptGuideTypes.map((item) => item.generateType)),
-  //     );
-  //     return uniqueTypes.map((value) => ({
-  //       label: value.charAt(0).toUpperCase() + value.slice(1),
-  //       value,
-  //     }));
-  //   }, [promptGuideTypes]);
+  }, [selectedType?.generateType]); 
 
   const categoryOptions = useMemo(() => {
     return promptGuideTypes.map((type) => ({
@@ -205,8 +195,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       promptGuideTypes[0]?.id;
     const fallbackType = promptGuideTypes.find(
       (item) => item.id === fallbackTypeId,
-    );
-
+    ); 
     form.setFieldsValue({
       id: initialValues?.id,
       title: initialValues?.title || "",

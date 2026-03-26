@@ -1,5 +1,8 @@
 import { AxiosInstance } from "axios";
-import type { TPromptGuideType } from "../common/prompt-guide.type";
+import type {
+  TPromptGuideType,
+  TPromptType,
+} from "../common/prompt-guide.type";
 
 const PromptGuideTypeServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide-type";
@@ -11,6 +14,23 @@ const PromptGuideTypeServices = (axiosInstance: AxiosInstance) => {
       const url = organizationId
         ? `${baseUrl}?organizationId=${organizationId}&generateType=${generateType}`
         : `${baseUrl}?generateType=${generateType}`;
+      return await axiosInstance
+        .get(url)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    findActive: async (
+      organizationId?: string,
+      generateType?: string,
+    ): Promise<TPromptType[]> => {
+      const url = organizationId
+        ? `${baseUrl}/active?organizationId=${organizationId}`
+        : `${baseUrl}/active`;
       return await axiosInstance
         .get(url)
         .then((res) => {
