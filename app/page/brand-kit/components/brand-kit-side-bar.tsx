@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Layout, Typography, Button, Space } from "antd";
+import BrandKitItem from "./brand-kit-item";
+import { Layout, Typography, Button, Space, Divider } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
@@ -41,15 +42,16 @@ export default function BrandKitSidebar({
         style={{
           background: semantic.colorBgContainer,
           padding: 20,
-          borderRight: `1px solid ${semantic.colorBorder}`,
+          borderRight: `1px solid ${semantic.colorBorder}`, position: "sticky", top: 0,
         }}
+       
       >
         {/* Header */}
         <Space
           style={{
             width: "100%",
             justifyContent: "space-between",
-            marginBottom: 20,
+            
           }}
         >
           <Text style={{ color: semantic.colorTextBase, fontSize: 16 }}>
@@ -75,79 +77,20 @@ export default function BrandKitSidebar({
             style={{ color: semantic.colorTextSecondary }}
           />
         </Space>
-
+        <Divider style={{ margin: "16px 0 16px 0" }} />
         {/* Brand Kit List */}
 
         {brandKits.map((kit, index) => (
-          <div
+          <BrandKitItem
             key={index}
-            onClick={() => onChangeIndex(index)}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              marginBottom: 10,
-              cursor: "pointer",
-              background:
-                activeIndex === index
-                  ? semantic.colorBgTextActive
-                  : hoveredIndex === index
-                    ? semantic.colorPrimaryBg
-                    : "transparent",
-              border: `1px solid ${activeIndex === index ? semantic.colorPrimary : "transparent"}`,
-              transition: "all 0.2s",
-            }}
-          >
-            <div style={{ display: "flex", gap: 12 }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  marginTop: 2,
-                }}
-              >
-                {kit.colors.slice(0, 3).map((c, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      background: c.hex,
-                      border: `1px solid ${semantic.colorBorder}`,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <div style={{ color: semantic.colorTextBase, fontSize: 14 }}>{kit.name}</div>
-
-                <div
-                  style={{
-                    color: semantic.colorTextSecondary,
-                    fontSize: 12,
-                    marginTop: 2,
-                  }}
-                >
-                  {kit.industry}
-                </div>
-
-                <div
-                  style={{
-                    color: semantic.colorTextSecondary,
-                    opacity: 0.8,
-                    fontSize: 12,
-                    marginTop: 4,
-                  }}
-                >
-                  {kit.colorCount} colors · {kit.fonts} fonts
-                </div>
-              </div>
-            </div>
-          </div>
+            kit={kit}
+            index={index}
+            activeIndex={activeIndex}
+            hoveredIndex={hoveredIndex}
+            semantic={semantic}
+            onChangeIndex={onChangeIndex}
+            setHoveredIndex={setHoveredIndex}
+          />
         ))}
       </Sider>
     </>
