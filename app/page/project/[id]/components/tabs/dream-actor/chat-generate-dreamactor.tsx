@@ -384,16 +384,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   );
 
   const fetchMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      {
-        organizationId: session?.user?.organizationId || "",
-        type: "dreamactor",
-        skip: 0,
-        take: 3,
-        ...(!teamView && { userId: userId }),
-      },
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "dreamactor",
+      skip: 0,
+      take: 3,
+      ...(!teamView && { userId: userId }),
+    });
     if (data) {
       if (data.length > 0) {
         const seqValues = data
@@ -423,17 +420,14 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      {
-        organizationId: session?.user?.organizationId || "",
-        type: "dreamactor",
-        skip: 0,
-        take: 1,
-        fristsql: fristRowSeq,
-        ...(!teamView && { userId: userId }),
-      },
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "dreamactor",
+      skip: 0,
+      take: 1,
+      fristsql: fristRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -447,17 +441,14 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   };
 
   const fetchNewMessage = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(
-      projectId,
-      {
-        organizationId: session?.user?.organizationId || "",
-        type: "dreamactor",
-        skip: 0,
-        take: 1,
-        lastsql: lastRowSeq,
-        ...(!teamView && { userId: userId }),
-      },
-    );
+    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
+      organizationId: session?.user?.organizationId || "",
+      type: "dreamactor",
+      skip: 0,
+      take: 1,
+      lastsql: lastRowSeq,
+      ...(!teamView && { userId: userId }),
+    });
     if (data && data.length > 0) {
       const seqValues = data
         .map((p) => p.seq)
@@ -1223,12 +1214,12 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                                 key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
                                 videoData={videoData}
                                 onDownloadVideo={onDownloadVideo}
-                                onShareVideo={(id, status) => {
+                                onShareVideo={(task, id, status) => {
                                   if (item.taskId) {
                                     onShareVideo(item.taskId, id, status);
                                   }
                                 }}
-                                shareStatus
+                                taskId={item.taskId} // shareStatus={true}
                               />
                             ),
                           )}

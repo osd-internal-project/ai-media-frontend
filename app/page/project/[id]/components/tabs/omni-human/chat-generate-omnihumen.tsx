@@ -1218,12 +1218,13 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
                                 key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
                                 videoData={videoData}
                                 onDownloadVideo={onDownloadVideo}
-                                onShareVideo={(id, status) => {
+                                onShareVideo={(task, id, status) => {
                                   if (item.taskId) {
                                     onShareVideo(item.taskId, id, status);
                                   }
                                 }}
-                                shareStatus
+                                // shareStatus={true}
+                                taskId={item.taskId}
                               />
                             ),
                           )}
