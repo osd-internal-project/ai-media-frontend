@@ -22,7 +22,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
-import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
+import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
 type Props = {
@@ -44,12 +44,12 @@ type Props = {
   isLoadingUpload: boolean;
   setSelectedWidth: (width: number) => void;
   setSelectedHeight: (height: number) => void;
-  promptGuideTemplates: TPromptGuideTemplate[];
-  fetchImagePromptGuides: () => void;
   handleUsePromptGuide: (prompt: TPromptGuide) => void;
   usedCredit: { used?: number; total?: number };
   cerrentUsedCredit: number;
   fetchCerrentUsedCredit: () => void;
+  organizationId?: string;
+  selectedModel?: string;
 };
 
 export default function ChatImageInput({
@@ -71,12 +71,12 @@ export default function ChatImageInput({
   isLoadingUpload,
   setSelectedWidth,
   setSelectedHeight,
-  promptGuideTemplates,
-  fetchImagePromptGuides,
   handleUsePromptGuide,
   usedCredit,
   cerrentUsedCredit,
   fetchCerrentUsedCredit,
+  organizationId,
+  selectedModel,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -226,9 +226,9 @@ export default function ChatImageInput({
           />
 
           <PromptTemplateSection
-            promptGuideTemplates={promptGuideTemplates}
-            fetchImagePromptGuides={fetchImagePromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
+            organizationId={organizationId}
+            selectedModel={selectedModel}
           />
 
           <SettingSection

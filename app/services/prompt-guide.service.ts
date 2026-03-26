@@ -61,9 +61,10 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
     },
     findByOrganization: async (
       organizationId: string,
+      query?: { model?: string },
     ): Promise<TPromptGuide[]> => {
       return await axiosInstance
-        .get(`${baseUrl}/organization/${organizationId}`)
+        .get(`${baseUrl}/organization/${organizationId}`, { params: { ...query } })
         .then((res) => {
           return res.data;
         })
