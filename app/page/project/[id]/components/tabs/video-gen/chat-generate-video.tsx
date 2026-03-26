@@ -878,6 +878,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     status: "upload" | "remove";
   }) => {
     if (file && status === "upload") {
+      if (index === 0) {
+        setFilesFirst([file]);
+      } else {
+        setFilesLast([file]);
+      }
+
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
@@ -918,11 +924,17 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
+          const updatedFile = {
+            ...file,
+            status: "done" as const,
+            url: result.url,
+            response: result,
+          };
           if (index === 0) {
-            setFilesFirst([file]);
+            setFilesFirst([updatedFile]);
             setRefImageFrist((prev) => [...prev, result]);
           } else {
-            setFilesLast([file]);
+            setFilesLast([updatedFile]);
             setRefImageLast((prev) => [...prev, result]);
           }
         }

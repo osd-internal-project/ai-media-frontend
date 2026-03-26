@@ -93,7 +93,12 @@ export default function UploadSection({
 							const source =
 								file.thumbUrl ||
 								file.url ||
-								(typeof file.preview === "string" ? file.preview : "");
+								(typeof file.preview === "string" ? file.preview : "") ||
+								(file.originFileObj ? URL.createObjectURL(file.originFileObj) : "");
+
+							// Re-calculate the source on every render for local files might be expensive, 
+							// but for small amount of files it's okay. 
+							// Better to avoid memory leaks by revoking if possible, but keep it simple for now as it's a small UI component.
 
 							return (
 								<Flex

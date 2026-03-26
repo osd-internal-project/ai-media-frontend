@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, type FC } from "react";
+import React, { useEffect, useRef, useState, useMemo, type FC } from "react";
 import { PermissionGuard } from "../../../../../../components/PermissionGuard";
 import { projectPermissions } from "../../../../../../utils/permissions";
 import {
@@ -21,7 +21,7 @@ import {
   Typography,
   Divider,
 } from "antd";
-import { LikeOutlined, LoadingOutlined, LikeFilled, PictureOutlined, CopyOutlined, DownloadOutlined, DeleteOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
+import { LoadingOutlined, LikeFilled, PictureOutlined, CopyOutlined, DownloadOutlined, DeleteOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 
 // import Image from "next/image";
 import { Download, ImageOff, StarIcon } from "lucide-react";
@@ -173,6 +173,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const galleryService = GalleryServices(axiosCore);
   const logsService = LogsServices(axiosCore);
   const generateServices = GenerateServices(axiosCore);
+  const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
@@ -789,8 +790,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     fileList: newFileList,
   }) => {
     if (newFileList.length >= 1 && file.status !== "removed") {
+      setFiles(newFileList);
       const fileToUpload = file.originFileObj || file;
+
       if (fileToUpload instanceof Blob) {
+        setIsLoadingUpload(true);
         try {
           await new Promise<void>((resolve, reject) => {
             const img = new window.Image();
@@ -813,33 +817,62 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));
+          setIsLoadingUpload(false);
           return;
         }
       }
+
       setIsLoadingUpload(true);
       const formData = new FormData();
       formData.append("userId", userId ? userId : "");
       formData.append("index", newFileList.length.toString());
       formData.append("projectId", projectId);
-      formData.append("name", file.name);
       formData.append("generateType", "image");
       formData.append("uid", file.uid);
       formData.append("file", fileToUpload as Blob);
       formData.append("organizationId", session?.user?.organizationId || "");
+
       try {
-        const result = await UploadsServices(axiosWorker).upload(formData);
+        const result = await uploadsServices.upload(formData);
+        console.log("Upload result:", result);
         setRefImage((prev) => [...prev, result]);
+        
+        // Update the file in the list with result URL for preview
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uid === file.uid
+              ? {
+                  ...f,
+                  status: "done" as const,
+                  url: result.url,
+                  response: result,
+                }
+              : f,
+          ),
+        );
       } catch (error) {
         console.error("Upload failed:", error);
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uid === file.uid ? { ...f, status: "error" as const } : f,
+          ),
+        );
+      } finally {
+        setIsLoadingUpload(false);
       }
+    } else if (file.status === "removed") {
+      setIsLoadingUpload(false);
+      onRemoveFile(file);
+    } else {
+      setIsLoadingUpload(false);
+      setFiles(newFileList);
     }
-    setIsLoadingUpload(false);
-    setFiles(newFileList);
   };
 
   const onRemoveFile = (file: UploadFile) => {
     setRefImage((prev) => prev.filter((f) => f.uid !== file.uid));
-    UploadsServices(axiosWorker).remove(file.uid);
+    setFiles((prev) => prev.filter((f) => f.uid !== file.uid));
+    uploadsServices.remove(file.uid);
   };
 
   const beforeUpload = (file: RcFile) => {
@@ -1048,7 +1081,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             // formData.append("file", file);
 
             const result =
-              await UploadsServices(axiosWorker).uploadFromPrompt(formData);
+              await uploadsServices.uploadFromPrompt(formData);
             return result;
           } catch (err) {
             console.error("Failed to process image:", img.name, err);
