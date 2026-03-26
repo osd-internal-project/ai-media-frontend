@@ -153,7 +153,7 @@ const TemplateItem: FC<TemplateItemProps> = ({
 					{showActions ? (
 						<Space wrap>
 							{canManage && (
-								<Button icon={<EditOutlined />} onClick={onEdit} style={{ borderRadius: 10 }}>
+								<Button type="primary" icon={<EditOutlined />} onClick={onEdit} style={{ borderRadius: 10 }}>
 									Edit
 								</Button>
 							)}
