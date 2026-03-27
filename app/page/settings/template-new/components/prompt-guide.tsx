@@ -247,6 +247,7 @@ const PromptGuideComponent: FC<props> = ({
     if (generateType === "video") {
       return renderDualUpload(
         {
+          accept: "image/*",
           fileList: firstFrame,
           loading: isLoadingFirstFrame,
           label: "Image",
@@ -254,6 +255,7 @@ const PromptGuideComponent: FC<props> = ({
           onChange: (info) => handleVideoImageUploadChange(info, "1"),
         },
         {
+          accept: "image/*",
           fileList: lastFrame,
           loading: isLoadingLastFrame,
           label: "Last Frame",

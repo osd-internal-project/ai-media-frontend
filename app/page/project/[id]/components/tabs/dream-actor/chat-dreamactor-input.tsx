@@ -149,6 +149,7 @@ export default function ChatDreamactorInput({
     <Upload
       listType="picture-card"
       maxCount={1}
+      accept={type === "image" ? "image/*" : "video/*"}
       showUploadList={false}
       fileList={file ? [file] : []}
       beforeUpload={() => false}
@@ -312,7 +313,7 @@ export default function ChatDreamactorInput({
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Portrait *", 0, "image", filesFirst[0])}
+                    {renderUploadTile("Portrait *", 0, "image", filesFirst[0],)}
                   </div>
                   <div style={{ flex: 1 }}>
                     {renderUploadTile(
@@ -332,6 +333,7 @@ export default function ChatDreamactorInput({
             placeholder="Describe what you want to actor video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}
             maxLength={2000}
+            required={false}
           />
 
           {/* <PromptTemplateSection

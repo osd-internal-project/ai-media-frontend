@@ -228,10 +228,16 @@ export default function ChatVideoInput({
     position: "relative",
   };
 
-  const renderUploadTile = (label: string, index: 0 | 1, file?: UploadFile) => (
+  const renderUploadTile = (
+    label: string,
+    index: 0 | 1,
+    file?: UploadFile,
+    accept?: string,
+  ) => (
     <Upload
       listType="picture-card"
       maxCount={1}
+      accept={accept}
       showUploadList={false}
       fileList={file ? [file] : []}
       beforeUpload={() => false}
@@ -359,10 +365,10 @@ export default function ChatVideoInput({
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("First Frame", 0, filesFirst[0])}
+                    {renderUploadTile("First Frame", 0, filesFirst[0], "image/*")}
                   </div>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Last Frame", 1, filesLast[0])}
+                    {renderUploadTile("Last Frame", 1, filesLast[0], "image/*")}
                   </div>
                 </Space>
               </Flex>
@@ -374,6 +380,7 @@ export default function ChatVideoInput({
             placeholder="Describe what you want to video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}
             maxLength={2000}
+            required={true}
           />
 
           <PromptTemplateSection

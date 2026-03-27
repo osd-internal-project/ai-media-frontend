@@ -223,6 +223,7 @@ export default function ChatImageInput({
           <PromptSection
             semantic={semantic}
             placeholder="Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."
+            required={true}
           />
 
           <PromptTemplateSection

@@ -151,6 +151,7 @@ export default function ChatOmnihumenInput({
     <Upload
       listType="picture-card"
       maxCount={1}
+      accept={type === "image" ? "image/*" : "audio/*"}
       showUploadList={false}
       fileList={file ? [file] : []}
       beforeUpload={() => false}
@@ -333,6 +334,7 @@ export default function ChatOmnihumenInput({
             placeholder="Describe what you want to human video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}
             maxLength={2000}
+            required={false}
           />
 
           {/* <PromptTemplateSection
