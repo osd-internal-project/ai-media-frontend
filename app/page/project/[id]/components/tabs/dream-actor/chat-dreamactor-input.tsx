@@ -34,10 +34,10 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
-// import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 import Quata from "@/app/page/project/component/quata";
+import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -75,6 +75,8 @@ type Props = {
   handleUsePromptGuide: (template: TPromptGuide) => void;
   usedCredit: { used?: number; total?: number };
   cerrentUsedCredit: number;
+  selectedModel?: string;
+  organizationId?: string;
 };
 
 export default function ChatDreamactorInput({
@@ -94,6 +96,8 @@ export default function ChatDreamactorInput({
   handleUsePromptGuide,
   usedCredit,
   cerrentUsedCredit,
+  selectedModel,
+  organizationId,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -314,7 +318,7 @@ export default function ChatDreamactorInput({
                 </Typography.Text>
                 <Space size={8} style={{ width: "100%" }}>
                   <div style={{ flex: 1 }}>
-                    {renderUploadTile("Portrait *", 0, "image", filesFirst[0],)}
+                    {renderUploadTile("Portrait *", 0, "image", filesFirst[0])}
                   </div>
                   <div style={{ flex: 1 }}>
                     {renderUploadTile(
@@ -337,12 +341,11 @@ export default function ChatDreamactorInput({
             required={false}
           />
 
-          {/* <PromptTemplateSection
-            promptGuideTemplates={promptGuideTemplates}
-            fetchPromptGuides={fetchVideoPromptGuides}
+          <PromptTemplateSection
             handleUsePromptGuide={handleUsePromptGuide}
-            buttonText="Browse Prompt Templates"
-          /> */}
+            organizationId={organizationId}
+            selectedModel={selectedModel}
+          />
 
           <SettingSection
             semantic={semantic}
@@ -422,7 +425,7 @@ export default function ChatDreamactorInput({
               height: 40,
               borderRadius: 10,
               fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`
+              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
             }}
             icon={<Sparkles size={16} />}
             loading={submitting}

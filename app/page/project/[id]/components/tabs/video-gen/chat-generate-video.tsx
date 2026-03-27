@@ -869,7 +869,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   const handleUploadChange = async ({
     index,
     file,
-    fileList: newFileList,
     status,
   }: {
     index: number;
@@ -878,12 +877,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     status: "upload" | "remove";
   }) => {
     if (file && status === "upload") {
-      if (index === 0) {
-        setFilesFirst([file]);
-      } else {
-        setFilesLast([file]);
-      }
-
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
@@ -924,18 +917,12 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
-          const updatedFile = {
-            ...file,
-            status: "done" as const,
-            url: result.url,
-            response: result,
-          };
           if (index === 0) {
-            setFilesFirst([updatedFile]);
-            setRefImageFrist((prev) => [...prev, result]);
+            setFilesFirst([file]);
+            setRefImageFrist([result]);
           } else {
-            setFilesLast([updatedFile]);
-            setRefImageLast((prev) => [...prev, result]);
+            setFilesLast([file]);
+            setRefImageLast([result]);
           }
         }
       } catch (error) {
@@ -945,10 +932,10 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       setIsLoadingUpload(true);
       try {
         if (index === 0) {
-          setRefImageFrist((prev) => prev.filter((f) => f.uid !== file.uid));
+          setRefImageFrist([]);
           setFilesFirst([]);
         } else {
-          setRefImageLast((prev) => prev.filter((f) => f.uid !== file.uid));
+          setRefImageLast([]);
           setFilesLast([]);
         }
         await UploadsServices(axiosWorker).remove(file.uid);
@@ -958,7 +945,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
     setIsLoadingUpload(false);
   };
-
   async function handleUsePromptGuide(prompt: TPromptGuide) {
     form.setFieldValue("prompt", prompt.textPrompt);
     // Clear both First and Last inputs
@@ -1035,7 +1021,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
   }
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (values: any) => { 
     if (!selectedAIModel)
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
@@ -1064,7 +1050,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       generateAudio: selectedAudio,
       draft: draftMode,
       organizationId: session?.user?.organizationId,
-    };
+    }; 
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
