@@ -38,6 +38,7 @@ import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OmniResultItem from "./omni-result";
 import OmnihumenResultHeader from "./header";
+import { getSecondsFileDuration } from "@/app/utils/fileUtil";
 
 interface OmniHumanChatProps {
   projectId: string;
@@ -166,7 +167,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
   const [fastMode, setFastMode] = useState<boolean>(false);
-  const [selectedDuration, setSelectedDuration] = useState<number>(6);
+  const [selectedDuration, setSelectedDuration] = useState<number>(0);
   const [refImageFrist, setRefImageFrist] = useState<
     {
       name: string;
@@ -693,6 +694,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
+    socket.off("worker:omnihumen-error", handleError); 
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:used-credit", handleCreditChange);
 
@@ -703,6 +705,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       socket.off("worker:omnihumen-url-success", workerUrlSuccess);
       socket.off("worker:omnihumen-upload-success", workerUploadSuccess);
       socket.off("worker:omnihumen-complete", workerComplete);
+      socket.off("worker:omnihumen-error", handleError);
       socket.off("worker:omnihumen-progress", handleProgress);
       socket.off("chat:used-credit", handleCreditChange);
     };
@@ -871,6 +874,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             setFilesFirst([file]);
             setRefImageFrist((prev) => [...prev, result]);
           } else {
+            const duration = await getSecondsFileDuration(file);
+            setSelectedDuration(duration);
             setFilesLast([file]);
             setRefImageLast((prev) => [...prev, result]);
           }
@@ -885,6 +890,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           setRefImageFrist((prev) => prev.filter((f) => f.uid !== file.uid));
           setFilesFirst([]);
         } else {
+          setSelectedDuration(0);
           setRefImageLast((prev) => prev.filter((f) => f.uid !== file.uid));
           setFilesLast([]);
         }
@@ -1000,6 +1006,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       resolution: selectedResolution,
       projectId: projectId,
       userId: userId,
+      duration: selectedDuration,
       organizationId: session?.user?.organizationId,
     };
     const tempMessage = {

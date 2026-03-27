@@ -39,6 +39,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import DreamactorResultItem from "./dream-item-result";
 import DreamHeader from "./header";
 import DreamactorResultHeader from "./header";
+import { getSecondsFileDuration } from "@/app/utils/fileUtil";
 
 interface DreamactorChatProps {
   teamView: boolean;
@@ -61,7 +62,7 @@ interface DreamactorChatProps {
   >;
 }
 
- interface UserMessage {
+interface UserMessage {
   id?: number;
   userId?: string;
   username: string;
@@ -82,7 +83,7 @@ interface DreamactorChatProps {
   recentOrganizationId?: string;
 }
 
- export interface VideoMessage {
+export interface VideoMessage {
   id?: string | undefined;
   imageUrl: string;
   thumbnailUrl?: string;
@@ -167,7 +168,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("1080p");
   const [fastMode, setFastMode] = useState<boolean>(false);
-  const [selectedDuration, setSelectedDuration] = useState<number>(6);
+  const [selectedDuration, setSelectedDuration] = useState<number>(0);
   const [refImageFrist, setRefImageFrist] = useState<
     {
       name: string;
@@ -692,6 +693,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     socket.on("worker:dreamactor-url-success", workerUrlSuccess);
     socket.on("worker:dreamactor-upload-success", workerUploadSuccess);
     socket.on("worker:dreamactor-complete", workerComplete);
+    socket.on("worker:dreamactor-error", handleError);
     socket.on("worker:dreamactor-progress", handleProgress);
     socket.on("chat:used-credit", handleCreditChange);
 
@@ -702,6 +704,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       socket.off("worker:dreamactor-url-success", workerUrlSuccess);
       socket.off("worker:dreamactor-upload-success", workerUploadSuccess);
       socket.off("worker:dreamactor-complete", workerComplete);
+      socket.off("worker:dreamactor-error", handleError);
       socket.off("worker:dreamactor-progress", handleProgress);
       socket.off("chat:used-credit", handleCreditChange);
     };
@@ -866,10 +869,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
+          console.log(2222);
           if (index === 0) {
             setFilesFirst([file]);
             setRefImageFrist((prev) => [...prev, result]);
           } else {
+            const duration = await getSecondsFileDuration(file);
+            setSelectedDuration(duration);
             setFilesLast([file]);
             setRefImageLast((prev) => [...prev, result]);
           }
@@ -884,6 +890,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
           setRefImageFrist((prev) => prev.filter((f) => f.uid !== file.uid));
           setFilesFirst([]);
         } else {
+          setSelectedDuration(0);
           setRefImageLast((prev) => prev.filter((f) => f.uid !== file.uid));
           setFilesLast([]);
         }
@@ -906,6 +913,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     if (prompt.images && prompt.images.length > 0) {
       setIsLoadingUpload(true);
       try {
+        console.log(111);
         const uploadPromises = prompt.images.map(async (img) => {
           const newIndex = img.index - 1;
           const formData = new FormData();
@@ -997,6 +1005,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       fastMode: fastMode,
       seed: values.seed,
       resolution: selectedResolution,
+      duration: selectedDuration,
       projectId: projectId,
       userId: userId,
       organizationId: session?.user?.organizationId,
@@ -1040,19 +1049,19 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     }
     socket.emit("generate:dreamactor", messageBody);
   };
-  
-const onDelete = (taskId: string, id: string) => {
-  setMessages((prev) =>
-    prev.map((msg) =>
-      msg.taskId === taskId
-        ? {
-            ...msg,
-            imageUrls: msg.imageUrls.filter((v) => v.id !== id),
-          }
-        : msg,
-    ),
-  );
-};
+
+  const onDelete = (taskId: string, id: string) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.taskId === taskId
+          ? {
+              ...msg,
+              imageUrls: msg.imageUrls.filter((v) => v.id !== id),
+            }
+          : msg,
+      ),
+    );
+  };
   return (
     <Flex
       vertical
@@ -1111,19 +1120,19 @@ const onDelete = (taskId: string, id: string) => {
         bottomRef={bottomRef}
         rightContent={
           <>
-             <DreamactorResultHeader
-    messages={messages}
-    onClear={() => setMessages([])}
-  />
+            <DreamactorResultHeader
+              messages={messages}
+              onClear={() => setMessages([])}
+            />
 
             {messages.map((item: Message, index) => (
-             <DreamactorResultItem
-    key={item.id || item.taskId} // ✅ safer key
-    message={item}
-    onDownloadVideo={onDownloadVideo}
-    onShareVideo={onShareVideo}
-    onDelete={onDelete}
-  />
+              <DreamactorResultItem
+                key={item.id || item.taskId} // ✅ safer key
+                message={item}
+                onDownloadVideo={onDownloadVideo}
+                onShareVideo={onShareVideo}
+                onDelete={onDelete}
+              />
             ))}
           </>
         }
