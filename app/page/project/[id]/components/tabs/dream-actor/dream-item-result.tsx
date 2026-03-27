@@ -1,26 +1,17 @@
 import React, { FC } from "react";
-import useResponsive from "@/app/hooks/useResponsive";
-import {
-  Card,
-  Flex,
-  Space,
-  Typography,
-  Tag,
-  Divider,
-  Row,
-  Col,
-} from "antd";
+import { Card, Flex, Space, Typography, Tag, Divider, Row, Col } from "antd";
 
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import VideoItem from "../video-gen/video-player";
 import { Message } from "./chat-generate-dreamactor";
 import DreamActionBar from "./action-bar";
+import useResponsive from "@/app/hooks/useResponsive";
 
 interface Props {
   message: Message;
   onDownloadVideo: (fileName: string, id: string) => void;
-    onShareVideo: (taskId: string, id: string, status: boolean) => void;
-    onDelete: (taskId: string, id: string) => void;
+  onShareVideo: (taskId: string, id: string, status: boolean) => void;
+  onDelete: (taskId: string, id: string) => void;
 }
 
 const DreamactorResultItem: FC<Props> = ({
@@ -44,6 +35,14 @@ const DreamactorResultItem: FC<Props> = ({
       styles={{ body: { padding: 12 } }}
     >
       {/* HEADER */}
+      {/* <Flex justify="space-between" align="center">
+        <Space>
+          <Typography.Text strong>#{message.taskId}</Typography.Text>
+
+          <Tag>{message.imageUrls?.length || 0} videos</Tag>
+
+          <Typography.Text ellipsis style={{ maxWidth: 300 }}>
+            {message.prompt || ""} */}
       <Flex
         justify={isMobile ? "start" : "space-between"}
         align={isMobile ? "start" : "center"}
@@ -88,9 +87,7 @@ const DreamactorResultItem: FC<Props> = ({
       {(message.genneratedStatus === "FAILED" ||
         message.genneratedStatus === "FAIL") && (
         <Card size="small">
-          <Typography.Text type="danger">
-            Generate failed
-          </Typography.Text>
+          <Typography.Text type="danger">Generate failed</Typography.Text>
         </Card>
       )}
 
