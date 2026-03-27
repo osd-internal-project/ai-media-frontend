@@ -393,7 +393,7 @@ export default function ChatDreamactorInput({
           />
         </Flex>
 
-        <BrandKitSection semantic={semantic}>
+        <BrandKitSection semantic={semantic}/>
           <Card
             size="small"
             style={{
@@ -429,7 +429,6 @@ export default function ChatDreamactorInput({
           >
             Generate
           </Button>
-        </BrandKitSection>
       </Form>
 
       <Modal

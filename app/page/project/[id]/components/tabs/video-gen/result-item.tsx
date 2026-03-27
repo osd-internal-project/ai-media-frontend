@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import useResponsive from "@/app/hooks/useResponsive";
 import {
   Card,
   Flex,
@@ -51,6 +52,8 @@ const VideoResultItem: FC<Props> = ({
     (message.genneratedStatus === "SUCCESS" &&
       (!message.imageUrls || message.imageUrls.length === 0));
 
+  const { isMobile } = useResponsive();
+
   return (
     <Card
       size="small"
@@ -66,45 +69,54 @@ const VideoResultItem: FC<Props> = ({
       {contextHolder}
 
       {/* HEADER */}
-      <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
-        <Space>
-          <Typography.Text >#{message.taskId}</Typography.Text>
-
+      <Flex
+        justify={isMobile ? "start" : "space-between"}
+        align={isMobile ? "start" : "center"}
+        style={{
+          marginBottom: 8,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 4 : 0,
+        }}
+      >
+        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ width: isMobile ? "100%" : undefined }}>
+          <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}>#{message.taskId}</Typography.Text>
           <Tag
             style={{
               color: aiCaveColors?.dreamActor,
               border: `1.5px solid ${semantic.colorBorder}`,
               background: "transparent",
               fontWeight: 600,
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               borderRadius: 8,
-              padding: "2px 10px",
+              padding: isMobile ? "1.5px 8px" : "2px 10px",
             }}
           >
             {message.imageUrls?.length || 0} videos
           </Tag>
-
           <Typography.Text
             ellipsis
-            style={{ maxWidth: 300, color: semantic.colorTextSecondary }}
+            style={{
+              maxWidth: isMobile ? 180 : 300,
+              color: semantic.colorTextSecondary,
+              fontSize: isMobile ? 13 : 14,
+            }}
           >
             "{message.prompt}"
           </Typography.Text>
         </Space>
-
-        <Space>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ marginTop: isMobile ? 6 : 0, alignItems: isMobile ? "flex-start" : "center" }}>
+          <Typography.Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
             {new Date(message.createdAt).toLocaleDateString([], {
               month: "short",
               day: "numeric",
               year: "numeric",
             })}
           </Typography.Text>
-
           <Button
             type="text"
             danger
             size="small"
+            style={{ padding: isMobile ? 0 : undefined }}
             onClick={() =>
               setMessages((prev) =>
                 prev.filter((m) => m.id !== message.id),
@@ -129,30 +141,30 @@ const VideoResultItem: FC<Props> = ({
       )}
 
     {/* VIDEOS */}
-{message.genneratedStatus === "SUCCESS" &&
-  message.imageUrls?.length > 0 && (
-    <div
-      style={{
-        marginTop: 8,
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: 12,
-      }}
-    >
-      {message.imageUrls.map((video: VideoMessage, i) => (
-        <VideoItem
-          key={video.id || `${message.taskId}-${i}`}
-          videoData={video}
-          taskId={message.taskId!}
-          messagePrompt={message.prompt}
-          onDownloadVideo={onDownloadVideo}
-          onShareVideo={(taskId, id, status) => {
-            onShareVideo(taskId, id, status);
+    {message.genneratedStatus === "SUCCESS" &&
+      message.imageUrls?.length > 0 && (
+        <div
+          style={{
+            marginTop: 8,
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
+            gap: 12,
           }}
-        />
-      ))}
-    </div>
-  )}
+        >
+          {message.imageUrls.map((video: VideoMessage, i) => (
+            <VideoItem
+              key={video.id || `${message.taskId}-${i}`}
+              videoData={video}
+              taskId={message.taskId!}
+              messagePrompt={message.prompt}
+              onDownloadVideo={onDownloadVideo}
+              onShareVideo={(taskId, id, status) => {
+                onShareVideo(taskId, id, status);
+              }}
+            />
+          ))}
+        </div>
+      )}
     </Card>
   );
 };

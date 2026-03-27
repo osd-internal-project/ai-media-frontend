@@ -28,6 +28,7 @@ interface Props {
   onUseTemplate: (prompt: TPromptGuide) => void;
   organizationId?: string;
   selectedModel?: string;
+  modalZIndex?: number;
 }
 
 function isAudio(url: string) {
@@ -89,6 +90,7 @@ export default function BrowsePromptModal({
   onUseTemplate, 
   organizationId,
   selectedModel,
+  modalZIndex = 1200,
 }: Props) {
   const [promptGuides, setPromptGuides] = useState<TPromptGuide[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,7 +115,8 @@ export default function BrowsePromptModal({
       setLoading(false);
     }
   };
-
+ // Debugging modal open state and zIndex
+  console.log('[BrowsePromptModal] open:', open, 'modalZIndex:', modalZIndex);
   useEffect(() => {
     if (open && organizationId) {
       fetchPromptGuides();
@@ -138,6 +141,7 @@ export default function BrowsePromptModal({
       width={1200}
       centered
       closeIcon={<X size={20} style={{ color: "rgba(255, 255, 255, 0.45)" }} />}
+      zIndex={modalZIndex}
       styles={{
         content: {
           background: "#121214",

@@ -343,17 +343,17 @@ export default function ChatVideoInput({
           flexDirection: "column",
         }}
       >
-        <Flex
-          vertical
-          gap={12}
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            paddingInline: 12,
-            paddingBlock: 12,
-          }}
-        >
+          <Flex
+                 vertical
+                 gap={12}
+                 style={{
+                   flex: 1,
+                   minHeight: 0,
+                   overflowY: "auto",
+                   paddingInline: 12,
+                   paddingBlock: 12,
+                 }}
+               >
           <UploadSection
             semantic={semantic}
             sectionTitle="Uploads"
@@ -364,14 +364,14 @@ export default function ChatVideoInput({
                 >
                   Upload Frames *
                 </Typography.Text>
-                <Space size={8} style={{ width: "100%" }}>
-                  <div style={{ flex: 1 }}>
-                    {renderUploadTile("First Frame", 0, filesFirst[0], "image/*")}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    {renderUploadTile("Last Frame", 1, filesLast[0], "image/*")}
-                  </div>
-                </Space>
+              <Flex gap={8} style={{ width: "100%" }}>
+  <div style={{ flex: 1, minWidth: 0 }}>
+    {renderUploadTile("First Frame", 0, filesFirst[0], "image/*")}
+  </div>
+  <div style={{ flex: 1, minWidth: 0 }}>
+    {renderUploadTile("Last Frame", 1, filesLast[0], "image/*")}
+  </div>
+</Flex>
               </Flex>
             }
           />
@@ -482,43 +482,75 @@ export default function ChatVideoInput({
           />
         </Flex>
 
-        <BrandKitSection semantic={semantic}>
-          <Card
-            size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
-            <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
-              creditTotal={usedCredit.total || 0}
+        <BrandKitSection
+          semantic={semantic}
+          style={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 10,
+            borderTop: `1px solid ${semantic.colorBorder}`,
+            background: semantic.colorBgContainer,
+            paddingInline: 8,
+            paddingBlock: 10,
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        />
+
+            <Flex
+                  vertical
+                  gap={8}
+                  style={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 10,
+                    borderTop: `1px solid ${semantic.colorBorder}`,
+                    background: semantic.colorBgContainer,
+                    paddingInline: 12,
+                    paddingBlock: 12,
+                  }}
+                >
+            <Card
               size="small"
-              cerrentUsedCredit={cerrentUsedCredit}
-            />
-          </Card>
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            disabled={submitting}
-            style={{
-              color: "white",
-              border: "none",
-              height: 40,
-              borderRadius: 10,
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`
-            }}
-            icon={<Sparkles size={16} />}
-            loading={submitting}
+              style={{
+                borderRadius: 12,
+                borderColor: semantic.colorBorder,
+                background: semantic.colorBgElevated,
+                width: "100%",
+                minWidth: 0,
+              }}
+              styles={{ body: { padding: "8px 12px" } }}
+            >
+              <Quata
+                title="Quota"
+                creditUsed={usedCredit.used || 0}
+                creditTotal={usedCredit.total || 0}
+                size="small"
+                cerrentUsedCredit={cerrentUsedCredit}
+              />
+            </Card>
+            <Button
+              block
+              type="primary"
+              htmlType="submit"
+              disabled={submitting}
+              style={{
+                color: "white",
+                border: "none",
+                height: 40,
+                borderRadius: 10,
+                fontWeight: 600,
+                background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
+          
+           
+              }}
+              icon={<Sparkles size={16} />}
+              loading={submitting}
           >
-            Generate Video
-          </Button>
-        </BrandKitSection>
+            
+              Generate Video
+            </Button>
+        </Flex>
       </Form>
 
       <Modal

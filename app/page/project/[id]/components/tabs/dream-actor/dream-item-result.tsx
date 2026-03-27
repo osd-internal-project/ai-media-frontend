@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import useResponsive from "@/app/hooks/useResponsive";
 import {
   Card,
   Flex,
@@ -28,6 +29,8 @@ const DreamactorResultItem: FC<Props> = ({
   onShareVideo,
   onDelete,
 }) => {
+  const { isMobile } = useResponsive();
+
   return (
     <Card
       size="small"
@@ -41,22 +44,32 @@ const DreamactorResultItem: FC<Props> = ({
       styles={{ body: { padding: 12 } }}
     >
       {/* HEADER */}
-      <Flex justify="space-between" align="center">
-        <Space>
-          <Typography.Text strong>
-            #{message.taskId}
-          </Typography.Text>
-
-          <Tag>
+      <Flex
+        justify={isMobile ? "start" : "space-between"}
+        align={isMobile ? "start" : "center"}
+        style={{
+          marginBottom: 8,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 4 : 0,
+        }}
+      >
+        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ width: isMobile ? "100%" : undefined }}>
+          <Typography.Text strong style={{ fontSize: isMobile ? 15 : 14 }}>#{message.taskId}</Typography.Text>
+          <Tag
+            style={{
+              fontWeight: 600,
+              fontSize: isMobile ? 12 : 13,
+              borderRadius: 8,
+              padding: isMobile ? "1.5px 8px" : "2px 10px",
+            }}
+          >
             {message.imageUrls?.length || 0} videos
           </Tag>
-
-          <Typography.Text ellipsis style={{ maxWidth: 300 }}>
+          <Typography.Text ellipsis style={{ maxWidth: isMobile ? 180 : 300, fontSize: isMobile ? 13 : 14 }}>
             "{message.prompt}"
           </Typography.Text>
         </Space>
-
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        <Typography.Text type="secondary" style={{ fontSize: isMobile ? 11 : 12, marginTop: isMobile ? 6 : 0 }}>
           {new Date(message.createdAt).toLocaleString()}
         </Typography.Text>
       </Flex>
@@ -86,8 +99,8 @@ const DreamactorResultItem: FC<Props> = ({
         message.imageUrls?.length > 0 && (
           <Row gutter={[8, 8]}>
             {message.imageUrls.map((video, i) => (
-              <Col key={video.id || i} xs={24} sm={12} md={12} lg={8}>
-                <div style={{ position: "relative" }}>
+              <Col key={video.id || i} xs={isMobile ? 24 : 24} sm={12} md={12} lg={8}>
+                <div style={{ position: "relative", marginBottom: isMobile ? 8 : 0 }}>
                   <VideoItem
                     videoData={video}
                     onDownloadVideo={onDownloadVideo}

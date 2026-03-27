@@ -42,6 +42,7 @@ export default function PromptTemplateSection({
           }}
           organizationId={organizationId}
           selectedModel={selectedModel}
+          modalZIndex={1300}
         />
       )}
     </>

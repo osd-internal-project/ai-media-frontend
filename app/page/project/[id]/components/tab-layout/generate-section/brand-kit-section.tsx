@@ -12,6 +12,16 @@ export default function BrandKitSection({
 	children,
 	style,
 }: Props) {
+	// Responsive: adjust width and padding for mobile overlays
+	const isMobile = typeof window !== "undefined" && window.innerWidth <= 600;
+	const mobileStyle: React.CSSProperties = isMobile
+		? {
+				minWidth: "100vw",
+				maxWidth: "100vw",
+				paddingInline: 8,
+				paddingBlock: 10,
+			}
+		: {};
 	return (
 		<Flex
 			vertical
@@ -24,6 +34,7 @@ export default function BrandKitSection({
 				background: semantic.colorBgContainer,
 				paddingInline: 12,
 				paddingBlock: 12,
+				...mobileStyle,
 				...style,
 			}}
 		>

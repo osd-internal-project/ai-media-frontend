@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import useResponsive from "@/app/hooks/useResponsive";
 import {
   Card,
   Flex,
@@ -39,6 +40,8 @@ const ResultItem: FC<Props> = ({
   setMessages,
   messageApi,
 }) => {
+  const { isMobile } = useResponsive();
+
   return (
     <Card
       size="small"
@@ -52,37 +55,43 @@ const ResultItem: FC<Props> = ({
       styles={{ body: { padding: 12, background: "none" } }}
     >
       {/* HEADER */}
-      <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
-        <Space>
-          <Typography.Text >#{message.taskId}</Typography.Text>
-
+      <Flex
+        justify={isMobile ? "start" : "space-between"}
+        align={isMobile ? "start" : "center"}
+        style={{
+          marginBottom: 8,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 4 : 0,
+        }}
+      >
+        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ width: isMobile ? "100%" : undefined }}>
+          <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}>#{message.taskId}</Typography.Text>
           <Tag
             style={{
               color: aiCaveColors.dreamActor,
               border: `1.5px solid ${semantic.colorBorder}`,
               background: "transparent",
               fontWeight: 600,
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               borderRadius: 8,
-              padding: "2px 10px",
+              padding: isMobile ? "1.5px 8px" : "2px 10px",
             }}
           >
             {message.imageUrls?.length || 0} imgs
           </Tag>
-
           <Typography.Text
             ellipsis
             style={{
-              maxWidth: 300,
+              maxWidth: isMobile ? 180 : 300,
               color: semantic.colorTextSecondary,
+              fontSize: isMobile ? 13 : 14,
             }}
           >
             {message.prompt}
           </Typography.Text>
         </Space>
-
-        <Space>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ marginTop: isMobile ? 6 : 0, alignItems: isMobile ? "flex-start" : "center" }}>
+          <Typography.Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
             {new Date(message.createdAt).toLocaleDateString([], {
               month: "short",
               day: "numeric",
@@ -93,11 +102,11 @@ const ResultItem: FC<Props> = ({
               minute: "2-digit",
             })}
           </Typography.Text>
-
           <Button
             type="text"
             danger
             size="small"
+            style={{ padding: isMobile ? 0 : undefined }}
             onClick={() =>
               setMessages((prev) =>
                 prev.filter((m) => m.id !== message.id),
@@ -164,13 +173,14 @@ const ResultItem: FC<Props> = ({
           <Row gutter={[8, 8]} style={{ marginTop: 8, width: "100%" }}>
             <Image.PreviewGroup>
               {message.imageUrls.map((imgUrl, i) => (
-                <Col key={imgUrl.id} xs={12} sm={12} md={6} lg={6}>
+                <Col key={imgUrl.id} xs={isMobile ? 24 : 12} sm={12} md={6} lg={6}>
                   <div
                     style={{
                       position: "relative",
                       overflow: "hidden",
                       borderRadius: 8,
                       aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
+                      marginBottom: isMobile ? 8 : 0,
                     }}
                     className="image-item"
                   >
@@ -183,29 +193,30 @@ const ResultItem: FC<Props> = ({
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
+                        borderRadius: isMobile ? 6 : 8,
                       }}
                     />
 
-                <ActionBar
-  item={imgUrl}
-  message={message}
-  onToggleFavorite={onShareImage}
-  onDownload={onDownloadImage}
-  onDelete={(taskId, id) => {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.taskId === taskId) {
-          return {
-            ...msg,
-            imageUrls: msg.imageUrls.filter((img) => img.id !== id),
-          };
-        }
-        return msg;
-      })
-    );
-  }}
-  messageApi={messageApi}
-/>
+                    <ActionBar
+                      item={imgUrl}
+                      message={message}
+                      onToggleFavorite={onShareImage}
+                      onDownload={onDownloadImage}
+                      onDelete={(taskId, id) => {
+                        setMessages((prev) =>
+                          prev.map((msg) => {
+                            if (msg.taskId === taskId) {
+                              return {
+                                ...msg,
+                                imageUrls: msg.imageUrls.filter((img) => img.id !== id),
+                              };
+                            }
+                            return msg;
+                          })
+                        );
+                      }}
+                      messageApi={messageApi}
+                    />
                   </div>
                 </Col>
               ))}

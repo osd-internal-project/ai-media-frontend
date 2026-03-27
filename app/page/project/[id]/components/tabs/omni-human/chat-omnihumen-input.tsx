@@ -394,7 +394,7 @@ export default function ChatOmnihumenInput({
           />
         </Flex>
 
-        <BrandKitSection semantic={semantic}>
+        <BrandKitSection semantic={semantic}/>
           <Card
             size="small"
             style={{
@@ -430,7 +430,7 @@ export default function ChatOmnihumenInput({
           >
             Generate
           </Button>
-        </BrandKitSection>
+       
       </Form>
 
       <Modal

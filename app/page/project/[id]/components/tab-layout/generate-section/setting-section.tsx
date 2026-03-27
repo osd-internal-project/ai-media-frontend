@@ -126,7 +126,7 @@ export default function SettingSection({
   };
 
   return (
-    <Flex vertical gap={8}>
+    <Flex vertical gap={8} style={{ minWidth: 0, maxWidth: '100%', padding: 2 }}>
       <Button
         type="text"
         onClick={() => setShowSettings((previous) => !previous)}
@@ -165,8 +165,10 @@ export default function SettingSection({
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
             borderRadius: 12,
+            minWidth: 0,
+            maxWidth: '100%',
           }}
-          styles={{ body: { padding: 12 } }}
+          styles={{ body: { padding: 10 } }}
         >
           <Flex vertical gap={14}>
             {groupModes && (
