@@ -54,7 +54,7 @@ const ResultItem: FC<Props> = ({
       {/* HEADER */}
       <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
         <Space>
-          <Typography.Text strong>#{index + 1}</Typography.Text>
+          <Typography.Text >#{message.taskId}</Typography.Text>
 
           <Tag
             style={{

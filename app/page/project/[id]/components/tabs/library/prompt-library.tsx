@@ -19,7 +19,8 @@ import {
   Typography,
   Empty,
 } from "antd";
-import { Download, ExternalLink, Loader, Trash2 } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Download, ExternalLink, Eye, Loader, Trash2 } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -31,6 +32,8 @@ export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
 }
+
+const PreviewImage = dynamic(() => import("../../chat-components/preview-image"), { ssr: false });
 
 const PromptLibrary: FC<props> = ({
   shouldRefetch,
@@ -45,6 +48,16 @@ const PromptLibrary: FC<props> = ({
   const galleryservices = GalleryServices(axiosCore);
 
   const [selected, setSelected] = useState<any>(null);
+  const [previewItem, setPreviewItem] = useState<any>(null);
+  // =========================
+  // PREVIEW HANDLER
+  // =========================
+  const handlePreview = (item: any) => {
+    setPreviewItem(item);
+  };
+  const handleClosePreview = () => {
+    setPreviewItem(null);
+  };
 
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -352,6 +365,14 @@ const PromptLibrary: FC<props> = ({
                         }}
                         style={secondaryActionStyle}
                       />
+                      <Button
+                        icon={<Eye size={16} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePreview(item);
+                        }}
+                        style={secondaryActionStyle}
+                      />
                     </Flex>
                   </div>
 
@@ -395,6 +416,34 @@ const PromptLibrary: FC<props> = ({
           {/* EMPTY */}
           {!displayItems.length && <Empty />}
         </Flex>
+      )}
+      {/* PREVIEW MODAL */}
+      {previewItem && (
+        previewItem.typeGenerate === "image" ? (
+          <PreviewImage
+            closePreview={handleClosePreview}
+            previewImage={previewItem.imageUrl}
+          />
+        ) : (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={handleClosePreview}
+          >
+            <button
+              className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+              onClick={handleClosePreview}
+            >
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <video
+              src={previewItem.imageUrl}
+              controls
+              autoPlay
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        )
       )}
     </div>
   );

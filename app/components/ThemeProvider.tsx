@@ -1,9 +1,8 @@
 "use client";
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { ConfigProvider } from "antd";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 
-// Theme mode type
 export type ThemeMode = "light" | "dark";
 
 interface ThemeContextProps {
@@ -24,9 +23,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggleMode = () => setMode((m) => (m === "dark" ? "light" : "dark"));
 
-
-  // ดึง theme config ตาม mode
   const themeConfig = getThemeConfig(mode);
+
+  // ✅ KEY: set class ให้ global CSS รู้ mode
+  useEffect(() => {
+    const root = document.documentElement; // หรือ document.body
+
+    root.classList.remove("theme-light", "theme-dark");
+    root.classList.add(`theme-${mode}`);
+  }, [mode]);
 
   return (
     <ThemeContext.Provider value={{ mode, toggleMode }}>

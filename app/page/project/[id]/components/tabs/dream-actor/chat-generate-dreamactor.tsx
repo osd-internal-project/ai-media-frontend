@@ -36,6 +36,9 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import DreamactorResultItem from "./dream-item-result";
+import DreamHeader from "./header";
+import DreamactorResultHeader from "./header";
 
 interface DreamactorChatProps {
   teamView: boolean;
@@ -58,7 +61,7 @@ interface DreamactorChatProps {
   >;
 }
 
-interface UserMessage {
+ interface UserMessage {
   id?: number;
   userId?: string;
   username: string;
@@ -79,7 +82,7 @@ interface UserMessage {
   recentOrganizationId?: string;
 }
 
-export interface VideoMessage {
+ export interface VideoMessage {
   id?: string | undefined;
   imageUrl: string;
   thumbnailUrl?: string;
@@ -87,7 +90,7 @@ export interface VideoMessage {
   fileName?: string;
 }
 
-interface Message {
+export interface Message {
   id: string;
   taskId: string;
   projectId: string;
@@ -1037,7 +1040,19 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     }
     socket.emit("generate:dreamactor", messageBody);
   };
-
+  
+const onDelete = (taskId: string, id: string) => {
+  setMessages((prev) =>
+    prev.map((msg) =>
+      msg.taskId === taskId
+        ? {
+            ...msg,
+            imageUrls: msg.imageUrls.filter((v) => v.id !== id),
+          }
+        : msg,
+    ),
+  );
+};
   return (
     <Flex
       vertical
@@ -1055,6 +1070,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         isMobile={isMobile}
         projectRole={projectRole || undefined}
         fallbackDescription="You need USER or ADMIN role to use the dreamactor chat feature."
+        tabKey="dream-actor"
+        form={form}
         leftPanel={
           <ChatDreamactorInput
             setSelectedRatio={setSelectedRatio}
@@ -1094,140 +1111,19 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         bottomRef={bottomRef}
         rightContent={
           <>
+             <DreamactorResultHeader
+    messages={messages}
+    onClear={() => setMessages([])}
+  />
+
             {messages.map((item: Message, index) => (
-              <Flex
-                key={`${item.id}-${index}`}
-                vertical
-                style={{ marginBottom: 8 }}
-              >
-                <Flex gap={8} align="flex-start">
-                  <Flex
-                    vertical
-                    style={{ width: "100%", alignItems: "flex-start" }}
-                  >
-                    <Flex align="center" gap={8} style={{ marginBottom: 4 }}>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {item.users.username}
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        •
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12 }}
-                      >
-                        {new Date(item.createdAt).toLocaleDateString([], {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}{" "}
-                        {new Date(item.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Typography.Text>
-                    </Flex>
-
-                    {item.prompt && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 2,
-                          borderRadius: 14,
-                          borderTopLeftRadius: 6,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgContainer,
-                        }}
-                        styles={{ body: { padding: "8px 12px" } }}
-                      >
-                        <Typography.Text
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {item.prompt}
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    <DreamactorSmartReference
-                      selectedAIModel={selectedAIModel}
-                      referenceImages={item.referenceImages}
-                      resolution={item.generateConfig?.resolution}
-                    />
-
-                    {(item.genneratedStatus === "PENDING" ||
-                      item.genneratedStatus === "PROCESSING") && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorBorder,
-                          background: semantic.colorBgElevated,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <AiImageLoader />
-                      </Card>
-                    )}
-
-                    {(item.genneratedStatus === "FAILED" ||
-                      item.genneratedStatus === "FAIL" ||
-                      (item.genneratedStatus === "SUCCESS" &&
-                        item.imageUrls?.length === 0)) && (
-                      <Card
-                        size="small"
-                        style={{
-                          marginTop: 4,
-                          borderRadius: 8,
-                          borderColor: semantic.colorErrorBorder,
-                          background: semantic.colorErrorBg,
-                        }}
-                        styles={{ body: { padding: 8 } }}
-                      >
-                        <Typography.Text style={{ color: semantic.colorError }}>
-                          Generate failed
-                        </Typography.Text>
-                      </Card>
-                    )}
-
-                    {item.genneratedStatus === "SUCCESS" &&
-                      item.imageUrls &&
-                      item.imageUrls.length > 0 && (
-                        <Flex
-                          vertical
-                          gap={8}
-                          style={{ marginTop: 8, width: "100%", maxWidth: 260 }}
-                        >
-                          {item.imageUrls.map(
-                            (videoData: VideoMessage, videoIndex) => (
-                              <VideoItem
-                                key={`${videoData.id || videoData.imageUrl}-${videoIndex}`}
-                                videoData={videoData}
-                                onDownloadVideo={onDownloadVideo}
-                                onShareVideo={(task, id, status) => {
-                                  if (item.taskId) {
-                                    onShareVideo(item.taskId, id, status);
-                                  }
-                                }}
-                                taskId={item.taskId} // shareStatus={true}
-                              />
-                            ),
-                          )}
-                        </Flex>
-                      )}
-                  </Flex>
-                </Flex>
-              </Flex>
+             <DreamactorResultItem
+    key={item.id || item.taskId} // ✅ safer key
+    message={item}
+    onDownloadVideo={onDownloadVideo}
+    onShareVideo={onShareVideo}
+    onDelete={onDelete}
+  />
             ))}
           </>
         }

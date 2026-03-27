@@ -1130,6 +1130,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         isMobile={isMobile}
         projectRole={projectRole}
         fallbackDescription="You need USER or ADMIN role to use the video chat feature."
+        tabKey="video"
+        form={form}
         leftPanel={
           <ChatVideoInput
             setSelectedRatio={setSelectedRatio}

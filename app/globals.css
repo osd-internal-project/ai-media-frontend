@@ -145,3 +145,74 @@
   color: #facc15 !important;
 }
 
+
+
+/* =========================
+   Scroll bar styles for WebKit browsers
+========================= */
+
+/* =========================
+   🌙 DARK MODE
+========================= */
+.theme-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.theme-dark ::-webkit-scrollbar-track {
+  background: #191C20; /* neutral900 */
+  border-radius: 999px;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+       #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0FEAB6 100%
+  );
+  border-radius: 999px;
+  border: 2px solid #191C20;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #4B49A1 0%,
+    #4B49A1 50%,
+    #0FEAB6 100%
+  );
+}
+
+/* =========================
+   ☀️ LIGHT MODE
+========================= */
+.theme-light ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.theme-light ::-webkit-scrollbar-track {
+  background: #F2F4F5; /* neutral200 */
+  border-radius: 999px;
+}
+
+.theme-light ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+     #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0FEAB6 100%
+  );
+  border-radius: 999px;
+  border: 2px solid #F2F4F5;
+}
+
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0DCFA0 100%
+  );
+}
