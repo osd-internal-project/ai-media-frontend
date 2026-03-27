@@ -51,14 +51,14 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
       <Flex justify="space-between" align="center">
         <Space size={8}>
           <Typography.Title level={5} style={{ margin: 0 }}>
-            🎬 Video Results
+           Results
           </Typography.Title>
 
           {/* จำนวน task */}
-          <Tag>{totalTasks} tasks</Tag>
+          {/* <Tag>{totalTasks} tasks</Tag> */}
 
           {/* จำนวน video */}
-          <Tag color="blue">{totalVideos} videos</Tag>
+          <Tag >{totalVideos}</Tag>
 
           {/* กำลัง generate */}
           {processingCount > 0 && (

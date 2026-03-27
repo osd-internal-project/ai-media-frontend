@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type FC, type ReactElement } from "react";
+import React, { useEffect, useState, useRef, type FC, type ReactElement } from "react";
 import {
   Button,
   Flex,
@@ -10,6 +10,9 @@ import {
   Typography,
   notification,
 } from "antd";
+import dynamic from "next/dynamic";
+import { Eye } from "lucide-react";
+
 import type { ColumnsType } from "antd/es/table";
 import { Loader2, Star } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -23,6 +26,7 @@ import {
   StarOutlined,
 
 } from "@ant-design/icons";
+import PreviewImage from "../../chat-components/preview-image";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -84,6 +88,8 @@ const PromptActivity: FC<props> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingButton, setLoadingButton] = useState<string | null>(null);
   const [api, contextHolders] = notification.useNotification();
+  const [previewItem, setPreviewItem] = useState<any>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeKey === "activity" && loading) {
@@ -180,34 +186,91 @@ const PromptActivity: FC<props> = ({
       dataIndex: "imageUrl",
       key: "preview",
       width: 140,
-      render: (_, record) => (
-        <div
-          style={{
-            width: 112,
-            height: 64,
-            borderRadius: 8,
-            overflow: "hidden",
-            border: `1px solid ${semantic.colorBorder}`,
-          }}
-        >
-          {record.typeGenerate === "image" ? (
-            <Image
-              src={record.imageUrl}
-              alt={record.prompt || "preview"}
-              preview={false}
-              width={112}
-              height={64}
-              style={{ objectFit: "cover" }}
-            />
-          ) : (
-            <video
-              src={record.imageUrl}
-              muted
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          )}
-        </div>
-      ),
+      render: (_, record) => {
+        const isVideo = record.typeGenerate === "video" || record.typeGenerate === "dreamactor" || record.typeGenerate === "omnihumen" || record.typeGenerate === "omnihuman";
+        return (
+          <div
+            style={{
+              width: 112,
+              height: 64,
+              borderRadius: 8,
+              overflow: "hidden",
+              border: `1px solid ${semantic.colorBorder}`,
+              position: "relative",
+              cursor: "pointer",
+            }}
+            onMouseEnter={() => setHoveredId(record.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            onClick={() => setPreviewItem(record)}
+          >
+            {/* Thumbnail or video preview */}
+            {isVideo ? (
+              <>
+                <video
+                  src={record.imageUrl}
+                  muted
+                  style={{ width: "100%", height: "100%", objectFit: "cover", opacity: hoveredId === record.id ? 1 : 0.7, transition: "opacity 0.2s" }}
+                  playsInline
+                  loop
+                  preload="metadata"
+                  onMouseOver={e => { if (hoveredId === record.id) (e.currentTarget as HTMLVideoElement).play(); }}
+                  onMouseOut={e => { (e.currentTarget as HTMLVideoElement).pause(); (e.currentTarget as HTMLVideoElement).currentTime = 0; }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    background: "rgba(0,0,0,0.5)",
+                    borderRadius: 4,
+                    padding: 2,
+                    zIndex: 2,
+                  }}
+                >
+                  <Eye size={16} color="#fff" />
+                </div>
+              </>
+            ) : (
+              <>
+                <Image
+                  src={record.imageUrl}
+                  alt={record.prompt || "preview"}
+                  preview={false}
+                  width={112}
+                  height={64}
+                  style={{ objectFit: "cover", opacity: hoveredId === record.id ? 1 : 0.85, transition: "opacity 0.2s" }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    background: "rgba(0,0,0,0.5)",
+                    borderRadius: 4,
+                    padding: 2,
+                    zIndex: 2,
+                  }}
+                >
+                  <Eye size={16} color="#fff" />
+                </div>
+              </>
+            )}
+            {/* Overlay on hover */}
+            {hoveredId === record.id && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.15)",
+                  zIndex: 1,
+                  borderRadius: 8,
+                  transition: "background 0.2s",
+                }}
+              />
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Type",
@@ -363,6 +426,34 @@ const PromptActivity: FC<props> = ({
             />
           </Flex>
         </Flex>
+      )}
+      {/* PREVIEW MODAL */}
+      {previewItem && (
+        previewItem.typeGenerate === "image" ? (
+          <PreviewImage
+            closePreview={() => setPreviewItem(null)}
+            previewImage={previewItem.imageUrl}
+          />
+        ) : (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setPreviewItem(null)}
+          >
+            <button
+              className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+              onClick={() => setPreviewItem(null)}
+            >
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <video
+              src={previewItem.imageUrl}
+              controls
+              autoPlay
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        )
       )}
     </div>
   );

@@ -2,8 +2,10 @@ import React from "react";
 import {
   RectangleHorizontal,
   RectangleVertical,
+  Sparkles,
   Square,
   Zap,
+  ZapIcon,
 } from "lucide-react";
 import {
   Button,
@@ -19,7 +21,7 @@ import {
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
@@ -291,8 +293,9 @@ export default function ChatImageInput({
               height: 40,
               borderRadius: 10,
               fontWeight: 600,
+              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`
             }}
-            icon={<Zap size={16} fill="currentColor" />}
+            icon={<Sparkles size={16}  />}
             loading={submitting}
           >
             Generate x {selectedMaximumImage}

@@ -1134,6 +1134,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         isMobile={isMobile}
         projectRole={projectRole}
         fallbackDescription="You need USER or ADMIN role to use the chat feature."
+        tabKey="image"
+        form={form}
         leftPanel={
           <ChatImageInput
             setGroupMode={setGroupMode}
