@@ -33,7 +33,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
-import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
+// import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 import Quata from "@/app/page/project/component/quata";
@@ -334,12 +334,12 @@ export default function ChatDreamactorInput({
             maxLength={2000}
           />
 
-          <PromptTemplateSection
+          {/* <PromptTemplateSection
             promptGuideTemplates={promptGuideTemplates}
             fetchPromptGuides={fetchVideoPromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
             buttonText="Browse Prompt Templates"
-          />
+          /> */}
 
           <SettingSection
             semantic={semantic}
