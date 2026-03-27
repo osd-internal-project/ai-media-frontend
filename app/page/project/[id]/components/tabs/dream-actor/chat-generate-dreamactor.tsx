@@ -869,7 +869,6 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
-          console.log(2222);
           if (index === 0) {
             setFilesFirst([file]);
             setRefImageFrist((prev) => [...prev, result]);
@@ -913,7 +912,6 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     if (prompt.images && prompt.images.length > 0) {
       setIsLoadingUpload(true);
       try {
-        console.log(111);
         const uploadPromises = prompt.images.map(async (img) => {
           const newIndex = img.index - 1;
           const formData = new FormData();
@@ -1108,6 +1106,8 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
+            selectedModel={selectedAIModel?.modelType || undefined}
+            organizationId={session?.user?.organizationId || undefined}
           />
         }
         loading={loading}

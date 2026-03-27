@@ -1095,6 +1095,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
+            selectedModel={selectedAIModel?.modelType || undefined}
+            organizationId={session?.user?.organizationId || undefined}
           />
         }
         loading={loading}
