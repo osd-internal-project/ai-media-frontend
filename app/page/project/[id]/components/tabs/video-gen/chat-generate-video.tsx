@@ -222,6 +222,16 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+
+    if (shouldAutoScrollRef.current && messages.length > 0) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        shouldAutoScrollRef.current = false;
+      }, 100);
+    }
+  }, [messages.length]);
+
+  useEffect(() => {
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
@@ -734,6 +744,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
+      // const nextPage = page + 1;
+      // setPage(nextPage);
+      // loadMoreMessages(nextPage, true);
       fetchOldMessages();
     }
   };
@@ -759,32 +772,23 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }
 
   // Restore scroll position after loading more
-  // useEffect(() => {
-  //     if (isLoadingMoreRef.current && chatContainerRef.current) {
-  //         const newScrollHeight = chatContainerRef.current.scrollHeight;
-  //         const scrollDiff = newScrollHeight - scrollHeightRef.current;
+  useEffect(() => {
+    if (isLoadingMoreRef.current && chatContainerRef.current) {
+      const newScrollHeight = chatContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - scrollHeightRef.current;
 
-  //         chatContainerRef.current.style.scrollBehavior = "auto";
-  //         chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.style.scrollBehavior = "auto";
+      chatContainerRef.current.scrollTop = scrollDiff;
 
-  //         requestAnimationFrame(() => {
-  //             if (chatContainerRef.current) {
-  //                 chatContainerRef.current.style.scrollBehavior = "smooth";
-  //             }
-  //         });
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = "smooth";
+        }
+      });
 
-  //         isLoadingMoreRef.current = false;
-  //     }
-  // }, [messages]);
-
-  // useEffect(() => {
-  //     if (shouldAutoScrollRef.current && messages.length > 0) {
-  //         setTimeout(() => {
-  //             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  //             shouldAutoScrollRef.current = false;
-  //         }, 100);
-  //     }
-  // }, [messages.length]);
+      isLoadingMoreRef.current = false;
+    }
+  }, [messages]);
 
   const onDownloadVideo = async (fileName: string, videoId: string) => {
     // try {
@@ -1021,7 +1025,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
   }
 
-  const handleFormSubmit = (values: any) => { 
+  const handleFormSubmit = (values: any) => {
     if (!selectedAIModel)
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
@@ -1050,7 +1054,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       generateAudio: selectedAudio,
       draft: draftMode,
       organizationId: session?.user?.organizationId,
-    }; 
+    };
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,

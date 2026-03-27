@@ -552,8 +552,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     const isAtBottom =
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
-    isAtBottomRef.current = isAtBottom;
-    isAtBottomRef.current = isAtBottom;
+    isAtBottomRef.current = isAtBottom; 
     if (
       target.scrollTop === 0 &&
       !loading &&

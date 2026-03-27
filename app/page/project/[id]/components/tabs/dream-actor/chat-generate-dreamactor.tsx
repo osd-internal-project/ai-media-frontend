@@ -214,6 +214,16 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+
+    if (shouldAutoScrollRef.current && messages.length > 0) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        shouldAutoScrollRef.current = false;
+      }, 100);
+    }
+  }, [messages.length]);
+
+  useEffect(() => {
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
@@ -742,6 +752,25 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
       fetchOldMessages();
     }
   };
+
+  // Restore scroll position after loading more
+  useEffect(() => {
+    if (isLoadingMoreRef.current && chatContainerRef.current) {
+      const newScrollHeight = chatContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - scrollHeightRef.current;
+
+      chatContainerRef.current.style.scrollBehavior = "auto";
+      chatContainerRef.current.scrollTop = scrollDiff;
+
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = "smooth";
+        }
+      });
+
+      isLoadingMoreRef.current = false;
+    }
+  }, [messages]);
 
   async function fetchDreamactorPromptGuides() {
     if (session?.user?.organizationId) {

@@ -213,6 +213,15 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
+    if (shouldAutoScrollRef.current && messages.length > 0) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        shouldAutoScrollRef.current = false;
+      }, 100);
+    }
+  }, [messages.length]);
+
+  useEffect(() => {
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
@@ -694,7 +703,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
-    socket.off("worker:omnihumen-error", handleError); 
+    socket.off("worker:omnihumen-error", handleError);
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:used-credit", handleCreditChange);
 
@@ -743,6 +752,25 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       fetchOldMessages();
     }
   };
+
+  // Restore scroll position after loading more
+  useEffect(() => {
+    if (isLoadingMoreRef.current && chatContainerRef.current) {
+      const newScrollHeight = chatContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - scrollHeightRef.current;
+
+      chatContainerRef.current.style.scrollBehavior = "auto";
+      chatContainerRef.current.scrollTop = scrollDiff;
+
+      requestAnimationFrame(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.style.scrollBehavior = "smooth";
+        }
+      });
+
+      isLoadingMoreRef.current = false;
+    }
+  }, [messages]);
 
   async function fetchOmnihumenPromptGuides() {
     if (session?.user?.organizationId) {
