@@ -35,7 +35,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../tab-layout/generate-section/prompt-section";
-import PromptTemplateSection from "../../tab-layout/generate-section/promt-template-section";
+import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 
@@ -74,6 +74,8 @@ type Props = {
   handleUsePromptGuide: (template: TPromptGuide) => void;
   usedCredit: { used?: number; total?: number };
   cerrentUsedCredit: number;
+  selectedModel?: string;
+  organizationId?: string;
 };
 
 export default function ChatVideoInput({
@@ -96,11 +98,11 @@ export default function ChatVideoInput({
   selectedAudio,
   setSelectedWidth,
   setSelectedHeight,
-  promptGuideTemplates,
-  fetchVideoPromptGuides,
   handleUsePromptGuide,
   usedCredit,
   cerrentUsedCredit,
+  selectedModel,
+  organizationId,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -376,10 +378,9 @@ export default function ChatVideoInput({
           />
 
           <PromptTemplateSection
-            promptGuideTemplates={promptGuideTemplates}
-            fetchPromptGuides={fetchVideoPromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
-            buttonText="Browse Prompt Templates"
+            organizationId={organizationId}
+            selectedModel={selectedModel}
           />
 
           <SettingSection

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, type FC } from "react";
-import { PermissionGuard } from "../../../../../../components/PermissionGuard";
-import { projectPermissions } from "../../../../../../utils/permissions";
+
 import {
   Avatar,
   Button,
@@ -31,12 +30,6 @@ import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import GenerateServices from "@/app/services/generate.service";
 import Avatars from "@/public/images/Avatar.jpg";
-import {
-  TPromptGuideType,
-  TPromptGuide,
-  TPromptGuideTemplate,
-} from "@/app/common/prompt-guide.type";
-import PromptGuideServices from "@/app/services/prompt-guide.service";
 import LogsServices from "@/app/services/logs.service";
 
 import ImageConfigurationCard from "./image-smart-reference";
@@ -55,6 +48,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import ActionBar from "./action-bar";
 import ResultHeader from "./result-header";
 import ResultItem from "./image-result-item";
+import { TPromptGuide } from "@/app/common/prompt-guide.type";
 
 export interface ImageChatProps {
   teamView: boolean;
@@ -168,11 +162,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const [api, contextHolderNoti] = notification.useNotification();
-  const promptGuideTypeService = PromptGuideTypeServices(axiosCore);
-  const promptGuideService = PromptGuideServices(axiosCore);
   const galleryService = GalleryServices(axiosCore);
   const logsService = LogsServices(axiosCore);
   const generateServices = GenerateServices(axiosCore);
+  const promptGuideService=PromptGuideTypeServices(axiosCore);
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -203,9 +196,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const [selectedResolution, setSelectedResolution] = useState<string>("2k");
   const [selectedWidth, setSelectedWidth] = useState<number>(2048);
   const [selectedHeight, setSelectedHeight] = useState<number>(2048);
-  const [promptGuideTemplates, setPromptGuideTemplates] = useState<
-    TPromptGuideTemplate[]
-  >([]);
   const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
   const [lastRowSeq, setLastRowSeq] = useState<number | undefined>(undefined);
   const [refImage, setRefImage] = useState<
@@ -580,25 +570,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }
   };
 
-  async function fetchImagePromptGuides() {
-    if (session?.user?.organizationId) {
-      const types = await promptGuideTypeService.findAll(
-        session?.user?.organizationId,
-        "image",
-      );
 
-      const templates = await Promise.all(
-        types.map(async (type) => {
-          const response = await promptGuideService.findWithImageByTypes(
-            session?.user?.organizationId || "",
-            type.id,
-          );
-          return { ...type, promptGuides: response || [] };
-        }),
-      );
-      setPromptGuideTemplates(templates);
-    }
-  }
   useEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
@@ -1056,6 +1028,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   async function handleUsePromptGuide(prompt: TPromptGuide) {
+    
     form.setFieldValue("prompt", prompt.textPrompt);
     setFiles([]);
     setRefImage([]);
@@ -1183,12 +1156,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             isLoadingUpload={isLoadingUpload}
             setSelectedWidth={setSelectedWidth}
             setSelectedHeight={setSelectedHeight}
-            promptGuideTemplates={promptGuideTemplates}
-            fetchImagePromptGuides={fetchImagePromptGuides}
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
             fetchCerrentUsedCredit={fetchCerrentUsedCredit}
+            organizationId={session?.user?.organizationId || undefined}
+            selectedModel={selectedAIModel?.modelType || undefined}
           />
         }
         loading={loading}

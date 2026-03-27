@@ -77,7 +77,7 @@ const ResultItem: FC<Props> = ({
               color: semantic.colorTextSecondary,
             }}
           >
-            "{message.prompt}"
+            {message.prompt}
           </Typography.Text>
         </Space>
 

@@ -1158,6 +1158,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
+            selectedModel={selectedAIModel?.modelType || undefined}
+            organizationId={session?.user?.organizationId || undefined}
           />
         }
         loading={loading}
@@ -1170,23 +1172,20 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         bottomRef={bottomRef}
         rightContent={
           <>
-                    <ResultHeader
-  messages={messages}
-  onClear={() => setMessages([])}/>
-      {messages.map((item, index) => (
-  <VideoResultItem
-    key={item.id || item.taskId || index}
-    message={item}
-    index={index}
-    semantic={semantic}
-    aiCaveColors={{ dreamActor: "#8b5cf6" }} // หรือเอาจาก theme จริงก็ได้
-    onShareVideo={onShareVideo}
-    onDownloadVideo={onDownloadVideo}
-    setMessages={setMessages}
-    selectedAIModel={selectedAIModel}   
-        />
-        
-))}
+            <ResultHeader messages={messages} onClear={() => setMessages([])} />
+            {messages.map((item, index) => (
+              <VideoResultItem
+                key={item.id || item.taskId || index}
+                message={item}
+                index={index}
+                semantic={semantic}
+                aiCaveColors={{ dreamActor: "#8b5cf6" }} // หรือเอาจาก theme จริงก็ได้
+                onShareVideo={onShareVideo}
+                onDownloadVideo={onDownloadVideo}
+                setMessages={setMessages}
+                selectedAIModel={selectedAIModel}
+              />
+            ))}
           </>
         }
       />
