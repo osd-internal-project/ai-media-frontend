@@ -50,23 +50,26 @@ const donutArc = (
 
 export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 	const [hoveredName, setHoveredName] = useState<string | null>(null);
-	const width = 220;
-	const height = 150;
-	const cx = 110;
-	const cy = 75;
-	const innerRadius = 42;
-	const outerRadius = 68;
+	const width = 260;
+	const height = 180;
+	const cx = 130;
+	const cy = 90;
+	const innerRadius = 54;
+	const outerRadius = 84;
 	const total = Math.max(data.reduce((sum, item) => sum + item.value, 0), 1);
 
+	// Add gap between arcs
+	const gapAngle = 2; // degrees
 	let startAngle = 0;
 	const arcs = data.map((item) => {
 		const angle = (item.value / total) * 360;
-		const endAngle = startAngle + angle;
+		const arcStart = startAngle + gapAngle / 2;
+		const arcEnd = startAngle + angle - gapAngle / 2;
 		const arc = {
 			...item,
-			path: donutArc(cx, cy, innerRadius, outerRadius, startAngle + 1, endAngle - 1),
+			path: donutArc(cx, cy, innerRadius, outerRadius, arcStart, arcEnd),
 		};
-		startAngle = endAngle;
+		startAngle += angle;
 		return arc;
 	});
 
@@ -79,7 +82,7 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 		<svg
 			viewBox={`0 0 ${width} ${height}`}
 			width="100%"
-			height={140}
+			height={height}
 			role="img"
 			aria-label="Type distribution"
 			onMouseLeave={() => setHoveredName(null)}
@@ -89,6 +92,8 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 					key={arc.name}
 					d={arc.path}
 					fill={arc.color}
+					stroke="#fff"
+					strokeWidth={2}
 					onMouseEnter={() => setHoveredName(arc.name)}
 					opacity={hoveredName && hoveredName !== arc.name ? 0.55 : 1}
 				/>
@@ -97,18 +102,18 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 			{hovered && (
 				<g>
 					<rect
-						x={8}
-						y={8}
+						x={cx - 65}
+						y={cy - 60}
 						width={130}
 						height={42}
 						rx={8}
 						fill={colors.tooltipBg}
 						stroke={colors.tooltipBorder}
 					/>
-					<text x={16} y={25} fill={colors.tooltipText} fontSize="11">
+					<text x={cx} y={cy - 45} fill={colors.tooltipText} fontSize="12" fontWeight="bold" textAnchor="middle">
 						{hovered.name}
 					</text>
-					<text x={16} y={40} fill={hovered.color} fontSize="11">
+					<text x={cx} y={cy - 28} fill={hovered.color} fontSize="12" fontWeight="bold" textAnchor="middle">
 						Value: {hovered.value}
 					</text>
 				</g>

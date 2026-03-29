@@ -8,51 +8,102 @@ import TypoModal from "./typo-modal";
 
 const { Title, Text } = Typography;
 
+
+
+// FontItem is only for UI, not for API
 interface FontItem {
   name: string;
   weight: number;
-  type: "heading" | "body";
+  type: string; // allow heading1-6, body, caption, paragraph
   preview: string;
 }
 
 interface TypographyTabProps {
   fonts: FontItem[];
-  onAddFont?: (values: Partial<FontItem>) => void;
+  onAddFont?: (payload: Partial<import("@/app/common/brand-kit").TBrandKitDetail>) => void;
   onDeleteFont?: (index: number) => void;
+  emptyState?: boolean;
 }
 
 const TypographyTab: React.FC<TypographyTabProps> = ({
   fonts,
   onAddFont,
   onDeleteFont,
+  emptyState,
 }) => {
-     const { mode } = useThemeMode();
+
+    const { mode } = useThemeMode();
     const semantic = getThemeConfig(mode).token ?? {};
-     const [modalOpen, setModalOpen] = useState(false);
-  const [form] = Form.useForm();
+    const [modalOpen, setModalOpen] = useState(false);
+    const [form] = Form.useForm();
 
-  // Handler for opening modal
-  const handleAddFont = () => {
-    form.resetFields();
-    setModalOpen(true);
-  };
+    // Handler for opening modal
+    const handleAddFont = () => {
+      form.resetFields();
+      setModalOpen(true);
+    };
 
-  // Handler for modal OK
-  const handleModalOk = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        // Call parent handler if provided
-        if (onAddFont) onAddFont(values);
+    // Handler for modal OK
+    const handleModalOk = async () => {
+      try {
+        const values = await form.validateFields();
+        // Compose payload for API (if onAddFont expects API shape)
+        const payload: Partial<import("@/app/common/brand-kit").TBrandKitDetail> = {
+          name: values.name,
+          type: "typography",
+          detail: {
+            weight: values.weight,
+            type: values.type,
+            preview: values.preview || "",
+          },
+          // brandKitId should be injected by parent if needed
+        };
+        if (onAddFont) onAddFont(payload);
         setModalOpen(false);
-      })
-      .catch(() => {});
-  };
+      } catch {
+        // validation error
+      }
+    };
 
-  // Handler for modal Cancel
-  const handleModalCancel = () => {
-    setModalOpen(false);
-  };
+    // Handler for modal Cancel
+    const handleModalCancel = () => {
+      setModalOpen(false);
+    };
+
+    // Always show Add Font button, even in empty state
+    if (emptyState) {
+      return (
+        <div>
+          <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+            <span />
+            <Button type="default" icon={<PlusOutlined />} onClick={handleAddFont}>
+              Add Font
+            </Button>
+          </Row>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 220,
+              color: semantic.colorTextSecondary,
+              gap: 12,
+            }}
+          >
+            <div style={{ fontSize: 48, opacity: 0.2 }}>🥣</div>
+            <div style={{ fontSize: 18 }}>No typography yet</div>
+            <div style={{ fontSize: 14, color: semantic.colorTextSecondary }}>Add your first brand font to get started.</div>
+          </div>
+          <TypoModal
+            open={modalOpen}
+            form={form}
+            onOk={handleModalOk}
+            onCancel={handleModalCancel}
+          />
+        </div>
+      );
+    }
 
   return (
     <div>

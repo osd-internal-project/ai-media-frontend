@@ -27,6 +27,7 @@ import PromptSection from "../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
+import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 type Props = {
   setGroupMode: (groupMode: string | undefined) => void;
   groupMode: string;
@@ -248,7 +249,7 @@ export default function ChatImageInput({
             setSelectedMaximumImage={setSelectedMaximumImage}
             ratioSizeMap={RATIO_SIZE_MAP}
           />
-
+            <BrandKitSection semantic={semantic} />
         </Flex>
 
         <Flex

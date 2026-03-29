@@ -32,8 +32,15 @@ const TypoModal: React.FC<TypoModalProps> = ({ open, form, onOk, onCancel }) => 
           rules={[{ required: true, message: 'Please select type!' }]}
         >
           <Select placeholder="Select type">
-            <Select.Option value="heading">Heading</Select.Option>
+            <Select.Option value="heading1">Heading1</Select.Option>
+            <Select.Option value="heading2">Heading2</Select.Option>
+            <Select.Option value="heading3">Heading3</Select.Option>
+            <Select.Option value="heading4">Heading4</Select.Option>
+            <Select.Option value="heading5">Heading5</Select.Option>
+            <Select.Option value="heading6">Heading6</Select.Option>
             <Select.Option value="body">Body</Select.Option>
+            <Select.Option value="caption">Caption</Select.Option>
+            <Select.Option value="paragraph">Paragraph</Select.Option>
           </Select>
         </Form.Item>
         <Form.Item
@@ -43,6 +50,7 @@ const TypoModal: React.FC<TypoModalProps> = ({ open, form, onOk, onCancel }) => 
         >
           <Input type="number" placeholder="700" min={100} max={900} step={100} />
         </Form.Item>
+        {/* Preview is auto-generated, not user input */}
       </Form>
     </Modal>
   );

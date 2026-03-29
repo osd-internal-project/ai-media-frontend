@@ -1,4 +1,30 @@
 /* GenerateImagePage tab full-height layout */
+/* Overlay and pane animation for GenerateTwoPaneLayout */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUpPane {
+  from {
+    transform: translateY(40px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.two-pane-overlay-bg {
+  animation: overlayFadeIn 0.22s cubic-bezier(.4,0,.2,1);
+  transition: background 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+.two-pane-overlay-pane {
+  animation: slideUpPane 0.28s cubic-bezier(.4,0,.2,1);
+  transition: box-shadow 0.18s cubic-bezier(.4,0,.2,1);
+}
 
 .ant-tabs-full {
   height: 100%;

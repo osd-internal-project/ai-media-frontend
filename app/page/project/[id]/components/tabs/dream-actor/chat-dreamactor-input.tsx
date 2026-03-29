@@ -394,9 +394,10 @@ export default function ChatDreamactorInput({
               </>
             }
           />
+          <BrandKitSection semantic={semantic} />
         </Flex>
 
-        <BrandKitSection semantic={semantic}/>
+        
           <Card
             size="small"
             style={{

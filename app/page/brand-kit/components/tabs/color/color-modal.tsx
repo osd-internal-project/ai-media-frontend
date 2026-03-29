@@ -97,10 +97,11 @@ const ColorModal: React.FC<ColorModalProps> = ({ open, form, onOk, onCancel }) =
           rules={[{ required: true, message: 'Please select category!' }]}
         >
           <Select placeholder="Select category">
-            <Select.Option value="Primary">Primary</Select.Option>
-            <Select.Option value="Secondary">Secondary</Select.Option>
-            <Select.Option value="Accent">Accent</Select.Option>
-            <Select.Option value="Neutral">Neutral</Select.Option>
+            <Select.Option value="primary">Primary</Select.Option>
+            <Select.Option value="secondary">Secondary</Select.Option>
+            <Select.Option value="accent">Accent</Select.Option>
+            <Select.Option value="neutral">Neutral</Select.Option>
+            <Select.Option value="background">Background</Select.Option>
           </Select>
         </Form.Item>
       </Form>
