@@ -3,6 +3,15 @@ import { AxiosInstance } from "axios";
 const GalleryServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/gallery";
   return {
+        deleteById: async (id: string) => {
+          return await axiosInstance
+            .delete(`${baseUrl}/${id}`)
+            .then((res) => res.data)
+            .catch((err) => {
+              console.log(err);
+              throw err;
+            });
+        },
     findAll: async () => {
       return await axiosInstance
         .get(`${baseUrl}`)
