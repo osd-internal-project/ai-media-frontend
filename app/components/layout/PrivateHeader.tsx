@@ -87,13 +87,10 @@ export function PrivateHeader({
   const orgMenuItems = [
     ...allOrganizations.map((org) => ({
       key: org.organizationId,
+      onClick: () => handleOrganizationChange(org.organizationId),
       label: (
         <Space style={{ width: "100%", justifyContent: "space-between" }}>
-          <div onClick={() => handleOrganizationChange(org.organizationId)}>
-            <Text strong={org.organizationId === organizationId}>
-              {org.name}
-            </Text>
-          </div>
+          <Text strong={org.organizationId === organizationId}>{org.name}</Text>
         </Space>
       ),
     })),
