@@ -25,7 +25,7 @@ const UsageTableModal: React.FC<Props> = ({ visible, onCancel, coupon }) => {
                 })
                 .finally(() => setLoading(false));
         }
-    }, [visible, coupon, couponService]);
+    }, [visible, coupon]);
 
     const columns = [
         {
