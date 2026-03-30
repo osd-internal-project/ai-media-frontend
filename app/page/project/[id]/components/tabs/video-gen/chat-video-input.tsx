@@ -39,6 +39,7 @@ import PromptTemplateSection from "../../tab-layout/generate-section/prompt-temp
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 
+
 type Props = {
   setSelectedRatio: (ratio: string) => void;
   selectedRatio: string;
@@ -78,32 +79,60 @@ type Props = {
   organizationId?: string;
 };
 
-export default function ChatVideoInput({
-  selectedRatio,
-  setSelectedRatio,
-  selectedResolution,
-  setSelectedResolution,
-  form,
-  filesFirst,
-  filesLast,
-  handleUploadChange,
-  handleSendMessage,
-  isLoadingUpload,
-  submitting,
-  setSelectedDuration,
-  selectedDuration,
-  setDraftMode,
-  draftMode,
-  setSelectedAudio,
-  selectedAudio,
-  setSelectedWidth,
-  setSelectedHeight,
-  handleUsePromptGuide,
-  usedCredit,
-  cerrentUsedCredit,
-  selectedModel,
-  organizationId,
-}: Props) {
+export default function ChatVideoInput(props: Props) {
+  const {
+    selectedRatio,
+    setSelectedRatio,
+    selectedResolution,
+    setSelectedResolution,
+    form,
+    filesFirst,
+    filesLast,
+    handleUploadChange,
+    handleSendMessage,
+    isLoadingUpload,
+    submitting,
+    setSelectedDuration,
+    selectedDuration,
+    setDraftMode,
+    draftMode,
+    setSelectedAudio,
+    selectedAudio,
+    setSelectedWidth,
+    setSelectedHeight,
+    handleUsePromptGuide,
+    usedCredit,
+    cerrentUsedCredit,
+    selectedModel,
+    organizationId,
+  } = props;
+
+  // Helper to join CI prompt and main prompt with connector
+  function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
+    if (!mainPrompt) return ciPrompt;
+    if (!ciPrompt) return mainPrompt;
+    // Main prompt first, then CI prompt with connector
+    return (
+      mainPrompt.trim() +
+      "\n\n---\n(BrandKit Prompt: " +
+      "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01 BrandKit)\n" +
+      ciPrompt.trim()
+    );
+  }
+
+  // State to get CI prompt and active from BrandKitSection
+  const [ciPrompt, setCiPrompt] = React.useState<string>("");
+  const [ciActive, setCiActive] = React.useState<boolean>(true);
+
+  // Custom handleSendMessage to combine CI prompt and main prompt
+  const handleSendMessageWithCi = (values: any) => {
+    let prompt = values.prompt || "";
+    if (ciActive && ciPrompt) {
+      prompt = joinCiPrompt(ciPrompt, prompt);
+    }
+    // Pass the combined prompt to the original handler
+    handleSendMessage({ ...values, prompt });
+  };
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
@@ -334,7 +363,7 @@ export default function ChatVideoInput({
       <Form
         name="video-gen"
         form={form}
-        onFinish={handleSendMessage}
+        onFinish={handleSendMessageWithCi}
         autoComplete="off"
         style={{
           height: "100%",
@@ -480,7 +509,11 @@ export default function ChatVideoInput({
               </>
             }
           />
-          <BrandKitSection semantic={semantic} />
+          <BrandKitSection
+            semantic={semantic}
+            onCiPromptChange={setCiPrompt}
+            onActiveChange={setCiActive}
+          />
         </Flex>
 
        

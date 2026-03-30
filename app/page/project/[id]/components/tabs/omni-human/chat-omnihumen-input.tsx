@@ -38,6 +38,8 @@ import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section
 import Quata from "@/app/page/project/component/quata";
 import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
 
+// ...existing code...
+
 type Props = {
   setSelectedRatio: (ratio: string) => void;
   selectedRatio: string;
@@ -98,6 +100,31 @@ export default function ChatOmnihumenInput({
   selectedModel,
   organizationId,
 }: Props) {
+  // Helper to join CI prompt and main prompt with connector
+  function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
+    if (!mainPrompt) return ciPrompt;
+    if (!ciPrompt) return mainPrompt;
+    // Main prompt first, then CI prompt with connector
+    return (
+      mainPrompt.trim() +
+      "\n\n---\n(BrandKit Prompt: " +
+      "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01 BrandKit)\n" +
+      ciPrompt.trim()
+    );
+  }
+
+  // State to get CI prompt and active from BrandKitSection
+  const [ciPrompt, setCiPrompt] = React.useState<string>("");
+  const [ciActive, setCiActive] = React.useState<boolean>(true);
+
+  // Custom handleSendMessage to combine CI prompt and main prompt
+  const handleSendMessageWithCi = (values: any) => {
+    let prompt = values.prompt || "";
+    if (ciActive && ciPrompt) {
+      prompt = joinCiPrompt(ciPrompt, prompt);
+    }
+    handleSendMessage({ ...values, prompt });
+  };
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
@@ -289,18 +316,19 @@ export default function ChatOmnihumenInput({
 
   return (
     <Flex vertical style={{ height: "100%", minHeight: 0 }}>
-      <Form
-        name="omnihumen-gen"
-        form={form}
-        onFinish={handleSendMessage}
-        autoComplete="off"
-        style={{
-          height: "100%",
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+
+        <Form
+          name="omnihumen-gen"
+          form={form}
+          onFinish={handleSendMessageWithCi}
+          autoComplete="off"
+          style={{
+            height: "100%",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
         <Flex
           vertical
           gap={12}
@@ -395,7 +423,11 @@ export default function ChatOmnihumenInput({
               </>
             }
           />
-          <BrandKitSection semantic={semantic} />
+          <BrandKitSection
+            semantic={semantic}
+            onCiPromptChange={setCiPrompt}
+            onActiveChange={setCiActive}
+          />
         </Flex>
 
         

@@ -19,16 +19,21 @@ const ColorModal: React.FC<ColorModalProps> = ({ open, form, onOk, onCancel }) =
     }
   }, [open, form]);
 
+  // Determine if editing (assume edit if form has id field)
+  const isEdit = Boolean(form.getFieldValue("id"));
+
   return (
     <Modal
-      title="Add Color"
+      title={isEdit ? "Edit Color" : "Add Color"}
       open={open}
       onOk={onOk}
       onCancel={onCancel}
-      okText="Add"
+      okText={isEdit ? "Save" : "Add"}
       cancelText="Cancel"
     >
       <Form form={form} layout="vertical">
+        {/* Hidden id field for edit mode detection */}
+        <Form.Item name="id" style={{ display: 'none' }}><Input /></Form.Item>
        
 <Form.Item
   label="Hex Value"

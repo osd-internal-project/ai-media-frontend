@@ -53,7 +53,7 @@ const BrandKitDetailServices = (axiosInstance: AxiosInstance) => {
     },
     create: async (value: Partial<TBrandKitDetail>) => {
       return await axiosInstance
-        .post(`${baseUrl}`, { body: value })
+        .post(`${baseUrl}`, value)
         .then((res) => {
           return res.data;
         })

@@ -41,8 +41,7 @@ export default function CIPromptTab({
   useEffect(() => {
     setCi(ciPrompt);
     setNeg(negativePrompt);
-    setIsEditingCI(false);
-    setIsEditingNeg(false);
+    // Do not reset isEditingCI/isEditingNeg here to allow continuous editing
   }, [ciPrompt, negativePrompt]);
 
   const wordCount =
@@ -58,13 +57,22 @@ export default function CIPromptTab({
     // Colors description
     let colorDesc = "";
     if (colors.length > 0) {
-      const colorList = colors.map(c => `${c.name || c.type}: ${c.hex}`).join(", ");
+      const colorList = colors.map(c => {
+        const name = c.name && c.name.trim() ? c.name : c.type;
+        const type = c.type ? `(${c.type})` : '';
+        return `${name} ${type}: ${c.hex}`.replace(/ +/g, ' ');
+      }).join(", ");
       colorDesc = `Brand colors: ${colorList}`;
     }
-    // Fonts description
+    // Fonts description (font-family, type, weight)
     let fontDesc = "";
     if (fonts.length > 0) {
-      const fontList = fonts.map(f => `${f.name} (${f.type}, weight ${f.weight})`).join(", ");
+      const fontList = fonts.map(f => {
+        const fam = f.name && f.name.trim() ? f.name : 'sans-serif';
+        const type = f.type ? `(${f.type})` : '';
+        const weight = f.weight || 400;
+        return `${fam} ${type}, weight ${weight}`.replace(/ +/g, ' ');
+      }).join(", ");
       fontDesc = `Fonts: ${fontList}`;
     }
     // Combine
@@ -89,7 +97,13 @@ export default function CIPromptTab({
 
   // Remove the old emptyState return, instead show placeholder in TextArea below
 
-  const isBrandKitEmpty = colors.length === 0 && fonts.length === 0;
+  // Improved: also check ciPrompt string for 'Fonts:' or 'Brand colors:'
+  let isBrandKitEmpty = colors.length === 0 && fonts.length === 0;
+  if (isBrandKitEmpty && ciPrompt) {
+    const hasFont = /Fonts:/i.test(ciPrompt);
+    const hasColor = /Brand colors:/i.test(ciPrompt);
+    isBrandKitEmpty = !(hasFont || hasColor);
+  }
 
   return (
     <div>

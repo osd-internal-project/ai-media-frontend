@@ -28,6 +28,18 @@ import PromptTemplateSection from "../../tab-layout/generate-section/prompt-temp
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
 import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
+
+// Helper to join CI prompt and main prompt with connector
+function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
+  if (!mainPrompt) return ciPrompt;
+  if (!ciPrompt) return mainPrompt;
+  // Main prompt first, then CI prompt with connector
+  return (
+    mainPrompt.trim() +
+    "\n\n---\n(BrandKit Prompt: ส่วนเสริมจาก BrandKit)\n" +
+    ciPrompt.trim()
+  );
+}
 type Props = {
   setGroupMode: (groupMode: string | undefined) => void;
   groupMode: string;
@@ -180,6 +192,20 @@ export default function ChatImageInput({
      }
   };
 
+  // State to get CI prompt and active from BrandKitSection
+  const [ciPrompt, setCiPrompt] = React.useState<string>("");
+  const [ciActive, setCiActive] = React.useState<boolean>(true);
+
+  // Custom handleSendMessage to combine CI prompt and main prompt
+  const handleSendMessageWithCi = (values: any) => {
+    let prompt = values.prompt || "";
+    if (ciActive && ciPrompt) {
+      prompt = joinCiPrompt(ciPrompt, prompt);
+    }
+    // Pass the combined prompt to the original handler
+    handleSendMessage({ ...values, prompt });
+  };
+
   return (
     <Flex
       vertical
@@ -191,7 +217,7 @@ export default function ChatImageInput({
       <Form
         name="basic"
         form={form}
-        onFinish={handleSendMessage}
+        onFinish={handleSendMessageWithCi}
         autoComplete="off"
         // onChange={fetchCerrentUsedCredit}
         style={{
@@ -249,7 +275,11 @@ export default function ChatImageInput({
             setSelectedMaximumImage={setSelectedMaximumImage}
             ratioSizeMap={RATIO_SIZE_MAP}
           />
-            <BrandKitSection semantic={semantic} />
+            <BrandKitSection
+              semantic={semantic}
+              onCiPromptChange={setCiPrompt}
+              onActiveChange={setCiActive}
+            />
         </Flex>
 
         <Flex
