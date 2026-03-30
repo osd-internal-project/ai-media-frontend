@@ -480,22 +480,10 @@ export default function ChatVideoInput({
               </>
             }
           />
+          <BrandKitSection semantic={semantic} />
         </Flex>
 
-        <BrandKitSection
-          semantic={semantic}
-          style={{
-            position: "sticky",
-            bottom: 0,
-            zIndex: 10,
-            borderTop: `1px solid ${semantic.colorBorder}`,
-            background: semantic.colorBgContainer,
-            paddingInline: 8,
-            paddingBlock: 10,
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        />
+       
 
             <Flex
                   vertical

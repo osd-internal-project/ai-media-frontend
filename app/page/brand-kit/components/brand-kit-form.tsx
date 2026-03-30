@@ -4,17 +4,21 @@ import React from "react";
 import { Form, Input, Select, Typography } from "antd";
 import type { FormInstance } from "antd/es/form";
 
-type CreateBrandKitFormProps = {
+type BrandKitFormProps = {
   form: FormInstance;
+  mode?: 'create' | 'edit';
 };
 
-export default function CreateBrandKitForm({
+export default function BrandKitForm({
   form,
-}: CreateBrandKitFormProps) {
+  mode = 'create',
+}: BrandKitFormProps) {
   return (
     <>
       <Typography.Text style={{ color: "#9ca3af", marginBottom: 12, display: "block" }}>
-        Create a new brand kit to store your brand identity and CI.
+        {mode === 'edit'
+          ? 'Edit your brand kit information.'
+          : 'Create a new brand kit to store your brand identity and CI.'}
       </Typography.Text>
 
       <Form layout="vertical" form={form}>

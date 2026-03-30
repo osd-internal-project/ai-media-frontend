@@ -16,6 +16,9 @@ interface Props {
   ciPrompt: string;
   negativePrompt: string;
   onChange: (ci: string, negative: string) => void;
+  emptyState?: boolean;
+  colors?: { name: string; hex: string; type: string }[];
+  fonts?: { name: string; weight: number; type: string }[];
 }
 
 
@@ -23,6 +26,9 @@ export default function CIPromptTab({
   ciPrompt,
   negativePrompt,
   onChange,
+  emptyState,
+  colors = [],
+  fonts = [],
 }: Props) {
   const [ci, setCi] = useState(ciPrompt);
   const [neg, setNeg] = useState(negativePrompt);
@@ -46,6 +52,27 @@ export default function CIPromptTab({
     setCi(ciPrompt);
     setIsEditingCI(false);
   };
+
+  // Auto-generate CI prompt from brand kit details
+  const handleAutoGenerate = () => {
+    // Colors description
+    let colorDesc = "";
+    if (colors.length > 0) {
+      const colorList = colors.map(c => `${c.name || c.type}: ${c.hex}`).join(", ");
+      colorDesc = `Brand colors: ${colorList}`;
+    }
+    // Fonts description
+    let fontDesc = "";
+    if (fonts.length > 0) {
+      const fontList = fonts.map(f => `${f.name} (${f.type}, weight ${f.weight})`).join(", ");
+      fontDesc = `Fonts: ${fontList}`;
+    }
+    // Combine
+    const prompt = [colorDesc, fontDesc, "clean modern minimalist aesthetic, professional AI technology style, high-tech futuristic feel, crisp sharp edges, premium quality"].filter(Boolean).join(", ");
+    setCi(prompt);
+    setIsEditingCI(true);
+  };
+
   const handleSaveCI = () => {
     onChange(ci, neg);
     setIsEditingCI(false);
@@ -60,10 +87,13 @@ export default function CIPromptTab({
     setIsEditingNeg(false);
   };
 
+  // Remove the old emptyState return, instead show placeholder in TextArea below
+
+  const isBrandKitEmpty = colors.length === 0 && fonts.length === 0;
+
   return (
     <div>
-
-      {/* 🔷 Info Banner */}
+      {/* ...existing code... */}
       <div
         style={{
           border: `1px solid ${semantic.colorBorder}`,
@@ -87,15 +117,19 @@ export default function CIPromptTab({
           </div>
         </Space>
       </div>
-
-      {/* 🔷 CI Prompt */}
-
+      {/* ...existing code... */}
       <div style={{ marginBottom: 28 }}>
         <Space style={{ width: "100%", justifyContent: "space-between" }}>
           <Text style={{ color: semantic.colorWhite }}>Brand CI Prompt</Text>
-          {!isEditingCI ? (
+          {isBrandKitEmpty ? (
+            <Button icon={<EditOutlined />} disabled>
+              Edit
+            </Button>
+          ) : !isEditingCI ? (
             <Space>
-              <Button icon={<ThunderboltOutlined />}>Auto-Generate</Button>
+              <Button icon={<ThunderboltOutlined />} onClick={handleAutoGenerate}>
+                Auto-Generate
+              </Button>
               <Button icon={<EditOutlined />} onClick={() => setIsEditingCI(true)}>
                 Edit
               </Button>
@@ -115,30 +149,38 @@ export default function CIPromptTab({
             </Space>
           )}
         </Space>
-
         <TextArea
           value={ci}
           onChange={(e) => setCi(e.target.value)}
           rows={4}
-          disabled={!isEditingCI}
+          disabled={isBrandKitEmpty || !isEditingCI}
+          placeholder={
+            isBrandKitEmpty
+              ? "Add at least one color or font to your Brand Kit before creating a CI Prompt. Go to the Colors or Typography tab first."
+              : (emptyState ? "No CI Prompt yet. Add your first CI prompt to get started." : undefined)
+          }
           style={{
             marginTop: 8,
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
             color: semantic.colorWhite,
             borderRadius: 10,
-            opacity: isEditingCI ? 1 : 0.7,
+            opacity: isBrandKitEmpty ? 0.5 : (isEditingCI ? 1 : 0.7),
           }}
         />
-
+        {isBrandKitEmpty && (
+          <div style={{ color: semantic.colorTextSecondary, marginTop: 8 }}>
+            <b>Tip:</b> Add at least one color or font in your Brand Kit before creating a CI Prompt. <br />
+            Go to the <b>Colors</b> or <b>Typography</b> tab first.
+          </div>
+        )}
         <div style={{ marginTop: 8 }}>
           <Tag color="green">
             {wordCount} words · injected into all generations when active
           </Tag>
         </div>
       </div>
-
-      {/* 🔷 Negative Prompt */}
+      {/* ...existing code... */}
       <div style={{ marginBottom: 28 }}>
         <Space style={{ width: "100%", justifyContent: "space-between" }}>
           <Text style={{ color: semantic.colorWhite }}>
@@ -178,11 +220,9 @@ export default function CIPromptTab({
           }}
         />
       </div>
-
-      {/* 🔷 Combined Preview */}
+      {/* ...existing code... */}
       <div>
         <Text style={{ color: "#64748b" }}>Combined Prompt Preview</Text>
-
         <Card
           style={{
             marginTop: 8,
@@ -197,10 +237,9 @@ export default function CIPromptTab({
               "A hero image for our new product launch"
             </div>
           </div>
-
           <div
             style={{
-              borderTop:`1px solid ${semantic.colorBorder}`,
+              borderTop: `1px solid ${semantic.colorBorder}`,
               paddingTop: 12,
             }}
           >

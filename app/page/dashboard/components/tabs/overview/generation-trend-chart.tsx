@@ -16,14 +16,20 @@ type GenerationTrendChartProps = {
   };
 };
 
-type Point = { x: number; y: number };
+type Point = {
+  x: number;
+  y: number;
+};
 
 const svgPoint = (point: Point) => `${point.x},${point.y}`;
 
 const smoothLinePath = (points: Point[]) => {
-  if (points.length < 2) return points.length ? `M${svgPoint(points[0])}` : "";
+  if (points.length < 2) {
+    return points.length ? `M${svgPoint(points[0])}` : "";
+  }
 
   let path = `M${svgPoint(points[0])}`;
+
   for (let i = 0; i < points.length - 1; i += 1) {
     const p0 = points[i - 1] ?? points[i];
     const p1 = points[i];
@@ -34,6 +40,7 @@ const smoothLinePath = (points: Point[]) => {
       x: p1.x + (p2.x - p0.x) / 6,
       y: p1.y + (p2.y - p0.y) / 6,
     };
+
     const cp2 = {
       x: p2.x - (p3.x - p1.x) / 6,
       y: p2.y - (p3.y - p1.y) / 6,
@@ -54,6 +61,7 @@ const smoothAreaPath = (points: Point[], baselineY: number) => {
   const line = smoothLinePath(points);
   const first = points[0];
   const last = points[points.length - 1];
+
   return `${line} L${last.x},${baselineY} L${first.x},${baselineY} Z`;
 };
 
@@ -62,253 +70,401 @@ export default function GenerationTrendChart({
   colors,
 }: GenerationTrendChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const width = 940;
-  const height = 280;
-  const padding = { top: 14, right: 8, bottom: 34, left: 36 };
+
+  const width = 980;
+  const height = 320;
+
+  const padding = {
+    top: 24,
+    right: 24,
+    bottom: 54,
+    left: 52,
+  };
+
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
-  const xMax = 600;
-  const yTicks = [0, 150, 300, 450, 600];
 
-  const xStep = chartWidth / Math.max(data.length - 1, 1);
-  const toX = (index: number) => padding.left + index * xStep;
-  const toY = (value: number) =>
-    padding.top +
-    chartHeight -
-    (Math.max(0, Math.min(xMax, value)) / xMax) * chartHeight;
+  const allValues = data.flatMap((item) => [
+    item.image,
+    item.video,
+    item.omnihuman,
+    item.dreamactor,
+  ]);
+
+  let yMin = Math.min(...allValues);
+  let yMax = Math.max(...allValues);
+
+  if (!isFinite(yMin)) yMin = 0;
+  if (!isFinite(yMax)) yMax = 1;
+
+  const yRange = Math.max(yMax - yMin, 10);
+
+  yMin = Math.max(0, yMin - yRange * 0.15);
+  yMax = yMax + yRange * 0.18;
+
+  const niceTicks = (min: number, max: number, count: number) => {
+    if (max === min) return [min];
+
+    const rawStep = (max - min) / (count - 1);
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const normalized = rawStep / magnitude;
+
+    let step = magnitude;
+
+    if (normalized > 5) step = 10 * magnitude;
+    else if (normalized > 2) step = 5 * magnitude;
+    else if (normalized > 1) step = 2 * magnitude;
+
+    const ticks: number[] = [];
+    const start = Math.floor(min / step) * step;
+    const end = Math.ceil(max / step) * step;
+
+    for (let value = start; value <= end; value += step) {
+      ticks.push(value);
+    }
+
+    return ticks;
+  };
+
+  const yTicks = niceTicks(yMin, yMax, 5);
+
+  const xDomain = Math.max(data.length - 1, 1);
+  const sidePad = 10;
+  const xStep = (chartWidth - sidePad * 2) / xDomain;
+
+  const toX = (index: number) =>
+    padding.left + sidePad + index * xStep;
+
+  const toY = (value: number) => {
+    return (
+      padding.top +
+      chartHeight -
+      ((value - yMin) / (yMax - yMin)) * chartHeight
+    );
+  };
+
+  const baselineY = padding.top + chartHeight;
 
   const imagePoints = data.map((item, index) => ({
     x: toX(index),
     y: toY(item.image),
   }));
+
   const videoPoints = data.map((item, index) => ({
     x: toX(index),
     y: toY(item.video),
   }));
+
   const humanPoints = data.map((item, index) => ({
     x: toX(index),
     y: toY(item.omnihuman),
   }));
+
   const dreamactorPoints = data.map((item, index) => ({
     x: toX(index),
     y: toY(item.dreamactor),
   }));
-  const baselineY = padding.top + chartHeight;
 
   const hoverItem = hoveredIndex !== null ? data[hoveredIndex] : null;
   const hoverX = hoveredIndex !== null ? toX(hoveredIndex) : 0;
-  
+
   const tooltipX = useMemo(() => {
     if (hoveredIndex === null) return 0;
-    return Math.min(toX(hoveredIndex) + 14, width - 165);
-  }, [hoveredIndex, width, xStep, padding.left]);
+
+    const preferred = toX(hoveredIndex) + 18;
+    return Math.min(preferred, width - 180);
+  }, [hoveredIndex]);
 
   const tooltipY = useMemo(() => {
     if (!hoverItem) return 0;
-    const maxY = toY(Math.max(
-      hoverItem.image,
-      hoverItem.video,
-      hoverItem.omnihuman,
-      hoverItem.dreamactor
-    ));
-    return Math.max(8, maxY - 20);
-  }, [hoverItem, toY]);
+
+    const highestPoint = Math.min(
+      toY(hoverItem.image),
+      toY(hoverItem.video),
+      toY(hoverItem.omnihuman),
+      toY(hoverItem.dreamactor),
+    );
+
+    return Math.max(12, highestPoint - 110);
+  }, [hoverItem]);
+
+  const series = [
+    {
+      key: "image",
+      color: colors.image,
+      points: imagePoints,
+      label: "Image",
+      values: data.map((item) => item.image),
+      gradientId: "gImage",
+      strokeDasharray: undefined,
+    },
+    {
+      key: "video",
+      color: colors.video,
+      points: videoPoints,
+      label: "Video",
+      values: data.map((item) => item.video),
+      gradientId: "gVideo",
+      strokeDasharray: undefined,
+    },
+    {
+      key: "human",
+      color: colors.human,
+      points: humanPoints,
+      label: "Human",
+      values: data.map((item) => item.omnihuman),
+      gradientId: "gHuman",
+      strokeDasharray: "6 4",
+    },
+    {
+      key: "dreamactor",
+      color: colors.dreamactor,
+      points: dreamactorPoints,
+      label: "Dream",
+      values: data.map((item) => item.dreamactor),
+      gradientId: "gDreamactor",
+      strokeDasharray: "2 4",
+    },
+  ];
 
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
-      height={260}
+      height={320}
       role="img"
       aria-label="Generation trends"
+      style={{
+        overflow: "visible",
+      }}
     >
       <defs>
         <linearGradient id="gImage" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={colors.image} stopOpacity="0.18" />
-          <stop offset="95%" stopColor={colors.image} stopOpacity="0" />
+          <stop offset="0%" stopColor={colors.image} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={colors.image} stopOpacity="0" />
         </linearGradient>
+
         <linearGradient id="gVideo" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={colors.video} stopOpacity="0.16" />
-          <stop offset="95%" stopColor={colors.video} stopOpacity="0" />
+          <stop offset="0%" stopColor={colors.video} stopOpacity="0.24" />
+          <stop offset="100%" stopColor={colors.video} stopOpacity="0" />
         </linearGradient>
+
         <linearGradient id="gHuman" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={colors.human} stopOpacity="0.12" />
-          <stop offset="95%" stopColor={colors.human} stopOpacity="0" />
+          <stop offset="0%" stopColor={colors.human} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={colors.human} stopOpacity="0" />
         </linearGradient>
+
         <linearGradient id="gDreamactor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor={colors.dreamactor} stopOpacity="0.12" />
-          <stop offset="95%" stopColor={colors.dreamactor} stopOpacity="0" />
+          <stop offset="0%" stopColor={colors.dreamactor} stopOpacity="0.16" />
+          <stop offset="100%" stopColor={colors.dreamactor} stopOpacity="0" />
         </linearGradient>
+
+        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow
+            dx="0"
+            dy="4"
+            stdDeviation="8"
+            floodOpacity="0.12"
+          />
+        </filter>
       </defs>
 
       {yTicks.map((tick) => (
-        <line
-          key={tick}
-          x1={padding.left}
-          x2={padding.left + chartWidth}
-          y1={toY(tick)}
-          y2={toY(tick)}
-          stroke={colors.grid}
-          strokeDasharray="3 3"
-        />
-      ))}
-
-      <path d={smoothAreaPath(imagePoints, baselineY)} fill="url(#gImage)" />
-      <path d={smoothAreaPath(videoPoints, baselineY)} fill="url(#gVideo)" />
-      <path d={smoothAreaPath(humanPoints, baselineY)} fill="url(#gHuman)" />
-      <path
-        d={smoothAreaPath(dreamactorPoints, baselineY)}
-        fill="url(#gDreamactor)"
-      />
-
-      <path
-        d={smoothLinePath(imagePoints)}
-        stroke={colors.image}
-        strokeWidth={2}
-        fill="none"
-      />
-      <path
-        d={smoothLinePath(videoPoints)}
-        stroke={colors.video}
-        strokeWidth={2}
-        fill="none"
-      />
-      <path
-        d={smoothLinePath(humanPoints)}
-        stroke={colors.human}
-        strokeWidth={2}
-        fill="none"
-        strokeDasharray="4 2"
-      />
-      <path
-        d={smoothLinePath(dreamactorPoints)}
-        stroke={colors.dreamactor}
-        strokeWidth={2}
-        fill="none"
-        strokeDasharray="2 2"
-      />
-
-      {data.map((item, index) => (
-        <g key={item.month}>
-          <rect
-            x={toX(index) - xStep / 2}
-            y={padding.top}
-            width={Math.max(xStep, 30)}
-            height={chartHeight}
-            fill="transparent"
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseMove={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
+        <g key={tick}>
+          <line
+            x1={padding.left}
+            x2={padding.left + chartWidth}
+            y1={toY(tick)}
+            y2={toY(tick)}
+            stroke={colors.grid}
+            strokeWidth={1}
+            strokeDasharray="4 6"
+            opacity={0.7}
           />
           <text
-            x={toX(index)}
-            y={height - 8}
-            textAnchor="middle"
+            x={padding.left - 12}
+            y={toY(tick) + 4}
+            textAnchor="end"
             fontSize="11"
             fill={colors.axis}
+            opacity={0.75}
           >
-            {item.month}
+            {tick}
           </text>
         </g>
       ))}
 
-      {yTicks.map((tick) => (
-        <text
-          key={`tick-${tick}`}
-          x={padding.left - 10}
-          y={toY(tick) + 4}
-          textAnchor="end"
-          fontSize="11"
-          fill={colors.axis}
-        >
-          {tick}
-        </text>
+      <line
+        x1={padding.left}
+        x2={padding.left + chartWidth}
+        y1={baselineY}
+        y2={baselineY}
+        stroke={colors.grid}
+        strokeWidth={1}
+        opacity={0.9}
+      />
+
+      {series.map((item) => (
+        <path
+          key={`${item.key}-area`}
+          d={smoothAreaPath(item.points, baselineY)}
+          fill={`url(#${item.gradientId})`}
+        />
       ))}
 
-      {[imagePoints, videoPoints, humanPoints, dreamactorPoints].map(
-        (series, seriesIndex) => {
-          const seriesColors = [
-            colors.image,
-            colors.video,
-            colors.human,
-            colors.dreamactor,
-          ];
-          return series.map((point, pointIndex) => (
-            <circle
-              key={`${seriesIndex}-${pointIndex}`}
-              cx={point.x}
-              cy={point.y}
-              r={hoveredIndex === pointIndex ? 4 : 3}
-              fill={seriesColors[seriesIndex]}
-              onMouseEnter={() => setHoveredIndex(pointIndex)}
+      {series.map((item) => (
+        <path
+          key={`${item.key}-line`}
+          d={smoothLinePath(item.points)}
+          stroke={item.color}
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          strokeDasharray={item.strokeDasharray}
+          filter="url(#softShadow)"
+        />
+      ))}
+
+      {data.map((item, index) => {
+        const showLabel =
+          data.length <= 10 ||
+          index === 0 ||
+          index === data.length - 1 ||
+          index % Math.ceil(data.length / 8) === 0;
+
+        return (
+          <g key={`${item.month}-${index}`}>
+            <rect
+              x={toX(index) - xStep / 2}
+              y={padding.top}
+              width={Math.max(xStep, 40)}
+              height={chartHeight}
+              fill="transparent"
+              onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             />
-          ));
-        },
-      )}
+
+            {showLabel && (
+              <text
+                x={toX(index)}
+                y={height - 18}
+                textAnchor="middle"
+                fontSize="11"
+                fill={colors.axis}
+                opacity={0.85}
+              >
+                {item.month}
+              </text>
+            )}
+          </g>
+        );
+      })}
 
       {hoverItem && (
-        <g>
+        <>
           <line
             x1={hoverX}
             x2={hoverX}
             y1={padding.top}
-            y2={padding.top + chartHeight}
+            y2={baselineY}
             stroke={colors.grid}
-            strokeDasharray="4 3"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
           />
+
           <rect
             x={tooltipX}
             y={tooltipY}
-            width={150}
-            height={96}
-            rx={8}
+            width={160}
+            height={102}
+            rx={14}
             fill={colors.tooltipBg}
             stroke={colors.tooltipBorder}
-            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+            filter="url(#softShadow)"
           />
+
           <text
-            x={tooltipX + 10}
-            y={tooltipY + 20}
-            fontSize="11"
-            fontWeight="bold"
+            x={tooltipX + 14}
+            y={tooltipY + 22}
+            fontSize="12"
+            fontWeight="700"
             fill={colors.tooltipText}
           >
             {hoverItem.month}
           </text>
+
           <text
-            x={tooltipX + 10}
-            y={tooltipY + 38}
+            x={tooltipX + 14}
+            y={tooltipY + 42}
             fontSize="11"
             fill={colors.image}
           >
             Image: {hoverItem.image}
           </text>
+
           <text
-            x={tooltipX + 10}
-            y={tooltipY + 53}
+            x={tooltipX + 14}
+            y={tooltipY + 58}
             fontSize="11"
             fill={colors.video}
           >
             Video: {hoverItem.video}
           </text>
+
           <text
-            x={tooltipX + 10}
-            y={tooltipY + 68}
+            x={tooltipX + 14}
+            y={tooltipY + 74}
             fontSize="11"
             fill={colors.human}
           >
             Human: {hoverItem.omnihuman}
           </text>
+
           <text
-            x={tooltipX + 10}
-            y={tooltipY + 83}
+            x={tooltipX + 14}
+            y={tooltipY + 90}
             fontSize="11"
             fill={colors.dreamactor}
           >
             Dream: {hoverItem.dreamactor}
           </text>
-        </g>
+        </>
+      )}
+
+      {series.map((item) =>
+        item.points.map((point, index) => {
+          const isActive = hoveredIndex === index;
+
+          return (
+            <g key={`${item.key}-${index}`}>
+              {isActive && (
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={10}
+                  fill={item.color}
+                  opacity={0.15}
+                />
+              )}
+
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={isActive ? 5 : 3.5}
+                fill="#fff"
+                stroke={item.color}
+                strokeWidth={isActive ? 3 : 2}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                style={{
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              />
+            </g>
+          );
+        }),
       )}
     </svg>
   );

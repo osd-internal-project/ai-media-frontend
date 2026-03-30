@@ -263,38 +263,41 @@ useEffect(() => {
           {/* Overlay for leftPanel: scrollable, input bar always visible */}
           {showLeftOverlay && (
             (() => { console.log('DEBUG: Render overlay leftPanel'); return null; })(),
-            <div
-              style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 1200,
-                background: "rgba(0,0,0,0.32)",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-              
-              }}
-              onClick={handleHideOverlay}
-            >
+            <>
+           
+           
               <div
+                className="two-pane-overlay-bg"
                 style={{
-                  background: semantic.colorBgContainer,
-                  borderRadius: 20,
-                  boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
-                  minHeight: 220,
-                  maxHeight: "70vh",
-                  width: "calc(100vw - 32px)",
-                  margin: "0 auto 16px auto",
-                  animation: "slideUp .2s cubic-bezier(.4,0,.2,1)",
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 1200,
+                  background: "rgba(0,0,0,0.32)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
                   display: "flex",
                   flexDirection: "column",
-                  padding: 0,
-                  position: "relative",
+                  justifyContent: "flex-end",
                 }}
-                onClick={e => e.stopPropagation()}
+                onClick={handleHideOverlay}
               >
+                <div
+                  className="two-pane-overlay-pane"
+                  style={{
+                    background: semantic.colorBgContainer,
+                    borderRadius: 20,
+                    boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+                    minHeight: 220,
+                    maxHeight: "70vh",
+                    width: "calc(100vw - 32px)",
+                    margin: "0 auto 16px auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: 0,
+                    position: "relative",
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
                 {/* Close button at top right */}
                 <button
                   onClick={handleHideOverlay}
@@ -387,8 +390,9 @@ useEffect(() => {
     />
   </div>
 </div> */}
+                </div>
               </div>
-            </div>
+            </>
           )}
           {/* Main input bar at bottom of page (when overlay not open) */}
        {/* Main input bar at bottom of page (when overlay not open) */}

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import BrandKitItem from "./brand-kit-item";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Layout, Typography, Button, Space, Divider } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -11,6 +12,7 @@ const { Sider } = Layout;
 const { Text } = Typography;
 
 export interface BrandKitSidebarItem {
+  id?: string;
   name: string;
   industry: string;
   colors: Array<{ hex: string }>;
@@ -23,6 +25,8 @@ type BrandKitSidebarProps = {
   activeIndex: number;
   onChangeIndex: (index: number) => void;
   onCreateKit: () => void;
+  onEditKit?: (index: number) => void;
+  onDeleteKit?: (index: number) => void;
 };
 
 export default function BrandKitSidebar({
@@ -30,6 +34,8 @@ export default function BrandKitSidebar({
   activeIndex,
   onChangeIndex,
   onCreateKit,
+  onEditKit,
+  onDeleteKit,
 }: BrandKitSidebarProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const { mode } = useThemeMode();
@@ -90,6 +96,8 @@ export default function BrandKitSidebar({
             semantic={semantic}
             onChangeIndex={onChangeIndex}
             setHoveredIndex={setHoveredIndex}
+            onEdit={() => onEditKit && onEditKit(index)}
+            onDelete={() => onDeleteKit && onDeleteKit(index)}
           />
         ))}
       </Sider>

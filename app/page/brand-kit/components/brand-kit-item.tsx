@@ -1,5 +1,7 @@
 import React from "react";
+import { Modal } from "antd";
 import { BrandKitSidebarItem } from "./brand-kit-side-bar";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 interface BrandKitItemProps {
   kit: BrandKitSidebarItem;
@@ -9,6 +11,8 @@ interface BrandKitItemProps {
   semantic: any;
   onChangeIndex: (index: number) => void;
   setHoveredIndex: (index: number | null) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const BrandKitItem: React.FC<BrandKitItemProps> = ({
@@ -19,6 +23,8 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
   semantic,
   onChangeIndex,
   setHoveredIndex,
+  onEdit,
+  onDelete,
 }) => {
   return (
     <div
@@ -39,6 +45,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
             : "transparent",
         border: `1px solid ${activeIndex === index ? semantic.colorPrimary : "transparent"}`,
         transition: "all 0.2s",
+        position: "relative",
       }}
     >
       <div style={{ display: "flex", gap: 12 }}>
@@ -64,7 +71,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
           ))}
         </div>
 
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ color: semantic.colorTextBase, fontSize: 14 }}>{kit.name}</div>
 
           <div
@@ -88,6 +95,53 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
             {kit.colorCount} colors · {kit.fonts} fonts
           </div>
         </div>
+
+        {/* Edit/Delete buttons (show only on hover, vertical, top-right) */}
+        {hoveredIndex === index && (
+          <div
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 10,
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              alignItems: "center",
+           
+              borderRadius: 8,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              padding: "4px 6px"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <EditOutlined
+              style={{ color: semantic.colorTextSecondary, fontSize: 16, cursor: "pointer" }}
+              title="Edit"
+              onClick={e => {
+                e.stopPropagation();
+                onEdit && onEdit();
+              }}
+            />
+            <DeleteOutlined
+              style={{ color: semantic.colorError, fontSize: 16, cursor: "pointer" }}
+              title="Delete"
+              onClick={e => {
+                e.stopPropagation();
+                if (onDelete) {
+                  Modal.confirm({
+                    title: 'Delete Brand Kit',
+                    content: `Are you sure you want to delete "${kit.name}"? This action cannot be undone.`,
+                    okText: 'Delete',
+                    okType: 'danger',
+                    cancelText: 'Cancel',
+                    onOk: onDelete,
+                  });
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
