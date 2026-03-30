@@ -13,7 +13,7 @@ export default function Callback() {
             if (!code) return;
 
             const res = await fetch(
-                `${config.backendAuthUrl}/auth/google/callback`,
+                `${config.backendUserUrl}/auth/google/callback`,
                 {
                     method: "POST",
                     headers: {

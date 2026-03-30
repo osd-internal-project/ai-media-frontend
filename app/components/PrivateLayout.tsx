@@ -187,7 +187,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   async function handleOrganizationChange(
     organizationId: string,
   ): Promise<void> {
-    // console.log(organizationId);
+    // console.log("organizationId", organizationId);
     setReload(true);
 
     await userServices

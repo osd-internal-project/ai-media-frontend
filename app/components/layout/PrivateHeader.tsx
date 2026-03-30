@@ -10,6 +10,10 @@ import {
   Divider,
   Card,
   Layout,
+  Modal,
+  Form,
+  Input,
+  message,
 } from "antd";
 
 import {
@@ -24,7 +28,10 @@ import {
 } from "@ant-design/icons";
 
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import React, { useState } from "react";
+import CouponService from "@/app/services/coupon.service";
+import { axiosUser } from "@/app/lib/axios/axios";
 import { getThemeConfig } from "../../theme/themeConfig";
 import ThemeToggleButton from "../ThemeToggleButton";
 import { useThemeMode } from "../ThemeProvider";
@@ -48,6 +55,7 @@ interface HeaderProps {
   systemRole?: string;
   onToggleSider?: () => void;
   creditBalance?: ICreditBalance;
+  handleOpenCouponModal: () => void;
 }
 
 export function PrivateHeader({
@@ -62,11 +70,16 @@ export function PrivateHeader({
   systemRole,
   onToggleSider,
   creditBalance,
+  handleOpenCouponModal,
 }: HeaderProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile } = useResponsive();
+  const [form] = Form.useForm();
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   /* ---------------- Real Organization List ---------------- */
   const allOrganizations = [
@@ -87,13 +100,10 @@ export function PrivateHeader({
   const orgMenuItems = [
     ...allOrganizations.map((org) => ({
       key: org.organizationId,
+      onClick: () => handleOrganizationChange(org.organizationId),
       label: (
         <Space style={{ width: "100%", justifyContent: "space-between" }}>
-          <div onClick={() => handleOrganizationChange(org.organizationId)}>
-            <Text strong={org.organizationId === organizationId}>
-              {org.name}
-            </Text>
-          </div>
+          <Text strong={org.organizationId === organizationId}>{org.name}</Text>
         </Space>
       ),
     })),
@@ -119,6 +129,12 @@ export function PrivateHeader({
       icon: <UserOutlined />,
       label: "Profile",
       onClick: () => router.push("/page/profile"),
+    },
+    {
+      key: "coupon",
+      icon: <CreditCardOutlined />,
+      label: "Use Coupon",
+      onClick: () => handleOpenCouponModal(),
     },
     ...(systemRole === "SUPER_ADMIN"
       ? [

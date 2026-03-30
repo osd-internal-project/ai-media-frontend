@@ -34,10 +34,12 @@ import OrganizationMembersServices from "../../services/organization-members.ser
 import { PrivateHeader } from "./../layout/PrivateHeader";
 import PrivateSider from "./../layout/PrivateSider";
 import PrivateContent from "./../layout/PrivateContent";
+import UseCouponModal from "../UseCouponModal";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import CreditBalanceServices from "@/app/services/credit-balance.service";
+import CouponService from "@/app/services/coupon.service";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -68,7 +70,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const organizationService = OrganizationService(axiosUser);
   const organizationMemberService = OrganizationMembersServices(axiosUser);
   const creditฺBalanceService = CreditBalanceServices(axiosUser);
-
+  const couponService = CouponService(axiosUser);
   const projectService = ProjectService(axiosCore);
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<
@@ -97,6 +99,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     IOrganization[]
   >([]);
   const [userProfile, setUserProfile] = useState<TUser | null>(null);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState<boolean>(false);
+  const [couponLoading, setCouponLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isMobile) {
@@ -282,6 +286,42 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
   }
 
+  // Use Coupon
+
+  const handleCouponSubmit = async (values: { code: string }) => {
+    if (!organizationId || !session?.user?.userId) {
+      modal.error({
+        title: "Error",
+        content: "Session expired or missing organization information",
+      });
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      await couponService.useCoupon({
+        code: values.code,
+        organizationId: organizationId,
+        userId: session?.user?.userId,
+      });
+      modal.success({
+        title: "Success",
+        content: "Coupon applied successfully!",
+      });
+      setIsCouponModalOpen(false);
+      // Reload page to update credit balance
+      window.location.reload();
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.message || "Failed to apply coupon";
+      modal.error({
+        title: "Error",
+        content: errorMsg,
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
   //User Pages
 
   return (
@@ -420,7 +460,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </Form>
         </Modal>
       ) : null}
-
+      <UseCouponModal
+        isCouponModalOpen={isCouponModalOpen}
+        setIsCouponModalOpen={setIsCouponModalOpen}
+        handleCouponSubmit={handleCouponSubmit}
+        couponLoading={couponLoading}
+      />
       <Layout
         className="h-screen overflow-hidden"
         style={{ position: "relative" }}
@@ -504,6 +549,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             currentOrganization={currentOrganization}
             systemRole={userProfile?.role && userProfile.role}
             onToggleSider={() => setMobileSiderOpen((prev) => !prev)}
+            handleOpenCouponModal={() => setIsCouponModalOpen(true)}
           />
           <div className="w-full h-full flex flex-col overflow-hidden">
             <PrivateContent user={userProfile ? userProfile : undefined}>
