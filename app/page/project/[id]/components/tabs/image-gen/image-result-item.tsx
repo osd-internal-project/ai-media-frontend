@@ -11,13 +11,13 @@ import {
   Row,
   Col,
   Image,
+  Popover,
+  Tooltip,
 } from "antd";
 import { ImageOff } from "lucide-react";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import ActionBar from "./action-bar";
 import { Message } from "./chat-generate-image";
-
-
 
 interface Props {
   message: Message;
@@ -64,34 +64,66 @@ const ResultItem: FC<Props> = ({
           gap: isMobile ? 4 : 0,
         }}
       >
-        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ width: isMobile ? "100%" : undefined }}>
-          <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}>#{message.taskId}</Typography.Text>
-          <Tag
-            style={{
-              color: aiCaveColors.dreamActor,
-              border: `1.5px solid ${semantic.colorBorder}`,
-              background: "transparent",
-              fontWeight: 600,
-              fontSize: isMobile ? 12 : 13,
-              borderRadius: 8,
-              padding: isMobile ? "1.5px 8px" : "2px 10px",
-            }}
+        <Space
+          // direction={isMobile ? "vertical" : "horizontal"}
+          size={isMobile ? 2 : 8}
+          style={{ width: isMobile ? "100%" : undefined }}
+        >
+          {/* <Typography.Text
+            style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}
           >
-            {message.imageUrls?.length || 0} imgs
-          </Tag>
+            #{message.taskId}
+          </Typography.Text> */}
           <Typography.Text
-            ellipsis
             style={{
-              maxWidth: isMobile ? 180 : 300,
-              color: semantic.colorTextSecondary,
-              fontSize: isMobile ? 13 : 14,
+              fontSize: isMobile ? 15 : 14,
+              color: semantic.colorPrimary,
             }}
           >
-            {message.prompt}
+            {message.resolution || ""}
           </Typography.Text>
+          <Typography.Text
+            style={{
+              fontSize: isMobile ? 15 : 14,
+              color: semantic.colorTextSecondary,
+            }}
+          >
+            {message.generateConfig?.ratio || ""}
+          </Typography.Text>
+          <Typography.Text
+            style={{
+              fontSize: isMobile ? 15 : 14,
+              fontWeight: 600,
+              color: semantic.colorPrimary,
+            }}
+          >
+            {message.generateConfig?.modelName || ""}
+          </Typography.Text>
+
+        
+            <Typography.Text
+              ellipsis
+              style={{
+                maxWidth: isMobile ? 180 : 300,
+                color: semantic.colorTextSecondary,
+                fontSize: isMobile ? 13 : 14,
+              }}
+            >
+              {message.prompt}
+            </Typography.Text> 
         </Space>
-        <Space direction={isMobile ? "vertical" : "horizontal"} size={isMobile ? 2 : 8} style={{ marginTop: isMobile ? 6 : 0, alignItems: isMobile ? "flex-start" : "center" }}>
-          <Typography.Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
+        <Space
+          // direction={isMobile ? "vertical" : "horizontal"}
+          size={isMobile ? 2 : 8}
+          style={{
+            marginTop: isMobile ? 6 : 0,
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
+        >
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: isMobile ? 11 : 12 }}
+          >
             {new Date(message.createdAt).toLocaleDateString([], {
               month: "short",
               day: "numeric",
@@ -108,9 +140,7 @@ const ResultItem: FC<Props> = ({
             size="small"
             style={{ padding: isMobile ? 0 : undefined }}
             onClick={() =>
-              setMessages((prev) =>
-                prev.filter((m) => m.id !== message.id),
-              )
+              setMessages((prev) => prev.filter((m) => m.id !== message.id))
             }
           >
             🗑
@@ -119,7 +149,6 @@ const ResultItem: FC<Props> = ({
       </Flex>
 
       <Divider style={{ margin: "16px 0" }} />
-
       {/* LOADING */}
       {(message.genneratedStatus === "PENDING" ||
         message.genneratedStatus === "PROCESSING") && (
@@ -139,8 +168,7 @@ const ResultItem: FC<Props> = ({
 
       {/* ERROR */}
       {(message.genneratedStatus === "FAILED" ||
-        (message.genneratedStatus === "SUCCESS" &&
-          !message.imageUrls)) && (
+        (message.genneratedStatus === "SUCCESS" && !message.imageUrls)) && (
         <Card
           size="small"
           style={{
@@ -173,7 +201,13 @@ const ResultItem: FC<Props> = ({
           <Row gutter={[8, 8]} style={{ marginTop: 8, width: "100%" }}>
             <Image.PreviewGroup>
               {message.imageUrls.map((imgUrl, i) => (
-                <Col key={imgUrl.id} xs={isMobile ? 24 : 12} sm={12} md={6} lg={6}>
+                <Col
+                  key={imgUrl.id}
+                  xs={isMobile ? 24 : 12}
+                  sm={12}
+                  md={6}
+                  lg={6}
+                >
                   <div
                     style={{
                       position: "relative",
@@ -208,11 +242,13 @@ const ResultItem: FC<Props> = ({
                             if (msg.taskId === taskId) {
                               return {
                                 ...msg,
-                                imageUrls: msg.imageUrls.filter((img) => img.id !== id),
+                                imageUrls: msg.imageUrls.filter(
+                                  (img) => img.id !== id,
+                                ),
                               };
                             }
                             return msg;
-                          })
+                          }),
                         );
                       }}
                       messageApi={messageApi}
@@ -228,5 +264,3 @@ const ResultItem: FC<Props> = ({
 };
 
 export default ResultItem;
-
-

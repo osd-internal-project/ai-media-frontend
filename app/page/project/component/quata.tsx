@@ -1,6 +1,7 @@
 import React from "react";
 import { Progress, Typography } from "antd";
 import { FileImageOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { formatNumber } from "@/app/utils/format";
 
 type QuataSize = "small" | "middle" | "large";
 
@@ -100,16 +101,16 @@ const Quata: React.FC<QuataProps> = ({
           strong
           style={{ color: colorTextBase, fontSize: ui.value }}
         >
-          {creditUsed}
+          {formatNumber(creditUsed)}
           {cerrentUsedCredit && cerrentUsedCredit > 0 ? (
             <strong style={{ color: colorPrimary }}>
               {" "}
-              +{cerrentUsedCredit || 0}
+              +{formatNumber(cerrentUsedCredit || 0)}
             </strong>
           ) : (
             ""
           )}
-          /{safeImageTotal}
+          /{formatNumber(safeImageTotal)}
         </Typography.Text>
       </div>
       {showProgress ? (

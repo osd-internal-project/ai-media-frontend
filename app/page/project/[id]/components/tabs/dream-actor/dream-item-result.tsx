@@ -53,39 +53,57 @@ const DreamactorResultItem: FC<Props> = ({
         }}
       >
         <Space
-          direction={isMobile ? "vertical" : "horizontal"}
+          // direction={isMobile ? "vertical" : "horizontal"}
           size={isMobile ? 2 : 8}
           style={{ width: isMobile ? "100%" : undefined }}
         >
-          <Typography.Text strong style={{ fontSize: isMobile ? 15 : 14 }}>
-            #{message.taskId}
-          </Typography.Text>
-          <Tag
-            style={{
-              fontWeight: 600,
-              fontSize: isMobile ? 12 : 13,
-              borderRadius: 8,
-              padding: isMobile ? "1.5px 8px" : "2px 10px",
-            }}
-          >
-            {message.imageUrls?.length || 0} videos
-          </Tag>
+          {/* <Typography.Text
+              style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}
+            >
+              #{message.taskId}
+            </Typography.Text> */}
           <Typography.Text
-            ellipsis
             style={{
-              maxWidth: isMobile ? 180 : 300,
-              fontSize: isMobile ? 13 : 14,
+              fontSize: isMobile ? 15 : 14,
+              color: "#1677ff",
             }}
           >
-            {message.prompt || ""}
+            {message.resolution || ""}
+          </Typography.Text>
+
+          <Typography.Text
+            style={{
+              fontSize: isMobile ? 15 : 14,
+              fontWeight: 600,
+              color: "#1677ff",
+            }}
+          >
+            {message.generateConfig?.modelName || ""}
           </Typography.Text>
         </Space>
-        <Typography.Text
-          type="secondary"
-          style={{ fontSize: isMobile ? 11 : 12, marginTop: isMobile ? 6 : 0 }}
+        <Space
+          // direction={isMobile ? "vertical" : "horizontal"}
+          size={isMobile ? 2 : 8}
+          style={{
+            marginTop: isMobile ? 6 : 0,
+            alignItems: isMobile ? "flex-start" : "center",
+          }}
         >
-          {new Date(message.createdAt).toLocaleString()}
-        </Typography.Text>
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: isMobile ? 11 : 12 }}
+          >
+            {new Date(message.createdAt).toLocaleDateString([], {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}{" "}
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Typography.Text>
+        </Space>
       </Flex>
 
       <Divider />
