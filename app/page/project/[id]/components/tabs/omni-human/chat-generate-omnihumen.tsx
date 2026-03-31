@@ -793,6 +793,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   }
 
   const onDownloadVideo = async (fileName: string, videoId: string) => {
+    const hide = messageApi.loading("Downloading...", 0);
     try {
       const response = await galleryService.downloadFile(
         videoId,
@@ -805,11 +806,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
-
-      message.success("Image downloaded successfully");
+      hide();
+      messageApi.success("Download completed");
     } catch (error) {
+      hide();
       console.error("Download error:", error);
-      message.error("Download failed");
+      messageApi.error("Download failed");
     }
   };
 

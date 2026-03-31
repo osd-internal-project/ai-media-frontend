@@ -6,16 +6,18 @@ interface TypoModalProps {
   form: any;
   onOk: () => void;
   onCancel: () => void;
+  mode?: 'add' | 'edit';
 }
 
-const TypoModal: React.FC<TypoModalProps> = ({ open, form, onOk, onCancel }) => {
+const TypoModal: React.FC<TypoModalProps> = ({ open, form, onOk, onCancel, mode = 'add' }) => {
+  const isEdit = mode === 'edit';
   return (
     <Modal
-      title="Add Font"
+      title={isEdit ? 'Edit Font' : 'Add Font'}
       open={open}
       onOk={onOk}
       onCancel={onCancel}
-      okText="Add"
+      okText={isEdit ? 'Save' : 'Add'}
       cancelText="Cancel"
     >
       <Form form={form} layout="vertical">

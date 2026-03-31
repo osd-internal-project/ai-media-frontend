@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import BrandKitServices from "@/app/services/brand-kit.service";
+import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Flex, Typography, Switch } from "antd";
 import {
   BgColorsOutlined,
@@ -12,15 +14,88 @@ type Props = {
   semantic: Record<string, any>;
   children?: React.ReactNode;
   style?: React.CSSProperties;
+  onCiPromptChange?: (ciPrompt: string) => void;
+  onActiveChange?: (active: boolean) => void;
 };
 
 export default function BrandKitSection({
   semantic,
   children,
   style,
+  onCiPromptChange,
+  onActiveChange,
 }: Props) {
-  const [active, setActive] = React.useState(true);
-  const colors = ["#6F6ADE", "#26D9B8", "#0F172A", "#B7B6F8", "#F8FAFC", "#8D93A6"];
+  const [active, setActive] = React.useState(false);
+  const [brandKit, setBrandKit] = useState<any>(null);
+  const [parsedColors, setParsedColors] = useState<string[]>([]);
+  const [parsedFonts, setParsedFonts] = useState<{ name: string; weight: number; type: string }[]>([]);
+
+  useEffect(() => {
+    if (!active) {
+      setBrandKit(null);
+      setParsedColors([]);
+      setParsedFonts([]);
+      if (typeof onCiPromptChange === 'function') onCiPromptChange("");
+      return;
+    }
+    const brandKitService = BrandKitServices(axiosCore);
+    brandKitService.findAll()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Sort by createdAt descending (latest first)
+          const kits = data.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          const kit = kits[0];
+          setBrandKit(kit);
+          // Parse colors from brandCiPrompt
+          let colors: string[] = [];
+          let fonts: { name: string; weight: number; type: string }[] = [];
+          let ciPrompt = "";
+          if (typeof kit.brandCiPrompt === 'string') {
+            ciPrompt = kit.brandCiPrompt;
+            // Parse colors
+            if (kit.brandCiPrompt.includes('Brand colors:')) {
+              const colorSection = kit.brandCiPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
+              const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
+              colors = hexMatches.map(m => '#' + m[1]);
+            }
+            // Parse fonts
+            if (kit.brandCiPrompt.includes('Fonts:')) {
+              const fontSection = kit.brandCiPrompt.split('Fonts:')[1] || '';
+              const fontMatches = [...fontSection.matchAll(/([^,\n]+)\s*\(([^)]*)\)/g)];
+              fontMatches.forEach((m) => {
+                let type = 'body', weight = 400;
+                if (m[2]) {
+                  const typeMatch = m[2].match(/(heading\d?|body|caption|paragraph)/i);
+                  if (typeMatch) type = typeMatch[1].toLowerCase();
+                  const weightMatch = m[2].match(/weight\s*(\d+)/i);
+                  if (weightMatch) weight = Number(weightMatch[1]);
+                }
+                fonts.push({ name: m[1].trim(), type, weight });
+              });
+            }
+          }
+          setParsedColors(colors);
+          setParsedFonts(fonts);
+          if (active && typeof onCiPromptChange === 'function') onCiPromptChange(ciPrompt);
+        } else {
+          setBrandKit(null);
+          setParsedColors([]);
+          setParsedFonts([]);
+          if (typeof onCiPromptChange === 'function') onCiPromptChange("");
+        }
+      })
+      .catch(() => {
+        setBrandKit(null);
+        setParsedColors([]);
+        setParsedFonts([]);
+        if (typeof onCiPromptChange === 'function') onCiPromptChange("");
+      });
+  }, [active]);
+
+  // Notify parent when active changes
+  useEffect(() => {
+    if (typeof onActiveChange === 'function') onActiveChange(active);
+  }, [active]);
 
   const colorDotStyle = (color: string): React.CSSProperties => ({
     width: 18,
@@ -90,9 +165,9 @@ export default function BrandKitSection({
             </Flex>
 
             <Flex align="center" gap={6}>
-              <div style={colorDotStyle("#6F6ADE")} />
-              <div style={colorDotStyle("#26D9B8")} />
-              <div style={colorDotStyle("#0F172A")} />
+              {parsedColors.slice(0, 3).map((color) => (
+                <div key={color} style={colorDotStyle(color)} />
+              ))}
             </Flex>
 
             <Text
@@ -104,7 +179,7 @@ export default function BrandKitSection({
                 minWidth: 0,
               }}
             >
-              AI Cave — Main Brand
+              {brandKit?.name || 'AI Cave — Main Brand'}
             </Text>
           </Flex>
 
@@ -131,12 +206,11 @@ export default function BrandKitSection({
               </Text>
 
               <Flex align="center" gap={8} wrap="wrap">
-                {colors.map((color) => (
+                {parsedColors.map((color) => (
                   <div key={color} style={colorDotStyle(color)} />
                 ))}
               </Flex>
             </Flex>
-
             <div
               style={{
                 borderRadius: 12,
@@ -163,7 +237,6 @@ export default function BrandKitSection({
                     CI Prompt (injected)
                   </Text>
                 </Flex>
-
                 <Text
                   style={{
                     color: "#7E7BFF",
@@ -174,9 +247,7 @@ export default function BrandKitSection({
                     whiteSpace: "pre-line",
                   }}
                 >
-                  {`Brand colors: deep purple (#6F6ADE)
-and teal (#0FEAB6) gradient
-accents, sleek dark background.`}
+                  {brandKit?.brandCiPrompt || ''}
                 </Text>
               </Flex>
             </div>
@@ -188,8 +259,7 @@ accents, sleek dark background.`}
                 fontSize: 11,
               }}
             >
-              × Avoid: cluttered, low quality, vintage, retro, oversaturated
-              visuals
+              × Avoid: {brandKit?.negativePrompt || 'cluttered, low quality, vintage, retro, oversaturated visuals'}
             </Text>
           </Flex>
         ) : (

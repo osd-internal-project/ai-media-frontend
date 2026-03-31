@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 import { Eye } from "lucide-react";
 
 import type { ColumnsType } from "antd/es/table";
-import { Loader2, Star } from "lucide-react";
+import { Loader2, Star, Download, Trash2, Share2, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -24,8 +24,9 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import {
   StarFilled,
   StarOutlined,
-
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 
 export interface props {
@@ -189,71 +190,112 @@ const PromptActivity: FC<props> = ({
       render: (_, record) => {
         const isVideo = record.typeGenerate === "video" || record.typeGenerate === "dreamactor" || record.typeGenerate === "omnihumen" || record.typeGenerate === "omnihuman";
         return (
-          <div
-            style={{
-              width: 112,
-              height: 64,
-              borderRadius: 8,
-              overflow: "hidden",
-              border: `1px solid ${semantic.colorBorder}`,
-              position: "relative",
-              cursor: "pointer",
-            }}
+            <div
+              style={{
+                width: 112,
+                height: 64,
+                borderRadius: 8,
+                overflow: "hidden",
+                border: `1px solid ${semantic.colorBorder}`,
+                position: "relative",
+                cursor: "pointer",
+                display: 'flex',
+            
+              }}
             onMouseEnter={() => setHoveredId(record.id)}
             onMouseLeave={() => setHoveredId(null)}
             onClick={() => setPreviewItem(record)}
           >
             {/* Thumbnail or video preview */}
             {isVideo ? (
-              <>
-                <video
-                  src={record.imageUrl}
-                  muted
-                  style={{ width: "100%", height: "100%", objectFit: "cover", opacity: hoveredId === record.id ? 1 : 0.7, transition: "opacity 0.2s" }}
-                  playsInline
-                  loop
-                  preload="metadata"
-                  onMouseOver={e => { if (hoveredId === record.id) (e.currentTarget as HTMLVideoElement).play(); }}
-                  onMouseOut={e => { (e.currentTarget as HTMLVideoElement).pause(); (e.currentTarget as HTMLVideoElement).currentTime = 0; }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    background: "rgba(0,0,0,0.5)",
-                    borderRadius: 4,
-                    padding: 2,
-                    zIndex: 2,
-                  }}
-                >
-                  <Eye size={16} color="#fff" />
-                </div>
-              </>
+              record.imageUrl ? (
+                <>
+                  <video
+                    src={record.imageUrl || undefined}
+                    muted
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      width: 'auto',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      opacity: hoveredId === record.id ? 1 : 0.7,
+                      transition: 'opacity 0.2s',
+                      display: 'block',
+                      margin: 'auto',
+                      background: 'transparent',
+                    }}
+                    playsInline
+                    loop
+                    preload="metadata"
+                    onMouseOver={async e => {
+                      if (hoveredId === record.id) {
+                        try {
+                          if (e.currentTarget.paused) {
+                            await e.currentTarget.play();
+                          }
+                        } catch (err) {
+                          // Ignore AbortError or any play interruption
+                        }
+                      }
+                    }}
+                    onMouseOut={e => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      background: "rgba(0,0,0,0.5)",
+                      borderRadius: 4,
+                      padding: 2,
+                      zIndex: 2,
+                    }}
+                  >
+                    <Eye size={16} color="#fff" />
+                  </div>
+                </>
+              ) : null
             ) : (
-              <>
-                <Image
-                  src={record.imageUrl}
-                  alt={record.prompt || "preview"}
-                  preview={false}
-                  width={112}
-                  height={64}
-                  style={{ objectFit: "cover", opacity: hoveredId === record.id ? 1 : 0.85, transition: "opacity 0.2s" }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    background: "rgba(0,0,0,0.5)",
-                    borderRadius: 4,
-                    padding: 2,
-                    zIndex: 2,
-                  }}
-                >
-                  <Eye size={16} color="#fff" />
-                </div>
-              </>
+              record.imageUrl ? (
+                <>
+                  <Image
+                    src={record.imageUrl || undefined}
+                    alt={record.prompt || "preview"}
+                    preview={false}
+                    width={112}
+                    height={64}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      width: 'auto',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      opacity: hoveredId === record.id ? 1 : 0.85,
+                      transition: 'opacity 0.2s',
+                      display: 'block',
+                      margin: 'auto',
+                      background: 'transparent',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      background: "rgba(0,0,0,0.5)",
+                      borderRadius: 4,
+                      padding: 2,
+                      zIndex: 2,
+                    }}
+                  >
+                    <Eye size={16} color="#fff" />
+                  </div>
+                </>
+              ) : null
             )}
             {/* Overlay on hover */}
             {hoveredId === record.id && (
@@ -292,11 +334,31 @@ const PromptActivity: FC<props> = ({
       title: "Prompt",
       dataIndex: "prompt",
       key: "prompt",
+      width: 270,
       ellipsis: true,
-      render: (value) => (
-        <Tooltip title={value}>
-          <Typography.Text>{value || "-"}</Typography.Text>
-        </Tooltip>
+      render: (value, record) => (
+        <div
+          style={{ display: 'flex', alignItems: 'center', position: 'relative' }}
+          onMouseEnter={() => setHoveredId(record.id)}
+          onMouseLeave={() => setHoveredId(null)}
+        >
+          <Tooltip title={value}>
+            <Typography.Text style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }}>{value || "-"}</Typography.Text>
+          </Tooltip>
+          {hoveredId === record.id && !!value && (
+            <Button
+              icon={<Copy size={16} />}
+              type="text"
+              shape="circle"
+              size="small"
+              style={{ marginLeft: 8 }}
+              onClick={() => {
+                navigator.clipboard.writeText(value);
+                api.success({ message: "Prompt copied" });
+              }}
+            />
+          )}
+        </div>
       ),
     },
     {
@@ -321,50 +383,144 @@ const PromptActivity: FC<props> = ({
     {
       title: "Actions",
       key: "actions",
-      width: 100,
+      align: "center",
+      width: 180,
       render: (_, record) => {
         const isLiked = Boolean(record?.status);
+        const isVideo = record.typeGenerate === "video" || record.typeGenerate === "dreamactor" || record.typeGenerate === "omnihumen" || record.typeGenerate === "omnihuman";
         return (
-          <Button
-            icon={
-              loadingButton === record.id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isLiked ? (
-                <StarFilled size={16} style={{ color: "#f59e0b" }} />
-              ) : (
-                <StarOutlined style={{ color: "#d9d9d9" }} size={16} />
-              )
-            }
-            onClick={() => {
-              if (loadingButton === record.id) return;
-              if (isLiked) {
-                // Unlike
-                setLoadingButton(record.id);
-                galleryservices.updateStatus(record.id, false)
-                  .then(() => {
-                    setData((prev) => {
-                      const updated = prev.data.map((entry) =>
-                        entry.id === record.id ? { ...entry, status: false } : entry
-                      );
-                      return { ...prev, data: updated };
-                    });
-                    api.success({ message: "Removed from library" });
-                  })
-                  .catch(() => {
-                    api.error({ message: "Failed to remove from library" });
-                  })
-                  .finally(() => setLoadingButton(null));
-              } else {
-                // Like
-                onSubmitToLibrary(record);
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', width: '100%' }}>
+            {/* Like/Unlike */}
+            <Button
+              icon={
+                loadingButton === record.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isLiked ? (
+                  <StarFilled size={16} style={{ color: "#f59e0b" }} />
+                ) : (
+                  <StarOutlined style={{ color: "#d9d9d9" }} size={16} />
+                )
               }
-            }}
-            loading={loadingButton === record.id}
-            type="text"
-            shape="circle"
-            disabled={isMockPreview}
-            className="activity-star-button"
-          />
+              onClick={() => {
+                if (loadingButton === record.id) return;
+                if (isLiked) {
+                  setLoadingButton(record.id);
+                  galleryservices.updateStatus(record.id, false)
+                    .then(() => {
+                      setData((prev) => {
+                        const updated = prev.data.map((entry) =>
+                          entry.id === record.id ? { ...entry, status: false } : entry
+                        );
+                        return { ...prev, data: updated };
+                      });
+                      api.success({ message: "Removed from library" });
+                    })
+                    .catch(() => {
+                      api.error({ message: "Failed to remove from library" });
+                    })
+                    .finally(() => setLoadingButton(null));
+                } else {
+                  onSubmitToLibrary(record);
+                }
+              }}
+              loading={loadingButton === record.id}
+              type="text"
+              shape="circle"
+              disabled={isMockPreview}
+              className="activity-star-button"
+            />
+            {/* Download */}
+            <Button
+              icon={<Download size={16} />}
+              type="text"
+              shape="circle"
+              disabled={isMockPreview}
+              onClick={async (e) => {
+                e.stopPropagation();
+                const key = `download_${record.id}`;
+                let hide: () => void = () => {};
+                try {
+                  const maybeHide = api.info({
+                    message: 'Downloading...'
+                  });
+                  if (typeof maybeHide === 'function') {
+                    hide = maybeHide;
+                  }
+                  const response = await galleryservices.downloadFile(
+                    record.id,
+                    organizationId,
+                  );
+                  if (!response) throw new Error("Download failed or response is empty");
+                  let ext = "";
+                  if (record.typeGenerate === "image") {
+                    ext = ".jpg";
+                  } else if (
+                    record.typeGenerate === "video" ||
+                    record.typeGenerate === "dreamactor" ||
+                    record.typeGenerate === "omnihumen" ||
+                    record.typeGenerate === "omnihuman"
+                  ) {
+                    ext = ".mp4";
+                  }
+                  const fileName = (record.prompt ? record.prompt.substring(0, 30).replace(/[^a-zA-Z0-9-_]/g, "_") : "file") + ext;
+                  const url = URL.createObjectURL(response);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = fileName;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                  hide && hide();
+                  api.success({ message: "Downloaded successfully" });
+                } catch (err) {
+                  hide && hide();
+                  api.error({ message: "Download failed" });
+                }
+              }}
+            />
+            {/* Delete */}
+            <Button
+              icon={<Trash2 size={16} />}
+              type="text"
+              shape="circle"
+              disabled={isMockPreview}
+              onClick={(e) => {
+                e.stopPropagation();
+                Modal.confirm({
+                  title: 'Delete this item?',
+                  icon: <ExclamationCircleOutlined />,
+                  content: 'Are you sure you want to delete this item? This action cannot be undone.',
+                  okText: 'Delete',
+                  okType: 'danger',
+                  cancelText: 'Cancel',
+                  onOk: async () => {
+                    try {
+                      await galleryservices.deleteById(record.id);
+                      setData((prev) => {
+                        const updated = prev.data.filter((entry) => entry.id !== record.id);
+                        return { ...prev, data: updated };
+                      });
+                      api.success({ message: "Deleted" });
+                    } catch (err) {
+                      api.error({ message: "Delete failed" });
+                    }
+                  },
+                });
+              }}
+            />
+            {/* Share */}
+            <Button
+              icon={<Share2 size={16} />}
+              type="text"
+              shape="circle"
+              disabled={isMockPreview}
+              onClick={() => {
+                // Share logic: copy link to clipboard
+                const url = window.location.origin + record.imageUrl;
+                navigator.clipboard.writeText(url);
+                api.success({ message: "Link copied" });
+              }}
+            />
+          </div>
         );
       },
     },

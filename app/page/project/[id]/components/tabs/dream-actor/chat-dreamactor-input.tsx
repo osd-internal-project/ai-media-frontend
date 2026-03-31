@@ -102,6 +102,32 @@ export default function ChatDreamactorInput({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
+  // Helper to join CI prompt and main prompt with connector
+  function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
+    if (!mainPrompt) return ciPrompt;
+    if (!ciPrompt) return mainPrompt;
+    // Main prompt first, then CI prompt with connector
+    return (
+      mainPrompt.trim() +
+      "\n\n---\n(BrandKit Prompt: " +
+      "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01 BrandKit)\n" +
+      ciPrompt.trim()
+    );
+  }
+
+  // State to get CI prompt and active from BrandKitSection
+  const [ciPrompt, setCiPrompt] = React.useState<string>("");
+  const [ciActive, setCiActive] = React.useState<boolean>(true);
+
+  // Custom handleSendMessage to combine CI prompt and main prompt
+  const handleSendMessageWithCi = (values: any) => {
+    let prompt = values.prompt || "";
+    if (ciActive && ciPrompt) {
+      prompt = joinCiPrompt(ciPrompt, prompt);
+    }
+    handleSendMessage({ ...values, prompt });
+  };
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewFileType, setPreviewFileType] = useState<"image" | "video">(
@@ -394,7 +420,11 @@ export default function ChatDreamactorInput({
               </>
             }
           />
-          <BrandKitSection semantic={semantic} />
+            <BrandKitSection
+                        semantic={semantic}
+                        onCiPromptChange={setCiPrompt}
+                        onActiveChange={setCiActive}
+                      />
         </Flex>
 
         

@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { Row, Col, Typography, Tag, Button, message, Form } from "antd";
-import { CopyOutlined, FileAddFilled } from "@ant-design/icons";
+import { Row, Col, Typography, Tag, Button, message, Form, Modal } from "antd";
+import { CopyOutlined, DeleteOutlined, EditOutlined, FileAddFilled } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { Plus, PlusIcon } from "lucide-react";
 import ColorModal from "./color-modal";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
+import useResponsive from "@/app/hooks/useResponsive";
 
 const { Title, Text } = Typography;
 
 interface ColorItem {
+  id: string;
   name: string;
   hex: string;
   type: string;
@@ -35,16 +37,56 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
   const semantic = getThemeConfig(mode).token ?? {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const { isMobile } = useResponsive();
 
 
   const handleCopy = (hex: string) => {
     navigator.clipboard.writeText(hex);
     messageApi.success(`Copied: ${hex}`);
-  };
+  }
+  // ต้องอยู่ตรงนี้เพื่อให้ทุกฟังก์ชันใน component เห็น
+  const [editColor, setEditColor] = useState<ColorItem | null>(null);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const handleAddColor = () => {
+    setEditColor(null);
+    setEditIndex(null);
     setIsModalOpen(true);
   };
+
+  // Modal state for delete confirmation
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ color: ColorItem; index: number } | null>(null);
+
+  const handleDeleteColor = (color: ColorItem, index: number) => {
+    setDeleteTarget({ color, index });
+    setDeleteModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { color, index } = deleteTarget;
+    try {
+      const colorDetail = (colors as any[])[index];
+      const id = colorDetail?.id;
+      if (!id) {
+        messageApi.error("Cannot find color id to delete");
+        setDeleteModalVisible(false);
+        setDeleteTarget(null);
+        return;
+      }
+      const brandKitDetailService = BrandKitDetailServices(axiosCore);
+      await brandKitDetailService.del(id);
+      messageApi.success("Color deleted");
+      onColorAdded(); // refresh
+    } catch (err) {
+      messageApi.error("Failed to delete color");
+    } finally {
+      setDeleteModalVisible(false);
+      setDeleteTarget(null);
+    }
+  };
+
 
 
   const handleModalOk = async () => {
@@ -64,14 +106,50 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
         },
         brandKitId,
       };
-      const res = await brandKitDetailService.create(payload);
-      if (res) {
-        messageApi.success("Color added!");
-        setIsModalOpen(false);
-        form.resetFields();
-        onColorAdded();
-      } else {
-        messageApi.error("Failed to add color");
+      console.log("[DEBUG] BrandKitDetail payload:", payload);
+      try {
+        // ถ้า editColor มีค่า ให้เรียก update
+        if (editColor && editIndex !== null) {
+          // หา id ของสีที่จะแก้ไข
+          const colorId = editColor.id;
+          const updatePayload: Partial<import("@/app/common/brand-kit").TBrandKitDetail> = {
+            name: values.name,
+            type: "colors",
+            detail: {
+              hex: values.hex,
+              type: values.type,
+            },
+            brandKitId,
+          };
+          const res = await brandKitDetailService.update(colorId, updatePayload);
+          if (res) {
+            messageApi.success("Color updated!");
+            setIsModalOpen(false);
+            form.resetFields();
+            setEditColor(null);
+            setEditIndex(null);
+            onColorAdded();
+          } else {
+            messageApi.error("Failed to update color");
+          }
+          return;
+        }
+        // create ปกติ
+        const res = await brandKitDetailService.create(payload);
+        console.log("[DEBUG] BrandKitDetail response:", res);
+        if (res) {
+          messageApi.success("Color added!");
+          setIsModalOpen(false);
+          form.resetFields();
+          setEditColor(null);
+          setEditIndex(null);
+          onColorAdded();
+        } else {
+          messageApi.error("Failed to add color");
+        }
+      } catch (err) {
+        console.error("[DEBUG] BrandKitDetail error:", err);
+        messageApi.error("Failed to add color (see console)");
       }
     } catch (e) {
       // validation error
@@ -83,12 +161,33 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
     form.resetFields();
   };
 
+
+  // กำหนดลำดับความสำคัญของประเภทสี
+  const COLOR_TYPE_PRIORITY = [
+    "primary",
+    "secondary",
+    "accent",
+    "neutral",
+    "success",
+    "warning",
+    "error",
+    "info",
+    "other"
+  ];
+
   // Group colors by type
   const colorsByType: Record<string, ColorItem[]> = {};
   colors.forEach((c) => {
     if (!colorsByType[c.type]) colorsByType[c.type] = [];
     colorsByType[c.type].push(c);
   });
+
+  // สร้างลำดับประเภทตาม priority เสมอ (ถ้าไม่มีสีใน type นั้นจะข้าม)
+  const orderedTypes = COLOR_TYPE_PRIORITY.filter(type => colorsByType[type] && colorsByType[type].length > 0)
+    .concat(
+      Object.keys(colorsByType)
+        .filter(type => !COLOR_TYPE_PRIORITY.includes(type))
+    );
 
   return (
     <div>
@@ -110,7 +209,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
         onCancel={handleModalCancel}
       />
 
-      {emptyState ? (
+      {(emptyState || colors.length === 0) ? (
         <div style={{
           display: "flex",
           flexDirection: "column",
@@ -126,115 +225,201 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
         </div>
       ) : (
         <>
-          {Object.entries(colorsByType).map(([type, groupColors]) => (
-            <div key={type} style={{ marginTop: 24 }}>
-              <Text style={{ color: "#64748b", fontSize: 12, fontWeight: 500 }}>
-                {type.toUpperCase()}
-              </Text>
+          {orderedTypes.map((type) => {
+            const groupColors = colorsByType[type];
+            return (
+              <div key={type} style={{ marginTop: 24 }}>
+                <Text style={{ color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+                  {type.toUpperCase()}
+                </Text>
 
-              <Row gutter={[24, 24]} style={{ marginTop: 8 }}>
-                {groupColors.map((color, index) => {
-                  const hoverKey = `${type}-${index}`; // unique key per swatch
-                  return (
-                    <Col key={`${color.name}-${color.hex}`} flex="0 0 200px">
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {/* Swatch 1:1 with hover overlay */}
-                        <div
-                          style={{
-                            position: "relative",
-                            width: "200px",
-                            aspectRatio: "1 / 1",
-                            borderRadius: 12,
-                            background: color.hex,
-                            cursor: "pointer",
-                            overflow: "hidden",
-                            border: `1px solid ${semantic.colorBorder}`,
-                          }}
-                          onMouseEnter={() => setHoveredKey(hoverKey)}
-                          onMouseLeave={() => setHoveredKey(null)}
-                        >
-                          {hoveredKey === hoverKey && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "100%",
-                                height: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Button
-                                type="primary"
-                                icon={<CopyOutlined />}
-                                onClick={() => handleCopy(color.hex)}
-                              />
-                            </div>
-                          )}
+                <Row gutter={[24, 24]} style={{ marginTop: 8 }}>
+                  {groupColors.map((color, groupIdx) => {
+                    const hoverKey = `${type}-${groupIdx}`;
+                    // หา index จริงของสีนี้ใน colors (เพื่อให้ลบ/แก้ไขถูกต้อง)
+                    const realIndex = colors.findIndex(
+                      c => c.id === color.id
+                    );
+                    return (
+                      <Col key={color.id} flex="0 0 200px">
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {/* Swatch 1:1 with hover overlay */}
+                          <div
+                            style={{
+                              position: "relative",
+                              width:isMobile ?"100px": "200px",
+                              aspectRatio: "1 / 1",
+                              borderRadius: 12,
+                              background: color.hex,
+                              cursor: "pointer",
+                              overflow: "hidden",
+                              border: `1px solid ${semantic.colorBorder}`,
+                            }}
+                            onMouseEnter={() => setHoveredKey(hoverKey)}
+                            onMouseLeave={() => setHoveredKey(null)}
+                          >
+                            {hoveredKey === hoverKey && (
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 12,
+                                  background: "rgba(0,0,0,0.18)",
+                                }}
+                              >
+                                <Button
+                                  type="text"
+                                  icon={<CopyOutlined style={{ fontSize: 18 }} />}
+                                  onClick={() => handleCopy(color.hex)}
+                                  style={{
+                                    minWidth: 36,
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 8,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#222',
+                                    boxShadow: '0 1px 4px #0001',
+                                  }}
+                                />
+                                <Button
+                                  type="text"
+                                  icon={<EditOutlined style={{ fontSize: 18 }} />}
+                                  onClick={() => {
+                                    setEditColor(color);
+                                    setEditIndex(realIndex);
+                                    form.setFieldsValue({
+                                      id: color.id,
+                                      name: color.name,
+                                      hex: color.hex,
+                                      type: color.type,
+                                    });
+                                    setIsModalOpen(true);
+                                  }}
+                                  style={{
+                                    minWidth: 36,
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 8,
+                                    color: '#222',
+                                    background: 'rgba(255,255,255,0.18)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 1px 4px #0001',
+                                  }}
+                                  title="Edit"
+                                />
+                                <Button
+                                  danger
+                                  type="text"
+                                  icon={<DeleteOutlined style={{ fontSize: 18 }} />}
+                                  onClick={() => {
+                                    handleDeleteColor(color, realIndex);
+                                  }}
+                                  style={{
+                                    minWidth: 36,
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 8,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 1px 4px #0001',
+                                  }}
+                                  title="Delete"
+                                />
+                                <Modal
+                                  open={deleteModalVisible}
+                                  title={deleteTarget ? `Delete color "${deleteTarget.color.name}"?` : ''}
+                                  onOk={handleConfirmDelete}
+                                  onCancel={() => { setDeleteModalVisible(false); setDeleteTarget(null); }}
+                                  okText="Delete"
+                                  okType="danger"
+                                  cancelText="Cancel"
+                                  destroyOnClose
+                                >
+                                  Are you sure you want to delete this color? This action cannot be undone.
+                                </Modal>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Name & Hex */}
+                          <Title level={5} style={{ margin: 0, color: semantic.colorWhite }}>
+                            {color.name}
+                          </Title>
+                          <Text>{color.hex}</Text>
+                          <Tag
+                            style={{
+                              marginTop: 8,
+                              color: color.hex,
+                              width: "fit-content",
+                              textAlign: "center",
+                              borderRadius: 8,
+                              border: `1px solid ${color.hex}`,
+                              letterSpacing: 0.5,
+                              display: "inline-block",
+                            }}
+                          >
+                            {color.type}
+                          </Tag>
                         </div>
-
-                        {/* Name & Hex */}
-                        <Title level={5} style={{ margin: 0, color: semantic.colorWhite }}>
-                          {color.name}
-                        </Title>
-                        <Text>{color.hex}</Text>
-                        <Tag
-                          style={{
-                            marginTop: 8,
-                            color: color.hex,
-                            width: "fit-content",
-                            textAlign: "center",
-                            borderRadius: 8,
-                            border: `1px solid ${color.hex}`,
-                            letterSpacing: 0.5,
-                            display: "inline-block",
-                          }}
-                        >
-                          {color.type}
-                        </Tag>
-                      </div>
-                    </Col>
-                  );
-                })}
-              </Row>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </div>
+            );
+          })}
+          {/* Palette Section: show only if colors exist */}
+          {colors.length > 0 && (
+            <div style={{ marginTop: 48 }}>
+              <Text style={{ color: "#64748b", fontSize: 13, fontWeight: 500, marginBottom: 8, display: "block" }}>
+                Palette
+              </Text>
+              <div style={{ display: "flex", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px 0 #0001", minHeight: 36, border: `1px solid ${semantic.colorBorder}` }}>
+                {colors.map((color, idx) => (
+                  <div
+                    key={color.hex + idx}
+                    style={{
+                      flex: 1,
+                      background: color.hex,
+                      minWidth: 0,
+                      height: 36,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      fontWeight: 500,
+                      fontSize: 12,
+                      borderRight: idx !== colors.length - 1 ? `1px solid ${semantic.colorBorder}` : undefined,
+                      transition: "background 0.2s",
+                    }}
+                    title={color.name + ' ' + color.hex}
+                  >
+                    {/* Optional: show nothing or color name/hex */}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-          {/* Palette Section */}
-          <div style={{ marginTop: 48 }}>
-            <Text style={{ color: "#64748b", fontSize: 13, fontWeight: 500, marginBottom: 8, display: "block" }}>
-              Palette
-            </Text>
-            <div style={{ display: "flex", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px 0 #0001", minHeight: 36, border: `1px solid ${semantic.colorBorder}` }}>
-              {colors.map((color, idx) => (
-                <div
-                  key={color.hex + idx}
-                  style={{
-                    flex: 1,
-                    background: color.hex,
-                    minWidth: 0,
-                    height: 36,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 500,
-                    fontSize: 12,
-                    borderRight: idx !== colors.length - 1 ? `1px solid ${semantic.colorBorder}` : undefined,
-                    transition: "background 0.2s",
-                  }}
-                  title={color.name + ' ' + color.hex}
-                >
-                  {/* Optional: show nothing or color name/hex */}
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </>
       )}
+
+
     </div>
   );
-};
+}
+
 
 export default ColorTab;
