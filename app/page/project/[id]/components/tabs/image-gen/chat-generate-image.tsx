@@ -861,25 +861,25 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const onDownloadImage = async (fileName: string, imageId: string) => {
+    const hide = messageApi.loading("Downloading image...", 0);
     try {
       const response = await galleryService.downloadFile(
         imageId,
         session?.user?.organizationId || "",
       );
       if (!response) throw new Error("Download failed or response is empty");
-      // console.log(response);
-      // const filename = response.name || "image.jpg";
       const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
-
-      message.success("Image downloaded successfully");
+      hide();
+      messageApi.success("Image downloaded successfully");
     } catch (error) {
+      hide();
       console.error("Download error:", error);
-      message.error("Download failed");
+      messageApi.error("Download failed");
     }
   };
 

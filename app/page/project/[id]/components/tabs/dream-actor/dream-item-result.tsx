@@ -20,7 +20,7 @@ const DreamactorResultItem: FC<Props> = ({
   onShareVideo,
   onDelete,
 }) => {
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
 
   return (
     <Card
@@ -43,68 +43,90 @@ const DreamactorResultItem: FC<Props> = ({
 
           <Typography.Text ellipsis style={{ maxWidth: 300 }}>
             {message.prompt || ""} */}
-      <Flex
-        justify={isMobile ? "start" : "space-between"}
-        align={isMobile ? "start" : "center"}
-        style={{
-          marginBottom: 8,
-          flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? 4 : 0,
-        }}
-      >
-        <Space
-          // direction={isMobile ? "vertical" : "horizontal"}
-          size={isMobile ? 2 : 8}
-          style={{ width: isMobile ? "100%" : undefined }}
-        >
-          {/* <Typography.Text
-              style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}
+      {(isMobile || isTablet) ? (
+        <div style={{ marginBottom: 8, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 8, width: "100%" }}>
+              <Typography.Text style={{ fontSize: 15, color: "#1677ff", fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: 15, fontWeight: 600, color: "#1677ff", whiteSpace: "nowrap" }}>{message.generateConfig?.modelName || ""}</Typography.Text>
+            </div>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+              <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+                {new Date(message.createdAt).toLocaleDateString([], {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                {new Date(message.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Typography.Text>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Row gutter={8} align="middle" style={{ marginBottom: 8, flexWrap: "nowrap", overflowX: "auto" }}>
+          <Col flex="none">
+            <Typography.Text
+              style={{
+                fontSize: 14,
+                color: "#1677ff",
+                fontWeight: 400,
+                whiteSpace: "nowrap",
+              }}
             >
-              #{message.taskId}
-            </Typography.Text> */}
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              color: "#1677ff",
-            }}
-          >
-            {message.resolution || ""}
-          </Typography.Text>
-
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              fontWeight: 600,
-              color: "#1677ff",
-            }}
-          >
-            {message.generateConfig?.modelName || ""}
-          </Typography.Text>
-        </Space>
-        <Space
-          // direction={isMobile ? "vertical" : "horizontal"}
-          size={isMobile ? 2 : 8}
-          style={{
-            marginTop: isMobile ? 6 : 0,
-            alignItems: isMobile ? "flex-start" : "center",
-          }}
-        >
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: isMobile ? 11 : 12 }}
-          >
-            {new Date(message.createdAt).toLocaleDateString([], {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}{" "}
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Typography.Text>
-        </Space>
-      </Flex>
+              {message.resolution || ""}
+            </Typography.Text>
+          </Col>
+          <Col flex="none">
+            <Typography.Text
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#1677ff",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {message.generateConfig?.modelName || ""}
+            </Typography.Text>
+          </Col>
+          <Col flex="auto" style={{ minWidth: 0 }}>
+            <Typography.Text
+              ellipsis
+              style={{
+                color: "#888",
+                fontSize: 14,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
+                width: "100%",
+                minWidth: 0,
+                maxWidth: "100%",
+              }}
+            >
+              {message.prompt}
+            </Typography.Text>
+          </Col>
+          <Col flex="none">
+            <Typography.Text
+              type="secondary"
+              style={{ fontSize: 12 }}
+            >
+              {new Date(message.createdAt).toLocaleDateString([], {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              {new Date(message.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Typography.Text>
+          </Col>
+        </Row>
+      )}
 
       <Divider />
 

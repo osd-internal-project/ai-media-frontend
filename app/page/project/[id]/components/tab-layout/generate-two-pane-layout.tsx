@@ -8,6 +8,7 @@ import { projectPermissions } from "@/app/utils/permissions";
 import { PictureOutlined, VideoCameraOutlined, UserOutlined } from "@ant-design/icons";
 import { Sparkle } from "lucide-react";
 import { aiCaveColors } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
 
 type EmptyAction = {
   label: string;
@@ -60,6 +61,7 @@ export default function GenerateTwoPaneLayout({
   // Mobile left pane overlay state
   const [showLeftOverlay, setShowLeftOverlay] = useState(false);
   const inputRef = useRef<InputRef>(null);
+  const { isTablet } = useResponsive();
 
 useEffect(() => {
   if (isMobile) {
@@ -223,7 +225,7 @@ useEffect(() => {
     >
       {/* LEFT PANE: Desktop = sidebar, Mobile = overlay+input */}
       {!isMobile && (
-        <Col flex="320px" style={{ minHeight: 0, paddingInline: 0 }}>
+        <Col flex={isTablet ? "280px" : "320px"} style={{ minHeight: 0, paddingInline: 0 }}>
           <Card
             style={{
               height: "100%",

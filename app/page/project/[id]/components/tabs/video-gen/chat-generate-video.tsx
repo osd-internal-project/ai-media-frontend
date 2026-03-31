@@ -791,48 +791,25 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }, [messages]);
 
   const onDownloadVideo = async (fileName: string, videoId: string) => {
-    // try {
-    // //   const urlWithoutParams = videoUrl.split("?")[0];
-    // //   const filename = urlWithoutParams.split("/").pop() || "video.mp4";
-
-    // //   const hide = message.loading("Downloading video...", 0);
-
-    // //   const response = await fetch(videoUrl);
-    // //   if (!response.ok) throw new Error("Download failed");
-
-    // //   const blob = await response.blob();
-    // //   const url = URL.createObjectURL(blob);
-    // //   const link = document.createElement("a");
-    // //   link.href = url;
-    // //   link.download = filename;
-    // //   link.click();
-    // //   URL.revokeObjectURL(url);
-
-    // //   hide();
-    // //   message.success("Video downloaded successfully");
-    // } catch (error) {
-    //   console.error("Download error:", error);
-    //   message.error("Download failed");
-    // }
+    const hide = messageApi.loading("Downloading video...", 0);
     try {
       const response = await galleryService.downloadFile(
         videoId,
         session?.user?.organizationId || "",
       );
       if (!response) throw new Error("Download failed or response is empty");
-      // console.log(response);
-      // const filename = response.name || "image.jpg";
       const url = URL.createObjectURL(response);
       const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
-
-      message.success("Image downloaded successfully");
+      hide();
+      messageApi.success("Video downloaded successfully");
     } catch (error) {
+      hide();
       console.error("Download error:", error);
-      message.error("Download failed");
+      messageApi.error("Download failed");
     }
   };
 

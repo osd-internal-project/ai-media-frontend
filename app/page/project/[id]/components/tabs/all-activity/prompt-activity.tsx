@@ -437,7 +437,15 @@ const PromptActivity: FC<props> = ({
               disabled={isMockPreview}
               onClick={async (e) => {
                 e.stopPropagation();
+                const key = `download_${record.id}`;
+                let hide: () => void = () => {};
                 try {
+                  const maybeHide = api.info({
+                    message: 'Downloading...'
+                  });
+                  if (typeof maybeHide === 'function') {
+                    hide = maybeHide;
+                  }
                   const response = await galleryservices.downloadFile(
                     record.id,
                     organizationId,
@@ -461,8 +469,10 @@ const PromptActivity: FC<props> = ({
                   link.download = fileName;
                   link.click();
                   URL.revokeObjectURL(url);
+                  hide && hide();
                   api.success({ message: "Downloaded successfully" });
                 } catch (err) {
+                  hide && hide();
                   api.error({ message: "Download failed" });
                 }
               }}

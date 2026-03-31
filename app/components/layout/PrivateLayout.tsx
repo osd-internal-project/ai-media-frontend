@@ -47,7 +47,7 @@ interface ClientLayoutProps {
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
-  const { isMobile } = useResponsive();
+  const { isMobile,isTablet } = useResponsive();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { data: session, update: updateSession } = useSession();
@@ -470,7 +470,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         className="h-screen overflow-hidden"
         style={{ position: "relative" }}
       >
-        {!isMobile ? (
+        {!(isMobile || isTablet) ? (
           <PrivateSider
             organizationId={organizationId}
             mappedPath={mappedPath}
@@ -479,7 +479,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           />
         ) : null}
 
-        {isMobile ? (
+        {(isMobile || isTablet) ? (
           <>
             {mobileSiderOpen ? (
               <div

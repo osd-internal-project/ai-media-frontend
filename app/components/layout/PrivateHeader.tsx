@@ -76,7 +76,7 @@ export function PrivateHeader({
   const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
   const [form] = Form.useForm();
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -167,8 +167,8 @@ export function PrivateHeader({
       }}
     >
       {/* ---------- Left : Mobile Sider Toggle + Organization Switcher ---------- */}
-      <Space size={isMobile ? 8 : 0} align="center">
-        {isMobile ? (
+      <Space size={isMobile || isTablet ? 8 : 0} align="center">
+        {(isMobile || isTablet) ? (
           <Button
             type="text"
             onClick={onToggleSider}
@@ -247,6 +247,7 @@ export function PrivateHeader({
       {/* ---------- Right ---------- */}
       <Space size="middle">
         {/* Token Usage */}
+        
         <Card
           hoverable
           styles={{
@@ -312,7 +313,7 @@ export function PrivateHeader({
                       .join("")
                   : ""}
               </Avatar>
-              {!isMobile ? user?.fullname : null}
+              {!(isMobile || isTablet) ? user?.fullname : null}
             </Space>
           </Button>
         </Dropdown>

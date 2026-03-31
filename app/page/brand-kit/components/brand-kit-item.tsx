@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Modal } from "antd";
 import { BrandKitSidebarItem } from "./brand-kit-side-bar";
@@ -33,6 +33,13 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
 }) => {
   const { isMobile } = useResponsive();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const deleteTriggeredRef = useRef(false);
+  // Swipe-to-delete state
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const dragThreshold = 60; // px to reveal delete
+  const maxSwipe = -80;
   // Debug log for rendering
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
@@ -46,28 +53,98 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
     });
   }
   return (
-    <div
-      onClick={() => onChangeIndex(index)}
-      onMouseEnter={() => setHoveredIndex(index)}
-      onMouseLeave={() => setHoveredIndex(null)}
-      style={{
-        padding: isMobile ? 8 : 14,
-        borderRadius: isMobile ? 10 : 14,
-        marginBottom: isMobile ? 6 : 10,
-        cursor: "pointer",
-        background:
-          activeIndex === index
-            ? semantic.colorBgTextActive
-            : hoveredIndex === index
-            ? semantic.colorPrimaryBg
-            : "transparent",
-        border: `1px solid ${activeIndex === index ? semantic.colorPrimary : "transparent"}`,
-        transition: "all 0.2s",
-        position: "relative",
-        minHeight: isMobile ? 44 : 0,
-      }}
-    >
-      <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: isMobile ? "center" : "flex-start" }}>
+    <div style={{ position: "relative", minHeight: isMobile ? 82 : 0, marginBottom: isMobile ? 6 : 10 }}>
+      {/* Swipe-to-delete background (mobile only, only show when swiped) */}
+      {isMobile && dragX < 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: semantic.colorError,
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            zIndex: 1,
+            transition: dragging ? "none" : "background 0.2s",
+            overflow: "hidden",
+            paddingRight: 18,
+            pointerEvents: dragX <= maxSwipe + 10 ? "auto" : "none",
+          }}
+        >
+          <DeleteOutlined
+            style={{ color: "#fff", fontSize: 28, cursor: "pointer", opacity: Math.min(1, Math.abs(dragX) / 40) }}
+            title="Delete"
+          />
+        </div>
+      )}
+      <div
+        onClick={() => onChangeIndex(index)}
+        onMouseEnter={() => setHoveredIndex(index)}
+        onMouseLeave={() => setHoveredIndex(null)}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: isMobile ? 12 : 10,
+          padding: isMobile ? 8 : 14,
+          borderRadius: isMobile ? 10 : 14,
+          cursor: "pointer",
+          background:
+            activeIndex === index
+              ? semantic.colorBgTextActive
+              : hoveredIndex === index
+              ? semantic.colorPrimaryBg
+              : "transparent",
+          border: `1px solid ${activeIndex === index ? semantic.colorPrimary : "transparent"}`,
+          transition: dragging ? "none" : "all 0.2s",
+          position: "relative",
+          minHeight: isMobile ? 82 : 0,
+          overflow: isMobile ? "visible" : undefined,
+          touchAction: isMobile ? "pan-y" : undefined,
+          zIndex: 2,
+          transform: isMobile ? `translateX(${dragX}px)` : undefined,
+          maxWidth: isMobile ? `calc(100% - ${Math.abs(dragX)}px)` : undefined,
+          minWidth: 0,
+          userSelect: dragging ? "none" : undefined,
+        }}
+        {...(isMobile
+          ? {
+              onTouchStart: (e) => {
+                dragStartX.current = e.touches[0].clientX;
+                setDragging(true);
+                deleteTriggeredRef.current = false;
+              },
+              onTouchMove: (e) => {
+                if (!dragging) return;
+                const delta = e.touches[0].clientX - dragStartX.current;
+                // Clamp between maxSwipe and 0
+                const newX = Math.max(Math.min(delta, 0), maxSwipe);
+                setDragX(newX);
+                // If dragged past threshold, trigger modal (only once per drag)
+                if (newX <= maxSwipe + 10 && !deleteTriggeredRef.current) {
+                  deleteTriggeredRef.current = true;
+                  setShowDeleteModal(true);
+                }
+              },
+              onTouchEnd: () => {
+                setDragging(false);
+                if (!showDeleteModal) {
+                  setDragX(0);
+                  deleteTriggeredRef.current = false;
+                }
+              },
+              onTouchCancel: () => {
+                setDragging(false);
+                setDragX(0);
+                deleteTriggeredRef.current = false;
+              },
+            }
+          : {})}
+      >
         <div
           style={{
             display: "flex",
@@ -82,8 +159,8 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               <div
                 key={i}
                 style={{
-                  width: isMobile ? 8 : 14,
-                  height: isMobile ? 8 : 14,
+                  width: isMobile ? 16 : 14,
+                  height: isMobile ? 16 : 14,
                   borderRadius: "50%",
                   background: c && c.hex ? c.hex : "transparent",
                   border: `1px solid ${semantic.colorBorder}`,
@@ -119,27 +196,28 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
           </div>
         </div>
 
-        {/* Edit/Delete buttons (show only on hover, vertical, top-right) */}
-        {hoveredIndex === index && (
+        {/* Edit/Delete buttons: always show on mobile, hover on desktop */}
+        {(isMobile || hoveredIndex === index) && (
           <>
             <div
               style={{
                 position: "absolute",
-                top: isMobile ? 4 : 8,
-                right: isMobile ? 4 : 10,
+                top: isMobile ? 8 : 8,
+                right: isMobile ? 8 : 10,
                 zIndex: 2,
                 display: "flex",
                 flexDirection: "column",
-                gap: isMobile ? 4 : 8,
+                gap: 16 ,
                 alignItems: "center",
                 borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                padding: isMobile ? "2px 3px" : "4px 6px"
+                boxShadow: isMobile ? "0 2px 8px rgba(0,0,0,0.10)" : "0 2px 8px rgba(0,0,0,0.06)",
+                padding: isMobile ? "6px 8px" : "4px 6px",
+                background:  "transparent"
               }}
               onClick={e => e.stopPropagation()}
             >
               <EditOutlined
-                style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 13 : 16, cursor: "pointer" }}
+                style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 18 : 16, cursor: "pointer" }}
                 title="Edit"
                 onClick={e => {
                   e.stopPropagation();
@@ -147,7 +225,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
                 }}
               />
               <DeleteOutlined
-                style={{ color: semantic.colorError, fontSize: isMobile ? 13 : 16, cursor: "pointer" }}
+                style={{ color: semantic.colorError, fontSize: isMobile ? 18 : 16, cursor: "pointer" }}
                 title="Delete"
                 onClick={e => {
                   e.stopPropagation();
@@ -156,6 +234,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               />
             </div>
             <Modal
+              zIndex={1500}
               open={showDeleteModal}
               title="Delete Brand Kit"
               okText="Delete"
@@ -163,10 +242,20 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               cancelText="Cancel"
               onOk={() => {
                 setShowDeleteModal(false);
-                onDelete && onDelete();
+                setDragX(0);
+                deleteTriggeredRef.current = false;
+                if (onDelete) onDelete();
               }}
-              onCancel={() => setShowDeleteModal(false)}
-              afterClose={() => setShowDeleteModal(false)}
+              onCancel={() => {
+                setShowDeleteModal(false);
+                setDragX(0);
+                deleteTriggeredRef.current = false;
+              }}
+              afterClose={() => {
+                setShowDeleteModal(false);
+                setDragX(0);
+                deleteTriggeredRef.current = false;
+              }}
             >
               Are you sure you want to delete "{kit.name}"? This action cannot be undone.
             </Modal>

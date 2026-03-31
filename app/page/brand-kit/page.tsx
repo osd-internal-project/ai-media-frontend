@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { isColorDetail } from "./helpers/isColorDetail";
+import { isTypographyDetail } from "./helpers/isTypographyDetail";
+import { autoGenerateCIPrompt } from "./helpers/autoGenerateCIPrompt";
+import { extractHexColors } from "./helpers/extractHexColors";
+import { extractFontNames } from "./helpers/extractFontNames";
 import { useSession } from "next-auth/react";
 import "./styles/style.css";
-import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin } from "antd";
+import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin, Tooltip, Col } from "antd";
 import {
   PlusOutlined,
   BgColorsOutlined,
@@ -31,6 +36,7 @@ import TypographyTab from "./components/tabs/typography/typography-tab";
 
 import CIPromptTab from "./components/tabs/ci-prompt/ci-prompt";
 import BrandKitForm from "./components/brand-kit-form";
+import BrandKitHeader from "./components/BrandKitHeader";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -49,6 +55,20 @@ interface FontItem {
 export default function BrandKitPage() {
   const { isMobile } = useResponsive();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Debug: log layout/content info when sidebar toggles (mobile)
+  useEffect(() => {
+    if (isMobile) {
+      // Log sidebar state and window size
+      console.log('[DEBUG] sidebarOpen:', sidebarOpen, 'window.innerWidth:', window.innerWidth, 'window.innerHeight:', window.innerHeight);
+      // Log main content bounding rect
+      const mainContent = document.querySelector('[data-brandkit-main-content]');
+      if (mainContent) {
+        const rect = mainContent.getBoundingClientRect();
+        console.log('[DEBUG] main content rect:', rect);
+      }
+    }
+  }, [sidebarOpen, isMobile]);
   const { data: session } = useSession();
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTab, setSelectedTab] = useState<string>("colors");
@@ -135,38 +155,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
 
   // (removed: now handled in the unified effect above)
 
-
-  // --- Type guards ---
-  function isColorDetail(detail: any): detail is { hex: string; type: string } {
-    return detail && typeof detail.hex === 'string' && typeof detail.type === 'string';
-  }
-  function isTypographyDetail(detail: any): detail is { weight?: number|string; type?: string } {
-    return detail && (typeof detail.weight === 'number' || typeof detail.weight === 'string' || typeof detail.type === 'string');
-  }
-
-  // --- Auto-generate CI Prompt logic ---
-  function autoGenerateCIPrompt({ colors, fonts }: { colors: { name: string; hex: string; type: string }[]; fonts: { name: string; weight: number; type: string }[] }) {
-    let colorDesc = "";
-    if (colors.length > 0) {
-      const colorList = colors.map(c => {
-        const name = c.name && c.name.trim() ? c.name : c.type;
-        const type = c.type ? `(${c.type})` : '';
-        return `${name} ${type}: ${c.hex}`.replace(/ +/g, ' ');
-      }).join(", ");
-      colorDesc = `Brand colors: ${colorList}`;
-    }
-    let fontDesc = "";
-    if (fonts.length > 0) {
-      const fontList = fonts.map(f => {
-        const fam = f.name && f.name.trim() ? f.name : 'sans-serif';
-        const type = f.type ? `(${f.type})` : '';
-        const weight = f.weight || 400;
-        return `${fam} ${type}, weight ${weight}`.replace(/ +/g, ' ');
-      }).join(", ");
-      fontDesc = `Fonts: ${fontList}`;
-    }
-    return [colorDesc, fontDesc, "clean modern minimalist aesthetic, professional AI technology style, high-tech futuristic feel, crisp sharp edges, premium quality"].filter(Boolean).join(", ");
-  }
 
   // Handler to refresh colors after add, and auto-update CI Prompt
   const handleColorAdded = async () => {
@@ -277,23 +265,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     }
   };
 
-  // Utility: extract hex codes from prompt string
-  function extractHexColors(prompt: string): {hex: string}[] {
-    const hexMatches = [...prompt.matchAll(/#([0-9a-fA-F]{3,8})/g)];
-    // Remove duplicates
-    const uniqueHexes = Array.from(new Set(hexMatches.map(m => '#' + m[1].toLowerCase())));
-    return uniqueHexes.map(hex => ({ hex }));
-  }
-
-  // Utility: extract font names from prompt string (from Fonts: ... section)
-  function extractFontNames(prompt: string): {name: string}[] {
-    const fontsSection = prompt.split('Fonts:')[1] || '';
-    // Match: FontName (type, weight)
-    const fontMatches = [...fontsSection.matchAll(/([^,\n]+)\s*\([^)]+\)/g)];
-    // Remove duplicates and trim
-    const uniqueNames = Array.from(new Set(fontMatches.map(m => m[1].trim())));
-    return uniqueNames.map(name => ({ name }));
-  }
+  // ...helpers moved to ./helpers/index.ts...
 
   // Update CI Prompt/NegativePrompt from CI tab (manual edit)
   const updateCI = async (ci: string, negative: string) => {
@@ -386,363 +358,352 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     }
   };
 
-  return (
-    <Layout style={{ display: "flex", height: "100%", flexDirection: isMobile ? "column" : "row" }}>
-      {contextHolder}
+ return (
+  <>
+    {contextHolder}
 
-      {/* Sidebar Responsive */}
-      {isMobile ? (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        background: semantic.colorBgBase,
+      }}
+    >
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && sidebarOpen && (
         <>
-          <Button
-            className="mobile-padding"
-            type="primary"
-            icon={<PlusOutlined />}
-            style={{ margin: 12, width: 44, height: 44, borderRadius: 12, position: "fixed", left: 8, top: 8, zIndex: 1001 }}
-            onClick={() => setSidebarOpen(true)}
+          {/* Backdrop */}
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.45)",
+              zIndex: 1000,
+            }}
           />
-          <Drawer
-            placement="left"
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            width={220}
-            bodyStyle={{ padding: 0 }}
-            style={{ zIndex: 1002 }}
-          >
-               <BrandKitSidebar
-          brandKits={brandKits.map((kit) => {
-              // Parse brandCiPrompt for 3 main colors and color/font count
-              let colors: { hex: string }[] = [];
-              let colorCount = 0;
-              let fonts = 0;
-              if (typeof kit.brandCiPrompt === 'string' && kit.brandCiPrompt.includes('Brand colors:')) {/* Lines 457-464 omitted */}
-              if (typeof kit.brandCiPrompt === 'string' && kit.brandCiPrompt.includes('Fonts:')) {/* Lines 466-472 omitted */}
-              return {
-                id: kit.id,
-                name: kit.name,
-                industry: kit.industryType,
-                colors,
-                fonts,
-                colorCount,
-              };
-            })}
-          activeIndex={selectedKitIndex}
-          onChangeIndex={setSelectedKitIndex}
-          onCreateKit={() => {
-            setFormMode('create');
-            form.resetFields();
-            setIsFormModalOpen(true);
-          }}
-          onEditKit={(index) => {
-            setFormMode('edit');
-            setEditIndex(index);
-            const kit = brandKits
-              .slice()
-              .sort((a, b) => {
-                if (a.createdAt && b.createdAt) {
-                  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+
+          {/* Sidebar Panel */}
+         
+           <BrandKitSidebar
+              style={{
+                position: "fixed",
+                left: 0,
+                top: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 1200,
+                boxShadow: "0 0 24px rgba(0,0,0,0.18)",
+                overflow: "hidden",
+              }}
+              onClose={() => setSidebarOpen(false)}
+              brandKits={brandKits.map((kit) => {
+                let colors: { hex: string }[] = [];
+                let colorCount = 0;
+                let fonts = 0;
+
+                if (
+                  typeof kit.brandCiPrompt === "string" &&
+                  kit.brandCiPrompt.includes("Brand colors:")
+                ) {
+                  const colorSection =
+                    kit.brandCiPrompt.split("Brand colors:")[1]?.split("Fonts:")[0] || "";
+
+                  const hexMatches = [
+                    ...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g),
+                  ];
+
+                  colors = hexMatches.map((m) => ({ hex: "#" + m[1] })).slice(0, 3);
+                  colorCount = hexMatches.length;
                 }
-                return a.name.localeCompare(b.name);
-              })[index];
-            form.setFieldsValue({
-              name: kit.name,
-              description: kit.description,
-              industry: kit.industryType,
-            });
-            setIsFormModalOpen(true);
-          }}
-          onDeleteKit={async (index) => {
-            const kit = brandKits
-              .slice()
-              .sort((a, b) => {
-                if (a.createdAt && b.createdAt) {
-                  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+
+                if (
+                  typeof kit.brandCiPrompt === "string" &&
+                  kit.brandCiPrompt.includes("Fonts:")
+                ) {
+                  const fontSection = kit.brandCiPrompt.split("Fonts:")[1] || "";
+                  const fontMatches = [
+                    ...fontSection.matchAll(/([^,\n]+\([^\)]*\))/g),
+                  ];
+                  fonts =
+                    fontMatches.length > 0
+                      ? fontMatches.length
+                      : fontSection.trim()
+                      ? 1
+                      : 0;
                 }
-                return a.name.localeCompare(b.name);
-              })[index];
-            if (!kit.id) return;
-            try {
-              const deleted = await brandKitService.del(kit.id);
-              if (deleted) {
-                const newKits = brandKits.filter((k) => k.id !== kit.id);
-                setBrandKits(newKits);
-                if (selectedKitIndex === index) {
-                  setSelectedKitIndex(0);
-                } else if (selectedKitIndex > index) {
-                  setSelectedKitIndex(selectedKitIndex - 1);
+
+                return {
+                  id: kit.id,
+                  name: kit.name,
+                  industry: kit.industryType,
+                  colors,
+                  fonts,
+                  colorCount,
+                };
+              })}
+              activeIndex={selectedKitIndex}
+              onChangeIndex={(idx) => {
+                setSelectedKitIndex(idx);
+                // Do not close sidebar automatically on select
+              }}
+              onCreateKit={() => {
+                setFormMode("create");
+                form.resetFields();
+                setIsFormModalOpen(true);
+                // Do not close sidebar automatically
+              }}
+              onEditKit={(index) => {
+                setFormMode("edit");
+                setEditIndex(index);
+
+                const kit = brandKits[index];
+
+                form.setFieldsValue({
+                  name: kit.name,
+                  description: kit.description,
+                  industry: kit.industryType,
+                });
+
+                setIsFormModalOpen(true);
+                // Do not close sidebar automatically
+              }}
+              onDeleteKit={async (index) => {
+                const kit = brandKits[index];
+                if (!kit.id) return;
+
+                try {
+                  const deleted = await brandKitService.del(kit.id);
+
+                  if (deleted) {
+                    const newKits = brandKits.filter((_, i) => i !== index);
+                    setBrandKits(newKits);
+
+                    if (selectedKitIndex === index) {
+                      setSelectedKitIndex(0);
+                    } else if (selectedKitIndex > index) {
+                      setSelectedKitIndex(selectedKitIndex - 1);
+                    }
+
+                    messageApi.success("Brand kit deleted!");
+                  } else {
+                    messageApi.error("Failed to delete brand kit");
+                  }
+                } catch {
+                  messageApi.error("Failed to delete brand kit");
                 }
-                messageApi.success('Brand kit deleted!');
-              } else {
-                messageApi.error('Failed to delete brand kit');
-              }
-            } catch (e) {
-              messageApi.error('Failed to delete brand kit');
-            }
-          }}
-        />
-          </Drawer>
+              }}
+            />
+        
         </>
-      ) : (
-        <BrandKitSidebar
-          brandKits={brandKits.map((kit) => {
-            // Parse brandCiPrompt for 3 main colors and color/font count
-            let colors: { hex: string }[] = [];
-            let colorCount = 0;
-            let fonts = 0;
-            if (typeof kit.brandCiPrompt === 'string' && kit.brandCiPrompt.includes('Brand colors:')) {
-              // Extract color hexes from brandCiPrompt
-              // Accepts: Brand colors: primary color: #034562, secondary: #123456, accent: #abcdef, ...
-              const colorSection = kit.brandCiPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
-              // Find all hex codes
-              const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
-              colors = hexMatches.map(m => ({ hex: '#' + m[1] })).slice(0, 3);
-              colorCount = hexMatches.length;
-            }
-            if (typeof kit.brandCiPrompt === 'string' && kit.brandCiPrompt.includes('Fonts:')) {
-              // Extract font list from Fonts: ...
-              // Match pattern: ชื่อ (type, weight)
-              const fontSection = kit.brandCiPrompt.split('Fonts:')[1] || '';
-              // Regex: match ชื่อ (type, weight) หรืออะไรก็ได้ที่อยู่ในวงเล็บหลังชื่อ
-              const fontMatches = [...fontSection.matchAll(/([^,\n]+\([^\)]*\))/g)];
-              fonts = fontMatches.length > 0 ? fontMatches.length : (fontSection.trim() ? 1 : 0);
-            }
-            return {
-              id: kit.id,
-              name: kit.name,
-              industry: kit.industryType,
-              colors,
-              fonts,
-              colorCount,
-            };
-          })}
-          activeIndex={selectedKitIndex}
-          onChangeIndex={setSelectedKitIndex}
-          onCreateKit={() => {
-            setFormMode('create');
-            form.resetFields();
-            setIsFormModalOpen(true);
-          }}
-          onEditKit={(index) => {
-            setFormMode('edit');
-            setEditIndex(index);
-            const kit = brandKits[index];
-            form.setFieldsValue({
-              name: kit.name,
-              description: kit.description,
-              industry: kit.industryType,
-            });
-            setIsFormModalOpen(true);
-          }}
-          onDeleteKit={async (index) => {
-            const kit = brandKits[index];
-            if (!kit.id) return;
-            try {
-              const deleted = await brandKitService.del(kit.id);
-              if (deleted) {
-                const newKits = brandKits.filter((_, i) => i !== index);
-                setBrandKits(newKits);
-                if (selectedKitIndex === index) {
-                  setSelectedKitIndex(0);
-                } else if (selectedKitIndex > index) {
-                  setSelectedKitIndex(selectedKitIndex - 1);
-                }
-                messageApi.success('Brand kit deleted!');
-              } else {
-                messageApi.error('Failed to delete brand kit');
-              }
-            } catch (e) {
-              messageApi.error('Failed to delete brand kit');
-            }
-          }}
-        />
       )}
 
-      {/* Shared Create/Edit Brand Kit Modal */}
-      <Modal
-        title={formMode === 'edit' ? 'Edit Brand Kit' : 'New Brand Kit'}
-        open={isFormModalOpen}
-        confirmLoading={formLoading}
-        onOk={async () => {
-          if (formMode === 'edit' && editIndex === null) return;
-          try {
-            setFormLoading(true);
-            const values = await form.validateFields();
-            if (formMode === 'create') {
-              const created = await brandKitService.create({
-                name: values.name,
-                description: values.description,
-                industryType: values.industry,
-                organizationId: session?.user?.organizationId ?? undefined,
-              });
-              if (created) {
-                setBrandKits([created, ...brandKits]);
-                messageApi.success("Brand kit created!");
-                setIsFormModalOpen(false);
-                form.resetFields();
-              } else {
-                messageApi.error("Failed to create brand kit");
-              }
-            } else if (formMode === 'edit' && editIndex !== null) {
-              const kit = brandKits[editIndex];
-              const updated = await brandKitService.update(kit.id, {
-                name: values.name,
-                description: values.description,
-                industryType: values.industry,
-              });
-              if (updated) {
-                const newKits = [...brandKits];
-                newKits[editIndex] = { ...newKits[editIndex], ...updated };
-                setBrandKits(newKits);
-                messageApi.success('Brand kit updated!');
-                setIsFormModalOpen(false);
-                setEditIndex(null);
-              } else {
-                messageApi.error('Failed to update brand kit');
-              }
-            }
-          } catch (e) {
-            messageApi.error(formMode === 'create' ? 'Failed to create brand kit' : 'Failed to update brand kit');
-          } finally {
-            setFormLoading(false);
-          }
-        }}
-        onCancel={() => {
-          setIsFormModalOpen(false);
-          setEditIndex(null);
-        }}
-        okText={formMode === 'edit' ? 'Save' : 'Create Kit'}
-        cancelText="Cancel"
-      >
-        <BrandKitForm form={form} mode={formMode} />
-      </Modal>
-
-      {/* Main Layout: Header + Scrollable Content */}
-      <Layout
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          ...(isMobile && { padding: 0, minHeight: "100vh" }),
-        }}
-      >
-        {brandKits.length === 0 ? (
-          // Empty State UI
-          <div
+      {/* Floating Sidebar Button */}
+      {isMobile && (
+        <Tooltip title="Brand Kit ทั้งหมด" placement="left">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<Palette size={20} color={semantic.colorWhite} />}
+            onClick={() => setSidebarOpen(true)}
             style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              background: semantic.colorBgBase,
-              gap: 24,
-              height: "100%",
-              ...(isMobile && { padding: 16 }),
+              position: "fixed",
+              right: 20,
+              bottom: 24,
+              zIndex: 999,
+              width: 56,
+              height: 56,
+              boxShadow: "0 6px 24px rgba(0,0,0,0.16)",
+            }}
+          />
+        </Tooltip>
+      )}
+
+      <Row
+        gutter={0}
+        wrap={false}
+        style={{
+          width: "100%",
+          height: "100%",
+          minHeight: "100vh",
+          margin: 0,
+        }}
+      >
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <Col
+            flex="270px"
+            style={{
+              height: "100vh",
+              borderRight: `1px solid ${semantic.colorBorder}`,
+              background: semantic.colorBgContainer,
+              overflow: "hidden",
             }}
           >
-            <Palette size={isMobile ? 32 : 48} color={semantic.colorTextSecondary} />
-            <Title level={3} style={{ color: semantic.colorTextBase, margin: 0, fontSize: isMobile ? 20 : 28 }}>No Brand Kits</Title>
-            <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 13 : 16 }}>Select or create a Brand Kit</Text>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size={isMobile ? "middle" : "large"}
-              style={isMobile ? { width: "100%", maxWidth: 240 } : {}}
-              onClick={() => {
-                setFormMode('create');
+            <BrandKitSidebar
+              brandKits={brandKits.map((kit) => {
+                let colors: { hex: string }[] = [];
+                let colorCount = 0;
+                let fonts = 0;
+
+                if (
+                  typeof kit.brandCiPrompt === "string" &&
+                  kit.brandCiPrompt.includes("Brand colors:")
+                ) {
+                  const colorSection =
+                    kit.brandCiPrompt.split("Brand colors:")[1]?.split("Fonts:")[0] || "";
+
+                  const hexMatches = [
+                    ...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g),
+                  ];
+
+                  colors = hexMatches.map((m) => ({ hex: "#" + m[1] })).slice(0, 3);
+                  colorCount = hexMatches.length;
+                }
+
+                if (
+                  typeof kit.brandCiPrompt === "string" &&
+                  kit.brandCiPrompt.includes("Fonts:")
+                ) {
+                  const fontSection = kit.brandCiPrompt.split("Fonts:")[1] || "";
+                  const fontMatches = [
+                    ...fontSection.matchAll(/([^,\n]+\([^\)]*\))/g),
+                  ];
+                  fonts =
+                    fontMatches.length > 0
+                      ? fontMatches.length
+                      : fontSection.trim()
+                      ? 1
+                      : 0;
+                }
+
+                return {
+                  id: kit.id,
+                  name: kit.name,
+                  industry: kit.industryType,
+                  colors,
+                  fonts,
+                  colorCount,
+                };
+              })}
+              activeIndex={selectedKitIndex}
+              onChangeIndex={setSelectedKitIndex}
+              onCreateKit={() => {
+                setFormMode("create");
                 form.resetFields();
                 setIsFormModalOpen(true);
               }}
-            >
-              New Brand Kit
-            </Button>
-          </div>
-        ) : (
-          <>
-            {/* Header พร้อม Tabs */}
-            <Header
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                height: "auto",
-                lineHeight: "normal",
-                background: semantic.colorBgContainer,
-                borderBottom: "1px solid " + semantic.colorBorder,
-                ...(isMobile && { padding: "0 8px", minHeight: 0 }),
+              onEditKit={(index) => {
+                setFormMode("edit");
+                setEditIndex(index);
+
+                const kit = brandKits[index];
+
+                form.setFieldsValue({
+                  name: kit.name,
+                  description: kit.description,
+                  industry: kit.industryType,
+                });
+
+                setIsFormModalOpen(true);
               }}
-            >
-              {/* Top Section */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: isMobile ? "center" : "flex-end",
-                  minHeight: isMobile ? 48 : 72,
-                  padding: isMobile ? "8px 0 0 0" : "16px 40px 0 40px",
-                  gap: isMobile ? 8 : 0,
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <Title
-                    style={{
-                      color: semantic.colorTextBase,
-                      margin: 0,
-                      fontSize: isMobile ? 18 : 28,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {selectedKit.name || "-"}
-                  </Title>
-                  <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 11 : 14 }}>
-                    {(selectedKit.industryType || "-")} · Updated {(selectedKit.updatedAt || "-")}
-                  </Text>
-                </div>
+              onDeleteKit={async (index) => {
+                const kit = brandKits[index];
+                if (!kit.id) return;
 
-                <Button
-                  type="default"
-                  icon={<StarOutlined />}
-                  style={{ alignSelf: isMobile ? "center" : "flex-end", marginBottom: isMobile ? 0 : 8, fontSize: isMobile ? 12 : 16, height: isMobile ? 28 : 32 }}
-                  size={isMobile ? "small" : "middle"}
-                >
-                  Default Kit
-                </Button>
-              </div>
-              <Divider style={{ margin: isMobile ? "8px 0 0 0" : "16px 0 0 0", width: "100%", maxWidth: "100%" }} />
-              {/* Tabs */}
-              <Tabs
-                activeKey={selectedTab}
-                onChange={setSelectedTab}
-                tabBarStyle={{
-                  margin: 0,
-                  paddingTop: isMobile ? 4 : 12,
-                  paddingLeft: isMobile ? 0 : 40,
-                  paddingRight: isMobile ? 0 : 40,
-                  fontSize: isMobile ? 12 : 16,
-                }}
-                items={[
-                  { key: "colors", label: <Space size={4}><BgColorsOutlined />Colors</Space> },
-                  { key: "typography", label: <Space size={4}><FontSizeOutlined />Typography</Space> },
-                  // { key: "logos", label: <Space size={4}><PictureOutlined />Logos</Space> },
-                  { key: "ci", label: <Space size={4}><BranchesOutlined />CI Prompt</Space> },
-                  // { key: "voice", label: <Space size={4}><MessageOutlined />Brand Voice</Space> },
-                ]}
-              />
-            </Header>
+                try {
+                  const deleted = await brandKitService.del(kit.id);
 
-            {/* Scrollable Content */}
-            <Content
+                  if (deleted) {
+                    const newKits = brandKits.filter((_, i) => i !== index);
+                    setBrandKits(newKits);
+
+                    if (selectedKitIndex === index) {
+                      setSelectedKitIndex(0);
+                    } else if (selectedKitIndex > index) {
+                      setSelectedKitIndex(selectedKitIndex - 1);
+                    }
+
+                    messageApi.success("Brand kit deleted!");
+                  } else {
+                    messageApi.error("Failed to delete brand kit");
+                  }
+                } catch {
+                  messageApi.error("Failed to delete brand kit");
+                }
+              }}
+            />
+          </Col>
+        )}
+
+        {/* Main Content */}
+        <Col
+          flex="auto"
+          style={{
+            minWidth: 0,
+            height: "100vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            background: semantic.colorBgBase,
+          }}
+        >
+          {brandKits.length === 0 ? (
+            <div
               style={{
                 flex: 1,
-                overflowY: "auto",
-                padding: isMobile ? 12 : 40,
-                background: semantic.colorBgBase,
                 display: "flex",
                 flexDirection: "column",
-                gap: isMobile ? 12 : 24,
-                height: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 20,
+                padding: 24,
               }}
             >
+              <Palette size={48} color={semantic.colorTextSecondary} />
+              <Title level={3} style={{ margin: 0 }}>
+                No Brand Kits
+              </Title>
+              <Text style={{ color: semantic.colorTextSecondary }}>
+                Select or create a Brand Kit
+              </Text>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setFormMode("create");
+                  form.resetFields();
+                  setIsFormModalOpen(true);
+                }}
+              >
+                New Brand Kit
+              </Button>
+            </div>
+          ) : (
+            <>
+              <BrandKitHeader
+                selectedKit={selectedKit}
+                selectedTab={selectedTab}
+                setSelectedTab={setSelectedTab}
+                isMobile={isMobile}
+                semantic={semantic}
+                onToggleSidebar={isMobile ? () => setSidebarOpen(true) : undefined}
+              />
+
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  padding: isMobile ? 12 : 40,
+                  paddingBottom: isMobile ? 90 : 40,
+                  boxSizing: "border-box",
+                }}
+              >
+            
               {tabLoading ? (
                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200 }}>
                   <Spin size="large" />
@@ -859,11 +820,72 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                 }
                 return null;
               })()}
-            </Content>
-          </>
-        )}
-      </Layout>
-    </Layout>
-        
-  );
+         
+              </div>
+            </>
+          )}
+        </Col>
+      </Row>
+
+       <Modal
+        zIndex={1500}
+        title={formMode === 'edit' ? 'Edit Brand Kit' : 'New Brand Kit'}
+        open={isFormModalOpen}
+        confirmLoading={formLoading}
+        onOk={async () => {
+          if (formMode === 'edit' && editIndex === null) return;
+          try {
+            setFormLoading(true);
+            const values = await form.validateFields();
+            if (formMode === 'create') {
+              const created = await brandKitService.create({
+                name: values.name,
+                description: values.description,
+                industryType: values.industry,
+                organizationId: session?.user?.organizationId ?? undefined,
+              });
+              if (created) {
+                setBrandKits([created, ...brandKits]);
+                messageApi.success("Brand kit created!");
+                setIsFormModalOpen(false);
+                form.resetFields();
+              } else {
+                messageApi.error("Failed to create brand kit");
+              }
+            } else if (formMode === 'edit' && editIndex !== null) {
+              const kit = brandKits[editIndex];
+              const updated = await brandKitService.update(kit.id, {
+                name: values.name,
+                description: values.description,
+                industryType: values.industry,
+              });
+              if (updated) {
+                const newKits = [...brandKits];
+                newKits[editIndex] = { ...newKits[editIndex], ...updated };
+                setBrandKits(newKits);
+                messageApi.success('Brand kit updated!');
+                setIsFormModalOpen(false);
+                setEditIndex(null);
+              } else {
+                messageApi.error('Failed to update brand kit');
+              }
+            }
+          } catch (e) {
+            messageApi.error(formMode === 'create' ? 'Failed to create brand kit' : 'Failed to update brand kit');
+          } finally {
+            setFormLoading(false);
+          }
+        }}
+        onCancel={() => {
+          setIsFormModalOpen(false);
+          setEditIndex(null);
+        }}
+        okText={formMode === 'edit' ? 'Save' : 'Create Kit'}
+        cancelText="Cancel"
+      >
+        <BrandKitForm form={form} mode={formMode} />
+      </Modal>
+    </div>
+  </>
+);
 }
