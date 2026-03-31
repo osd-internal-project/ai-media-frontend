@@ -71,7 +71,7 @@ export const MenuSider = [
       },
       {
         key: `assistant`,
-        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+        // role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
         icon: <MessageSquare size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Assistant</span>
