@@ -1,5 +1,6 @@
 import { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
 import React, { useMemo, useState } from "react";
+import useResponsive from "@/app/hooks/useResponsive";
 
 type GenerationTrendChartProps = {
   data: IDashboardCreditPerMonthAndType[];
@@ -69,27 +70,44 @@ export default function GenerationTrendChart({
   data,
   colors,
 }: GenerationTrendChartProps) {
+
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { isMobile } = useResponsive();
 
-  const width = 980;
-  const height = 320;
+  // Responsive chart size
+  const width = isMobile ? 340 : 980;
+  const height = isMobile ? 220 : 320;
 
+  // Responsive padding
   const padding = {
-    top: 24,
-    right: 24,
-    bottom: 54,
-    left: 52,
+    top: isMobile ? 12 : 24,
+    right: isMobile ? 8 : 24,
+    bottom: isMobile ? 32 : 54,
+    left: isMobile ? 32 : 52,
   };
 
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
-  const allValues = data.flatMap((item) => [
+
+  // Find the first index where any series has a non-zero value
+  const firstActiveIndex = data.findIndex(
+    (item) => item.image > 0 || item.video > 0 || item.omnihuman > 0 || item.dreamactor > 0
+  );
+  // Show only from firstActiveIndex-2 (or 0 if not enough), and always start at 0 if firstActiveIndex is 0 or negative
+  const displayStartIndex = Math.max(0, firstActiveIndex > 2 ? firstActiveIndex - 2 : firstActiveIndex);
+  const displayData = data.slice(displayStartIndex);
+
+
+  const allValues = displayData.flatMap((item) => [
     item.image,
     item.video,
     item.omnihuman,
     item.dreamactor,
   ]);
+
+  // ตรวจสอบว่ามีข้อมูลขยับหรือไม่ (มีค่า > 0)
+  const hasActiveData = allValues.some((v) => v > 0);
 
   let yMin = Math.min(...allValues);
   let yMax = Math.max(...allValues);
@@ -126,9 +144,10 @@ export default function GenerationTrendChart({
     return ticks;
   };
 
+
   const yTicks = niceTicks(yMin, yMax, 5);
 
-  const xDomain = Math.max(data.length - 1, 1);
+  const xDomain = Math.max(displayData.length - 1, 1);
   const sidePad = 10;
   const xStep = (chartWidth - sidePad * 2) / xDomain;
 
@@ -145,35 +164,63 @@ export default function GenerationTrendChart({
 
   const baselineY = padding.top + chartHeight;
 
-  const imagePoints = data.map((item, index) => ({
+
+  const imagePoints = displayData.map((item, index) => ({
     x: toX(index),
     y: toY(item.image),
   }));
 
-  const videoPoints = data.map((item, index) => ({
+  const videoPoints = displayData.map((item, index) => ({
     x: toX(index),
     y: toY(item.video),
   }));
 
-  const humanPoints = data.map((item, index) => ({
+  const humanPoints = displayData.map((item, index) => ({
     x: toX(index),
     y: toY(item.omnihuman),
   }));
 
-  const dreamactorPoints = data.map((item, index) => ({
+  const dreamactorPoints = displayData.map((item, index) => ({
     x: toX(index),
     y: toY(item.dreamactor),
   }));
 
-  const hoverItem = hoveredIndex !== null ? data[hoveredIndex] : null;
+  const hoverItem = hoveredIndex !== null ? displayData[hoveredIndex] : null;
   const hoverX = hoveredIndex !== null ? toX(hoveredIndex) : 0;
+
+
+
+
+
+
+
+  // Find the first label index for x-axis (relative to displayData)
+  const firstLabelIndex = 0; // always the first of displayData
+  let firstXLabelMonth: string | null = null;
+
+  const xLabelDebug = displayData.map((item, index) => {
+    const showLabel =
+      (displayData.length <= 10 ||
+        index === firstLabelIndex ||
+        index === displayData.length - 2 ||
+        (index > firstLabelIndex && (index - firstLabelIndex) % Math.ceil((displayData.length - firstLabelIndex) / 8) === 0)
+      );
+    if (showLabel && index >= firstLabelIndex && firstXLabelMonth === null) {
+      firstXLabelMonth = item.month;
+    }
+    // Only the first label (firstLabelIndex) should have isActive: true
+    return { month: item.month, index, showLabel, isActive: index === firstLabelIndex };
+  });
+
+  console.log('[GenerationTrendChart] x-axis first label:', firstXLabelMonth, xLabelDebug);
+
 
   const tooltipX = useMemo(() => {
     if (hoveredIndex === null) return 0;
 
     const preferred = toX(hoveredIndex) + 18;
     return Math.min(preferred, width - 180);
-  }, [hoveredIndex]);
+  }, [hoveredIndex, displayData]);
 
   const tooltipY = useMemo(() => {
     if (!hoverItem) return 0;
@@ -188,13 +235,14 @@ export default function GenerationTrendChart({
     return Math.max(12, highestPoint - 110);
   }, [hoverItem]);
 
+
   const series = [
     {
       key: "image",
       color: colors.image,
       points: imagePoints,
       label: "Image",
-      values: data.map((item) => item.image),
+      values: displayData.map((item) => item.image),
       gradientId: "gImage",
       strokeDasharray: undefined,
     },
@@ -203,7 +251,7 @@ export default function GenerationTrendChart({
       color: colors.video,
       points: videoPoints,
       label: "Video",
-      values: data.map((item) => item.video),
+      values: displayData.map((item) => item.video),
       gradientId: "gVideo",
       strokeDasharray: undefined,
     },
@@ -212,7 +260,7 @@ export default function GenerationTrendChart({
       color: colors.human,
       points: humanPoints,
       label: "Human",
-      values: data.map((item) => item.omnihuman),
+      values: displayData.map((item) => item.omnihuman),
       gradientId: "gHuman",
       strokeDasharray: "6 4",
     },
@@ -221,11 +269,29 @@ export default function GenerationTrendChart({
       color: colors.dreamactor,
       points: dreamactorPoints,
       label: "Dream",
-      values: data.map((item) => item.dreamactor),
+      values: displayData.map((item) => item.dreamactor),
       gradientId: "gDreamactor",
       strokeDasharray: "2 4",
     },
   ];
+
+
+
+  // Debug: log x-axis label info
+  console.log('[GenerationTrendChart] x-axis debug:', {
+    firstActiveIndex,
+    months: displayData.map((item) => item.month),
+    xLabels: displayData.map((item, index) => {
+      const showLabel =
+        (displayData.length <= 10 ||
+          index === firstLabelIndex ||
+          index === displayData.length - 1 ||
+          (index > firstLabelIndex && (index - firstLabelIndex) % Math.ceil((displayData.length - firstLabelIndex) / 8) === 0)
+        );
+      // Only the first label (firstLabelIndex) should have isActive: true
+      return { month: item.month, index, showLabel, isActive: index === firstLabelIndex };
+    })
+  });
 
   return (
     <svg
@@ -282,10 +348,10 @@ export default function GenerationTrendChart({
             opacity={0.7}
           />
           <text
-            x={padding.left - 12}
-            y={toY(tick) + 4}
+            x={padding.left - (isMobile ? 6 : 12)}
+            y={toY(tick) + (isMobile ? 2 : 4)}
             textAnchor="end"
-            fontSize="11"
+            fontSize={isMobile ? 9 : 11}
             fill={colors.axis}
             opacity={0.75}
           >
@@ -304,62 +370,68 @@ export default function GenerationTrendChart({
         opacity={0.9}
       />
 
-      {series.map((item) => (
-        <path
-          key={`${item.key}-area`}
-          d={smoothAreaPath(item.points, baselineY)}
-          fill={`url(#${item.gradientId})`}
-        />
+
+      {/* แสดงเส้นโค้งและ area เฉพาะ series ที่มีค่าขยับ (ไม่ใช่ [0,0,0,...]) */}
+      {hasActiveData && (
+        <>
+          {series.map((item) => {
+            // ไม่วาดถ้าค่าทุกจุดเป็น 0 หรือค่าทุกจุดเท่ากันหมด (กรณี flat line)
+            const allEqual = item.values.every((v) => v === item.values[0]);
+            if (allEqual) return null;
+            return (
+              <path
+                key={`${item.key}-area`}
+                d={smoothAreaPath(item.points, baselineY)}
+                fill={`url(#${item.gradientId})`}
+              />
+            );
+          })}
+          {series.map((item) => {
+            const allEqual = item.values.every((v) => v === item.values[0]);
+            if (allEqual) return null;
+            return (
+              <path
+                key={`${item.key}-line`}
+                d={smoothLinePath(item.points)}
+                stroke={item.color}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+                strokeDasharray={item.strokeDasharray}
+                filter="url(#softShadow)"
+              />
+            );
+          })}
+        </>
+      )}
+
+     
+
+      {displayData.map((item, index) => (
+        <g key={`${item.month}-${index}`}>
+          <rect
+            x={toX(index) - xStep / 2}
+            y={padding.top}
+            width={Math.max(xStep, 40)}
+            height={chartHeight}
+            fill="transparent"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          />
+          <text
+            x={toX(index)}
+            y={height - (isMobile ? 10 : 18)}
+            textAnchor="middle"
+            fontSize={isMobile ? 9 : 11}
+            fill={colors.axis}
+            opacity={0.85}
+            fontWeight={index === firstLabelIndex ? 700 : 400}
+          >
+            {item.month}
+          </text>
+        </g>
       ))}
-
-      {series.map((item) => (
-        <path
-          key={`${item.key}-line`}
-          d={smoothLinePath(item.points)}
-          stroke={item.color}
-          strokeWidth={3}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-          strokeDasharray={item.strokeDasharray}
-          filter="url(#softShadow)"
-        />
-      ))}
-
-      {data.map((item, index) => {
-        const showLabel =
-          data.length <= 10 ||
-          index === 0 ||
-          index === data.length - 1 ||
-          index % Math.ceil(data.length / 8) === 0;
-
-        return (
-          <g key={`${item.month}-${index}`}>
-            <rect
-              x={toX(index) - xStep / 2}
-              y={padding.top}
-              width={Math.max(xStep, 40)}
-              height={chartHeight}
-              fill="transparent"
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            />
-
-            {showLabel && (
-              <text
-                x={toX(index)}
-                y={height - 18}
-                textAnchor="middle"
-                fontSize="11"
-                fill={colors.axis}
-                opacity={0.85}
-              >
-                {item.month}
-              </text>
-            )}
-          </g>
-        );
-      })}
 
       {hoverItem && (
         <>

@@ -1163,6 +1163,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                 onDownloadVideo={onDownloadVideo}
                 onShareVideo={onShareVideo}
                 onDelete={onDelete}
+                semantic={semantic}
               />
             ))}
           </>

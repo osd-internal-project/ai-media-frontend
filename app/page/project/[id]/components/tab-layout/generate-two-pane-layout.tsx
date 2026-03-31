@@ -220,7 +220,7 @@ useEffect(() => {
         height: "100%",
         minHeight: 0,
         margin: 0,
-        padding: 16,
+        padding: isMobile ? 8 : 24,
       }}
     >
       {/* LEFT PANE: Desktop = sidebar, Mobile = overlay+input */}

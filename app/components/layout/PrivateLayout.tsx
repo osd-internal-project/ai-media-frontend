@@ -469,8 +469,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       <Layout
         className="h-screen overflow-hidden"
         style={{ position: "relative" }}
-      >
-        {!(isMobile || isTablet) ? (
+      >        {!(isMobile || isTablet) ? (
           <PrivateSider
             organizationId={organizationId}
             mappedPath={mappedPath}
