@@ -64,11 +64,11 @@ const HeaderGenerateImagePage: FC<props> = ({
   // };
 
   const TitleSection = () => (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0">
       <Space size={8} align="center" wrap>
         <Typography.Title
           level={isMobile ? 5 : isTablet ? 4 : 3}
-          style={{ margin: 0, color: semantic.colorTextBase, fontSize: isMobile ? 18 : isTablet ? 22 : undefined }}
+          style={{ margin: 0, color: semantic.colorTextBase, fontSize: isMobile ? 18 : isTablet ? 22 : 26, lineHeight: 1.1 }}
         >
           {getProject?.name || "Project"}
         </Typography.Title>
@@ -84,7 +84,8 @@ const HeaderGenerateImagePage: FC<props> = ({
             backgroundColor: semantic.colorBgTextActive,
             fontWeight: 600,
             fontSize: isMobile ? 11 : 12,
-            padding: "0 8px",
+            padding: "0 6px",
+            lineHeight: 1.5,
           }}
         >
           {(getProject?.status || "active").toLowerCase() === "deleted"
@@ -95,7 +96,8 @@ const HeaderGenerateImagePage: FC<props> = ({
       <Typography.Text
         style={{
           color: semantic.colorTextSecondary,
-          fontSize: isMobile ? 12 : isTablet ? 12 : 14,
+          fontSize: isMobile ? 11 : 12,
+          lineHeight: 1.2,
         }}
       >
         Shake up your creativity with image generation
@@ -107,14 +109,14 @@ const HeaderGenerateImagePage: FC<props> = ({
     <div
       className="w-full"
       style={{
-        padding: isMobile ? "6px 8px" : isTablet ? "8px 12px" : "10px 16px",
+        padding: isMobile ? "6px 8px" : isTablet ? "7px 10px" : "9px 14px",
         backgroundColor: semantic.colorBgContainer,
         borderBottom: `1px solid ${semantic.colorBorder}`,
       }}
     >
       {/* Mobile: Title at top */}
       {isMobile && (
-        <div className="mb-1">
+        <div className="mb-0">
           <TitleSection />
         </div>
       )}
@@ -123,9 +125,9 @@ const HeaderGenerateImagePage: FC<props> = ({
       <div
         className={`flex ${
           isMobile
-            ? "flex-col space-y-2"
+            ? "flex-col space-y-1"
             : isTablet
-              ? "flex-col space-y-2"
+              ? "flex-col space-y-1"
               : "justify-between items-center"
         }`}
       >
@@ -140,13 +142,14 @@ const HeaderGenerateImagePage: FC<props> = ({
         <div
           className={`flex ${
             isMobile
-              ? "items-start gap-1 justify-start flex-wrap"
+              ? "items-start gap-2 justify-start flex-wrap"
               : isTablet
                 ? "items-start flex-wrap gap-2 justify-start"
                 : "items-center gap-4"
           }`}
+          style={{ marginTop: isMobile ? 6 : 0 }}
         >
-          <div>
+          <div >
             {" "}
             <span
               className="font-medium"
@@ -157,6 +160,7 @@ const HeaderGenerateImagePage: FC<props> = ({
             <Switch
               checkedChildren="Team"
               unCheckedChildren="Personal"
+              size="small"
               defaultChecked
               value={teamView}
               onChange={setTeamView}
@@ -170,17 +174,18 @@ const HeaderGenerateImagePage: FC<props> = ({
               {/* AI Model Selection */}
               <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className="text-sm font-medium"
+                  className="text-xs font-medium"
                   style={{ color: semantic.colorTextSecondary }}
                 >
                   AI Model:
                 </span>
                 <Select
-                  size={isMobile || isTablet ? "small" : "middle"}
+                  size="small"
                   style={
                     {
-                      minWidth: isMobile ? 116 : isTablet ? 180 : 260,
+                      minWidth: isMobile ? 108 : isTablet ? 170 : 220,
                       width: "auto",
+                      fontSize: 12,
                       ["--model-select-bg" as string]:
                         semantic.colorBgContainer,
                       ["--model-select-border" as string]: semantic.colorBorder,
@@ -198,6 +203,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                   dropdownStyle={{
                     backgroundColor: semantic.colorBgElevated,
                     color: semantic.colorTextBase,
+                    fontSize: 12,
                   }}
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id?.toString()}
@@ -422,7 +428,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                             overlayStyle={{ maxWidth: "none" }}
                           >
                             <div className="flex items-center justify-between">
-                              <span>{model.modelType}</span>
+                              <span className="text-xs">{model.modelType}</span>
                               {selectedAIModel?.id === model.id && (
                                 <span className="text-blue-400 ml-2">✓</span>
                               )}

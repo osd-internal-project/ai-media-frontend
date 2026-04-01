@@ -320,16 +320,16 @@ const PromptGuideComponent: FC<props> = ({
         style={{
           marginBottom: sectionGap,
           display: "flex",
-          flexWrap: "wrap",
-          alignItems: isMobile ? "flex-start" : "center",
+          flexWrap: "nowrap",
+          alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
         }}
       >
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <Typography.Title
             level={titleLevel}
-            style={{ marginBottom: 2, fontSize: isMobile ? 20 : undefined }}
+            style={{ marginBottom: 2, fontSize: isMobile ? 16 : 20 }}
           >
             Prompt Guide Templates
           </Typography.Title>
@@ -341,7 +341,7 @@ const PromptGuideComponent: FC<props> = ({
           </Typography.Text>
         </div>
 
-        <Space wrap style={{ width: isMobile ? "100%" : "auto" }}>
+        <Space wrap={false} style={{ width: "auto", flexShrink: 0 }}>
           {/* {canManage && (
             <Button onClick={handleAddType} block={isMobile}>Add Type</Button>
           )} */}
@@ -351,7 +351,7 @@ const PromptGuideComponent: FC<props> = ({
               size={isMobile ? "middle" : "large"}
               icon={<PlusOutlined />}
               onClick={openCreateTemplateModal}
-              block={isMobile}
+              block={false}
             >
               {isMobile ? "New" : "New Template"}
             </Button>
