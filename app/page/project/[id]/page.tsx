@@ -33,6 +33,7 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import OrganizationServices from "@/app/services/organization.service";
 
 type GenerateTabKey =
   | "image"
@@ -52,10 +53,12 @@ const GenerateImagePage: FC = () => {
   );
   const projectService = ProjectService(axiosCore);
   const masterModelTypeServices = MasterModelTypeServices(axiosCore);
+  const organizationServices = OrganizationServices(axiosUser);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
   const [teamView, setTeamView] = useState<boolean>(true);
+  const [accessCode, setAccessCode] = useState<string[]>([]);
 
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
@@ -99,6 +102,19 @@ const GenerateImagePage: FC = () => {
           console.error("Failed to fetch project role:", error);
         }
       }
+      if (organizationId) {
+        try {
+          const code =
+            await organizationServices.findAccessCodeByOrganizationId(
+              organizationId,
+            );
+          if (code) {
+            setAccessCode(code);
+          }
+        } catch (error) {
+          console.error("Failed to fetch brand kit:", error);
+        }
+      }
     };
 
     fetchProjectRole();
@@ -128,8 +144,6 @@ const GenerateImagePage: FC = () => {
   };
 
   const masterdata = async () => {
-    console.log("organizationId", organizationId);
-
     const models = await masterModelTypeServices.findAll();
     setAIModels(models || []);
   };
@@ -342,150 +356,159 @@ const GenerateImagePage: FC = () => {
             scrollbarWidth: "thin",
             scrollBehavior: "smooth",
           }}
-          onChange={(key) =>
-            onChangeTab(key as "image" | "video" | "library" | "activity")
-          }
-          items={
-            [
-              {
-                disabled: disableTab,
-                key: "image",
-                forceRender: true,
-                destroyOnHidden: true,
-                label: renderTabLabel(
-                  "image",
-                  "Image Gen",
-                  <PictureOutlined />,
-                ),
-                children: activeKey === "image" && (
-                  <ChatGenerateImage
-                    teamView={teamView}
-                    promptGuideOpenStatus={promptGuideOpenStatus}
-                    key={`image`}
-                    activeKey={activeKey}
-                    projectId={id}
-                    userId={session?.user?.id}
-                    projectRole={projectRole}
-                    username={session?.user?.name || ""}
-                    selectedAIModel={selectedAIModel}
-                    setDisableTab={setDisableTab}
-                    onSetPromptTextRef={onSetPromptTextRef}
-                  />
-                ),
-              },
-              {
-                disabled: disableTab,
-                forceRender: true,
-                destroyOnHidden: true,
-
-                key: "video",
-                label: renderTabLabel(
-                  "video",
-                  "Video Gen",
-                  <VideoCameraOutlined />,
-                ),
-                children: activeKey === "video" && (
-                  <ChatGenerateVideo
-                    teamView={teamView}
-                    key={"video"}
-                    activeKey={activeKey}
-                    projectId={id}
-                    userId={session?.user?.id}
-                    projectRole={projectRole}
-                    promptGuideOpenStatus={promptGuideOpenStatus}
-                    selectedAIModel={selectedAIModel}
-                    username={session?.user?.name || ""}
-                    setDisableTab={setDisableTab}
-                    onSetPromptTextRef={onSetPromptTextRef}
-                  />
-                ),
-              },
-              {
-                disabled: disableTab,
-                forceRender: true,
-                destroyOnHidden: true,
-                key: "omnihumen",
-                label: renderTabLabel(
-                  "omnihumen",
-                  "OmniHuman",
-                  <MessageOutlined />,
-                ),
-                children: activeKey === "omnihumen" && (
-                  <ChatGenerateOmnihumen
-                    teamView={teamView}
-                    key={"omnihumen"}
-                    activeKey={activeKey}
-                    projectId={id}
-                    userId={session?.user?.id}
-                    projectRole={projectRole}
-                    promptGuideOpenStatus={promptGuideOpenStatus}
-                    selectedAIModel={selectedAIModel}
-                    username={session?.user?.name || ""}
-                    setDisableTab={setDisableTab}
-                    onSetPromptTextRef={onSetPromptTextRef}
-                  />
-                ),
-              },
-              {
-                disabled: disableTab,
-                forceRender: true,
-                destroyOnHidden: true,
-                key: "dreamactor",
-                label: renderTabLabel(
-                  "dreamactor",
-                  "DreamActor",
-                  <PlaySquareOutlined />,
-                ),
-                children: activeKey === "dreamactor" && (
-                  <ChatGenerateDreamactor
-                    teamView={teamView}
-                    key={"dreamactor"}
-                    activeKey={activeKey}
-                    projectId={id}
-                    userId={session?.user?.id}
-                    projectRole={projectRole}
-                    promptGuideOpenStatus={promptGuideOpenStatus}
-                    selectedAIModel={selectedAIModel}
-                    username={session?.user?.name || ""}
-                    setDisableTab={setDisableTab}
-                    onSetPromptTextRef={onSetPromptTextRef}
-                  />
-                ),
-              },
-
-              {
-                disabled: disableTab,
-                forceRender: true,
-                key: "library",
-                label: renderTabLabel("library", "Library", <StarOutlined />),
-                children: (
-                  <div className="h-full">
-                    <PromptLibrary
-                      activeKey={activeKey}
-                      key={`activity-${activeKey}`}
-                    />
-                  </div>
-                ),
-              },
-              {
-                disabled: disableTab,
-                forceRender: true,
-                key: "activity",
-                label: renderTabLabel(
-                  "activity",
-                  "All Activity",
-                  <FolderOpenOutlined />,
-                ),
-                children: (
-                  <PromptActivity
+          onChange={(key) => onChangeTab(key as GenerateTabKey)}
+          items={[
+            ...(accessCode.includes("image")
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "image",
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    label: renderTabLabel(
+                      "image",
+                      "Image Gen",
+                      <PictureOutlined />,
+                    ),
+                    children: activeKey === "image" && (
+                      <ChatGenerateImage
+                        teamView={teamView}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        key={`image`}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        username={session?.user?.name || ""}
+                        selectedAIModel={selectedAIModel}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(accessCode.includes("video")
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "video",
+                    label: renderTabLabel(
+                      "video",
+                      "Video Gen",
+                      <VideoCameraOutlined />,
+                    ),
+                    children: activeKey === "video" && (
+                      <ChatGenerateVideo
+                        teamView={teamView}
+                        key={"video"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(accessCode.includes("omni")
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "omnihumen",
+                    label: renderTabLabel(
+                      "omnihumen",
+                      "OmniHuman",
+                      <MessageOutlined />,
+                    ),
+                    children: activeKey === "omnihumen" && (
+                      <ChatGenerateOmnihumen
+                        teamView={teamView}
+                        key={"omnihumen"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(accessCode.includes("dream")
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "dreamactor",
+                    label: renderTabLabel(
+                      "dreamactor",
+                      "DreamActor",
+                      <PlaySquareOutlined />,
+                    ),
+                    children: activeKey === "dreamactor" && (
+                      <ChatGenerateDreamactor
+                        teamView={teamView}
+                        key={"dreamactor"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            {
+              disabled: disableTab,
+              forceRender: true,
+              key: "library",
+              label: renderTabLabel("library", "Library", <StarOutlined />),
+              children: (
+                <div className="h-full">
+                  <PromptLibrary
                     activeKey={activeKey}
                     key={`activity-${activeKey}`}
                   />
-                ),
-              },
-            ]
-            // .filter((item) => !hiddenTabs.includes(item.key))
-          }
+                </div>
+              ),
+            },
+            {
+              disabled: disableTab,
+              forceRender: true,
+              key: "activity",
+              label: renderTabLabel(
+                "activity",
+                "All Activity",
+                <FolderOpenOutlined />,
+              ),
+              children: (
+                <PromptActivity
+                  activeKey={activeKey}
+                  key={`activity-${activeKey}`}
+                />
+              ),
+            },
+          ]}
         />
       </div>
     </div>
