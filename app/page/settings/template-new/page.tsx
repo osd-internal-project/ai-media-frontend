@@ -513,10 +513,23 @@ const TemplateSettingPage: FC = (): ReactElement => {
   };
 
   return (
-    <>
+    <div
+      style={{
+        height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
+      }}
+    >
       {contextHolder}
       {contextHolderNoti}
-      <Spin spinning={loading}>
+      <Spin
+        spinning={loading}
+        style={{
+          height: "100%",
+          minHeight: 0,
+          display: "block",
+        }}
+      >
         <PromptGuideComponent
           searchQuery={searchQuery}
           allModel={allModel}
@@ -546,7 +559,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
           handleVideoImageUploadChange={handleVideoImageUploadChange}
         />
       </Spin>
-    </>
+    </div>
   );
 };
 

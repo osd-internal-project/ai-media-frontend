@@ -61,7 +61,7 @@ const GenerateImagePage: FC = () => {
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
@@ -248,8 +248,8 @@ const GenerateImagePage: FC = () => {
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: 8,
-          padding: isMobile ? "5px 9px" : "6px 12px",
+          gap: isMobile ? 6 : 8,
+          padding: isMobile ? "4px 8px" : isTablet ? "5px 10px" : "6px 12px",
           borderRadius: 8,
           border:
             isDarkMode && isActive
@@ -277,6 +277,7 @@ const GenerateImagePage: FC = () => {
             color:
               isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
             marginBottom: 0,
+            fontSize: isMobile ? 12 : isTablet ? 13 : 14,
           }}
         >
           {text}
@@ -331,6 +332,16 @@ const GenerateImagePage: FC = () => {
           className="ant-tabs-full generate-tabs"
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
+          tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
+          tabBarStyle={{
+            margin: 0,
+            paddingInline: isMobile ? 8 : isTablet ? 10 : 14,
+            overflowX: "auto",
+            overflowY: "hidden",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "thin",
+            scrollBehavior: "smooth",
+          }}
           onChange={(key) =>
             onChangeTab(key as "image" | "video" | "library" | "activity")
           }

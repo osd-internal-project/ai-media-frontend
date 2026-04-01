@@ -67,8 +67,8 @@ const HeaderGenerateImagePage: FC<props> = ({
     <div className="flex flex-col gap-1">
       <Space size={8} align="center" wrap>
         <Typography.Title
-          level={isMobile || isTablet ? 4 : 3}
-          style={{ margin: 0, color: semantic.colorTextBase }}
+          level={isMobile ? 5 : isTablet ? 4 : 3}
+          style={{ margin: 0, color: semantic.colorTextBase, fontSize: isMobile ? 18 : isTablet ? 22 : undefined }}
         >
           {getProject?.name || "Project"}
         </Typography.Title>
@@ -83,7 +83,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                 : semantic.colorSuccess,
             backgroundColor: semantic.colorBgTextActive,
             fontWeight: 600,
-            fontSize: 12,
+            fontSize: isMobile ? 11 : 12,
             padding: "0 8px",
           }}
         >
@@ -95,7 +95,7 @@ const HeaderGenerateImagePage: FC<props> = ({
       <Typography.Text
         style={{
           color: semantic.colorTextSecondary,
-          fontSize: isMobile || isTablet ? 13 : 14,
+          fontSize: isMobile ? 12 : isTablet ? 12 : 14,
         }}
       >
         Shake up your creativity with image generation
@@ -107,14 +107,14 @@ const HeaderGenerateImagePage: FC<props> = ({
     <div
       className="w-full"
       style={{
-        padding: isMobile ? "10px 12px" : "12px 18px",
+        padding: isMobile ? "6px 8px" : isTablet ? "8px 12px" : "10px 16px",
         backgroundColor: semantic.colorBgContainer,
         borderBottom: `1px solid ${semantic.colorBorder}`,
       }}
     >
       {/* Mobile: Title at top */}
       {isMobile && (
-        <div className="mb-4">
+        <div className="mb-1">
           <TitleSection />
         </div>
       )}
@@ -123,9 +123,9 @@ const HeaderGenerateImagePage: FC<props> = ({
       <div
         className={`flex ${
           isMobile
-            ? "flex-col space-y-4"
+            ? "flex-col space-y-2"
             : isTablet
-              ? "flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0"
+              ? "flex-col space-y-2"
               : "justify-between items-center"
         }`}
       >
@@ -140,17 +140,17 @@ const HeaderGenerateImagePage: FC<props> = ({
         <div
           className={`flex ${
             isMobile
-              ? "items-center gap-1 justify-end flex-nowrap"
+              ? "items-start gap-1 justify-start flex-wrap"
               : isTablet
-                ? "flex-wrap gap-3 justify-end"
+                ? "items-start flex-wrap gap-2 justify-start"
                 : "items-center gap-4"
           }`}
         >
           <div>
             {" "}
             <span
-              className="text-sm font-medium"
-              style={{ color: semantic.colorTextSecondary }}
+              className="font-medium"
+              style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}
             >
               {`View : `}
             </span>{" "}
@@ -176,10 +176,10 @@ const HeaderGenerateImagePage: FC<props> = ({
                   AI Model:
                 </span>
                 <Select
-                  size="middle"
+                  size={isMobile || isTablet ? "small" : "middle"}
                   style={
                     {
-                      minWidth: isMobile ? 160 : isTablet ? 250 : 280,
+                      minWidth: isMobile ? 116 : isTablet ? 180 : 260,
                       width: "auto",
                       ["--model-select-bg" as string]:
                         semantic.colorBgContainer,
@@ -474,9 +474,9 @@ const HeaderGenerateImagePage: FC<props> = ({
         closable={{ "aria-label": "Close Button" }}
         onClose={onClose}
         open={open}
-        width={isMobile ? "90%" : isTablet ? "80%" : 600}
+        width={isMobile ? "92%" : isTablet ? "78%" : 600}
         placement={isMobile ? "bottom" : "right"}
-        height={isMobile ? "80%" : undefined}
+        height={isMobile ? "78%" : undefined}
       >
         <div className="space-y-6">
           {/* Introduction */}

@@ -1,5 +1,6 @@
 import { Layout } from "antd";
 import useResponsive from "@/app/hooks/useResponsive";
+import "./LayoutStyle.css";
 const { Content } = Layout;
 
 interface ClientLayoutProps {
@@ -13,15 +14,18 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
   if (user) {
     return (
       <Content
-
+        className="private-content-scroll"
         style={{
           margin: 0,
           padding: 0,
           overflow: "auto",
-          height: isMobile ? "calc(100vh - 64px)" : "calc(100vh - 80px)",
+          height: isMobile ? "calc(100dvh - 64px)" : "calc(100dvh - 80px)",
+          WebkitOverflowScrolling: "touch",
+          scrollBehavior: "smooth",
         }}
       >
         {children}
+        
       </Content>
     );
   }

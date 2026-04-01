@@ -1,12 +1,11 @@
 import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
-import { Card, Flex, Space, Typography, Tag, Button, Divider, Row, Col } from "antd";
+import { Card, Space, Typography, Button, Divider, Row, Col } from "antd";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { Message, VideoMessage } from "./chat-generate-video";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import Paragraph from "antd/es/skeleton/Paragraph";
 import { Volume1, VolumeX, User } from "lucide-react";
 
 interface Props {
@@ -45,6 +44,8 @@ const VideoResultItem: FC<Props> = ({
       (!message.imageUrls || message.imageUrls.length === 0));
 
   const { isMobile, isTablet } = useResponsive();
+  const metaFontSize = isMobile ? 11 : isTablet ? 12 : 14;
+  const promptFontSize = isMobile ? 13 : isTablet ? 14 : 16;
 
   // State for show more/less prompt
   const [showFullPrompt, setShowFullPrompt] = useState(false);
@@ -71,7 +72,7 @@ const VideoResultItem: FC<Props> = ({
         background: "none",
         boxShadow: "none",
       }}
-      styles={{ body: { padding: isMobile? 0 :  12, background: "none" } }}
+      styles={{ body: { padding: isMobile ? 0 : isTablet ? 8 : 12, background: "none" } }}
     >
       {contextHolder}
 
@@ -79,15 +80,15 @@ const VideoResultItem: FC<Props> = ({
       {isMobile || isTablet ? (
         <div style={{ marginBottom: 8, width: "100%" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
-            <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%" }}>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.ratio || ""}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.duration || ""} s</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.generateAudio ? (<Volume1 color="green" size={11} />) : (<VolumeX size={11} />)}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%", flexWrap: "wrap" }}>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.ratio || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.duration || ""} s</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.generateAudio ? (<Volume1 color="green" size={metaFontSize} />) : (<VolumeX size={metaFontSize} />)}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
-                  <User size={12} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
               </Typography.Text>
@@ -97,7 +98,7 @@ const VideoResultItem: FC<Props> = ({
                 ref={promptRef}
                 style={{
                   color: semantic.colorTextSecondary,
-                  fontSize: 14,
+                  fontSize: promptFontSize,
                   fontStyle: 'italic',
                   overflow: showFullPrompt ? "visible" : "hidden",
                   textOverflow: showFullPrompt ? "unset" : "ellipsis",
@@ -114,7 +115,7 @@ const VideoResultItem: FC<Props> = ({
                 <Button
                   type="link"
                   size="small"
-                  style={{ fontSize: 12, padding: 0, marginLeft: 4 }}
+                  style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
                   {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
@@ -153,7 +154,7 @@ const VideoResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorPrimary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
@@ -165,7 +166,7 @@ const VideoResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorTextSecondary,
                   whiteSpace: "nowrap",
                 }}
@@ -176,7 +177,7 @@ const VideoResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorTextSecondary,
                   whiteSpace: "nowrap",
                 }}
@@ -187,22 +188,22 @@ const VideoResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorTextSecondary,
                   whiteSpace: "nowrap",
                 }}
               >
                 {message.generateConfig?.generateAudio ? (
-                  <Volume1 color="green" size={14} />
+                  <Volume1 color="green" size={metaFontSize} />
                 ) : (
-                  <VolumeX size={14} />
+                  <VolumeX size={metaFontSize} />
                 )}
               </Typography.Text>
             </Col>
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   fontWeight: 600,
                   color: semantic.colorPrimary,
                   whiteSpace: "nowrap",
@@ -213,7 +214,7 @@ const VideoResultItem: FC<Props> = ({
               </Typography.Text>
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorTextSecondary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
@@ -223,7 +224,7 @@ const VideoResultItem: FC<Props> = ({
                 }}
               >
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
-                  <User size={14} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
               </Typography.Text>
@@ -238,7 +239,7 @@ const VideoResultItem: FC<Props> = ({
               >
                 <Typography.Text
                   type="secondary"
-                  style={{ fontSize: 12 }}
+                  style={{ fontSize: isMobile ? 11 : 12 }}
                 >
                   {new Date(message.createdAt).toLocaleDateString([], {
                     month: "short",
@@ -269,7 +270,7 @@ const VideoResultItem: FC<Props> = ({
                 ref={promptRef}
                 style={{
                   color: semantic.colorTextSecondary,
-                  fontSize: 16,
+                  fontSize: promptFontSize,
                   fontStyle: 'italic',
                   overflow: showFullPrompt ? "visible" : "hidden",
                   textOverflow: showFullPrompt ? "unset" : "ellipsis",
@@ -286,7 +287,7 @@ const VideoResultItem: FC<Props> = ({
                 <Button
                   type="link"
                   size="small"
-                  style={{ fontSize: 14, padding: 0, marginLeft: 4 }}
+                  style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
                   {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
@@ -298,7 +299,7 @@ const VideoResultItem: FC<Props> = ({
       )}
     
 
-      <Divider style={{ margin: "16px 0" }} />
+      <Divider style={{ margin: "14px 0" }} />
 
       {/* LOADING */}
       {isLoading && <AiImageLoader />}

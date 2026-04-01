@@ -53,22 +53,9 @@ interface FontItem {
 
 
 export default function BrandKitPage() {
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Debug: log layout/content info when sidebar toggles (mobile)
-  useEffect(() => {
-    if (isMobile) {
-      // Log sidebar state and window size
-      console.log('[DEBUG] sidebarOpen:', sidebarOpen, 'window.innerWidth:', window.innerWidth, 'window.innerHeight:', window.innerHeight);
-      // Log main content bounding rect
-      const mainContent = document.querySelector('[data-brandkit-main-content]');
-      if (mainContent) {
-        const rect = mainContent.getBoundingClientRect();
-        console.log('[DEBUG] main content rect:', rect);
-      }
-    }
-  }, [sidebarOpen, isMobile]);
+  const [isSidebarColumnVisible, setIsSidebarColumnVisible] = useState(true);
   const { data: session } = useSession();
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTab, setSelectedTab] = useState<string>("colors");
@@ -367,7 +354,9 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
         position: "relative",
         width: "100%",
         height: "100%",
-        overflow: "hidden",
+        minHeight: 0,
+        overflowX: "hidden",
+        overflowY: "hidden",
         background: semantic.colorBgBase,
       }}
     >
@@ -376,6 +365,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
         <>
           {/* Backdrop */}
           <div
+            className="brandkit-mobile-backdrop"
             onClick={() => setSidebarOpen(false)}
             style={{
               position: "fixed",
@@ -397,6 +387,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                 zIndex: 1200,
                 boxShadow: "0 0 24px rgba(0,0,0,0.18)",
                 overflow: "hidden",
+                animation: "brandkitMobilePanelIn 260ms ease",
               }}
               onClose={() => setSidebarOpen(false)}
               brandKits={brandKits.map((kit) => {
@@ -504,6 +495,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       {isMobile && (
         <Tooltip title="Brand Kit ทั้งหมด" placement="left">
           <Button
+            className="brandkit-fab"
             type="primary"
             shape="circle"
             icon={<Palette size={20} color={semantic.colorWhite} />}
@@ -527,16 +519,16 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
         style={{
           width: "100%",
           height: "100%",
-          minHeight: "100vh",
+          minHeight: 0,
           margin: 0,
         }}
       >
-        {/* Desktop Sidebar */}
-        {!isMobile && (
+        {/* Desktop/Tablet Sidebar */}
+        {!isMobile && isSidebarColumnVisible && (
           <Col
-            flex="270px"
+            flex={isTablet ? "240px" : "270px"}
             style={{
-              height: "100vh",
+              height: "100%",
               borderRight: `1px solid ${semantic.colorBorder}`,
               background: semantic.colorBgContainer,
               overflow: "hidden",
@@ -643,7 +635,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
           flex="auto"
           style={{
             minWidth: 0,
-            height: "100vh",
+            height: "100%",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -688,19 +680,32 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                 selectedTab={selectedTab}
                 setSelectedTab={setSelectedTab}
                 isMobile={isMobile}
+                isTablet={isTablet}
+                isSidebarVisible={isMobile ? sidebarOpen : isSidebarColumnVisible}
                 semantic={semantic}
-                onToggleSidebar={isMobile ? () => setSidebarOpen(true) : undefined}
+                onToggleSidebar={() => {
+                  if (isMobile) {
+                    setSidebarOpen(true);
+                    return;
+                  }
+                  setIsSidebarColumnVisible((prev) => !prev);
+                }}
               />
 
               <div
+                className="brandkit-main-scroll"
                 style={{
                   flex: 1,
                   minHeight: 0,
                   overflowY: "auto",
                   overflowX: "hidden",
-                  padding: isMobile ? 12 : 40,
-                  paddingBottom: isMobile ? 90 : 40,
+                  touchAction: "pan-y",
+                  padding: isMobile ? 12 : isTablet ? 20 : 32,
+                  paddingBottom: isMobile ? 90 : isTablet ? 24 : 32,
                   boxSizing: "border-box",
+                  overscrollBehavior: "contain",
+                  WebkitOverflowScrolling: "touch",
+                  scrollBehavior: "smooth",
                 }}
               >
             
@@ -885,6 +890,50 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       >
         <BrandKitForm form={form} mode={formMode} />
       </Modal>
+
+      <style jsx global>{`
+        .brandkit-mobile-backdrop {
+          animation: brandkitBackdropFadeIn 220ms ease;
+        }
+
+        .brandkit-fab {
+          transition: transform 180ms ease, box-shadow 180ms ease;
+          animation: brandkitFabIn 320ms ease;
+        }
+
+        .brandkit-fab:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        .brandkit-main-scroll::-webkit-scrollbar {
+          width: 9px;
+        }
+
+        .brandkit-main-scroll::-webkit-scrollbar-thumb {
+          background: rgba(120, 120, 120, 0.3);
+          border-radius: 999px;
+        }
+
+        .brandkit-main-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        @keyframes brandkitBackdropFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes brandkitMobilePanelIn {
+          from { opacity: 0; transform: translateX(-18px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes brandkitFabIn {
+          from { opacity: 0; transform: translateY(14px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   </>
 );

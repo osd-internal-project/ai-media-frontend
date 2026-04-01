@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ByTypeItem } from "../types";
+import useResponsive from "@/app/hooks/useResponsive";
 
 
 
@@ -50,24 +51,61 @@ const donutArc = (
 
 export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 	const [hoveredName, setHoveredName] = useState<string | null>(null);
-	const width = 260;
-	const height = 180;
-	const cx = 130;
-	const cy = 90;
-	const innerRadius = 54;
-	const outerRadius = 84;
-	const total = Math.max(data.reduce((sum, item) => sum + item.value, 0), 1);
+	const [animationProgress, setAnimationProgress] = useState(0);
+	const { isMobile, isTablet } = useResponsive();
+
+	const width = isMobile ? 320 : isTablet ? 360 : 260;
+	const height = isMobile ? 220 : isTablet ? 220 : 180;
+	const cx = width / 2;
+	const cy = isMobile ? 108 : 96;
+	const innerRadius = isMobile ? 56 : 54;
+	const outerRadius = isMobile ? 88 : 84;
+	const realTotal = data.reduce((sum, item) => sum + item.value, 0);
+	const hasPositiveValue = realTotal > 0;
+	const normalizedData = hasPositiveValue
+		? data
+		: data.map((item) => ({ ...item, angleValue: 1 }));
+	const total = hasPositiveValue
+		? realTotal
+		: Math.max(normalizedData.length, 1);
+
+	useEffect(() => {
+		let raf = 0;
+		let start = 0;
+		setAnimationProgress(0);
+
+		const animate = (time: number) => {
+			if (!start) start = time;
+			const elapsed = time - start;
+			const duration = 420;
+			const progress = Math.min(elapsed / duration, 1);
+			setAnimationProgress(1 - Math.pow(1 - progress, 3));
+
+			if (progress < 1) {
+				raf = requestAnimationFrame(animate);
+			}
+		};
+
+		raf = requestAnimationFrame(animate);
+
+		return () => cancelAnimationFrame(raf);
+	}, [data]);
 
 	// Add gap between arcs
 	const gapAngle = 2; // degrees
 	let startAngle = 0;
-	const arcs = data.map((item) => {
-		const angle = (item.value / total) * 360;
+	const arcs = normalizedData.map((item) => {
+		const valueForAngle = hasPositiveValue
+			? item.value
+			: (item as ByTypeItem & { angleValue: number }).angleValue;
+		const angle = (valueForAngle / total) * 360;
 		const arcStart = startAngle + gapAngle / 2;
 		const arcEnd = startAngle + angle - gapAngle / 2;
+		const animatedEnd = arcStart + (arcEnd - arcStart) * animationProgress;
 		const arc = {
 			...item,
-			path: donutArc(cx, cy, innerRadius, outerRadius, arcStart, arcEnd),
+			value: hasPositiveValue ? item.value : 0,
+			path: donutArc(cx, cy, innerRadius, outerRadius, arcStart, animatedEnd),
 		};
 		startAngle += angle;
 		return arc;
@@ -86,7 +124,18 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 			role="img"
 			aria-label="Type distribution"
 			onMouseLeave={() => setHoveredName(null)}
+			onTouchEnd={() => setHoveredName(null)}
 		>
+			<circle
+				cx={cx}
+				cy={cy}
+				r={outerRadius + 2}
+				fill="none"
+				stroke={colors.tooltipBorder}
+				strokeOpacity={0.25}
+				strokeWidth={1}
+			/>
+
 			{arcs.map((arc) => (
 				<path
 					key={arc.name}
@@ -95,16 +144,39 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
 					stroke="#fff"
 					strokeWidth={2}
 					onMouseEnter={() => setHoveredName(arc.name)}
+					onTouchStart={() => setHoveredName(arc.name)}
 					opacity={hoveredName && hoveredName !== arc.name ? 0.55 : 1}
+					style={{ transition: "opacity 180ms ease" }}
 				/>
 			))}
 
+			<text
+				x={cx}
+				y={cy - 4}
+				fill={colors.tooltipText}
+				fontSize={isMobile ? 11 : 10}
+				textAnchor="middle"
+				opacity={0.7}
+			>
+				Total
+			</text>
+			<text
+				x={cx}
+				y={cy + 14}
+				fill={colors.tooltipText}
+				fontSize={isMobile ? 18 : 16}
+				fontWeight="700"
+				textAnchor="middle"
+			>
+				{realTotal}
+			</text>
+
 			{hovered && (
-				<g>
+				<g style={{ pointerEvents: "none" }}>
 					<rect
-						x={cx - 65}
-						y={cy - 60}
-						width={130}
+						x={cx - 72}
+						y={cy - 74}
+						width={144}
 						height={42}
 						rx={8}
 						fill={colors.tooltipBg}

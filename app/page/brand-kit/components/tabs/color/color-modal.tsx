@@ -26,6 +26,7 @@ const ColorModal: React.FC<ColorModalProps> = ({ open, form, onOk, onCancel }) =
     <Modal
       title={isEdit ? "Edit Color" : "Add Color"}
       open={open}
+      forceRender
       onOk={onOk}
       onCancel={onCancel}
       okText={isEdit ? "Save" : "Add"}

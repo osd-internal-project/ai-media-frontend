@@ -1,0 +1,115 @@
+
+.osd-menu-padding .ant-menu-item {
+	padding-top: 14px !important;
+	padding-bottom: 14px !important;
+}
+
+/* Remove Antd Menu right border */
+:where(.ant-menu-light).ant-menu-root.ant-menu-inline,
+:where(.ant-menu-light) > .ant-menu.ant-menu-root.ant-menu-inline,
+:where(.ant-menu-light).ant-menu-root.ant-menu-vertical,
+:where(.ant-menu-light) > .ant-menu.ant-menu-root.ant-menu-vertical {
+  border-inline-end: none !important;
+}
+
+  .private-content-scroll {
+            overscroll-behavior: contain;
+          }
+
+          .private-content-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+
+          .private-content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(120, 120, 120, 0.25);
+            border-radius: 999px;
+          }
+.private-header-shell {
+          animation: privateHeaderDrop 260ms ease;
+        }
+
+        .private-header-icon-btn,
+        .private-header-org-btn,
+        .private-header-user-btn,
+        .private-header-balance-card,
+        .private-header-action-wrap {
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .private-header-icon-btn:hover,
+        .private-header-org-btn:hover,
+        .private-header-user-btn:hover,
+        .private-header-balance-card:hover,
+        .private-header-action-wrap:hover {
+          transform: translateY(-1px);
+        }
+
+        .private-header-balance-card:hover {
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes privateHeaderDrop {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+		 .private-layout-shell {
+          animation: privateLayoutFadeIn 260ms ease;
+        }
+
+        .private-layout-backdrop {
+          backdrop-filter: saturate(120%) blur(1px);
+        }
+
+        .private-layout-mobile-sider {
+          will-change: transform;
+        }
+
+        @keyframes privateLayoutFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+
+		.private-sider-shell {
+          animation: privateSiderIn 260ms ease;
+        }
+
+        .private-sider-logo {
+          animation: privateLogoIn 320ms ease;
+        }
+
+        .private-sider-close-btn {
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .private-sider-close-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+        }
+
+        .private-sider-menu-scroll {
+          scroll-behavior: smooth;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .private-sider-menu-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .private-sider-menu-scroll::-webkit-scrollbar-thumb {
+          background: rgba(120, 120, 120, 0.28);
+          border-radius: 999px;
+        }
+
+        @keyframes privateSiderIn {
+          from { opacity: 0; transform: translateX(-10px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes privateLogoIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }

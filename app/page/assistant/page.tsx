@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Button, theme, Typography, message as antMessage } from "antd";
-import { History, MessageSquare } from "lucide-react";
+import { Button, theme, Typography, message as antMessage, Segmented } from "antd";
+import { History, MessageSquare, Image as ImageIcon } from "lucide-react";
 import { axiosChatAssistant } from "@/app/lib/axios/axios";
 import ChatAssistantService from "@/app/services/chat-assistant.service";
 import type {
@@ -14,6 +14,7 @@ import type {
 import ConversationList from "./components/ConversationList";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
+import ImageToPromptPanel from "./components/ImageToPromptPanel";
 
 const { Text } = Typography;
 
@@ -27,6 +28,7 @@ const AssistantPage = () => {
   const service = useMemo(() => ChatAssistantService(axiosChatAssistant), []);
 
   // ── State ──────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<"chat" | "image-to-prompt">("chat");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
@@ -53,7 +55,9 @@ const AssistantPage = () => {
     if (!userId) return;
     setLoadingConvs(true);
     const list = await service.listConversations(userId);
-    setConversations(list.sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()));
+    if (list) {
+      setConversations(list.sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()));
+    }
     setLoadingConvs(false);
   }, [userId, service]);
 
@@ -97,6 +101,12 @@ const AssistantPage = () => {
     }
     setLoadingConvs(false);
   }, [userId, organizationId, service, loadConversations]);
+
+  // ── Continue to Chat ────────────────────────────────────
+  const handleContinueChat = useCallback((id: string) => {
+    setActiveTab("chat");
+    handleSelectConversation(id);
+  }, [handleSelectConversation]);
 
   // ── Delete ──────────────────────────────────────────────
   const handleDelete = useCallback(
@@ -300,54 +310,81 @@ const AssistantPage = () => {
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
         <div
-          className="flex h-14 shrink-0 items-center gap-3 border-b px-4"
+          className="flex h-14 shrink-0 items-center justify-between border-b px-4"
           style={{
             backgroundColor: token.colorBgContainer,
             borderColor: token.colorBorder,
           }}
         >
-          <Button
-            type="text"
-            shape="circle"
-            icon={<History className="h-5 w-5" style={{ color: token.colorTextSecondary }} />}
-            onClick={() => setSidebarOpen((p) => !p)}
+          <div className="flex items-center gap-3">
+            <Button
+              type="text"
+              shape="circle"
+              icon={<History className="h-5 w-5" style={{ color: token.colorTextSecondary }} />}
+              onClick={() => setSidebarOpen((p) => !p)}
+            />
+            {activeTab === "chat" ? (
+              <Text className="text-sm font-medium truncate" style={{ color: token.colorTextBase }}>
+                {activeConv?.title ?? "Chat Assistant"}
+              </Text>
+            ) : (
+              <Text className="text-sm font-medium truncate" style={{ color: token.colorTextBase }}>
+                Image to Prompt
+              </Text>
+            )}
+          </div>
+
+          <Segmented
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as "chat" | "image-to-prompt")}
+            options={[
+              { label: 'Chat', value: 'chat' },
+              { label: 'Image to Prompt', value: 'image-to-prompt' },
+            ]}
           />
-          <Text className="text-sm font-medium truncate" style={{ color: token.colorTextBase }}>
-            {activeConv?.title ?? "Chat Assistant"}
-          </Text>
         </div>
 
-        {/* Empty state */}
-        {!activeConvId && (
-          <div className="flex flex-1 flex-col items-center justify-center px-4 -mt-10">
-            <div className="w-full max-w-[700px] flex flex-col items-center text-center">
-              <h1 className="text-4xl font-normal tracking-tight mb-2" style={{ color: token.colorTextBase }}>
-                {greeting},
-              </h1>
-              <h2 className="text-4xl font-normal tracking-tight mb-10" style={{ color: token.colorTextBase }}>
-                What do you want to create?
-              </h2>
-            </div>
-          </div>
-        )}
-
-        {/* Messages */}
-        {activeConvId && (
-          <ChatWindow
-            messages={messages}
-            isStreaming={isStreaming}
-            streamingContent={streamingContent}
+        {activeTab === "image-to-prompt" ? (
+          <ImageToPromptPanel
+            userId={userId}
+            organizationId={organizationId}
+            onContinueChat={handleContinueChat}
           />
-        )}
+        ) : (
+          <>
+            {/* Empty state */}
+            {!activeConvId && (
+              <div className="flex flex-1 flex-col items-center justify-center px-4 -mt-10">
+                <div className="w-full max-w-[700px] flex flex-col items-center text-center">
+                  <h1 className="text-4xl font-normal tracking-tight mb-2" style={{ color: token.colorTextBase }}>
+                    {greeting},
+                  </h1>
+                  <h2 className="text-4xl font-normal tracking-tight mb-10" style={{ color: token.colorTextBase }}>
+                    What do you want to create?
+                  </h2>
+                </div>
+              </div>
+            )}
 
-        {/* Input */}
-        <ChatInput
-          onSend={handleSend}
-          disabled={isStreaming || loadingMsgs}
-          placeholder={
-            activeConvId ? "Message the assistant..." : "Start typing to begin a new chat..."
-          }
-        />
+            {/* Messages */}
+            {activeConvId && (
+              <ChatWindow
+                messages={messages}
+                isStreaming={isStreaming}
+                streamingContent={streamingContent}
+              />
+            )}
+
+            {/* Input */}
+            <ChatInput
+              onSend={handleSend}
+              disabled={isStreaming || loadingMsgs}
+              placeholder={
+                activeConvId ? "Message the assistant..." : "Start typing to begin a new chat..."
+              }
+            />
+          </>
+        )}
       </main>
     </div>
   );

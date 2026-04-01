@@ -54,22 +54,22 @@ const ChatInput = ({ onSend, disabled, placeholder = "Message assistant..." }: C
 
         <div className="flex items-center justify-between mt-2 px-1">
           <div className="flex items-center gap-1">
-            <Button
+            {/* <Button
               type="text"
               shape="round"
               size="small"
               icon={<LayoutTemplate className="h-4 w-4" style={{ color: token.colorTextSecondary }} />}
             >
               <Text style={{ color: token.colorTextSecondary, fontSize: 13 }}>Templates</Text>
-            </Button>
+            </Button> */}
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
+            {/* <Button
               type="text"
               shape="circle"
               icon={<Settings className="h-4 w-4" style={{ color: token.colorTextSecondary }} />}
-            />
+            /> */}
             <Button
               type="primary"
               shape="circle"
