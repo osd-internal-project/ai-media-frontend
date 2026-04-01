@@ -156,7 +156,7 @@ const HeaderGenerateImagePage: FC<props> = ({
             </span>{" "}
             <Switch
               checkedChildren="Team"
-              unCheckedChildren="Persnal"
+              unCheckedChildren="Personal"
               defaultChecked
               value={teamView}
               onChange={setTeamView}

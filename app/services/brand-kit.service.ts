@@ -28,20 +28,9 @@ const BrandKitServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    create: async (data: Partial<TBrandKit>) => {
+    getDefault: async (id: string) => {
       return await axiosInstance
-        .post(`${baseUrl}`, data)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
-    },
-    update: async (id: string, data: Partial<TBrandKit>) => {
-      return await axiosInstance
-        .patch(`${baseUrl}/${id}`, data)
+        .get(`${baseUrl}/default/${id}`)
         .then((res) => {
           return res.data;
         })
@@ -61,6 +50,40 @@ const BrandKitServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    create: async (data: Partial<TBrandKit>) => {
+      return await axiosInstance
+        .post(`${baseUrl}`, data)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    setDefault: async (id: string) => {
+      return await axiosInstance
+        .post(`${baseUrl}/set-default/${id}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    update: async (id: string, data: Partial<TBrandKit>) => {
+      return await axiosInstance
+        .patch(`${baseUrl}/${id}`, data)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+
     del: async (roleId: string) => {
       return await axiosInstance
         .delete(`${baseUrl}/${roleId}`)
