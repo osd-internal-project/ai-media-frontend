@@ -40,6 +40,7 @@ import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import CreditBalanceServices from "@/app/services/credit-balance.service";
 import CouponService from "@/app/services/coupon.service";
+import "./LayoutStyle.css";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -79,12 +80,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [creditBalance, setCreditBalance] = useState<
     ICreditBalance | undefined
   >(undefined);
-  const [getProject, setProject] = useState<IProject[]>([]);
-  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
-    [],
-  );
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string>("");
+  // const [getProject, setProject] = useState<IProject[]>([]);
+  // const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
+  //   [],
+  // );
+  // const [showAddMember, setShowAddMember] = useState(false);
+  // const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<
     "OWNER" | "ADMIN" | "USER" | "VIEWER"
   >("USER");
@@ -467,9 +468,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         couponLoading={couponLoading}
       />
       <Layout
-        className="h-screen overflow-hidden"
+        className="h-screen overflow-hidden private-layout-shell"
         style={{ position: "relative" }}
-      >        {!(isMobile || isTablet) ? (
+      >
+        {!(isMobile || isTablet) ? (
           <PrivateSider
             organizationId={organizationId}
             mappedPath={mappedPath}
@@ -482,16 +484,20 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           <>
             {mobileSiderOpen ? (
               <div
+                className="private-layout-backdrop"
                 style={{
                   position: "absolute",
                   inset: 0,
                   background: "rgba(0,0,0,0.35)",
                   zIndex: 1200,
+                  opacity: mobileSiderOpen ? 1 : 0,
+                  transition: "opacity 220ms ease",
                 }}
                 onClick={() => setMobileSiderOpen(false)}
               />
             ) : null}
             <div
+              className="private-layout-mobile-sider"
               style={{
                 position: "absolute",
                 left: 0,
@@ -504,6 +510,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   ? "translateX(0)"
                   : "translateX(-100%)",
                 transition: "transform 0.22s ease",
+                boxShadow: mobileSiderOpen
+                  ? "0 18px 36px rgba(0,0,0,0.22)"
+                  : "none",
               }}
             >
               <PrivateSider
@@ -563,6 +572,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </div>
         </Layout>
       </Layout>
+      
     </Spin>
     //   <style>{`
     //     /* Dark Select Styling */

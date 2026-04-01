@@ -1175,8 +1175,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           <>
             {/* Chat Header  */}
             <ResultHeader
-  messages={messages}
-  onClear={() => setMessages([])}
+             messages={messages}
+             onClear={() => setMessages([])}
             />
             {/* item */}
            {messages.map((message: Message, index) => (

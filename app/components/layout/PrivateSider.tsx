@@ -5,7 +5,7 @@ import { MenuSider, renderMenuItems } from "@/app/config/menu";
 import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
-import "./Sider.css";
+import "./LayoutStyle.css";
 
 const { Sider } = Layout;
 
@@ -34,6 +34,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
 
   return (
     <Sider
+      className="private-sider-shell"
       width={92}
       trigger={null}
       collapsible
@@ -49,7 +50,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
       }}
     >
       {/* Logo */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 0", flexShrink: 0 }}>
+      <div className="private-sider-logo" style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 0", flexShrink: 0 }}>
         <AntdImage
           src="/images/logo-1.png"
           alt="OSD Logo"
@@ -61,19 +62,29 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
 
       {/* Menu */}
       {organizationId && (
-        <Menu
-          selectedKeys={[
-            mappedPath,
-            `${mappedPath}/${currentPathSub}`,
-          ]}
-          defaultSelectedKeys={[
-            mappedPath,
-            `${mappedPath}/${currentPathSub}`,
-          ]}
-          items={renderMenuItems(MenuSider, organizationRole)}
-          className="osd-menu-padding"
-          style={{ paddingBottom: isMobile && onClose ? 72 : 0 }}
-        />
+        <div
+          className="private-sider-menu-scroll"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingBottom: isMobile && onClose ? 72 : 0,
+          }}
+        >
+          <Menu
+            selectedKeys={[
+              mappedPath,
+              `${mappedPath}/${currentPathSub}`,
+            ]}
+            defaultSelectedKeys={[
+              mappedPath,
+              `${mappedPath}/${currentPathSub}`,
+            ]}
+            items={renderMenuItems(MenuSider, organizationRole)}
+            className="osd-menu-padding"
+          />
+        </div>
       )}
 
       {(isMobile || isTablet) && onClose ? (
@@ -91,6 +102,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           }}
         >
           <Button
+            className="private-sider-close-btn"
             type="text"
             onClick={onClose}
             icon={<MenuFoldOutlined style={{ color: semantic.colorTextBase }} />}
@@ -107,6 +119,8 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           />
         </div>
       ) : null}
+
+      
     </Sider>
   );
 };

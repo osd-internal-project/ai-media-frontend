@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Card, Col, Flex, Input, InputRef, Row, Spin, Typography } from "antd";
-import { ArrowUpOutlined, LoadingOutlined, SendOutlined } from "@ant-design/icons";
+import { LoadingOutlined, SendOutlined } from "@ant-design/icons";
 import { PermissionGuard } from "@/app/components/PermissionGuard";
 import { projectPermissions } from "@/app/utils/permissions";
 
-import { PictureOutlined, VideoCameraOutlined, UserOutlined } from "@ant-design/icons";
+import { PictureOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import { Sparkle } from "lucide-react";
 import { aiCaveColors } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -55,6 +55,9 @@ export default function GenerateTwoPaneLayout({
   emptyActions,
   form,
 }: Props) {
+  const MOBILE_INPUT_BAR_HEIGHT = 72;
+  const MOBILE_INPUT_RESERVED_SPACE = 96;
+
   // Use form instance from props if provided
   const formInstance = form;
 
@@ -63,12 +66,6 @@ export default function GenerateTwoPaneLayout({
   const inputRef = useRef<InputRef>(null);
   const { isTablet } = useResponsive();
 
-useEffect(() => {
-  if (isMobile) {
-    console.log("DEBUG mobile render");
-  }
-}, [isMobile]);
-  
 // Utility to convert hex color to rgba
 function hexToRgba(hex: string, alpha: number) {
   let c = hex.replace('#', '');
@@ -85,7 +82,6 @@ function hexToRgba(hex: string, alpha: number) {
   // Handler: show overlay when input focused
   const handleInputFocus = () => {
     if (isMobile) {
-      console.log('DEBUG: input focused, setShowLeftOverlay(true)');
       setShowLeftOverlay(true);
     }
   };
@@ -134,17 +130,23 @@ function hexToRgba(hex: string, alpha: number) {
     }
   };
 
+  const handleActionClick = (prompt: string) => {
+    handleSetPrompt(prompt);
+    if (isMobile) {
+      handleInputFocus();
+    }
+  };
+
   // Render actions based on tabKey
   const renderActions = () => {
     const buttonStyle = {
-      padding: "8px 20px",
+      padding: isMobile ? "6px 12px" : isTablet ? "7px 14px" : "8px 18px",
       borderRadius: 999,
       border: "none",
-    
       color: semantic.colorPrimary,
-
       cursor: "pointer",
-    
+      fontSize: isMobile ? 12 : 13,
+      height: isMobile ? 30 : 34,
     };
     if (tabKey === "image") {
       return imageActions.map((action, idx) => (
@@ -153,7 +155,7 @@ function hexToRgba(hex: string, alpha: number) {
           type="default"
           shape="round"
           style={buttonStyle}
-          onClick={() => handleSetPrompt(action.prompt)}
+          onClick={() => handleActionClick(action.prompt)}
         >
           {action.label}
         </Button>
@@ -166,7 +168,7 @@ function hexToRgba(hex: string, alpha: number) {
           type="default"
           shape="round"
           style={buttonStyle}
-          onClick={() => handleSetPrompt(action.prompt)}
+          onClick={() => handleActionClick(action.prompt)}
         >
           {action.label}
         </Button>
@@ -179,20 +181,20 @@ function hexToRgba(hex: string, alpha: number) {
           type="default"
           shape="round"
           style={buttonStyle}
-          onClick={() => handleSetPrompt(action.prompt)}
+          onClick={() => handleActionClick(action.prompt)}
         >
           {action.label}
         </Button>
       ));
     }
-    if (tabKey === "dream-actor") {
+    if (tabKey === "dream-actor" || tabKey === "dreamactor") {
       return dreamActorAction.map((action, idx) => (
         <Button
           key={action.label + idx}
           type="default"
           shape="round"
           style={buttonStyle}
-          onClick={() => handleSetPrompt(action.prompt)}
+          onClick={() => handleActionClick(action.prompt)}
         >
           {action.label}
         </Button>
@@ -211,6 +213,18 @@ useEffect(() => {
 
   prevLoadingRef.current = loading;
 }, [loading, isMobile, showLeftOverlay]);
+
+  // Prevent background scroll while overlay is open on mobile.
+  useEffect(() => {
+    if (!isMobile || !showLeftOverlay) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobile, showLeftOverlay]);
  
   return (
     <Row
@@ -220,12 +234,12 @@ useEffect(() => {
         height: "100%",
         minHeight: 0,
         margin: 0,
-        padding: isMobile ? 8 : 24,
+        padding: isMobile ? 8 : isTablet ? 12 : 20,
       }}
     >
       {/* LEFT PANE: Desktop = sidebar, Mobile = overlay+input */}
       {!isMobile && (
-        <Col flex={isTablet ? "280px" : "320px"} style={{ minHeight: 0, paddingInline: 0 }}>
+        <Col flex={isTablet ? "260px" : "320px"} style={{ minHeight: 0, paddingInline: 0 }}>
           <Card
             style={{
               height: "100%",
@@ -264,7 +278,6 @@ useEffect(() => {
         <>
           {/* Overlay for leftPanel: scrollable, input bar always visible */}
           {showLeftOverlay && (
-            (() => { console.log('DEBUG: Render overlay leftPanel'); return null; })(),
             <>
            
            
@@ -290,7 +303,7 @@ useEffect(() => {
                     borderRadius: 20,
                     boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
                     minHeight: 220,
-                    maxHeight: "70vh",
+                    maxHeight: "72svh",
                     width: "calc(100vw - 32px)",
                     margin: "0 auto 16px auto",
                     display: "flex",
@@ -322,8 +335,16 @@ useEffect(() => {
                 >
                   <span style={{ fontSize: 22, color: semantic.colorTextSecondary }}>&#10005;</span>
                 </button>
-                <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-                  {(() => { console.log('DEBUG: leftPanel overlay scrollable div rendered'); return null; })()}
+                <div
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    padding: 16,
+                    overscrollBehavior: "contain",
+                    WebkitOverflowScrolling: "touch",
+                    scrollBehavior: "auto",
+                  }}
+                >
                   <PermissionGuard
                     roles={projectPermissions.useChat}
                     userRole={projectRole}
@@ -406,7 +427,7 @@ useEffect(() => {
       right: 0,
       bottom: 0,
       zIndex: 1100,
-      padding: "12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px)",
+      padding: `10px 12px calc(env(safe-area-inset-bottom, 0px) + 10px)`,
       background: "transparent",
       pointerEvents: "none",
     }}
@@ -416,7 +437,7 @@ useEffect(() => {
         display: "flex",
         alignItems: "center",
         gap: 8,
-        padding: 6,
+        padding: 5,
         borderRadius: 999,
         background: semantic.colorBgContainer,
         border: `1px solid ${semantic.colorBorder}`,
@@ -432,7 +453,7 @@ useEffect(() => {
         onFocus={handleInputFocus}
         style={{
           flex: 1,
-          fontSize: 15,
+          fontSize: 14,
           background: "transparent",
           color: semantic.colorText,
           boxShadow: "none",
@@ -481,17 +502,25 @@ useEffect(() => {
             style={{
               flex: 1,
               overflowY: "auto",
+              overscrollBehavior: "contain",
               WebkitOverflowScrolling: "touch",
-              paddingInline: 16,
-              paddingBlock: 12,
+              paddingInline: isMobile ? 10 : isTablet ? 12 : 16,
+              paddingBlock: isMobile ? 10 : 12,
               // mobile: leave space for input bar
-              paddingBottom: isMobile ? 64 : 12,
+              paddingBottom: isMobile
+                ? showLeftOverlay
+                  ? 12
+                  : `calc(env(safe-area-inset-bottom, 0px) + ${MOBILE_INPUT_RESERVED_SPACE}px)`
+                : 12,
               boxSizing: "border-box",
               minHeight: 0,
-              maxHeight: isMobile ? 'calc(100vh - 64px)' : undefined,
+              maxHeight: isMobile
+                ? showLeftOverlay
+                  ? undefined
+                  : `calc(100svh - ${MOBILE_INPUT_BAR_HEIGHT}px)`
+                : undefined,
             }}
           >
-            {(() => { if (isMobile) console.log('DEBUG: rightContent scrollable div rendered'); return null; })()}
             {(!loading && !isFetchingHistory && messagesLength === 0) ? (
               <Flex align="center" justify="center" style={{ height: "100%", paddingInline: 24 }}>
                 <Flex vertical align="center" style={{ textAlign: "center", maxWidth: 320 }}>
@@ -519,8 +548,8 @@ useEffect(() => {
                     Ready to generate
                   </Typography.Title>
                   <Typography.Text type="secondary">{emptyDescription}</Typography.Text>
-                  {(tabKey === "image" || tabKey === "video" || tabKey === "omnihumen" || tabKey === "dream-actor") && (
-                    <Flex gap={8} justify="center" style={{ marginTop: 20 }}>
+                  {(tabKey === "image" || tabKey === "video" || tabKey === "omnihumen" || tabKey === "dream-actor" || tabKey === "dreamactor") && (
+                    <Flex gap={8} justify="center" wrap style={{ marginTop: 20 }}>
                       {renderActions()}
                     </Flex>
                   )}

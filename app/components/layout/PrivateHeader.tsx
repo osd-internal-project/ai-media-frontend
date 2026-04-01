@@ -1,43 +1,35 @@
 "use client";
 
 import {
-  Button,
-  Dropdown,
   Avatar,
+  Button,
+  Card,
+  Divider,
+  Dropdown,
+  Layout,
   Progress,
   Space,
   Typography,
-  Divider,
-  Card,
-  Layout,
-  Modal,
-  Form,
-  Input,
-  message,
 } from "antd";
-
 import {
+  CreditCardOutlined,
   DownOutlined,
+  HomeOutlined,
+  LogoutOutlined,
   MenuOutlined,
   PlusOutlined,
   SettingOutlined,
   UserOutlined,
-  LogoutOutlined,
-  CreditCardOutlined,
-  HomeOutlined,
 } from "@ant-design/icons";
-
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
-import React, { useState } from "react";
-import CouponService from "@/app/services/coupon.service";
-import { axiosUser } from "@/app/lib/axios/axios";
-import { getThemeConfig } from "../../theme/themeConfig";
-import ThemeToggleButton from "../ThemeToggleButton";
-import { useThemeMode } from "../ThemeProvider";
+import { signOut } from "next-auth/react";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { ICreditBalance, IOrganization } from "@/app/common/organization.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { formatCompactNumber } from "@/app/utils/format";
+import ThemeToggleButton from "../ThemeToggleButton";
+import { useThemeMode } from "../ThemeProvider";
+import "./LayoutStyle.css";
 
 const { Text } = Typography;
 const { Header } = Layout;
@@ -73,30 +65,22 @@ export function PrivateHeader({
   handleOpenCouponModal,
 }: HeaderProps) {
   const router = useRouter();
-  const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile, isTablet } = useResponsive();
-  const [form] = Form.useForm();
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-  const [couponLoading, setCouponLoading] = useState(false);
 
-  /* ---------------- Real Organization List ---------------- */
   const allOrganizations = [
     ...(personalOrganizations || []),
     ...(teamOrganizations || []),
   ];
-
   const activeOrg = allOrganizations.find(
     (o) => o.organizationId === organizationId,
   );
 
-  /* ---------------- Token Usage ---------------- */
   const tokenUsage = currentOrganization?.remainTokenAmount ?? 0;
   const tokenLimit = currentOrganization?.packageTokenAmount ?? 0;
   const tokenPercentage = tokenLimit > 0 ? (tokenUsage / tokenLimit) * 100 : 0;
 
-  /* ---------------- Organization Menu ---------------- */
   const orgMenuItems = [
     ...allOrganizations.map((org) => ({
       key: org.organizationId,
@@ -108,12 +92,12 @@ export function PrivateHeader({
       ),
     })),
     { type: "divider" as const },
-    // {
-    //   key: "add",
-    //   icon: <PlusOutlined />,
-    //   label: "Add Organization",
-    //   onClick: handleOpenCreateOrg,
-    // },
+    {
+      key: "add",
+      icon: <PlusOutlined />,
+      label: "Add Organization",
+      onClick: handleOpenCreateOrg,
+    },
     {
       key: "settings",
       icon: <SettingOutlined />,
@@ -122,7 +106,6 @@ export function PrivateHeader({
     },
   ];
 
-  /* ---------------- User Menu ---------------- */
   const userMenuItems = [
     {
       key: "profile",
@@ -134,7 +117,7 @@ export function PrivateHeader({
       key: "coupon",
       icon: <CreditCardOutlined />,
       label: "Use Coupon",
-      onClick: () => handleOpenCouponModal(),
+      onClick: handleOpenCouponModal,
     },
     ...(systemRole === "SUPER_ADMIN"
       ? [
@@ -157,47 +140,40 @@ export function PrivateHeader({
 
   return (
     <Header
+      className="private-header-shell"
       style={{
-        height: isMobile ? 58 : 72,
+        height: isMobile ? 54 : isTablet ? 58 : 62,
         borderBottom: `1px solid ${semantic.colorBorder}`,
-        padding: isMobile ? "0 10px" : "0 20px",
+        padding: isMobile ? "0 8px" : isTablet ? "0 14px" : "0 20px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
       }}
     >
-      {/* ---------- Left : Mobile Sider Toggle + Organization Switcher ---------- */}
-      <Space size={isMobile || isTablet ? 8 : 0} align="center">
+      <Space size={isMobile ? 6 : isTablet ? 8 : 10} align="center">
         {(isMobile || isTablet) ? (
           <Button
+            className="private-header-icon-btn"
             type="text"
             onClick={onToggleSider}
             style={{
-              width: 36,
-              height: 36,
+              width: isMobile ? 32 : 36,
+              height: isMobile ? 32 : 36,
               padding: 0,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
+              borderRadius: 8,
             }}
             icon={<MenuOutlined style={{ color: semantic.colorTextBase }} />}
           />
         ) : null}
 
         <Dropdown menu={{ items: orgMenuItems }} trigger={["click"]}>
-          <Button
-            type="text"
-            style={{
-              padding: isMobile ? 0 : "0 16px",
-              minWidth: isMobile ? 40 : undefined,
-              height: isMobile ? 44 : 50,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Space size={isMobile ? 0 : 12} align="center">
+          <Button type="text" className="private-header-org-btn" style={{ padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px", minWidth: isMobile ? 40 : undefined, height: isMobile ? 40 : isTablet ? 44 : 50, display: "flex", alignItems: "center", borderRadius: 10 }}>
+            <Space size={isMobile ? 6 : isTablet ? 8 : 12} align="center">
               <Avatar
-                size={32}
+                size={isMobile ? 28 : 32}
                 icon={<HomeOutlined />}
                 style={{
                   backgroundColor: semantic.colorBgTextActive,
@@ -206,37 +182,15 @@ export function PrivateHeader({
               />
               {!isMobile ? (
                 <>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                      lineHeight: 1.2,
-                      maxWidth: 220,
-                    }}
-                  >
-                    <Typography.Text
-                      type="secondary"
-                      style={{
-                        fontSize: 12,
-                        color: semantic.colorTextSecondary,
-                      }}
-                    >
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.2, maxWidth: 220 }}>
+                    <Typography.Text type="secondary" style={{ fontSize: 12, color: semantic.colorTextSecondary }}>
                       ORGANIZATION
                     </Typography.Text>
-                    <Typography.Text
-                      strong
-                      style={{ color: semantic.colorTextBase }}
-                    >
+                    <Typography.Text strong style={{ color: semantic.colorTextBase }}>
                       {activeOrg?.name}
                     </Typography.Text>
                   </div>
-                  <DownOutlined
-                    style={{
-                      fontSize: 14,
-                      color: semantic.colorTextSecondary,
-                    }}
-                  />
+                  <DownOutlined style={{ fontSize: 14, color: semantic.colorTextSecondary }} />
                 </>
               ) : null}
             </Space>
@@ -244,45 +198,36 @@ export function PrivateHeader({
         </Dropdown>
       </Space>
 
-      {/* ---------- Right ---------- */}
-      <Space size="middle">
-        {/* Token Usage */}
-        
+      <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
         <Card
           hoverable
+          className="private-header-balance-card"
           styles={{
             body: {
-              padding: isMobile ? "4px 8px" : "4px 12px",
+              padding: isMobile ? "2px 6px" : isTablet ? "3px 8px" : "4px 12px",
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: isMobile ? 6 : 8,
             },
           }}
           style={{
-            borderRadius: 8,
+            borderRadius: 10,
             borderColor: semantic.colorBorder,
             boxShadow: "none",
-            minWidth: isMobile ? 86 : 180,
+            minWidth: isMobile ? 78 : isTablet ? 136 : 180,
             maxWidth: 240,
             background: semantic.colorBgContainer,
           }}
         >
-          <Space align="center" size={6}>
+          <Space align="center" size={isMobile ? 4 : 6}>
             <CreditCardOutlined style={{ color: semantic.colorTextBase }} />
-            <Text style={{ color: semantic.colorTextBase }}>
-              {/* {tokenUsage.toLocaleString()} */}
+            <Text style={{ color: semantic.colorTextBase, fontSize: isMobile ? 11 : 13 }}>
               {formatCompactNumber(creditBalance?.currentCycleBalance)}+{" "}
               {formatCompactNumber(creditBalance?.onTopBalance)}
             </Text>
-            {!isMobile ? (
+            {!isMobile && !isTablet ? (
               <>
-                <Divider
-                  type="vertical"
-                  style={{
-                    height: 24,
-                    borderColor: semantic.colorBorder,
-                  }}
-                />
+                <Divider type="vertical" style={{ height: 24, borderColor: semantic.colorBorder }} />
                 <Progress
                   percent={tokenPercentage}
                   showInfo={false}
@@ -296,16 +241,14 @@ export function PrivateHeader({
           </Space>
         </Card>
 
-        <ThemeToggleButton />
+        <div className="private-header-action-wrap">
+          <ThemeToggleButton />
+        </div>
 
-        {/* User Menu */}
         <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-          <Button type="text" style={{ padding: isMobile ? 0 : undefined }}>
-            <Space>
-              <Avatar
-                size={32}
-                style={{ backgroundColor: semantic.colorPrimary }}
-              >
+          <Button type="text" className="private-header-user-btn" style={{ padding: isMobile ? "0 2px" : undefined, borderRadius: 10, height: isMobile ? 40 : 44 }}>
+            <Space size={isMobile ? 6 : 8}>
+              <Avatar size={isMobile ? 30 : 32} style={{ backgroundColor: semantic.colorPrimary }}>
                 {user?.fullname
                   ? user.fullname
                       .split(" ")
@@ -318,6 +261,8 @@ export function PrivateHeader({
           </Button>
         </Dropdown>
       </Space>
+
+      
     </Header>
   );
 }

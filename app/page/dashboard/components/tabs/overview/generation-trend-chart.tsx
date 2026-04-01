@@ -188,31 +188,8 @@ export default function GenerationTrendChart({
   const hoverItem = hoveredIndex !== null ? displayData[hoveredIndex] : null;
   const hoverX = hoveredIndex !== null ? toX(hoveredIndex) : 0;
 
-
-
-
-
-
-
   // Find the first label index for x-axis (relative to displayData)
   const firstLabelIndex = 0; // always the first of displayData
-  let firstXLabelMonth: string | null = null;
-
-  const xLabelDebug = displayData.map((item, index) => {
-    const showLabel =
-      (displayData.length <= 10 ||
-        index === firstLabelIndex ||
-        index === displayData.length - 2 ||
-        (index > firstLabelIndex && (index - firstLabelIndex) % Math.ceil((displayData.length - firstLabelIndex) / 8) === 0)
-      );
-    if (showLabel && index >= firstLabelIndex && firstXLabelMonth === null) {
-      firstXLabelMonth = item.month;
-    }
-    // Only the first label (firstLabelIndex) should have isActive: true
-    return { month: item.month, index, showLabel, isActive: index === firstLabelIndex };
-  });
-
-  console.log('[GenerationTrendChart] x-axis first label:', firstXLabelMonth, xLabelDebug);
 
 
   const tooltipX = useMemo(() => {
@@ -234,8 +211,6 @@ export default function GenerationTrendChart({
 
     return Math.max(12, highestPoint - 110);
   }, [hoverItem]);
-
-
   const series = [
     {
       key: "image",
@@ -274,30 +249,11 @@ export default function GenerationTrendChart({
       strokeDasharray: "2 4",
     },
   ];
-
-
-
-  // Debug: log x-axis label info
-  console.log('[GenerationTrendChart] x-axis debug:', {
-    firstActiveIndex,
-    months: displayData.map((item) => item.month),
-    xLabels: displayData.map((item, index) => {
-      const showLabel =
-        (displayData.length <= 10 ||
-          index === firstLabelIndex ||
-          index === displayData.length - 1 ||
-          (index > firstLabelIndex && (index - firstLabelIndex) % Math.ceil((displayData.length - firstLabelIndex) / 8) === 0)
-        );
-      // Only the first label (firstLabelIndex) should have isActive: true
-      return { month: item.month, index, showLabel, isActive: index === firstLabelIndex };
-    })
-  });
-
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
-      height={320}
+      height={height}
       role="img"
       aria-label="Generation trends"
       style={{
@@ -418,6 +374,8 @@ export default function GenerationTrendChart({
             fill="transparent"
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
+            onTouchStart={() => setHoveredIndex(index)}
+            onTouchEnd={() => setHoveredIndex(null)}
           />
           <text
             x={toX(index)}
@@ -529,6 +487,8 @@ export default function GenerationTrendChart({
                 strokeWidth={isActive ? 3 : 2}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onTouchStart={() => setHoveredIndex(index)}
+                onTouchEnd={() => setHoveredIndex(null)}
                 style={{
                   cursor: "pointer",
                   transition: "all 0.2s ease",

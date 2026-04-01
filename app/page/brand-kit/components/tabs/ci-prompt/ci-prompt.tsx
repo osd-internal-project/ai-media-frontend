@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from "react";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
+import useResponsive from "@/app/hooks/useResponsive";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -37,6 +38,7 @@ export default function CIPromptTab({
   const [isEditingNeg, setIsEditingNeg] = useState(false);
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
+  const { isMobile, isTablet } = useResponsive();
 
   useEffect(() => {
     setCi(ciPrompt);
@@ -106,25 +108,26 @@ export default function CIPromptTab({
   }
 
   return (
-    <div>
+    <div className="ci-tab-shell" style={{ width: "100%" }}>
       {/* ...existing code... */}
       <div
+        className="ci-tab-alert"
         style={{
           border: `1px solid ${semantic.colorBorder}`,
           background: "rgba(99,102,241,0.08)",
-          padding: 16,
+          padding: isMobile ? 12 : isTablet ? 14 : 16,
           borderRadius: 12,
-          marginBottom: 24,
+          marginBottom: isMobile ? 16 : 24,
         }}
       >
-        <Space align="start">
+        <Space align="start" size={isMobile ? 8 : 12}>
           <ThunderboltOutlined style={{ color: semantic.colorPrimary, marginTop: 4 }} />
           <div>
-            <Text style={{ color: semantic.colorWhite }}>
+            <Text style={{ color: semantic.colorTextBase, fontSize: isMobile ? 13 : 14 }}>
               CI Prompt is automatically injected into every generation
             </Text>
             <div>
-              <Text style={{ color: semantic.colorTextSecondary }}>
+              <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>
                 When Brand Kit is enabled in the generation workspace, this prompt is appended to your main prompt to enforce brand consistency.
               </Text>
             </div>
@@ -132,41 +135,46 @@ export default function CIPromptTab({
         </Space>
       </div>
       {/* ...existing code... */}
-      <div style={{ marginBottom: 28 }}>
-        <Space style={{ width: "100%", justifyContent: "space-between" }}>
-          <Text style={{ color: semantic.colorWhite }}>Brand CI Prompt</Text>
+      <div className="ci-tab-section" style={{ marginBottom: isMobile ? 20 : 28 }}>
+        <Space style={{ width: "100%", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
+          <Text style={{ color: semantic.colorTextBase, fontSize: isMobile ? 13 : 14 }}>Brand CI Prompt</Text>
           {isBrandKitEmpty ? (
-            <Button icon={<EditOutlined />} disabled>
+            <Button className="ci-tab-action" size={isMobile ? "small" : "middle"} icon={<EditOutlined />} disabled>
               Edit
             </Button>
           ) : !isEditingCI ? (
-            <Space>
-              <Button icon={<ThunderboltOutlined />} onClick={handleAutoGenerate}>
-                Auto-Generate
+            <Space size={isMobile ? 6 : 8} wrap>
+              <Button className="ci-tab-action" size={isMobile ? "small" : "middle"} icon={<ThunderboltOutlined />} onClick={handleAutoGenerate}>
+                {isMobile ? "Auto" : "Auto-Generate"}
               </Button>
-              <Button icon={<EditOutlined />} onClick={() => setIsEditingCI(true)}>
+              <Button className="ci-tab-action" size={isMobile ? "small" : "middle"} icon={<EditOutlined />} onClick={() => setIsEditingCI(true)}>
                 Edit
               </Button>
             </Space>
           ) : (
-            <Space>
+            <Space size={isMobile ? 6 : 8}>
               <Button
-                color="green"
+                className="ci-tab-action"
+                type="primary"
                 icon={<CheckOutlined />}
                 onClick={handleSaveCI}
+                size={isMobile ? "small" : "middle"}
               />
               <Button
+                className="ci-tab-action"
                 danger
                 icon={<CloseOutlined />}
                 onClick={handleCancelCI}
+                size={isMobile ? "small" : "middle"}
               />
             </Space>
           )}
         </Space>
         <TextArea
+          className="ci-tab-textarea"
           value={ci}
           onChange={(e) => setCi(e.target.value)}
-          rows={4}
+          rows={isMobile ? 5 : 4}
           disabled={isBrandKitEmpty || !isEditingCI}
           placeholder={
             isBrandKitEmpty
@@ -177,9 +185,10 @@ export default function CIPromptTab({
             marginTop: 8,
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
-            color: semantic.colorWhite,
+            color: semantic.colorTextBase,
             borderRadius: 10,
             opacity: isBrandKitEmpty ? 0.5 : (isEditingCI ? 1 : 0.7),
+            fontSize: isMobile ? 13 : 14,
           }}
         />
         {isBrandKitEmpty && (
@@ -195,55 +204,63 @@ export default function CIPromptTab({
         </div>
       </div>
       {/* ...existing code... */}
-      <div style={{ marginBottom: 28 }}>
-        <Space style={{ width: "100%", justifyContent: "space-between" }}>
-          <Text style={{ color: semantic.colorWhite }}>
+      <div className="ci-tab-section" style={{ marginBottom: isMobile ? 20 : 28 }}>
+        <Space style={{ width: "100%", justifyContent: "space-between", flexWrap: "wrap", rowGap: 8 }}>
+          <Text style={{ color: semantic.colorTextBase, fontSize: isMobile ? 13 : 14 }}>
             Negative Prompt <span style={{ color: semantic.colorTextSecondary }}>(what to avoid)</span>
           </Text>
           {!isEditingNeg ? (
-            <Button icon={<EditOutlined />} onClick={() => setIsEditingNeg(true)}>
+            <Button className="ci-tab-action" size={isMobile ? "small" : "middle"} icon={<EditOutlined />} onClick={() => setIsEditingNeg(true)}>
               Edit
             </Button>
           ) : (
-            <Space>
+            <Space size={isMobile ? 6 : 8}>
               <Button
-                color="green"
+                className="ci-tab-action"
+                type="primary"
                 icon={<CheckOutlined />}
                 onClick={handleSaveNeg}
+                size={isMobile ? "small" : "middle"}
               />
               <Button
+                className="ci-tab-action"
                 danger
                 icon={<CloseOutlined />}
                 onClick={handleCancelNeg}
+                size={isMobile ? "small" : "middle"}
               />
             </Space>
           )}
         </Space>
         <TextArea
+          className="ci-tab-textarea"
           value={neg}
           onChange={(e) => setNeg(e.target.value)}
-          rows={3}
+          rows={isMobile ? 4 : 3}
           disabled={!isEditingNeg}
           style={{
             marginTop: 8,
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
-            color: semantic.colorWhite,
+            color: semantic.colorTextBase,
             borderRadius: 10,
             opacity: isEditingNeg ? 1 : 0.7,
+            fontSize: isMobile ? 13 : 14,
           }}
         />
       </div>
       {/* ...existing code... */}
-      <div>
-        <Text style={{ color: "#64748b" }}>Combined Prompt Preview</Text>
+      <div className="ci-tab-section">
+        <Text style={{ color: "#64748b", fontSize: isMobile ? 12 : 13 }}>Combined Prompt Preview</Text>
         <Card
+          className="ci-tab-preview-card"
           style={{
             marginTop: 8,
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
             borderRadius: 12,
           }}
+          bodyStyle={{ padding: isMobile ? 12 : 16 }}
         >
           <div style={{ marginBottom: 12 }}>
             <Text style={{ color: semantic.colorTextSecondary }}>Your prompt</Text>
@@ -264,6 +281,39 @@ export default function CIPromptTab({
           </div>
         </Card>
       </div>
+
+      <style jsx global>{`
+        .ci-tab-alert,
+        .ci-tab-section {
+          animation: ciTabFadeIn 300ms ease;
+        }
+
+        .ci-tab-action {
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .ci-tab-action:hover {
+          transform: translateY(-1px);
+        }
+
+        .ci-tab-textarea {
+          transition: border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .ci-tab-preview-card {
+          transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .ci-tab-preview-card:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        @keyframes ciTabFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

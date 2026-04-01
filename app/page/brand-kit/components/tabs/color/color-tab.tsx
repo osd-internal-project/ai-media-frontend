@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Row, Col, Typography, Tag, Button, message, Form, Modal } from "antd";
-import { CopyOutlined, DeleteOutlined, EditOutlined, FileAddFilled } from "@ant-design/icons";
+import { CopyOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
-import { Plus, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import ColorModal from "./color-modal";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -37,7 +37,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
   const semantic = getThemeConfig(mode).token ?? {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
 
 
   const handleCopy = (hex: string) => {
@@ -190,15 +190,23 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
     );
 
   return (
-    <div>
+    <div
+      className="color-tab-root"
+      style={{
+        width: "100%",
+        overflow: "visible",
+        touchAction: "pan-y",
+        paddingBottom: isMobile ? 8 : 12,
+      }}
+    >
       {contextHolder}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <Text color={semantic.colorTextSecondary}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
+        <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>
           {colors.length} colors defined · click swatch to copy hex
         </Text>
-        <Button type="default" icon={<PlusIcon />} onClick={handleAddColor}>
-          Add Color
+        <Button className="color-tab-action" type="default" size={isMobile ? "small" : "middle"} icon={<PlusIcon size={isMobile ? 14 : 16} />} onClick={handleAddColor}>
+          {isMobile ? "Add" : "Add Color"}
         </Button>
       </div>
 
@@ -224,30 +232,43 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
           <div style={{ fontSize: 14, color: semantic.colorTextSecondary }}>Add your first brand color to get started.</div>
         </div>
       ) : (
-        <>
+        <div
+          className="color-tab-scroll-shell"
+          style={{
+            overflowY: "visible",
+            overflowX: "visible",
+            paddingBottom: 0,
+          }}
+        >
           {orderedTypes.map((type) => {
             const groupColors = colorsByType[type];
             return (
-              <div key={type} style={{ marginTop: 24 }}>
+              <div key={type} className="color-tab-group" style={{ marginTop: 24 }}>
                 <Text style={{ color: "#64748b", fontSize: 12, fontWeight: 500 }}>
                   {type.toUpperCase()}
                 </Text>
 
-                <Row gutter={[24, 24]} style={{ marginTop: 8 }}>
+                <Row
+                  gutter={[isMobile ? 12 : 20, isMobile ? 14 : 24]}
+                  style={{ marginTop: 8, marginLeft: 0, marginRight: 0 }}
+                >
                   {groupColors.map((color, groupIdx) => {
                     const hoverKey = `${type}-${groupIdx}`;
+                    const showActions = hoveredKey === hoverKey || isMobile;
                     // หา index จริงของสีนี้ใน colors (เพื่อให้ลบ/แก้ไขถูกต้อง)
                     const realIndex = colors.findIndex(
                       c => c.id === color.id
                     );
                     return (
-                      <Col key={color.id} flex="0 0 200px">
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <Col key={color.id} xs={12} sm={8} md={8} lg={6} xl={6}>
+                        <div className="color-tab-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                           {/* Swatch 1:1 with hover overlay */}
                           <div
+                            className="color-tab-swatch"
                             style={{
                               position: "relative",
-                              width:isMobile ?"100px": "200px",
+                              width: "100%",
+                              maxWidth: isMobile ? 140 : isTablet ? 170 : 200,
                               aspectRatio: "1 / 1",
                               borderRadius: 12,
                               background: color.hex,
@@ -258,8 +279,9 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                             onMouseEnter={() => setHoveredKey(hoverKey)}
                             onMouseLeave={() => setHoveredKey(null)}
                           >
-                            {hoveredKey === hoverKey && (
+                            {showActions && (
                               <div
+                                className="color-tab-overlay"
                                 style={{
                                   position: "absolute",
                                   top: 0,
@@ -269,18 +291,19 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
-                                  gap: 12,
-                                  background: "rgba(0,0,0,0.18)",
+                                  gap: isMobile ? 8 : 12,
+                                  background: isMobile ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.18)",
                                 }}
                               >
                                 <Button
+                                  className="color-tab-icon-btn"
                                   type="text"
-                                  icon={<CopyOutlined style={{ fontSize: 18 }} />}
+                                  icon={<CopyOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
                                   onClick={() => handleCopy(color.hex)}
                                   style={{
-                                    minWidth: 36,
-                                    width: 40,
-                                    height: 40,
+                                    minWidth: isMobile ? 30 : 36,
+                                    width: isMobile ? 32 : 40,
+                                    height: isMobile ? 32 : 40,
                                     borderRadius: 8,
                                     background: 'rgba(255,255,255,0.18)',
                                     display: 'flex',
@@ -291,8 +314,9 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                   }}
                                 />
                                 <Button
+                                  className="color-tab-icon-btn"
                                   type="text"
-                                  icon={<EditOutlined style={{ fontSize: 18 }} />}
+                                  icon={<EditOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
                                   onClick={() => {
                                     setEditColor(color);
                                     setEditIndex(realIndex);
@@ -305,9 +329,9 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                     setIsModalOpen(true);
                                   }}
                                   style={{
-                                    minWidth: 36,
-                                    width: 40,
-                                    height: 40,
+                                    minWidth: isMobile ? 30 : 36,
+                                    width: isMobile ? 32 : 40,
+                                    height: isMobile ? 32 : 40,
                                     borderRadius: 8,
                                     color: '#222',
                                     background: 'rgba(255,255,255,0.18)',
@@ -319,16 +343,17 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                   title="Edit"
                                 />
                                 <Button
+                                  className="color-tab-icon-btn"
                                   danger
                                   type="text"
-                                  icon={<DeleteOutlined style={{ fontSize: 18 }} />}
+                                  icon={<DeleteOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
                                   onClick={() => {
                                     handleDeleteColor(color, realIndex);
                                   }}
                                   style={{
-                                    minWidth: 36,
-                                    width: 40,
-                                    height: 40,
+                                    minWidth: isMobile ? 30 : 36,
+                                    width: isMobile ? 32 : 40,
+                                    height: isMobile ? 32 : 40,
                                     borderRadius: 8,
                                     background: 'rgba(255,255,255,0.18)',
                                     display: 'flex',
@@ -338,28 +363,17 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                   }}
                                   title="Delete"
                                 />
-                                <Modal
-                                  open={deleteModalVisible}
-                                  title={deleteTarget ? `Delete color "${deleteTarget.color.name}"?` : ''}
-                                  onOk={handleConfirmDelete}
-                                  onCancel={() => { setDeleteModalVisible(false); setDeleteTarget(null); }}
-                                  okText="Delete"
-                                  okType="danger"
-                                  cancelText="Cancel"
-                                  destroyOnClose
-                                >
-                                  Are you sure you want to delete this color? This action cannot be undone.
-                                </Modal>
                               </div>
                             )}
                           </div>
 
                           {/* Name & Hex */}
-                          <Title level={5} style={{ margin: 0, color: semantic.colorWhite }}>
+                          <Title level={isMobile ? 5 : 5} style={{ margin: 0, color: semantic.colorTextBase, fontSize: isMobile ? 14 : 16 }}>
                             {color.name}
                           </Title>
-                          <Text>{color.hex}</Text>
+                          <Text style={{ fontSize: isMobile ? 12 : 13 }}>{color.hex}</Text>
                           <Tag
+                            className="color-tab-type-tag"
                             style={{
                               marginTop: 8,
                               color: color.hex,
@@ -369,6 +383,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                               border: `1px solid ${color.hex}`,
                               letterSpacing: 0.5,
                               display: "inline-block",
+                              fontSize: isMobile ? 11 : 12,
                             }}
                           >
                             {color.type}
@@ -383,7 +398,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
           })}
           {/* Palette Section: show only if colors exist */}
           {colors.length > 0 && (
-            <div style={{ marginTop: 48 }}>
+            <div className="color-tab-group" style={{ marginTop: 48 }}>
               <Text style={{ color: "#64748b", fontSize: 13, fontWeight: 500, marginBottom: 8, display: "block" }}>
                 Palette
               </Text>
@@ -413,8 +428,79 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
+
+      <Modal
+        open={deleteModalVisible}
+        title={deleteTarget ? `Delete color "${deleteTarget.color.name}"?` : ""}
+        onOk={handleConfirmDelete}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setDeleteTarget(null);
+        }}
+        okText="Delete"
+        okType="danger"
+        cancelText="Cancel"
+        destroyOnHidden
+      >
+        Are you sure you want to delete this color? This action cannot be undone.
+      </Modal>
+
+      <style jsx global>{`
+        .color-tab-root {
+          min-height: 0;
+        }
+
+        .color-tab-group {
+          animation: colorGroupIn 300ms ease;
+        }
+
+        .color-tab-item {
+          transition: transform 180ms ease;
+        }
+
+        .color-tab-item:hover {
+          transform: translateY(-1px);
+        }
+
+        .color-tab-swatch {
+          transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .color-tab-swatch:hover {
+          transform: translateY(-1px) scale(1.01);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .color-tab-overlay {
+          animation: colorOverlayFade 180ms ease;
+        }
+
+        .color-tab-icon-btn,
+        .color-tab-action {
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .color-tab-icon-btn:hover,
+        .color-tab-action:hover {
+          transform: translateY(-1px);
+        }
+
+        .color-tab-type-tag {
+          transition: all 180ms ease;
+        }
+
+        @keyframes colorOverlayFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes colorGroupIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
 
     </div>

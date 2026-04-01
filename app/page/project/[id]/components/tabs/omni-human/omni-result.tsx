@@ -1,6 +1,6 @@
 import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
-import { Card, Flex, Space, Typography, Tag, Divider, Row, Col, Button } from "antd";
+import { Card, Space, Typography, Divider, Row, Col, Button } from "antd";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 
 import VideoItem from "../video-gen/video-player";
@@ -28,6 +28,8 @@ const OmniResultItem: FC<Props> = ({
   messageApi,
 }) => {
   const { isMobile, isTablet } = useResponsive();
+  const metaFontSize = isMobile ? 11 : isTablet ? 12 : 14;
+  const promptFontSize = isMobile ? 13 : isTablet ? 14 : 16;
 
   // State for show more/less prompt
   const [showFullPrompt, setShowFullPrompt] = useState(false);
@@ -55,18 +57,18 @@ const OmniResultItem: FC<Props> = ({
         background: "none",
         boxShadow: "none",
       }}
-      styles={{ body: { padding: isMobile ? 0 : 12 } }}
+      styles={{ body: { padding: isMobile ? 0 : isTablet ? 8 : 12 } }}
     >
       {/* HEADER */}
       {(isMobile || isTablet) ? (
         <div style={{ marginBottom: 8, width: "100%" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
-            <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%" }}>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
-              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%", flexWrap: "wrap" }}>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
-                  <User size={12} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
               </Typography.Text>
@@ -76,7 +78,7 @@ const OmniResultItem: FC<Props> = ({
                 ref={promptRef}
                 style={{
                   color: semantic.colorTextSecondary,
-                  fontSize: 14,
+                  fontSize: promptFontSize,
                   fontStyle: 'italic',
                   overflow: showFullPrompt ? "visible" : "hidden",
                   textOverflow: showFullPrompt ? "unset" : "ellipsis",
@@ -92,9 +94,8 @@ const OmniResultItem: FC<Props> = ({
               {isOverflow && (
                 <Button
                   type="link"
-                  color={semantic.colorPrimary}
                   size="small"
-                  style={{ fontSize: 12, padding: 0, marginLeft: 4 }}
+                  style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
                   {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
@@ -122,7 +123,7 @@ const OmniResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorPrimary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
@@ -134,7 +135,7 @@ const OmniResultItem: FC<Props> = ({
             <Col flex="none">
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   fontWeight: 600,
                   color: semantic.colorPrimary,
                   whiteSpace: "nowrap",
@@ -145,7 +146,7 @@ const OmniResultItem: FC<Props> = ({
               </Typography.Text>
               <Typography.Text
                 style={{
-                  fontSize: 14,
+                  fontSize: metaFontSize,
                   color: semantic.colorTextSecondary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
@@ -155,7 +156,7 @@ const OmniResultItem: FC<Props> = ({
                 }}
               >
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
-                  <User size={14} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
               </Typography.Text>
@@ -170,7 +171,7 @@ const OmniResultItem: FC<Props> = ({
               >
                 <Typography.Text
                   type="secondary"
-                  style={{ fontSize: 12 }}
+                  style={{ fontSize: isMobile ? 11 : 12 }}
                 >
                   {new Date(message.createdAt).toLocaleDateString([], {
                     month: "short",
@@ -191,7 +192,7 @@ const OmniResultItem: FC<Props> = ({
                 ref={promptRef}
                 style={{
                   color: semantic.colorTextSecondary,
-                  fontSize: 16,
+                  fontSize: promptFontSize,
                   fontStyle: 'italic',
                   overflow: showFullPrompt ? "visible" : "hidden",
                   textOverflow: showFullPrompt ? "unset" : "ellipsis",
@@ -207,9 +208,8 @@ const OmniResultItem: FC<Props> = ({
               {isOverflow && (
                 <Button
                   type="link"
-                  color={semantic.colorPrimary}
                   size="small"
-                  style={{ fontSize: 14, padding: 0, marginLeft: 4 }}
+                  style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
                   {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
@@ -220,7 +220,7 @@ const OmniResultItem: FC<Props> = ({
         </>
       )}
 
-      <Divider />
+      <Divider style={{ margin: "14px 0" }} />
 
       {/* LOADING */}
       {(message.genneratedStatus === "PENDING" ||

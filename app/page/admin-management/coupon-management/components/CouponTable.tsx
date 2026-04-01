@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Table, Button, Space, Tag, Tooltip, Input, Select, Flex } from "antd";
+import {
+  Table,
+  Button,
+  Space,
+  Tag,
+  Tooltip,
+  Input,
+  Select,
+  Flex,
+  Typography,
+  ConfigProvider,
+} from "antd";
 import {
   EyeOutlined,
   EditOutlined,
@@ -8,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import { ICouponCode } from "@/app/common/coupon.type";
 import dayjs from "dayjs";
+import { formatNumber } from "@/app/utils/format";
 
 interface Props {
   data: ICouponCode[];
@@ -16,8 +28,10 @@ interface Props {
   onPageChange: (page: number, pageSize: number) => void;
   onSearch: (values: any) => void;
   onAdd: () => void;
+  onAddGroup: () => void;
   onEdit: (record: ICouponCode) => void;
   onViewUsage: (record: ICouponCode) => void;
+  onExport: (values: any) => void;
 }
 
 const CouponTable: React.FC<Props> = ({
@@ -29,33 +43,59 @@ const CouponTable: React.FC<Props> = ({
   onAdd,
   onEdit,
   onViewUsage,
+  onAddGroup,
+  onExport,
 }) => {
   const [searchText, setSearchText] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [fixOrganizationId, setFixOrganizationId] = useState("");
+  const [referenceTag, setReferenceTag] = useState("");
 
   const columns = [
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
-      render: (text: string) => <strong>{text}</strong>,
+      width: 150,
+      render: (text: string) => (
+        <Typography.Paragraph
+          ellipsis={{
+            rows: 1,
+            symbol: ">",
+            // expandable: "collapsible",
+          }}
+          copyable
+        >
+          {text}
+        </Typography.Paragraph>
+      ),
     },
     {
-      title: "OnTop Credit",
+      title: "Credit",
       dataIndex: "onTopCredit",
       key: "onTopCredit",
-      render: (val: number) => <Tag color="blue">{val}</Tag>,
+      width: 100,
+      render: (val: number) => formatNumber(val),
     },
     {
-      title: "Usage Limit",
+      title: " Limit",
       dataIndex: "usageLimit",
       key: "usageLimit",
+      width: 100,
+    },
+    {
+      title: "Tag",
+      dataIndex: "referenceTag",
+      key: "referenceTag",
+      width: 100,
+      render: (val: number) => <Tag color="blue">{val}</Tag>,
     },
     {
       title: "Expires At",
       dataIndex: "expiresAt",
       key: "expiresAt",
+      width: 130,
+
       render: (date: string) => dayjs(date).format("YYYY-MM-DD HH:mm"),
     },
     {
@@ -93,8 +133,8 @@ const CouponTable: React.FC<Props> = ({
       key: "action",
       render: (_: any, record: ICouponCode) => (
         <Space size="middle">
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Edit
+          <Button size="small" onClick={() => onEdit(record)}>
+            <EditOutlined />
           </Button>
         </Space>
       ),
@@ -112,16 +152,25 @@ const CouponTable: React.FC<Props> = ({
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 250 }}
             onPressEnter={() =>
-              onSearch({ code: searchText, status, fixOrganizationId })
+              onSearch({ code: searchText, status, fixOrganizationId,referenceTag })
             }
           />
+          {/* <Input
+              placeholder="Search fix organization ID"
+              value={fixOrganizationId}
+              onChange={(e) => setFixOrganizationId(e.target.value)}
+              style={{ width: 200 }}
+              onPressEnter={() =>
+                onSearch({ code: searchText, status, fixOrganizationId })
+              }
+            /> */}
           <Input
-            placeholder="Search fix organization ID"
-            value={fixOrganizationId}
-            onChange={(e) => setFixOrganizationId(e.target.value)}
+            placeholder="Search Tag"
+            value={referenceTag}
+            onChange={(e) => setReferenceTag(e.target.value)}
             style={{ width: 200 }}
             onPressEnter={() =>
-              onSearch({ code: searchText, status, fixOrganizationId })
+              onSearch({ code: searchText, status, fixOrganizationId,referenceTag })
             }
           />
           <Select
@@ -138,18 +187,33 @@ const CouponTable: React.FC<Props> = ({
           <Button
             type="primary"
             onClick={() =>
-              onSearch({ code: searchText, status, fixOrganizationId })
+              onSearch({ code: searchText, status, fixOrganizationId, referenceTag })
             }
           >
             Search
           </Button>
+          <Button
+            type="primary"
+            onClick={() =>
+              onExport({ code: searchText, status, fixOrganizationId, referenceTag })
+            }
+          >
+            Export
+          </Button>
         </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
-          Add Coupon
-        </Button>
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onAddGroup}>
+            Add Group
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
+            Add
+          </Button>
+        </Space>
       </Flex>
 
       <Table
+        size="small"
+        style={{ fontSize: 12 }}
         columns={columns}
         dataSource={data}
         rowKey="id"

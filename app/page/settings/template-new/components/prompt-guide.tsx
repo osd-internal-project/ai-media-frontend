@@ -36,6 +36,7 @@ import React, {
 } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
 import CustomTab from "./customtab";
 import TemplateFormModal from "./template-form-modal";
 import TemplateItem from "./template-item";
@@ -106,23 +107,16 @@ const PromptGuideComponent: FC<props> = ({
 }): ReactElement => {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
+  const { isMobile, isTablet } = useResponsive();
 
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [typeForm] = Form.useForm();
 
-  useEffect(() => {
-    const onResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    onResize();
-    window.addEventListener("resize", onResize);
-
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+  const containerPadding = isMobile ? 12 : isTablet ? 16 : 24;
+  const sectionGap = isMobile ? 12 : 16;
+  const titleLevel = isMobile ? 5 : 4;
 
   const selectedPromptGuideTypeId = useMemo(() => {
     if (!selectedPromptGuide?.id) return undefined;
@@ -311,13 +305,38 @@ const PromptGuideComponent: FC<props> = ({
   };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3 md:items-center">
+    <div
+      style={{
+        height: "100%",
+        minHeight: 0,
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+        scrollBehavior: "smooth",
+        overscrollBehavior: "contain",
+        padding: containerPadding,
+      }}
+    >
+      <div
+        style={{
+          marginBottom: sectionGap,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: isMobile ? "flex-start" : "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         <div>
-          <Typography.Title level={4} style={{ marginBottom: 4 }}>
+          <Typography.Title
+            level={titleLevel}
+            style={{ marginBottom: 2, fontSize: isMobile ? 20 : undefined }}
+          >
             Prompt Guide Templates
           </Typography.Title>
-          <Typography.Text type="secondary">
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: isMobile ? 12 : 13 }}
+          >
             Pre-configured prompts for common use cases
           </Typography.Text>
         </div>
@@ -329,18 +348,28 @@ const PromptGuideComponent: FC<props> = ({
           {canManage && (
             <Button
               type="primary"
+              size={isMobile ? "middle" : "large"}
               icon={<PlusOutlined />}
               onClick={openCreateTemplateModal}
               block={isMobile}
             >
-              New Template
+              {isMobile ? "New" : "New Template"}
             </Button>
           )}
         </Space>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+      <div
+        style={{
+          marginBottom: sectionGap,
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "stretch" : "center",
+          gap: 12,
+        }}
+      >
         <Input
+          size={isMobile ? "middle" : "large"}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           prefix={<SearchOutlined />}
@@ -352,9 +381,9 @@ const PromptGuideComponent: FC<props> = ({
       </div>
 
       {promptGuilds.length > 0 ? (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[isMobile ? 12 : 16, isMobile ? 12 : 16]}>
           {promptGuilds.map((template) => (
-            <Col key={template.id} xs={24} md={12} lg={8}>
+            <Col key={template.id} xs={24} sm={12} md={12} lg={8}>
               <TemplateItem
                 title={template.title}
                 textPrompt={template.textPrompt}
@@ -373,7 +402,7 @@ const PromptGuideComponent: FC<props> = ({
           style={{
             border: `1px dashed ${semantic.colorBorder}`,
             borderRadius: 12,
-            padding: 40,
+            padding: isMobile ? 20 : 40,
           }}
         >
           <Empty description="No templates found" />
