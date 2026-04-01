@@ -860,6 +860,13 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
     status: "upload" | "remove";
   }) => {
     if (file && status === "upload") {
+      // Optimistic preview so selected file appears immediately in upload section.
+      if (index === 0) {
+        setFilesFirst([file]);
+      } else {
+        setFilesLast([file]);
+      }
+
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
@@ -901,17 +908,52 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
           if (index === 0) {
-            setFilesFirst([file]);
+            setFilesFirst((prev) =>
+              prev.map((f) =>
+                f.uid === file.uid
+                  ? {
+                      ...f,
+                      status: "done" as const,
+                      url: result.url,
+                      response: result,
+                    }
+                  : f,
+              ),
+            );
             setRefImageFrist((prev) => [...prev, result]);
           } else {
             const duration = await getSecondsFileDuration(file);
             setSelectedDuration(duration);
-            setFilesLast([file]);
+            setFilesLast((prev) =>
+              prev.map((f) =>
+                f.uid === file.uid
+                  ? {
+                      ...f,
+                      status: "done" as const,
+                      url: result.url,
+                      response: result,
+                    }
+                  : f,
+              ),
+            );
             setRefImageLast((prev) => [...prev, result]);
           }
         }
       } catch (error) {
         console.error("Upload failed:", error);
+        if (index === 0) {
+          setFilesFirst((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, status: "error" as const } : f,
+            ),
+          );
+        } else {
+          setFilesLast((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, status: "error" as const } : f,
+            ),
+          );
+        }
       }
     } else if (status === "remove") {
       setIsLoadingUpload(true);
@@ -1163,6 +1205,11 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                 onDownloadVideo={onDownloadVideo}
                 onShareVideo={onShareVideo}
                 onDelete={onDelete}
+                onDeleteMessage={(messageId) =>
+                  setMessages((prev) =>
+                    prev.filter((m) => m.id !== messageId && m.taskId !== messageId),
+                  )
+                }
                 semantic={semantic}
               />
             ))}

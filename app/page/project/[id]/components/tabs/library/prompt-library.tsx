@@ -20,7 +20,7 @@ import {
   Empty,
 } from "antd";
 import dynamic from "next/dynamic";
-import { Download, ExternalLink, Eye, Loader, Trash2 } from "lucide-react";
+import { Download, ExternalLink, Eye, Loader, Trash2, User } from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
@@ -79,6 +79,26 @@ const PromptLibrary: FC<props> = ({
     backgroundColor: aiCaveColors.secondary,
     borderColor: aiCaveColors.secondary,
     color: semantic.colorBgBase,
+  };
+
+  const actionButtonStyle = {
+    ...secondaryActionStyle,
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
+  const isVideoType = (type?: string) => {
+    const normalized = (type || "").toLowerCase();
+    return (
+      normalized === "video" ||
+      normalized === "dreamactor" ||
+      normalized === "omnihumen" ||
+      normalized === "omnihuman"
+    );
   };
 
   // =========================
@@ -224,9 +244,7 @@ const PromptLibrary: FC<props> = ({
   // PREVIEW
   // =========================
   const renderPreview = (record: any) => {
-    const isVideo =
-      record.typeGenerate === "video" ||
-      record.typeGenerate === "dreamactor";
+    const isVideo = isVideoType(record.typeGenerate);
 
     if (!isVideo) {
       return (
@@ -283,7 +301,7 @@ const PromptLibrary: FC<props> = ({
 
           {/* GRID */}
           <Row gutter={[16, 16]}>
-            {displayItems.map((item) => (
+            {displayItems.map((item, idx) => (
               <Col key={item.id} xs={24} md={12} lg={8}>
                 <Card
                   onClick={() => onSelectItem(item)}
@@ -292,10 +310,18 @@ const PromptLibrary: FC<props> = ({
                     overflow: "hidden",
                     borderColor: semantic.colorBorder,
                     background: semantic.colorBgContainer,
+                    borderRadius: 12,
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    transition: "transform 220ms ease, box-shadow 220ms ease",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    animation: `fadeInUp 280ms ease ${idx * 35}ms both`,
                   }}
+                  className="group"
                 >
                   <div
-                    className="group relative aspect-video"
+                    className="relative aspect-square overflow-hidden"
                     onMouseEnter={() => {
                       const v = videoRefs.current[item.id];
                       if (v) v.play();
@@ -324,18 +350,12 @@ const PromptLibrary: FC<props> = ({
 
                     {/* ACTION BAR */}
                     <Flex
-  align="center"
-  justify="center"
-  gap={8}
-  className="
-    absolute inset-0
-    bg-black/20
-    opacity-0
-    md:group-hover:opacity-100
-    transition-opacity
-    pointer-events-auto
-  "
->
+                      align="center"
+                      justify="center"
+                      gap={8}
+                      className="absolute inset-0 bg-black/35 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 pointer-events-auto"
+                      style={{ padding: 8 }}
+                    >
                       <Button
                         icon={<Download size={16} />}
                         onClick={(e) => {
@@ -345,7 +365,7 @@ const PromptLibrary: FC<props> = ({
                             item.id
                           );
                         }}
-                        style={secondaryActionStyle}
+                        style={actionButtonStyle}
                       />
 
                       <Button
@@ -354,7 +374,7 @@ const PromptLibrary: FC<props> = ({
                           e.stopPropagation();
                           handleOpenResult(item);
                         }}
-                        style={secondaryActionStyle}
+                        style={actionButtonStyle}
                       />
 
                       <Button
@@ -363,7 +383,7 @@ const PromptLibrary: FC<props> = ({
                           e.stopPropagation();
                           handleRemoveFromLibrary(item);
                         }}
-                        style={secondaryActionStyle}
+                        style={actionButtonStyle}
                       />
                       <Button
                         icon={<Eye size={16} />}
@@ -371,25 +391,88 @@ const PromptLibrary: FC<props> = ({
                           e.stopPropagation();
                           handlePreview(item);
                         }}
-                        style={secondaryActionStyle}
+                        style={actionButtonStyle}
                       />
                     </Flex>
                   </div>
 
                   {/* FOOTER */}
-                  <div style={{ padding: 12 }}>
-                    <Typography.Paragraph ellipsis={{ rows: 2 }}>
-                      {item.prompt || "-"}
+                  <div
+                    style={{
+                      padding: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      minHeight: 146,
+                    }}
+                  >
+                    <Flex
+                      wrap="wrap"
+                      gap={8}
+                      align="center"
+                      style={{ rowGap: 4 }}
+                    >
+                      <Typography.Text
+                        style={{
+                          fontSize: 12,
+                          color: semantic.colorPrimary,
+                          fontWeight: 500,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item?.resolution || item?.generateConfig?.resolution || "-"}
+                      </Typography.Text>
+
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12, maxWidth: "44%" }}
+                        ellipsis
+                      >
+                        {item?.generateConfig?.modelName || "Unknown"}
+                      </Typography.Text>
+
+                      <Typography.Text
+                        type="secondary"
+                        style={{
+                          fontSize: 12,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          maxWidth: "52%",
+                        }}
+                        ellipsis
+                      >
+                        <User size={12} />
+                        {item?.users?.fullname || item?.users?.username || "-"}
+                      </Typography.Text>
+                    </Flex>
+
+                    <Typography.Paragraph
+                      ellipsis={{ rows: 2 }}
+                      style={{
+                        marginBottom: 0,
+                        minHeight: 40,
+                        fontStyle: "italic",
+                        color: semantic.colorTextSecondary,
+                      }}
+                    >
+                      {`"${item.prompt || "-"}"`}
                     </Typography.Paragraph>
 
-                    <Flex justify="space-between">
+                    <Flex justify="space-between" align="center">
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {item?.generateConfig?.modelName || "Unknown"}
+                        {item?.createdAt
+                          ? new Date(item.createdAt).toLocaleDateString()
+                          : "-"}
                       </Typography.Text>
 
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                         {item?.createdAt
-                          ? new Date(item.createdAt).toLocaleDateString()
+                          ? new Date(item.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
                           : "-"}
                       </Typography.Text>
                     </Flex>
@@ -400,23 +483,52 @@ const PromptLibrary: FC<props> = ({
           </Row>
 
           {/* PAGINATION */}
-          <Flex justify="center">
-            <Pagination
-              current={page}
-              total={total}
-              pageSize={pageSize}
-              onChange={(p) => {
-                setPage(p);
-                setLoading(true);
-              }}
-              showSizeChanger={false}
-            />
-          </Flex>
+          {displayItems.length > 0 && (
+            <Flex justify="center">
+              <Pagination
+                current={page}
+                total={total}
+                pageSize={pageSize}
+                onChange={(p) => {
+                  setPage(p);
+                  setLoading(true);
+                }}
+                showSizeChanger={false}
+              />
+            </Flex>
+          )}
 
           {/* EMPTY */}
           {!displayItems.length && <Empty />}
         </Flex>
       )}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        :global(.ant-card.group:hover) {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.14);
+        }
+
+        :global(.ant-card.group video),
+        :global(.ant-card.group img) {
+          transition: transform 260ms ease;
+        }
+
+        :global(.ant-card.group:hover video),
+        :global(.ant-card.group:hover img) {
+          transform: scale(1.03);
+        }
+      `}</style>
       {/* PREVIEW MODAL */}
       {previewItem && (
         previewItem.typeGenerate === "image" ? (

@@ -6,7 +6,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import VideoItem from "../video-gen/video-player";
 import { Message } from "./chat-generate-omnihumen";
 import OmniActionBar from "./action-bar";
-import { User } from "lucide-react";
+import { Trash2, User } from "lucide-react";
 
 interface Props {
   message: Message;
@@ -46,6 +46,12 @@ const OmniResultItem: FC<Props> = ({
     // eslint-disable-next-line
   }, [message.prompt, isMobile, isTablet]);
 
+  const onDeleteMessage = () => {
+    setMessages((prev: Message[]) =>
+      prev.filter((m) => m.id !== message.id && m.taskId !== message.taskId),
+    );
+  };
+
 
   return (
     <Card
@@ -65,6 +71,7 @@ const OmniResultItem: FC<Props> = ({
           <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
             <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%", flexWrap: "wrap" }}>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.ratio || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
@@ -114,6 +121,14 @@ const OmniResultItem: FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Typography.Text>
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 size={14} />}
+                size="small"
+                style={{ padding: 0 }}
+                onClick={onDeleteMessage}
+              />
             </div>
           </div>
         </div>
@@ -130,6 +145,17 @@ const OmniResultItem: FC<Props> = ({
                 }}
               >
                 {message.resolution || ""}
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: metaFontSize,
+                  color: semantic.colorTextSecondary,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.ratio || ""}
               </Typography.Text>
             </Col>
             <Col flex="none">
@@ -183,6 +209,13 @@ const OmniResultItem: FC<Props> = ({
                     minute: "2-digit",
                   })}
                 </Typography.Text>
+                <Button
+                  type="text"
+                  icon={<Trash2 size={12} />}
+                  danger
+                  size="small"
+                  onClick={onDeleteMessage}
+                />
               </Space>
             </Col>
           </Row>

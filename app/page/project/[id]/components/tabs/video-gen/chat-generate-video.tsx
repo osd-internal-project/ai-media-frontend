@@ -858,6 +858,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     status: "upload" | "remove";
   }) => {
     if (file && status === "upload") {
+      // Optimistic preview so selected image appears immediately in upload tiles.
+      if (index === 0) {
+        setFilesFirst([file]);
+      } else {
+        setFilesLast([file]);
+      }
+
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
@@ -899,15 +906,50 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         const result = await UploadsServices(axiosWorker).upload(formData);
         if (result) {
           if (index === 0) {
-            setFilesFirst([file]);
+            setFilesFirst((prev) =>
+              prev.map((f) =>
+                f.uid === file.uid
+                  ? {
+                      ...f,
+                      status: "done" as const,
+                      url: result.url,
+                      response: result,
+                    }
+                  : f,
+              ),
+            );
             setRefImageFrist([result]);
           } else {
-            setFilesLast([file]);
+            setFilesLast((prev) =>
+              prev.map((f) =>
+                f.uid === file.uid
+                  ? {
+                      ...f,
+                      status: "done" as const,
+                      url: result.url,
+                      response: result,
+                    }
+                  : f,
+              ),
+            );
             setRefImageLast([result]);
           }
         }
       } catch (error) {
         console.error("Upload failed:", error);
+        if (index === 0) {
+          setFilesFirst((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, status: "error" as const } : f,
+            ),
+          );
+        } else {
+          setFilesLast((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, status: "error" as const } : f,
+            ),
+          );
+        }
       }
     } else if (status === "remove") {
       setIsLoadingUpload(true);

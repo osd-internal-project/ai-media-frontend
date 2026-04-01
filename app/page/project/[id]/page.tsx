@@ -86,6 +86,20 @@ const GenerateImagePage: FC = () => {
     }
   };
 
+  const normalizedAccessCodes = useMemo(
+    () => accessCode.map((c) => c.toLowerCase().trim()),
+    [accessCode],
+  );
+  const hasAccessControl = normalizedAccessCodes.length > 0;
+  const canAccessImage =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("image"));
+  const canAccessVideo =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("video"));
+  const canAccessOmni =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("omni"));
+  const canAccessDream =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("dream"));
+
   useEffect(() => {
     const fetchProjectRole = async () => {
       if (session?.user?.id && id) {
@@ -109,7 +123,7 @@ const GenerateImagePage: FC = () => {
               organizationId,
             );
           if (code) {
-            setAccessCode(code);
+            setAccessCode(Array.isArray(code) ? code : []);
           }
         } catch (error) {
           console.error("Failed to fetch brand kit:", error);
@@ -118,7 +132,7 @@ const GenerateImagePage: FC = () => {
     };
 
     fetchProjectRole();
-  }, [session?.user?.id, id]);
+  }, [session?.user?.id, id, organizationId]);
 
   useEffect(() => {
     if (loadingData) {
@@ -358,7 +372,7 @@ const GenerateImagePage: FC = () => {
           }}
           onChange={(key) => onChangeTab(key as GenerateTabKey)}
           items={[
-            ...(accessCode.includes("image")
+            ...(canAccessImage
               ? [
                   {
                     disabled: disableTab,
@@ -388,7 +402,7 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
-            ...(accessCode.includes("video")
+            ...(canAccessVideo
               ? [
                   {
                     disabled: disableTab,
@@ -418,7 +432,7 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
-            ...(accessCode.includes("omni")
+            ...(canAccessOmni
               ? [
                   {
                     disabled: disableTab,
@@ -448,7 +462,7 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
-            ...(accessCode.includes("dream")
+            ...(canAccessDream
               ? [
                   {
                     disabled: disableTab,

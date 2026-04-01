@@ -6,7 +6,7 @@ import { Message, VideoMessage } from "./chat-generate-video";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import { Volume1, VolumeX, User } from "lucide-react";
+import { Volume1, VolumeX, User, Trash2 } from "lucide-react";
 
 interface Props {
   message: Message;
@@ -137,13 +137,14 @@ const VideoResultItem: FC<Props> = ({
               <Button
                 type="text"
                 danger
+                icon={<Trash2 size={14} />}
                 size="small"
                 style={{ padding: 0 }}
                 onClick={() =>
                   setMessages((prev) => prev.filter((m) => m.id !== message.id))
                 }
               >
-                🗑
+                
               </Button>
             </div>
           </div>
@@ -253,13 +254,14 @@ const VideoResultItem: FC<Props> = ({
                 </Typography.Text>
                 <Button
                   type="text"
+                  icon={<Trash2 size={12} />}
                   danger
                   size="small"
                   onClick={() =>
                     setMessages((prev) => prev.filter((m) => m.id !== message.id))
                   }
                 >
-                  🗑
+                  
                 </Button>
               </Space>
             </Col>

@@ -17,6 +17,7 @@ export interface BrandKitSidebarItem {
   id?: string;
   name: string;
   industry: string;
+  isDefault?: boolean;
   colors: Array<{ hex: string }>;
   fonts: number;
   colorCount: number;

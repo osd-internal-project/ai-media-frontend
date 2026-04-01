@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
-import { Modal } from "antd";
+import { Modal, Tag } from "antd";
 import { BrandKitSidebarItem } from "./brand-kit-side-bar";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, StarFilled } from "@ant-design/icons";
 
 interface BrandKitItemProps {
   kit: BrandKitSidebarItem & {
@@ -40,6 +40,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
   const dragStartX = useRef(0);
   const dragThreshold = 60; // px to reveal delete
   const maxSwipe = -80;
+  const showEditDelete = isMobile || hoveredIndex === index;
   // Debug log for rendering
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
@@ -53,7 +54,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
     });
   }
   return (
-    <div style={{ position: "relative", minHeight: isMobile ? 82 : 0, marginBottom: isMobile ? 6 : 10 }}>
+    <div style={{ position: "relative", minHeight: isMobile ? 82 : 94, marginBottom: isMobile ? 6 : 10 }}>
       {/* Swipe-to-delete background (mobile only, only show when swiped) */}
       {isMobile && dragX < 0 && (
         <div
@@ -102,7 +103,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
           border: `1px solid ${activeIndex === index ? semantic.colorPrimary : "transparent"}`,
           transition: dragging ? "none" : "all 0.2s",
           position: "relative",
-          minHeight: isMobile ? 82 : 0,
+          minHeight: 82 ,
           overflow: isMobile ? "visible" : undefined,
           touchAction: isMobile ? "pan-y" : undefined,
           zIndex: 2,
@@ -159,8 +160,8 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               <div
                 key={i}
                 style={{
-                  width: isMobile ? 16 : 14,
-                  height: isMobile ? 16 : 14,
+                  width:  16 ,
+                  height: 16 ,
                   borderRadius: "50%",
                   background: c && c.hex ? c.hex : "transparent",
                   border: `1px solid ${semantic.colorBorder}`,
@@ -171,8 +172,57 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
           })}
         </div>
 
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ color: semantic.colorTextBase, fontSize: isMobile ? 13 : 14, fontWeight: isMobile ? 500 : 400 }}>{kit.name}</div>
+        <div
+          style={{
+            minWidth: 0,
+            flex: 1,
+            paddingRight: isMobile ? 44 : 76,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              rowGap: 6,
+              gap: 6,
+              minWidth: 0,
+              marginBottom: isMobile ? 1 : 0,
+            }}
+          >
+            <div
+              style={{
+                color: semantic.colorTextBase,
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: isMobile ? 500 : 400,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+            {!isMobile && kit.isDefault && (
+          <StarFilled style={{ color: "#f59e0b" }} />
+            )}  {kit.name}
+            </div>
+            {isMobile && kit.isDefault && (
+              <Tag
+                icon={<StarFilled style={{ color: "#f59e0b" }} />}
+                style={{
+                  marginInlineEnd: 0,
+                  borderRadius: 999,
+                  border: `1px solid ${semantic.colorWarningBorder || "#fbbf24"}`,
+                  background: semantic.colorWarningBg || "rgba(245,158,11,0.12)",
+                  color: semantic.colorWarning || "#f59e0b",
+                  fontSize: isMobile ? 10 : 11,
+                  lineHeight: 1,
+                  padding: isMobile ? "2px 6px" : "3px 7px",
+                }}
+              >
+                Default
+              </Tag>
+            )}
+          </div>
 
           <div
             style={{
@@ -195,26 +245,36 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
             {(kit.colorCount ?? 0)} colors · {(kit.fonts ?? 0)} fonts
           </div>
         </div>
-
+         
         {/* Edit/Delete buttons: always show on mobile, hover on desktop */}
-        {(isMobile || hoveredIndex === index) && (
-          <>
+        <>
+          <div
+            style={{
+              position: "absolute",
+              // top: isMobile ? 8 : 8,
+              right: isMobile ? 8 : 10,
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: isMobile ? 16 : 10,
+              alignItems: "flex-end",
+              borderRadius: 8,
+              boxShadow: isMobile ? "0 2px 8px rgba(0,0,0,0.10)" : "none",
+              padding: isMobile ? "6px 8px" : "4px 0",
+              background: "transparent",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
             <div
               style={{
-                position: "absolute",
-                top: isMobile ? 8 : 8,
-                right: isMobile ? 8 : 10,
-                zIndex: 2,
                 display: "flex",
                 flexDirection: "column",
-                gap: 16 ,
-                alignItems: "center",
-                borderRadius: 8,
-                boxShadow: isMobile ? "0 2px 8px rgba(0,0,0,0.10)" : "0 2px 8px rgba(0,0,0,0.06)",
-                padding: isMobile ? "6px 8px" : "4px 6px",
-                background:  "transparent"
+                alignItems: "flex-end",
+                gap: 16,
+                opacity: showEditDelete ? 1 : 0,
+                pointerEvents: showEditDelete ? "auto" : "none",
+                transition: "opacity 0.18s ease",
               }}
-              onClick={e => e.stopPropagation()}
             >
               <EditOutlined
                 style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 18 : 16, cursor: "pointer" }}
@@ -233,6 +293,8 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
                 }}
               />
             </div>
+          
+          </div>
             <Modal
               zIndex={1500}
               open={showDeleteModal}
@@ -259,8 +321,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
             >
               Are you sure you want to delete "{kit.name}"? This action cannot be undone.
             </Modal>
-          </>
-        )}
+        </>
       </div>
     </div>
   );

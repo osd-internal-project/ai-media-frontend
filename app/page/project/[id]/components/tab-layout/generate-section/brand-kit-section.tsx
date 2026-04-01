@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import BrandKitServices from "@/app/services/brand-kit.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Flex, Typography, Switch } from "antd";
+import { useSession } from "next-auth/react";
 import {
   BgColorsOutlined,
   BulbOutlined,
@@ -25,12 +26,15 @@ export default function BrandKitSection({
   onCiPromptChange,
   onActiveChange,
 }: Props) {
+  const { data: session } = useSession();
   const [active, setActive] = React.useState(false);
   const [brandKit, setBrandKit] = useState<any>(null);
   const [parsedColors, setParsedColors] = useState<string[]>([]);
   const [parsedFonts, setParsedFonts] = useState<{ name: string; weight: number; type: string }[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!active) {
       setBrandKit(null);
       setParsedColors([]);
@@ -38,59 +42,89 @@ export default function BrandKitSection({
       if (typeof onCiPromptChange === 'function') onCiPromptChange("");
       return;
     }
+
     const brandKitService = BrandKitServices(axiosCore);
-    brandKitService.findAll()
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          // Sort by createdAt descending (latest first)
-          const kits = data.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          const kit = kits[0];
-          setBrandKit(kit);
-          // Parse colors from brandCiPrompt
-          let colors: string[] = [];
-          let fonts: { name: string; weight: number; type: string }[] = [];
-          let ciPrompt = "";
-          if (typeof kit.brandCiPrompt === 'string') {
-            ciPrompt = kit.brandCiPrompt;
-            // Parse colors
-            if (kit.brandCiPrompt.includes('Brand colors:')) {
-              const colorSection = kit.brandCiPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
-              const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
-              colors = hexMatches.map(m => '#' + m[1]);
-            }
-            // Parse fonts
-            if (kit.brandCiPrompt.includes('Fonts:')) {
-              const fontSection = kit.brandCiPrompt.split('Fonts:')[1] || '';
-              const fontMatches = [...fontSection.matchAll(/([^,\n]+)\s*\(([^)]*)\)/g)];
-              fontMatches.forEach((m) => {
-                let type = 'body', weight = 400;
-                if (m[2]) {
-                  const typeMatch = m[2].match(/(heading\d?|body|caption|paragraph)/i);
-                  if (typeMatch) type = typeMatch[1].toLowerCase();
-                  const weightMatch = m[2].match(/weight\s*(\d+)/i);
-                  if (weightMatch) weight = Number(weightMatch[1]);
-                }
-                fonts.push({ name: m[1].trim(), type, weight });
-              });
-            }
+    const organizationId = session?.user?.organizationId;
+
+    const loadBrandKit = async () => {
+      try {
+        let kit: any = null;
+
+        if (organizationId) {
+          kit = await brandKitService.getDefaultByOrganizationId(organizationId);
+        }
+
+        if (!kit) {
+          const data = await brandKitService.findAll();
+          if (Array.isArray(data) && data.length > 0) {
+            kit = data[0];
           }
+        }
+
+        if (!kit) {
+          if (!cancelled) {
+            setBrandKit(null);
+            setParsedColors([]);
+            setParsedFonts([]);
+            if (typeof onCiPromptChange === 'function') onCiPromptChange("");
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setBrandKit(kit);
+        }
+
+        // Parse colors from brandCiPrompt
+        let colors: string[] = [];
+        let fonts: { name: string; weight: number; type: string }[] = [];
+        let ciPrompt = "";
+        if (typeof kit.brandCiPrompt === 'string') {
+          ciPrompt = kit.brandCiPrompt;
+          // Parse colors
+          if (kit.brandCiPrompt.includes('Brand colors:')) {
+            const colorSection = kit.brandCiPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
+            const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
+            colors = hexMatches.map(m => '#' + m[1]);
+          }
+          // Parse fonts
+          if (kit.brandCiPrompt.includes('Fonts:')) {
+            const fontSection = kit.brandCiPrompt.split('Fonts:')[1] || '';
+            const fontMatches = [...fontSection.matchAll(/([^,\n]+)\s*\(([^)]*)\)/g)];
+            fontMatches.forEach((m) => {
+              let type = 'body', weight = 400;
+              if (m[2]) {
+                const typeMatch = m[2].match(/(heading\d?|body|caption|paragraph)/i);
+                if (typeMatch) type = typeMatch[1].toLowerCase();
+                const weightMatch = m[2].match(/weight\s*(\d+)/i);
+                if (weightMatch) weight = Number(weightMatch[1]);
+              }
+              fonts.push({ name: m[1].trim(), type, weight });
+            });
+          }
+        }
+
+        if (!cancelled) {
           setParsedColors(colors);
           setParsedFonts(fonts);
           if (active && typeof onCiPromptChange === 'function') onCiPromptChange(ciPrompt);
-        } else {
+        }
+      } catch {
+        if (!cancelled) {
           setBrandKit(null);
           setParsedColors([]);
           setParsedFonts([]);
           if (typeof onCiPromptChange === 'function') onCiPromptChange("");
         }
-      })
-      .catch(() => {
-        setBrandKit(null);
-        setParsedColors([]);
-        setParsedFonts([]);
-        if (typeof onCiPromptChange === 'function') onCiPromptChange("");
-      });
-  }, [active]);
+      }
+    };
+
+    loadBrandKit();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, session?.user?.organizationId]);
 
   // Notify parent when active changes
   useEffect(() => {

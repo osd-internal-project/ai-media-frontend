@@ -1,5 +1,5 @@
-import { Row, Col, Divider, Tabs, Button, Typography, Space } from "antd";
-import { StarOutlined, BgColorsOutlined, FontSizeOutlined, BranchesOutlined } from "@ant-design/icons";
+import { Row, Col, Divider, Tabs, Button, Typography, Space, Tooltip } from "antd";
+import { StarOutlined, BgColorsOutlined, FontSizeOutlined, BranchesOutlined, StarFilled } from "@ant-design/icons";
 import React from "react";
 
 import { Palette } from "lucide-react";
@@ -13,6 +13,9 @@ interface BrandKitHeaderProps {
   isSidebarVisible?: boolean;
   semantic: any;
   onToggleSidebar?: () => void;
+  isDefaultKit?: boolean;
+  setDefaultLoading?: boolean;
+  onSetDefault?: () => void;
 }
 
 
@@ -27,6 +30,9 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
   isSidebarVisible = true,
   semantic,
   onToggleSidebar,
+  isDefaultKit = false,
+  setDefaultLoading = false,
+  onSetDefault,
 }) => (
   <div
     className="brandkit-header-shell"
@@ -84,20 +90,37 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
         </div>
       </Col>
       <Col>
-        <Button
-          className="brandkit-header-action"
-          type="default"
-          icon={<StarOutlined />}
-          style={{
-            fontSize: isMobile ? 11 : isTablet ? 12 : 14,
-            height: isMobile ? 24 : isTablet ? 28 : 32,
-            padding: isMobile ? "0 8px" : isTablet ? "0 10px" : undefined,
-            minWidth: isMobile ? 76 : isTablet ? 88 : 100,
-          }}
-          size={isMobile || isTablet ? "small" : "middle"}
+        <Tooltip
+          title={
+            isDefaultKit
+              ? "This is already the default brand kit"
+              : "Set this brand kit as default"
+          }
         >
-          {isMobile ? "Default" : "Default Kit"}
-        </Button>
+          <Button
+            className="brandkit-header-action"
+            type="default"
+            icon={
+              isDefaultKit ? (
+                <StarFilled style={{ color: "#f59e0b" }} />
+              ) : (
+                <StarOutlined style={{ color: semantic.colorTextSecondary }} />
+              )
+            }
+            loading={setDefaultLoading}
+            disabled={isDefaultKit || !selectedKit?.id}
+            onClick={onSetDefault}
+            style={{
+              fontSize: isMobile ? 11 : isTablet ? 12 : 14,
+              height: isMobile ? 24 : isTablet ? 28 : 32,
+              padding: isMobile ? "0 8px" : isTablet ? "0 10px" : undefined,
+              minWidth: isMobile ? 92 : isTablet ? 112 : 126,
+            }}
+            size={isMobile || isTablet ? "small" : "middle"}
+          >
+            {isMobile ? "Default" : "Default Kit"}
+          </Button>
+        </Tooltip>
       </Col>
     </Row>
     <Divider style={{ margin: isMobile ? "6px 0 0 0" : isTablet ? "10px 0 0 0" : "12px 0 0 0", width: "100%", maxWidth: "100%", color: `${semantic.colorBorder}` }} />

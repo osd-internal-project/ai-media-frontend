@@ -1,18 +1,19 @@
 import React, { FC, useRef, useState, useEffect } from "react";
-import { Card, Typography, Divider, Row, Col, Button } from "antd";
+import { Card, Typography, Divider, Row, Col, Button, Space } from "antd";
 
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import VideoItem from "../video-gen/video-player";
 import { Message } from "./chat-generate-dreamactor";
 import DreamActionBar from "./action-bar";
 import useResponsive from "@/app/hooks/useResponsive";
-import { User } from "lucide-react";
+import { Trash2, User } from "lucide-react";
 
 interface Props {
   message: Message;
   onDownloadVideo: (fileName: string, id: string) => void;
   onShareVideo: (taskId: string, id: string, status: boolean) => void;
   onDelete: (taskId: string, id: string) => void;
+  onDeleteMessage: (messageId: string) => void;
   semantic: any;
 }
 
@@ -21,6 +22,7 @@ const DreamactorResultItem: FC<Props> = ({
   onDownloadVideo,
   onShareVideo,
   onDelete,
+  onDeleteMessage,
   semantic,
 }) => {
   const { isMobile, isTablet } = useResponsive();
@@ -60,6 +62,7 @@ const DreamactorResultItem: FC<Props> = ({
           <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
             <div style={{ display: "flex", flexDirection: "row", gap: 8, width: "100%", flexWrap: "wrap" }}>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.ratio || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap" }}>{message.generateConfig?.modelName || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
@@ -109,6 +112,14 @@ const DreamactorResultItem: FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Typography.Text>
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 size={14} />}
+                size="small"
+                style={{ padding: 0 }}
+                onClick={() => onDeleteMessage(message.id)}
+              />
             </div>
           </div>
         </div>
@@ -125,6 +136,17 @@ const DreamactorResultItem: FC<Props> = ({
                 }}
               >
                 {message.resolution || ""}
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: metaFontSize,
+                  color: semantic.colorTextSecondary,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.ratio || ""}
               </Typography.Text>
             </Col>
             <Col flex="none">
@@ -158,20 +180,29 @@ const DreamactorResultItem: FC<Props> = ({
               </Typography.Text>
             </Col>
             <Col flex="none">
-              <Typography.Text
-                type="secondary"
-                style={{ fontSize: isMobile ? 11 : 12 }}
-              >
-                {new Date(message.createdAt).toLocaleDateString([], {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}{" "}
-                {new Date(message.createdAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Typography.Text>
+              <Space size={8} style={{ alignItems: "center", flexShrink: 0 }}>
+                <Typography.Text
+                  type="secondary"
+                  style={{ fontSize: isMobile ? 11 : 12 }}
+                >
+                  {new Date(message.createdAt).toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}{" "}
+                  {new Date(message.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography.Text>
+                <Button
+                  type="text"
+                  icon={<Trash2 size={12} />}
+                  danger
+                  size="small"
+                  onClick={() => onDeleteMessage(message.id)}
+                />
+              </Space>
             </Col>
           </Row>
           <Row>

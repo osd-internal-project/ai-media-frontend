@@ -10,7 +10,7 @@ import {
   Col,
   Image,
 } from "antd";
-import { ImageOff, User } from "lucide-react";
+import { ImageOff, Trash2, User } from "lucide-react";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import ActionBar from "./action-bar";
 import { Message } from "./chat-generate-image";
@@ -129,13 +129,14 @@ const ResultItem: FC<Props> = ({
               <Button
                 type="text"
                 danger
+                icon={<Trash2 size={12} />}
                 size="small"
                 style={{ padding: 0 }}
                 onClick={() =>
                   setMessages((prev) => prev.filter((m) => m.id !== message.id))
                 }
               >
-                🗑
+                
               </Button>
             </div>
           </div>
@@ -219,13 +220,14 @@ const ResultItem: FC<Props> = ({
               </Typography.Text>
               <Button
                 type="text"
+                icon={<Trash2 size={14} />}
                 danger
                 size="small"
                 onClick={() =>
                   setMessages((prev) => prev.filter((m) => m.id !== message.id))
                 }
               >
-                🗑
+               
               </Button>
             </Space>
           </Col>

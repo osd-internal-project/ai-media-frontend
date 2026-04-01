@@ -97,7 +97,12 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
   const [voice, setVoice] = useState<TBrandKitDetail[]>([]);
   // Loading state for tab content
   const [tabLoading, setTabLoading] = useState(false);
+  const [setDefaultLoading, setSetDefaultLoading] = useState(false);
   const brandKitDetailService = BrandKitDetailServices(axiosCore);
+
+  const isDefaultKit = Boolean(
+    (selectedKit as any)?.isDefault ?? (selectedKit as any)?.default,
+  );
 
 
   // Fetch data only for the selected tab and kit
@@ -345,6 +350,32 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     }
   };
 
+  const handleSetDefaultBrandKit = async () => {
+    if (!selectedKit?.id || isDefaultKit) return;
+
+    try {
+      setSetDefaultLoading(true);
+      const result = await brandKitService.setDefault(selectedKit.id);
+      if (!result) {
+        messageApi.error("Failed to set default brand kit");
+        return;
+      }
+
+      setBrandKits((prev) =>
+        prev.map((kit) => ({
+          ...kit,
+          isDefault: kit.id === selectedKit.id,
+          default: kit.id === selectedKit.id,
+        })),
+      );
+      messageApi.success("Default brand kit updated");
+    } catch (error) {
+      messageApi.error("Failed to set default brand kit");
+    } finally {
+      setSetDefaultLoading(false);
+    }
+  };
+
  return (
   <>
     {contextHolder}
@@ -430,6 +461,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   id: kit.id,
                   name: kit.name,
                   industry: kit.industryType,
+                  isDefault: Boolean((kit as any).isDefault ?? (kit as any).default),
                   colors,
                   fonts,
                   colorCount,
@@ -575,6 +607,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   id: kit.id,
                   name: kit.name,
                   industry: kit.industryType,
+                  isDefault: Boolean((kit as any).isDefault ?? (kit as any).default),
                   colors,
                   fonts,
                   colorCount,
@@ -683,6 +716,9 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                 isTablet={isTablet}
                 isSidebarVisible={isMobile ? sidebarOpen : isSidebarColumnVisible}
                 semantic={semantic}
+                isDefaultKit={isDefaultKit}
+                setDefaultLoading={setDefaultLoading}
+                onSetDefault={handleSetDefaultBrandKit}
                 onToggleSidebar={() => {
                   if (isMobile) {
                     setSidebarOpen(true);

@@ -3,6 +3,8 @@ export interface TBrandKit {
   name: string;
   description: string;
   industryType: string;
+  isDefault?: boolean;
+  default?: boolean;
   createdAt: string;
   updatedAt: string;
   brandCiPrompt: string;

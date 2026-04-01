@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, type FC, type ReactElement } from "react";
 import {
   Button,
+  Empty,
   Flex,
   Image,
   Pagination,
@@ -33,39 +34,6 @@ export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
 }
-
-const mockActivityData = [
-  {
-    id: "mock-act-1",
-    typeGenerate: "image",
-    imageUrl: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200&q=80",
-    prompt: "Astronaut walking through a jungle of bioluminescent plants",
-    createdAt: "2026-03-03T09:10:00.000Z",
-    status: false,
-    users: { fullname: "Demo User" },
-    generateConfig: { modelName: "Flux Schnell" },
-  },
-  {
-    id: "mock-act-2",
-    typeGenerate: "video",
-    imageUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    prompt: "Drone shot above a modern city with cinematic sunset lighting",
-    createdAt: "2026-03-03T11:25:00.000Z",
-    status: true,
-    users: { fullname: "Creative Team" },
-    generateConfig: { modelName: "Kling 1.6" },
-  },
-  {
-    id: "mock-act-3",
-    typeGenerate: "omnihumen",
-    imageUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    prompt: "Portrait avatar speaking Thai naturally with clean studio background",
-    createdAt: "2026-03-04T07:45:00.000Z",
-    status: false,
-    users: { fullname: "Motion Lab" },
-    generateConfig: { modelName: "OmniHuman v1" },
-  },
-];
 
 const PromptActivity: FC<props> = ({
   shouldRefetch,
@@ -426,7 +394,6 @@ const PromptActivity: FC<props> = ({
               loading={loadingButton === record.id}
               type="text"
               shape="circle"
-              disabled={isMockPreview}
               className="activity-star-button"
             />
             {/* Download */}
@@ -434,7 +401,6 @@ const PromptActivity: FC<props> = ({
               icon={<Download size={16} />}
               type="text"
               shape="circle"
-              disabled={isMockPreview}
               onClick={async (e) => {
                 e.stopPropagation();
                 const key = `download_${record.id}`;
@@ -482,7 +448,6 @@ const PromptActivity: FC<props> = ({
               icon={<Trash2 size={16} />}
               type="text"
               shape="circle"
-              disabled={isMockPreview}
               onClick={(e) => {
                 e.stopPropagation();
                 Modal.confirm({
@@ -512,7 +477,6 @@ const PromptActivity: FC<props> = ({
               icon={<Share2 size={16} />}
               type="text"
               shape="circle"
-              disabled={isMockPreview}
               onClick={() => {
                 // Share logic: copy link to clipboard
                 const url = window.location.origin + record.imageUrl;
@@ -525,10 +489,7 @@ const PromptActivity: FC<props> = ({
       },
     },
   ];
-
-  const isMockPreview = !loading && getData.data.length === 0;
-  const displayItems = isMockPreview ? mockActivityData : getData.data;
-  const displayTotal = isMockPreview ? mockActivityData.length : total;
+  const isEmpty = !loading && getData.data.length === 0;
 
   return (
     <div className="h-full min-h-0 overflow-auto p-4">
@@ -544,9 +505,7 @@ const PromptActivity: FC<props> = ({
               All Activity
             </Typography.Title>
             <Typography.Text type="secondary">
-              {isMockPreview
-                ? "Showing mock preview data"
-                : "All generation history in this project"}
+              All generation history in this project
             </Typography.Text>
           </div>
 
@@ -561,26 +520,35 @@ const PromptActivity: FC<props> = ({
             <Table
               rowKey="id"
               columns={columns}
-              dataSource={displayItems}
+              dataSource={getData.data}
               pagination={false}
               size="middle"
               scroll={{ x: 1200 }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    description="No activity yet"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                ),
+              }}
             />
           </div>
 
-          <Flex justify="center">
-            <Pagination
-              current={page}
-              total={displayTotal}
-              pageSize={pageSize}
-              onChange={(nextPage) => {
-                setPage(nextPage);
-                setLoading(true);
-              }}
-              showSizeChanger={false}
-              disabled={isMockPreview}
-            />
-          </Flex>
+          {!isEmpty && (
+            <Flex justify="center">
+              <Pagination
+                current={page}
+                total={total}
+                pageSize={pageSize}
+                onChange={(nextPage) => {
+                  setPage(nextPage);
+                  setLoading(true);
+                }}
+                showSizeChanger={false}
+              />
+            </Flex>
+          )}
         </Flex>
       )}
       {/* PREVIEW MODAL */}
