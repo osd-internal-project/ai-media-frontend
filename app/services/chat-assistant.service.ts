@@ -3,6 +3,8 @@ import type {
   ChatResponse,
   Conversation,
   CreateConversationPayload,
+  GeneratePromptFromImageOptions,
+  ImagePromptResponse,
   Message,
   SendChatPayload,
   TokenUsageSummary,
@@ -100,6 +102,36 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         .catch((err) => {
           console.error("[ChatAssistant] getTokenUsage:", err);
           return undefined;
+        });
+    },
+
+    /** POST /prompt/from-image */
+    generatePromptFromImage: async (
+      file: File,
+      options?: GeneratePromptFromImageOptions
+    ): Promise<ImagePromptResponse> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (options?.userId) formData.append("userId", options.userId);
+      if (options?.conversationId)
+        formData.append("conversationId", options.conversationId);
+      if (options?.organizationId)
+        formData.append("organizationId", options.organizationId);
+      if (options?.context) formData.append("context", options.context);
+      if (options?.style) formData.append("style", options.style);
+      if (options?.model) formData.append("model", options.model);
+
+      return axiosInstance
+        .post("/prompt/from-image", formData, {
+          headers: {
+            // Let the browser set the content type with the correct boundary
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((res) => res.data)
+        .catch((err) => {
+          console.error("[ChatAssistant] generatePromptFromImage:", err);
+          throw new Error(err.response?.data?.message ?? "Failed to generate prompt from image");
         });
     },
   };

@@ -73,3 +73,38 @@ export interface SendChatPayload {
   message: string;
   stream?: boolean;
 }
+
+// ============================================================
+//  Image → Prompt
+// ============================================================
+
+export interface ImagePromptBreakdown {
+  subject?: string;
+  action?: string;
+  environment?: string;
+  lighting?: string;
+  cameraAngle?: string;
+  style?: string;
+  colorPalette?: string;
+}
+
+export interface ImagePromptResponse {
+  analysis: string;
+  breakdown: ImagePromptBreakdown;
+  prompt: string;
+  negativePrompt: string;
+  aspectRatio: string;
+  tokenUsage: TokenUsage;
+  conversationId?: string;
+  messageId?: string;
+}
+
+export interface GeneratePromptFromImageOptions {
+  userId?: string;
+  conversationId?: string;
+  organizationId?: string;
+  context?: string;
+  style?: string;
+  model?: string;
+}
+
