@@ -39,6 +39,7 @@ import React, {
 } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
 import TemplateItem from "./template-item";
 import { Image } from "lucide-react";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
@@ -94,6 +95,16 @@ const extractPromptVariables = (prompt: string) => {
   return Array.from(unique);
 };
 
+const normalizeGenerateType = (
+  value?: string,
+): TGenerateType => {
+  if (value === "dream-actor") return "dreamactor";
+  if (value === "image" || value === "video" || value === "omnihumen" || value === "dreamactor") {
+    return value;
+  }
+  return "image";
+};
+
 const TYPE_META: Record<
   TGenerateType,
   { label: string; icon: React.ReactNode; color: string }
@@ -122,8 +133,13 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
 }) => {
   const { mode: themeMode } = useThemeMode();
   const semantic = getThemeConfig(themeMode).token ?? {};
+  const { isTablet } = useResponsive();
   const [form] = Form.useForm<FormValues>();
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
+
+  const isCompact = isMobile || isTablet;
+  const headerPadding = isMobile ? "12px 14px" : isTablet ? "14px 16px" : "16px 20px";
+  const sectionPadding = isMobile ? 12 : isTablet ? 14 : 16;
 
   const selectedTypeId = Form.useWatch("promptGuideTypeId", form);
   const selectedGenerateType = Form.useWatch("generateType", form);
@@ -183,8 +199,8 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
     templateName.trim() && promptText.trim() && selectedType,
   );
   const currentGenerateType: TGenerateType =
-    selectedGenerateType ?? selectedType?.generateType ?? "image";
-  const currentTypeMeta = TYPE_META[currentGenerateType];
+    normalizeGenerateType(selectedGenerateType ?? selectedType?.generateType);
+  const currentTypeMeta = TYPE_META[currentGenerateType] ?? TYPE_META.image;
 
   const handleReset = () => {
     const fallbackTypeId =
@@ -202,7 +218,9 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       description: initialValues?.description || "",
       textPrompt: initialValues?.textPrompt || "",
       status: initialValues?.status ?? true,
-      generateType: fallbackType?.generateType,
+      generateType: normalizeGenerateType(
+        fallbackType?.generateType || initialValues?.generateType,
+      ),
       promptGuideTypeId: fallbackTypeId,
       model: initialValues?.model || "",
     });
@@ -225,8 +243,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
     // form.setFieldValue("model", getModelsByType(value)[0]);
   };
   const handleTypeChange = (value: number) => {
-    // const type = promptGuideTypes.find((item) => item.id === value);
-    // form.setFieldValue("generateType", type?.generateType);
+    const type = promptGuideTypes.find((item) => item.id === value);
+    if (type?.generateType) {
+      form.setFieldValue("generateType", normalizeGenerateType(type.generateType));
+    }
     form.setFieldValue("promptGuideTypeId", value);
     // form.setFieldValue("model", getModelsByType(type?.generateType)[0]);
   };
@@ -288,8 +308,18 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       open={open}
       footer={null}
       onCancel={onCancel}
-      width={isMobile ? "94%" : 900}
-      styles={{ body: { padding: 0 } }}
+      forceRender
+      width={isMobile ? "96%" : isTablet ? 760 : 900}
+      styles={{
+        body: {
+          padding: 0,
+          maxHeight: isMobile ? "86svh" : "80svh",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: "touch",
+          scrollBehavior: "smooth",
+        },
+      }}
       afterOpenChange={(nextOpen) => {
         if (nextOpen) {
           handleReset();
@@ -301,14 +331,14 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
         size={12}
         style={{
           borderBottom: `1px solid ${semantic.colorBorder}`,
-          padding: "16px 20px",
+          padding: headerPadding,
           width: "100%",
         }}
       >
         <div
           style={{
-            width: 36,
-            height: 36,
+            width: isCompact ? 32 : 36,
+            height: isCompact ? 32 : 36,
             borderRadius: 10,
             display: "flex",
             alignItems: "center",
@@ -320,10 +350,13 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
           <PlusOutlined />
         </div>
         <Space direction="vertical" size={0}>
-          <Typography.Title level={5} style={{ margin: 0 }}>
+          <Typography.Title
+            level={isMobile ? 5 : 4}
+            style={{ margin: 0, fontSize: isMobile ? 18 : undefined }}
+          >
             {formMode === "create" ? "Create New Template" : "Edit Template"}
           </Typography.Title>
-          <Typography.Text type="secondary">
+          <Typography.Text type="secondary" style={{ fontSize: isMobile ? 12 : 13 }}>
             {formMode === "create"
               ? "Build a reusable prompt template using system categories and services"
               : "Update template details and prompt content using system categories and services"}
@@ -344,7 +377,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 borderBottom: isMobile
                   ? `1px solid ${semantic.colorBorder}`
                   : "none",
-                padding: 16,
+                padding: sectionPadding,
                 width: "100%",
               }}
             >
@@ -364,7 +397,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                   { required: true, message: "Template name is required" },
                 ]}
               >
-                <Input placeholder="Product Photography" />
+                <Input size={isMobile ? "middle" : "large"} placeholder="Product Photography" />
               </Form.Item>
 
               <Form.Item
@@ -372,7 +405,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 label="Description"
                 style={{ marginBottom: 0 }}
               >
-                <Input.TextArea rows={3} placeholder="Short description" />
+                <Input.TextArea rows={isMobile ? 2 : 3} placeholder="Short description" />
               </Form.Item>
 
               <Form.Item
@@ -384,6 +417,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 ]}
               >
                 <Select
+                  size={isMobile ? "middle" : "large"}
                   placeholder="Select generation type"
                   options={[
                     {
@@ -434,6 +468,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 rules={[{ required: true, message: "Category is required" }]}
               >
                 <Select
+                  size={isMobile ? "middle" : "large"}
                   placeholder="Select category"
                   options={categoryOptions}
                   onChange={handleTypeChange}
@@ -446,6 +481,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 style={{ marginBottom: 0 }}
               >
                 <Select
+                  size={isMobile ? "middle" : "large"}
                   placeholder="Select model"
                   options={modelOptions}
                   disabled={modelOptions.length === 0}
@@ -541,9 +577,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
             <Space
               direction="vertical"
               size={12}
-              style={{ padding: 16, width: "100%" }}
+              style={{ padding: sectionPadding, width: "100%" }}
             >
               <Tabs
+                size={isMobile ? "small" : "middle"}
                 activeKey={activeTab}
                 onChange={(key) => setActiveTab(key as "edit" | "preview")}
                 items={[
@@ -564,7 +601,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                           ]}
                         >
                           <Input.TextArea
-                            rows={12}
+                            rows={isMobile ? 8 : 12}
                             placeholder="Write your prompt template"
                           />
                         </Form.Item>
@@ -584,7 +621,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                             <Typography.Text
                               style={{
                                 color: semantic.colorInfo,
-                                fontSize: 12,
+                                fontSize: isMobile ? 11 : 12,
                               }}
                             >
                               <InfoCircleOutlined /> Variable Syntax Guide: use{" "}
@@ -669,6 +706,8 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                               background: semantic.colorBgTextActive,
                               border: `1px solid ${semantic.colorBorder}`,
                               minHeight: 180,
+                              maxHeight: isMobile ? 220 : undefined,
+                              overflowY: isMobile ? "auto" : "visible",
                             }}
                           >
                             <Typography.Paragraph
@@ -714,24 +753,27 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       <div
         style={{
           borderTop: `1px solid ${semantic.colorBorder}`,
-          padding: "12px 20px",
+          padding: isMobile ? "10px 12px" : "12px 20px",
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: isMobile ? "stretch" : "center",
+          gap: isMobile ? 10 : 0,
         }}
       >
-        <Button icon={<ReloadOutlined />} onClick={handleReset}>
+        <Button size={isMobile ? "middle" : "large"} icon={<ReloadOutlined />} onClick={handleReset} block={isMobile}>
           Reset
         </Button>
-        <Space>
+        <Space style={{ width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-end" : undefined }}>
           {formMode === "edit" && onDelete && (
-            <Button danger icon={<DeleteOutlined />} onClick={onDelete}>
+            <Button size={isMobile ? "middle" : "large"} danger icon={<DeleteOutlined />} onClick={onDelete}>
               Delete
             </Button>
           )}
-          <Button onClick={onCancel}>Cancel</Button>
+          <Button size={isMobile ? "middle" : "large"} onClick={onCancel}>Cancel</Button>
           <Button
             type="primary"
+            size={isMobile ? "middle" : "large"}
             icon={<SaveOutlined />}
             disabled={!isReady}
             onClick={handleSubmit}

@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import React, { type FC, useState } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
 
 type TemplateItemProps = {
 	title?: string;
@@ -80,6 +81,7 @@ const TemplateItem: FC<TemplateItemProps> = ({
 }) => {
 	const { mode } = useThemeMode();
 	const semantic = getThemeConfig(mode).token ?? {};
+	const { isMobile, isTablet } = useResponsive();
 	const [isHovered, setIsHovered] = useState(false);
 	const isLight = mode === "light";
 
@@ -91,14 +93,15 @@ const TemplateItem: FC<TemplateItemProps> = ({
 			style={{
 				borderColor: isHovered ? semantic.colorPrimaryBorder : semantic.colorBorder,
 				background: isHovered && isLight ? semantic.colorFillAlter : semantic.colorBgContainer,
-				transform: isHovered ? "translateY(-2px)" : "translateY(0)",
-				boxShadow: isHovered ? "0 10px 28px rgba(0,0,0,0.12)" : "none",
+				transform: !isMobile && isHovered ? "translateY(-2px)" : "translateY(0)",
+				boxShadow: !isMobile && isHovered ? "0 10px 28px rgba(0,0,0,0.12)" : "none",
 				transition: "all 180ms ease",
 			}}
+			styles={{ body: { padding: isMobile ? 12 : isTablet ? 14 : 16 } }}
 		>
 			<Space
 				direction="vertical"
-				size={12}
+				size={isMobile ? 10 : 12}
 				style={{ width: "100%" }}
 			>
 				<div
@@ -109,9 +112,14 @@ const TemplateItem: FC<TemplateItemProps> = ({
 						gap: 8,
 					}}
 				>
-					<div>
-						<Typography.Text strong>{title || "Template Name"}</Typography.Text>
-						<Typography.Text type="secondary" style={{ display: "block" }}>
+					<div style={{ minWidth: 0 }}>
+						<Typography.Text strong style={{ fontSize: isMobile ? 14 : 15 }}>
+							{title || "Template Name"}
+						</Typography.Text>
+						<Typography.Text
+							type="secondary"
+							style={{ display: "block", fontSize: isMobile ? 12 : 13 }}
+						>
 							{description || "No description"}
 						</Typography.Text>
 					</div>
@@ -123,14 +131,14 @@ const TemplateItem: FC<TemplateItemProps> = ({
 				<div
 					style={{
 						borderRadius: 10,
-						padding: 10,
+						padding: isMobile ? 8 : 10,
 						background: isHovered ? semantic.colorBgContainerDisabled : semantic.colorBgTextActive,
-						minHeight: 66,
+						minHeight: isMobile ? 58 : 66,
 						transition: "background-color 180ms ease",
 					}}
 				>
 					<Typography.Paragraph
-						style={{ margin: 0, fontFamily: "monospace", fontSize: 12 }}
+						style={{ margin: 0, fontFamily: "monospace", fontSize: isMobile ? 11 : 12 }}
 						ellipsis={{ rows: 3 }}
 					>
 						{textPrompt || "Your prompt will appear here..."}
@@ -153,7 +161,13 @@ const TemplateItem: FC<TemplateItemProps> = ({
 					{showActions ? (
 						<Space wrap>
 							{canManage && (
-								<Button type="primary" icon={<EditOutlined />} onClick={onEdit} style={{ borderRadius: 10 }}>
+								<Button
+									type="primary"
+									size={isMobile ? "small" : "middle"}
+									icon={<EditOutlined />}
+									onClick={onEdit}
+									style={{ borderRadius: 10 }}
+								>
 									Edit
 								</Button>
 							)}

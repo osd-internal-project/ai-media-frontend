@@ -2,7 +2,6 @@ import { Row, Col, Divider, Tabs, Button, Typography, Space } from "antd";
 import { StarOutlined, BgColorsOutlined, FontSizeOutlined, BranchesOutlined } from "@ant-design/icons";
 import React from "react";
 
-import { MenuOutlined } from "@ant-design/icons";
 import { Palette } from "lucide-react";
 
 interface BrandKitHeaderProps {
@@ -10,6 +9,8 @@ interface BrandKitHeaderProps {
   selectedTab: string;
   setSelectedTab: (key: string) => void;
   isMobile: boolean;
+  isTablet?: boolean;
+  isSidebarVisible?: boolean;
   semantic: any;
   onToggleSidebar?: () => void;
 }
@@ -17,35 +18,48 @@ interface BrandKitHeaderProps {
 
 const { Title, Text } = Typography;
 
-const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({ selectedKit, selectedTab, setSelectedTab, isMobile, semantic, onToggleSidebar }) => (
+const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
+  selectedKit,
+  selectedTab,
+  setSelectedTab,
+  isMobile,
+  isTablet = false,
+  isSidebarVisible = true,
+  semantic,
+  onToggleSidebar,
+}) => (
   <div
+    className="brandkit-header-shell"
     style={{
       background: semantic.colorBgContainer,
       borderBottom: "1px solid " + semantic.colorBorder,
-      
       boxSizing: "border-box",
       zIndex: 10,
-      width: '100%',
+      width: "100%",
     }}
-    >
-           {isMobile && ( <Row align="middle" style={{ minHeight: isMobile ? 24 : 72, width: '100%', padding: isMobile ? "0 8px" : "0 24px" }}>
-     
-       
-            <Col flex="none" style={{ marginRight: 8 }}>
-                
+  >
+    {(isMobile || isTablet || !isSidebarVisible) && onToggleSidebar ? (
+      <Row
+        align="middle"
+        style={{ minHeight: isMobile ? 26 : 30, width: "100%", padding: isMobile ? "0 8px" : "0 14px" }}
+      >
+        <Col flex="none" style={{ marginRight: 8 }}>
           <Button
+            className="brandkit-header-action"
             type="text"
-            icon={<Palette size={16}  />}
+            icon={<Palette size={16} />}
             onClick={onToggleSidebar}
-            style={{ display: 'flex', alignItems: 'center', padding: isMobile ? 0 : 6, color: semantic.colorPrimary }}
-            aria-label="เปิดเมนู Brandkit ทั้งหมด"
+            style={{ display: "flex", alignItems: "center", padding: isMobile ? 0 : 4, color: semantic.colorPrimary }}
+            aria-label={isSidebarVisible ? "ซ่อนเมนู Brandkit" : "เปิดเมนู Brandkit ทั้งหมด"}
           >
-            <span style={{ fontWeight: 400, fontSize: 14, color: semantic.colorPrimary }}>Brandkit ทั้งหมด</span>
+            <span style={{ fontWeight: 400, fontSize: isMobile ? 13 : 14, color: semantic.colorPrimary }}>
+              {isSidebarVisible ? "ซ่อน Brandkit" : "Brandkit ทั้งหมด"}
+            </span>
           </Button>
         </Col>
-           
-            </Row> )}
-    <Row align="middle" style={{ minHeight: isMobile ? 56 : 72, width: '100%', padding: isMobile ? "0 8px" : "0 24px" }}>
+      </Row>
+    ) : null}
+    <Row align="middle" style={{ minHeight: isMobile ? 50 : isTablet ? 58 : 64, width: '100%', padding: isMobile ? "0 8px" : isTablet ? "0 14px" : "0 20px" }}>
      
       <Col flex="auto">
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 0 : 2, width: isMobile ? "100%" : "auto" }}>
@@ -53,49 +67,51 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({ selectedKit, selectedTa
             style={{
               color: semantic.colorTextBase,
               margin: 0,
-              fontSize: isMobile ? 16 : 28,
+              fontSize: isMobile ? 15 : isTablet ? 20 : 24,
               lineHeight: 1.2,
               whiteSpace: isMobile ? "nowrap" : undefined,
               overflow: isMobile ? "hidden" : undefined,
               textOverflow: isMobile ? "ellipsis" : undefined,
-              maxWidth: isMobile ? 200 : undefined,
+              maxWidth: isMobile ? 180 : isTablet ? 280 : undefined,
             }}
-            level={isMobile ? 5 : 3}
+            level={isMobile ? 5 : isTablet ? 4 : 3}
           >
             {selectedKit.name || "-"}
           </Title>
-          <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 10 : 14, whiteSpace: isMobile ? "nowrap" : undefined, overflow: isMobile ? "hidden" : undefined, textOverflow: isMobile ? "ellipsis" : undefined, maxWidth: isMobile ? 200 : undefined }}>
+          <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 10 : isTablet ? 12 : 13, whiteSpace: isMobile ? "nowrap" : undefined, overflow: isMobile ? "hidden" : undefined, textOverflow: isMobile ? "ellipsis" : undefined, maxWidth: isMobile ? 180 : isTablet ? 320 : undefined }}>
             {(selectedKit.industryType || "-")} · Updated {(selectedKit.updatedAt || "-")}
           </Text>
         </div>
       </Col>
       <Col>
         <Button
+          className="brandkit-header-action"
           type="default"
           icon={<StarOutlined />}
           style={{
-            fontSize: isMobile ? 11 : 16,
-            height: isMobile ? 24 : 32,
-            padding: isMobile ? "0 8px" : undefined,
-            minWidth: isMobile ? 80 : 100,
+            fontSize: isMobile ? 11 : isTablet ? 12 : 14,
+            height: isMobile ? 24 : isTablet ? 28 : 32,
+            padding: isMobile ? "0 8px" : isTablet ? "0 10px" : undefined,
+            minWidth: isMobile ? 76 : isTablet ? 88 : 100,
           }}
-          size={isMobile ? "small" : "middle"}
+          size={isMobile || isTablet ? "small" : "middle"}
         >
-          Default Kit
+          {isMobile ? "Default" : "Default Kit"}
         </Button>
       </Col>
     </Row>
-    <Divider style={{ margin: isMobile ? "8px 0 0 0" : "16px 0 0 0", width: "100%", maxWidth: "100%", color: `${semantic.colorBorder}` }} />
+    <Divider style={{ margin: isMobile ? "6px 0 0 0" : isTablet ? "10px 0 0 0" : "12px 0 0 0", width: "100%", maxWidth: "100%", color: `${semantic.colorBorder}` }} />
     {/* Tabs */}
     <Tabs
+      className="brandkit-header-tabs"
       activeKey={selectedTab}
       onChange={setSelectedTab}
       tabBarStyle={{
         margin: 0,
-        paddingTop: isMobile ? 2 : 12,
-        paddingLeft: isMobile ? 16 : 24,
+        paddingTop: isMobile ? 0 : isTablet ? 6 : 10,
+        paddingLeft: isMobile ? 12 : isTablet ? 14 : 20,
         paddingRight: isMobile ? 0 : 0,
-        fontSize: isMobile ? 11 : 16,
+        fontSize: isMobile ? 11 : isTablet ? 13 : 15,
         width: "100%",
       }}
       items={[
@@ -106,6 +122,24 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({ selectedKit, selectedTa
         // { key: "voice", label: <Space size={isMobile ? 2 : 4}><MessageOutlined />Brand Voice</Space> },
       ]}
     />
+
+    <style jsx global>{`
+      .brandkit-header-action {
+        transition: all 180ms ease;
+      }
+
+      .brandkit-header-action:hover {
+        transform: translateY(-1px);
+      }
+
+      .brandkit-header-tabs .ant-tabs-tab {
+        transition: all 180ms ease;
+      }
+
+      .brandkit-header-tabs .ant-tabs-tab:hover {
+        transform: translateY(-1px);
+      }
+    `}</style>
   </div>
 );
 

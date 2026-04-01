@@ -15,6 +15,7 @@ const TypoModal: React.FC<TypoModalProps> = ({ open, form, onOk, onCancel, mode 
     <Modal
       title={isEdit ? 'Edit Font' : 'Add Font'}
       open={open}
+      forceRender
       onOk={onOk}
       onCancel={onCancel}
       okText={isEdit ? 'Save' : 'Add'}
