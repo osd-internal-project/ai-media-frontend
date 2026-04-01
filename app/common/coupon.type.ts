@@ -9,8 +9,19 @@ export interface ICouponCode {
   updatedAt: string | Date;
   onTopCredit: number;
   couponCodeUsage?: ICouponCodeUsage;
+  referenceTag?: string;
 }
 
+export interface ICouponCodeGroupCreate {
+  tag: string;
+  expiresAt: string | Date;
+  status: "ACTIVE" | "INACTIVE" | "EXPIRED";
+  usageLimit: number;
+  fixOrganizationId?: string;
+  onTopCredit: number;
+  referenceTag: string;
+  amount: number;
+}
 export interface ICouponCodeUsage {
   id: string;
   organizationId?: string;

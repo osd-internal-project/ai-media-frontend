@@ -65,7 +65,7 @@ const CouponFormModal: React.FC<Props> = ({
       width={600}
     >
       <Form form={form} layout="vertical" disabled={loading}>
-        <div  className=" grid grid-cols-2 gap-4">
+        <div className=" grid grid-cols-2 gap-4">
           <Space>
             <Form.Item
               name="code"
@@ -75,7 +75,8 @@ const CouponFormModal: React.FC<Props> = ({
             >
               <Input placeholder="Enter coupon code" disabled={isEdit} />
             </Form.Item>
-            <Button size="small"
+            <Button
+              size="small"
               onClick={() => {
                 const code = crypto.randomUUID();
                 form.setFieldValue("code", code.toUpperCase());
@@ -108,7 +109,7 @@ const CouponFormModal: React.FC<Props> = ({
             ]}
             style={{ flex: 1 }}
           >
-            <DatePicker  style={{ width: "100%" }} />
+            <DatePicker style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             name="usageLimit"

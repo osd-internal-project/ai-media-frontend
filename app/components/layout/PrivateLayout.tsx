@@ -79,12 +79,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [creditBalance, setCreditBalance] = useState<
     ICreditBalance | undefined
   >(undefined);
-  const [getProject, setProject] = useState<IProject[]>([]);
-  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
-    [],
-  );
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string>("");
+  // const [getProject, setProject] = useState<IProject[]>([]);
+  // const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
+  //   [],
+  // );
+  // const [showAddMember, setShowAddMember] = useState(false);
+  // const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<
     "OWNER" | "ADMIN" | "USER" | "VIEWER"
   >("USER");
