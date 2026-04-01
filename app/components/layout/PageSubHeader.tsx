@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Space, Tag, Typography } from "antd";
+import useResponsive from "@/app/hooks/useResponsive";
 
 type PageSubHeaderProps = {
   title: React.ReactNode;
@@ -30,6 +31,8 @@ export default function PageSubHeader({
   chipText,
   compact = true,
 }: PageSubHeaderProps) {
+  const { isMobile, isTablet } = useResponsive();
+  const isStack = isMobile || isTablet;
   return (
     <div
       style={{
@@ -38,13 +41,15 @@ export default function PageSubHeader({
         backgroundColor: background,
         borderBottom: `1px solid ${borderColor}`,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
+        flexDirection: isStack ? "column" : "row",
+        alignItems: isStack ? "stretch" : "center",
+        justifyContent: isStack ? "center" : "space-between",
         gap: 12,
+        textAlign: isStack ? "center" : undefined,
       }}
     >
-      <div style={{ minWidth: 0 }}>
-        <Space size={8} align="center" wrap>
+      <div style={{ minWidth: 0, width: isStack ? "100%" : undefined }}>
+        <Space size={8} align="center" wrap style={{ justifyContent: isStack ? "center" : undefined, width: isStack ? "100%" : undefined }}>
           <Typography.Title
             level={3}
             style={{
@@ -81,7 +86,7 @@ export default function PageSubHeader({
         ) : null}
       </div>
 
-      {rightSlot ? <div>{rightSlot}</div> : null}
+      {rightSlot ? <div style={isStack ? { width: "100%", marginTop: 8 } : {}}>{rightSlot}</div> : null}
     </div>
   );
 }

@@ -20,3 +20,8 @@ export const axiosWorker = axios.create({
   baseURL: config.backendWorkerUrl,
   headers: { "Content-Type": "multipart/form-data" },
 });
+
+export const axiosChatAssistant = axios.create({
+  baseURL: config.backendChatAssistantUrl,
+  headers: { "Content-Type": "application/json" },
+});

@@ -29,6 +29,7 @@ export default function PromptTemplateSection({
         icon={<Presentation size={14} />}
         onClick={handleOpenModal}
         disabled={!organizationId || !selectedModel}
+        style={{padding:16}}
       >
         {buttonText}
       </Button>

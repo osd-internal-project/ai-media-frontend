@@ -1,13 +1,13 @@
-import React, { FC } from "react";
+import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
-import { Card, Flex, Space, Typography, Tag, Button, Divider } from "antd";
+import { Card, Flex, Space, Typography, Tag, Button, Divider, Row, Col } from "antd";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { Message, VideoMessage } from "./chat-generate-video";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import Paragraph from "antd/es/skeleton/Paragraph";
-import { Volume, Volume1, VolumeX } from "lucide-react";
+import { Volume1, VolumeX, User } from "lucide-react";
 
 interface Props {
   message: Message;
@@ -44,7 +44,22 @@ const VideoResultItem: FC<Props> = ({
     (message.genneratedStatus === "SUCCESS" &&
       (!message.imageUrls || message.imageUrls.length === 0));
 
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
+
+  // State for show more/less prompt
+  const [showFullPrompt, setShowFullPrompt] = useState(false);
+  // ปุ่ม more/ย่อ จะโชว์เมื่อ overflow เท่านั้น
+  const [isOverflow, setIsOverflow] = useState(false);
+  const promptRef = useRef<HTMLSpanElement>(null);
+
+  // เมื่อข้อความล้น ให้จำสถานะ overflow ไว้จนกว่า message.prompt เปลี่ยน
+  useEffect(() => {
+    if (promptRef.current) {
+      const el = promptRef.current;
+      setIsOverflow(prev => prev || el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight);
+    }
+    // eslint-disable-next-line
+  }, [message.prompt, isMobile, isTablet]);
 
   return (
     <Card
@@ -56,123 +71,232 @@ const VideoResultItem: FC<Props> = ({
         background: "none",
         boxShadow: "none",
       }}
-      styles={{ body: { padding: 12, background: "none" } }}
+      styles={{ body: { padding: isMobile? 0 :  12, background: "none" } }}
     >
       {contextHolder}
 
       {/* HEADER */}
-      <Flex
-        justify={isMobile ? "start" : "space-between"}
-        align={isMobile ? "start" : "center"}
-        style={{
-          marginBottom: 8,
-          flexDirection: isMobile ? "column" : "row",
-          gap: isMobile ? 4 : 0,
-        }}
-      >
-        <Space
-          // direction={isMobile ? "vertical" : "horizontal"}
-          size={isMobile ? 2 : 8}
-          style={{ width: isMobile ? "100%" : undefined }}
-        >
-          {/* <Typography.Text
-              style={{ fontWeight: 600, fontSize: isMobile ? 15 : 14 }}
-            >
-              #{message.taskId}
-            </Typography.Text> */}
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              color: semantic.colorPrimary,
-            }}
-          >
-            {message.resolution || ""}
-          </Typography.Text>
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              color: semantic.colorTextSecondary,
-            }}
-          >
-            {message.generateConfig?.ratio || ""}
-          </Typography.Text>
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              color: semantic.colorTextSecondary,
-            }}
-          >
-            {message.generateConfig?.duration || ""} s
-          </Typography.Text>
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              color: semantic.colorTextSecondary,
-            }}
-          >
-            {message.generateConfig?.generateAudio ? (
-              <Volume1 color="green" size={14} />
-            ) : (
-              <VolumeX size={14} />
-            )}
-          </Typography.Text>
-
-          <Typography.Text
-            style={{
-              fontSize: isMobile ? 15 : 14,
-              fontWeight: 600,
-              color: semantic.colorPrimary,
-            }}
-          >
-            {message.generateConfig?.modelName || ""}
-          </Typography.Text>
-
-          <Typography.Text
-            ellipsis
-            style={{
-              maxWidth: isMobile ? 180 : 300,
-              color: semantic.colorTextSecondary,
-              fontSize: isMobile ? 13 : 14,
-            }}
-          >
-            {message.prompt}
-          </Typography.Text>
-        </Space>
-        <Space
-          // direction={isMobile ? "vertical" : "horizontal"}
-          size={isMobile ? 2 : 8}
-          style={{
-            marginTop: isMobile ? 6 : 0,
-            alignItems: isMobile ? "flex-start" : "center",
-          }}
-        >
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: isMobile ? 11 : 12 }}
-          >
-            {new Date(message.createdAt).toLocaleDateString([], {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}{" "}
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Typography.Text>
-          <Button
-            type="text"
-            danger
-            size="small"
-            style={{ padding: isMobile ? 0 : undefined }}
-            onClick={() =>
-              setMessages((prev) => prev.filter((m) => m.id !== message.id))
-            }
-          >
-            🗑
-          </Button>
-        </Space>
-      </Flex>
+      {isMobile || isTablet ? (
+        <div style={{ marginBottom: 8, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%" }}>
+              <Typography.Text style={{ fontSize: 11, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.ratio || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.duration || ""} s</Typography.Text>
+              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.generateAudio ? (<Volume1 color="green" size={11} />) : (<VolumeX size={11} />)}</Typography.Text>
+              <Typography.Text style={{ fontSize: 11, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: 11, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
+                  <User size={12} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  {message.users?.fullname || message.users?.username || "-"}
+                </span>
+              </Typography.Text>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", marginTop: 2 }}>
+              <Typography.Text
+                ref={promptRef}
+                style={{
+                  color: semantic.colorTextSecondary,
+                  fontSize: 14,
+                  fontStyle: 'italic',
+                  overflow: showFullPrompt ? "visible" : "hidden",
+                  textOverflow: showFullPrompt ? "unset" : "ellipsis",
+                  whiteSpace: showFullPrompt ? "normal" : "nowrap",
+                  display: "block",
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                }}
+              >
+                {`"${message.prompt}"`}
+              </Typography.Text>
+              {isOverflow && (
+                <Button
+                  type="link"
+                  size="small"
+                  style={{ fontSize: 12, padding: 0, marginLeft: 4 }}
+                  onClick={() => setShowFullPrompt((v) => !v)}
+                >
+                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                </Button>
+              )}
+            </div>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+              <Typography.Text type="secondary" style={{ fontSize: 10 }}>
+                {new Date(message.createdAt).toLocaleDateString([], {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}{" "}
+                {new Date(message.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Typography.Text>
+              <Button
+                type="text"
+                danger
+                size="small"
+                style={{ padding: 0 }}
+                onClick={() =>
+                  setMessages((prev) => prev.filter((m) => m.id !== message.id))
+                }
+              >
+                🗑
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Row gutter={8} align="middle" style={{ marginBottom: 8, flexWrap: "nowrap", overflowX: "auto" }}>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  color: semantic.colorPrimary,
+                  fontWeight: 400,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.resolution || ""}
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  color: semantic.colorTextSecondary,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.generateConfig?.ratio || ""}
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  color: semantic.colorTextSecondary,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.generateConfig?.duration || ""} s
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  color: semantic.colorTextSecondary,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {message.generateConfig?.generateAudio ? (
+                  <Volume1 color="green" size={14} />
+                ) : (
+                  <VolumeX size={14} />
+                )}
+              </Typography.Text>
+            </Col>
+            <Col flex="none">
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: semantic.colorPrimary,
+                  whiteSpace: "nowrap",
+                  marginRight: 8,
+                }}
+              >
+                {message.generateConfig?.modelName || ""}
+              </Typography.Text>
+              <Typography.Text
+                style={{
+                  fontSize: 14,
+                  color: semantic.colorTextSecondary,
+                  fontWeight: 400,
+                  whiteSpace: "nowrap",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
+                  <User size={14} style={{ marginRight: 2, verticalAlign: "middle" }} />
+                  {message.users?.fullname || message.users?.username || "-"}
+                </span>
+              </Typography.Text>
+            </Col>
+            <Col flex="auto" style={{ minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
+              <Space
+                size={8}
+                style={{
+                  alignItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Typography.Text
+                  type="secondary"
+                  style={{ fontSize: 12 }}
+                >
+                  {new Date(message.createdAt).toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}{" "}
+                  {new Date(message.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography.Text>
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  onClick={() =>
+                    setMessages((prev) => prev.filter((m) => m.id !== message.id))
+                  }
+                >
+                  🗑
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+          <Row>
+            <Col flex="auto" style={{ minWidth: 0, display: 'flex', alignItems: 'center' }}>
+              <Typography.Text
+                ref={promptRef}
+                style={{
+                  color: semantic.colorTextSecondary,
+                  fontSize: 16,
+                  fontStyle: 'italic',
+                  overflow: showFullPrompt ? "visible" : "hidden",
+                  textOverflow: showFullPrompt ? "unset" : "ellipsis",
+                  whiteSpace: showFullPrompt ? "normal" : "nowrap",
+                  display: "block",
+                  width: "100%",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                }}
+              >
+                {`"${message.prompt}"`}
+              </Typography.Text>
+              {isOverflow && (
+                <Button
+                  type="link"
+                  size="small"
+                  style={{ fontSize: 14, padding: 0, marginLeft: 4 }}
+                  onClick={() => setShowFullPrompt((v) => !v)}
+                >
+                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                </Button>
+              )}
+            </Col>
+          </Row>
+        </>
+      )}
+    
 
       <Divider style={{ margin: "16px 0" }} />
 
@@ -193,7 +317,11 @@ const VideoResultItem: FC<Props> = ({
             style={{
               marginTop: 8,
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : isTablet
+                ? "repeat(2, 1fr)"
+                : "repeat(4, 1fr)",
               gap: 12,
             }}
           >

@@ -30,7 +30,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
 
     const { mode } = useThemeMode();
     const semantic = getThemeConfig(mode).token ?? {};
-    const { isMobile } = useResponsive();
+    const { isMobile, isTablet } = useResponsive();
 
   return (
     <Sider
@@ -76,7 +76,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
         />
       )}
 
-      {isMobile && onClose ? (
+      {(isMobile || isTablet) && onClose ? (
         <div
           style={{
             position: "absolute",
