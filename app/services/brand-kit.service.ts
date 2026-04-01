@@ -28,9 +28,9 @@ const BrandKitServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    getDefault: async (id: string) => {
+    getDefaultByOrganizationId: async (organizationId: string) => {
       return await axiosInstance
-        .get(`${baseUrl}/default/${id}`)
+        .get(`${baseUrl}/organization/${organizationId}/default`)
         .then((res) => {
           return res.data;
         })
