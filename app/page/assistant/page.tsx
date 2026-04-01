@@ -117,6 +117,8 @@ const AssistantPage = () => {
       if (isStreaming) return;
 
       let convId = activeConvId;
+      // Capture whether this is the very first message so we can auto-title later
+      const isFirstMessage = messages.filter((m) => m.role === "user").length === 0;
 
       // Auto-create conversation if none active
       if (!convId) {
@@ -185,8 +187,26 @@ const AssistantPage = () => {
             };
             setMessages((prev) => [...prev, assistantMsg]);
 
-            // Refresh conversation list (title may have updated)
-            loadConversations();
+            // Auto-update title on first message – wrap in async IIFE so we can await
+            (async () => {
+              if (isFirstMessage && convId) {
+                const currentConv = conversations.find((c) => c.id === convId);
+                if (!currentConv || currentConv.title === "New Chat") {
+                  const newTitle = text.slice(0, 60);
+                  await service.updateConversation(convId, newTitle);
+                  // Immediately reflect the new title in the sidebar
+                  setConversations((prev) =>
+                    prev.map((c) =>
+                      c.id === convId
+                        ? { ...c, title: newTitle, updatedAt: new Date().toISOString() }
+                        : c
+                    )
+                  );
+                }
+              }
+              // Refresh conversation list to get latest state from server
+              loadConversations();
+            })();
           } else if (chunk.type === "error") {
             es.close();
             esRef.current = null;
