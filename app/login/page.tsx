@@ -50,6 +50,13 @@ const Page: FC = () => {
     }
   };
 
+  // const handleGoogleLogin = () => {
+  //   const issuer = "https://id24.aicave.ai/realms/eportal";
+  //   const clientId = "eportal-client-id";
+  //   const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/callback` : "";
+  //   const url = `${issuer}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&kc_idp_hint=google`;
+  //   window.location.href = url;
+  // };
   const handleGoogleLogin = async () => {
     try {
       const res = await axios.get("/api/auth/google");
@@ -59,6 +66,15 @@ const Page: FC = () => {
       messageApi.error("Failed to connect to Google Login");
     }
   };
+
+  // const handleMicrosoftLogin = () => {
+  //   const issuer = "https://id24.aicave.ai/realms/eportal";
+  //   const clientId = "eportal-client-id";
+  //   const redirectUri =
+  //     typeof window !== "undefined" ? `${window.location.origin}/callback` : "";
+  //   const url = `${issuer}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&kc_idp_hint=microsoft`;
+  //   window.location.href = url;
+  // };
 
   // Check URL errors (e.g. from Google/Keycloak redirects)
   React.useEffect(() => {

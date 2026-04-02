@@ -7,7 +7,10 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 py-4 border-white/5">
       <div className="flex items-center gap-2">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-80">
+        <Link
+          href="/"
+          className="flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-80"
+        >
           <img
             src="/images/logo-1.png"
             alt="Ai Cave Logo"
@@ -19,11 +22,23 @@ export default function Navbar() {
       {/* Navigation Links and CTA */}
       <div className="flex items-center gap-8">
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/home" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
+          <Link
+            href="/home"
+            className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
+          >
             Home
           </Link>
-          <Link href="/features" className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors">
+          <Link
+            href="/features"
+            className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
+          >
             Features
+          </Link>
+          <Link
+            href="/login"
+            className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
+          >
+            Login
           </Link>
         </div>
 
