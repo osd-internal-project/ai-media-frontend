@@ -41,7 +41,7 @@ export const MenuSider = [
       },
       {
         key: `settings/template-new`,
-        role: ["OWNER", "ADMIN", "MEMBER", "SUPER_ADMIN"],
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
         icon: <BookTemplate size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
@@ -49,7 +49,7 @@ export const MenuSider = [
       },
       {
         key: `brand-kit`,
-        role: ["OWNER", "ADMIN", "MEMBER", "SUPER_ADMIN"],
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
         icon: <PaletteIcon size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Brand Kit</span>
