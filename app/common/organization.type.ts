@@ -65,7 +65,7 @@ export interface IOrganization {
   remainTokenAmount?: number;
   remainImageAmount?: number;
   maxUserAccess?: number;
-
+  accessCodes: string[];
   //Relateion
   subscription?: IOrganizationSubscription;
   creditBalance?: ICreditBalance;

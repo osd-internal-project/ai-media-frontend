@@ -10,6 +10,7 @@ import {
   message,
   Switch,
   Tabs,
+  Checkbox,
 } from "antd";
 import OrganizationService from "@/app/services/organization.service";
 import OrganizationMembersServices from "@/app/services/organization-members.service";
@@ -26,6 +27,12 @@ export default function OrganizationDetailPage() {
   const [, contextHolder] = message.useMessage();
   const { id } = useParams();
   const organizationId = String(id);
+  const ACCESS_CODE: { label: string; value: string; className: string }[] = [
+    { label: "Image", value: "image", className: "label-1" },
+    { label: "Video", value: "video", className: "label-2" },
+    { label: "Omnihuman", value: "omni", className: "label-3" },
+    { label: "Dream Actor", value: "dream", className: "label-4" },
+  ];
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,6 +88,7 @@ export default function OrganizationDetailPage() {
       name: organization?.name,
       description: organization?.description,
       status: organization?.status,
+      accessCodes: organization?.accessCodes,
     });
     setIsEditModalOpen(true);
   };
@@ -205,6 +213,9 @@ export default function OrganizationDetailPage() {
           </Form.Item>
           <Form.Item name="status" label="Status" valuePropName="checked">
             <Switch />
+          </Form.Item>
+          <Form.Item name="accessCodes" label="Access">
+            <Checkbox.Group options={ACCESS_CODE} />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} />
