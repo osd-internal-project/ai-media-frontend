@@ -7,6 +7,7 @@ import {
   PaletteIcon,
   BookTemplate,
   MessageSquare,
+  Zap,
 } from "lucide-react";
 
 export const MenuSider = [
@@ -61,6 +62,14 @@ export const MenuSider = [
       //   icon: <Settings size={22} />,
       //   label: <span style={{ fontSize: 12, fontWeight: 'normal' }}>ADMIN</span>,
       // },
+       {
+        key: `credit`,
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+        icon: <Zap size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Credits</span>
+        ),
+      },
       {
         key: `dashboard`,
         role: ["OWNER", "ADMIN", "SUPER_ADMIN"],

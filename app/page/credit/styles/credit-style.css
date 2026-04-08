@@ -1,0 +1,16 @@
+  .credit-overview-card {
+          transition: transform 180ms ease, box-shadow 180ms ease;
+        }
+
+        .credit-overview-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .credit-overview-card .ant-progress-inner {
+          border-radius: 999px;
+        }
+
+        .credit-overview-card .ant-progress-bg {
+          border-radius: 999px;
+        }

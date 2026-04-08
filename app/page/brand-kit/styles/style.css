@@ -10,3 +10,158 @@
 :where(.css-dev-only-do-not-override-1ww1alo).ant-layout-header {
   padding: 0 !important;
 }
+
+.brandkit-mobile-backdrop {
+  animation: brandkitBackdropFadeIn 220ms ease;
+}
+
+.brandkit-fab {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  animation: brandkitFabIn 320ms ease;
+}
+
+.brandkit-fab:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22) !important;
+}
+
+.brandkit-main-scroll::-webkit-scrollbar {
+  width: 9px;
+}
+
+.brandkit-main-scroll::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.3);
+  border-radius: 999px;
+}
+
+.brandkit-main-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logo-list-scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+}
+
+.logo-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.logo-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.3);
+  border-radius: 999px;
+}
+
+.logo-card-anim {
+  animation: logoCardIn 320ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.logo-card-anim:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);
+}
+
+.logo-tab-action {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.logo-tab-action:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+@keyframes logoCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brandkitBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes brandkitMobilePanelIn {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes brandkitFabIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+ .brand-voice-card {
+        animation: brandVoiceCardIn 320ms ease;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .brand-voice-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .brand-voice-card .ant-input {
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .brand-voice-action {
+        transition: transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .brand-voice-action:hover {
+        transform: translateY(-1px);
+      }
+
+      .brand-voice-card .ant-input:focus,
+      .brand-voice-card .ant-input-focused {
+        border-color: #7c6cf6 !important;
+        box-shadow: 0 0 0 2px rgba(124, 108, 246, 0.15) !important;
+      }
+
+      .brand-voice-card .ant-progress-bg {
+        border-radius: 999px;
+      }
+
+      .brand-voice-card .ant-progress-inner {
+        border-radius: 999px;
+      }
+
+      @keyframes brandVoiceCardIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }

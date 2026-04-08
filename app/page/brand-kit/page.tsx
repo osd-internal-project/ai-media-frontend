@@ -7,6 +7,7 @@ import { autoGenerateCIPrompt } from "./helpers/autoGenerateCIPrompt";
 import { extractHexColors } from "./helpers/extractHexColors";
 import { extractFontNames } from "./helpers/extractFontNames";
 import { useSession } from "next-auth/react";
+
 import "./styles/style.css";
 import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin, Tooltip, Col } from "antd";
 import {
@@ -33,6 +34,9 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { Divide, Palette } from "lucide-react";
 import TypographyTab from "./components/tabs/typography/typography-tab";
+import LogoTab from "./components/tabs/logo/logo-tab";
+import { type LogoModalValues } from "./components/tabs/logo/logo-modal";
+import BrandVoiceTab from "./components/tabs/brand-voice/brand-voice";
 
 import CIPromptTab from "./components/tabs/ci-prompt/ci-prompt";
 import BrandKitForm from "./components/brand-kit-form";
@@ -64,6 +68,16 @@ export default function BrandKitPage() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [form] = AntForm.useForm();
   const [formLoading, setFormLoading] = useState(false);
+  const [logoFormLoading, setLogoFormLoading] = useState(false);
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+  const [logoFormMode, setLogoFormMode] = useState<"create" | "edit">("create");
+  const [editingLogoId, setEditingLogoId] = useState<string | null>(null);
+  const [voiceFormLoading, setVoiceFormLoading] = useState(false);
+  const [logoInitialValues, setLogoInitialValues] = useState<Partial<LogoModalValues>>({
+    name: "",
+    url: "",
+    logoType: "primary",
+  });
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -94,7 +108,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
   // CI Prompt state (from brand kit, not detail)
   const [ciPrompt, setCiPrompt] = useState<string>("");
   const [negativePrompt, setNegativePrompt] = useState<string>("");
-  const [voice, setVoice] = useState<TBrandKitDetail[]>([]);
+  const [voicePromptByKit, setVoicePromptByKit] = useState<Record<string, string>>({});
   // Loading state for tab content
   const [tabLoading, setTabLoading] = useState(false);
   const [setDefaultLoading, setSetDefaultLoading] = useState(false);
@@ -110,7 +124,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     if (!selectedKit.id) {
       setTypography([]);
       setLogos([]);
-      setVoice([]);
       setColors([]);
       setTabLoading(false);
       setCiPrompt("");
@@ -134,9 +147,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
           const kit = await brandKitService.findById(selectedKit.id);
           setCiPrompt(kit?.brandCiPrompt || "");
           setNegativePrompt(kit?.negativePrompt || "");
-        } else if (selectedTab === "voice") {
-          const voiceRes = await brandKitDetailService.findByTypeAndBrandKitId("voice", selectedKit.id);
-          setVoice(voiceRes || []);
         }
       } finally {
         setTabLoading(false);
@@ -157,7 +167,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     const prompt = autoGenerateCIPrompt({
       colors: (res || []).map(c => {
         return isColorDetail(c.detail)
-          ? { name: c.name, hex: c.detail.hex, type: c.detail && typeof c.detail.type === 'string' ? c.detail.type : '' }
+          ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
           : { name: c.name, hex: '', type: '' };
       }),
       fonts: typography.map(t => {
@@ -207,7 +217,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       const prompt = autoGenerateCIPrompt({
         colors: colors.map(c => {
           return isColorDetail(c.detail)
-            ? { name: c.name, hex: c.detail.hex, type: c.detail && typeof c.detail.type === 'string' ? c.detail.type : '' }
+            ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
             : { name: c.name, hex: '', type: '' };
         }),
         fonts: (typoRes || []).map(t => {
@@ -237,7 +247,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       const prompt = autoGenerateCIPrompt({
         colors: colors.map(c => {
           return isColorDetail(c.detail)
-            ? { name: c.name, hex: c.detail.hex, type: c.detail && typeof c.detail.type === 'string' ? c.detail.type : '' }
+            ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
             : { name: c.name, hex: '', type: '' };
         }),
         fonts: (typoRes || []).map(t => {
@@ -254,6 +264,138 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       if (kits) setBrandKits(kits);
     } else {
       messageApi.error("Failed to delete font");
+    }
+  };
+
+  const isLogoDetail = (
+    detail: unknown,
+  ): detail is import("@/app/common/brand-kit").TBrandKitDetailLogo => {
+    return (
+      !!detail &&
+      typeof detail === "object" &&
+      typeof (detail as { url?: unknown }).url === "string"
+    );
+  };
+
+  const refreshLogos = async () => {
+    if (!selectedKit.id) return;
+    const logoRes = await brandKitDetailService.findByTypeAndBrandKitId("logo", selectedKit.id);
+    setLogos(logoRes || []);
+  };
+
+  const openCreateLogoModal = () => {
+    if (!selectedKit.id) {
+      messageApi.warning("Please select a brand kit first");
+      return;
+    }
+
+    setLogoFormMode("create");
+    setEditingLogoId(null);
+    setLogoInitialValues({ name: "", url: "", logoType: "primary" });
+    setIsLogoModalOpen(true);
+  };
+
+  const openEditLogoModal = (logo: { id: string; name: string; type: string; image: string }) => {
+    const normalizedLogoType: LogoModalValues["logoType"] =
+      logo.type === "primary" ||
+      logo.type === "secondary" ||
+      logo.type === "icon" ||
+      logo.type === "light" ||
+      logo.type === "dark"
+        ? logo.type
+        : "primary";
+
+    setLogoFormMode("edit");
+    setEditingLogoId(logo.id);
+    setLogoInitialValues({
+      name: logo.name,
+      url: logo.image,
+      logoType: normalizedLogoType,
+    });
+    setIsLogoModalOpen(true);
+  };
+
+  const handleSubmitLogo = async (values: LogoModalValues) => {
+    if (!selectedKit.id) return;
+
+    try {
+      setLogoFormLoading(true);
+
+      const payload: Partial<TBrandKitDetail> = {
+        name: values.name,
+        type: "logo",
+        detail: {
+          url: values.url,
+          type: values.logoType,
+        } as import("@/app/common/brand-kit").TBrandKitDetailLogo,
+      };
+
+      if (logoFormMode === "create") {
+        const created = await brandKitDetailService.create({
+          ...payload,
+          brandKitId: selectedKit.id,
+        });
+        if (!created) {
+          messageApi.error("Failed to add logo");
+          return;
+        }
+        messageApi.success("Logo added!");
+      } else {
+        if (!editingLogoId) return;
+        const updated = await brandKitDetailService.update(editingLogoId, payload);
+        if (!updated) {
+          messageApi.error("Failed to update logo");
+          return;
+        }
+        messageApi.success("Logo updated!");
+      }
+
+      await refreshLogos();
+      setIsLogoModalOpen(false);
+      setEditingLogoId(null);
+      setLogoInitialValues({ name: "", url: "", logoType: "primary" });
+    } catch {
+      messageApi.error(logoFormMode === "create" ? "Failed to add logo" : "Failed to update logo");
+    } finally {
+      setLogoFormLoading(false);
+    }
+  };
+
+  const handleDeleteLogo = async (id: string) => {
+    const deleted = await brandKitDetailService.del(id);
+    if (!deleted) {
+      messageApi.error("Failed to delete logo");
+      return;
+    }
+    await refreshLogos();
+    messageApi.success("Logo deleted!");
+  };
+
+  const handleSaveVoice = async (values: {
+    prompt: string;
+    toneProfile: {
+      formalCasual: number;
+      professionalFriendly: number;
+      conservativeBold: number;
+      seriousPlayful: number;
+    };
+    keywords: string[];
+  }) => {
+    if (!selectedKit.id) return;
+
+    try {
+      setVoiceFormLoading(true);
+
+      setVoicePromptByKit((prev) => ({
+        ...prev,
+        [selectedKit.id]: values.prompt,
+      }));
+
+      messageApi.success("Brand voice saved!");
+    } catch {
+      messageApi.error("Failed to save brand voice settings");
+    } finally {
+      setVoiceFormLoading(false);
     }
   };
 
@@ -755,7 +897,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   typography.length === 0 &&
                   logos.length === 0 &&
                   ciPrompt.length === 0 &&
-                  voice.length === 0;
+                  !(voicePromptByKit[selectedKit.id] || "").trim();
                 if (selectedTab === "colors") {
                   // Type guard for color detail
                   function isColorDetail(detail: any): detail is { hex: string; type: string } {
@@ -767,7 +909,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                         id: c.id,
                         name: c.name,
                         hex: isColorDetail(c.detail) ? c.detail.hex : '',
-                        type: c.detail && typeof c.detail.type === 'string' ? c.detail.type : '',
+                        type: isColorDetail(c.detail) ? c.detail.type : '',
                       }))}
                       brandKitId={selectedKit.id}
                       axiosCore={axiosCore}
@@ -796,12 +938,31 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   );
                 }
                 if (selectedTab === "logos") {
-                  return allEmpty ? (
-                    <div style={{ color: "#e5e7eb", textAlign: "center", padding: 48, fontSize: 20 }}>
-                      🥣 No logos yet
-                    </div>
-                  ) : (
-                    <div style={{ color: "#e5e7eb" }}>logo</div>
+                  return (
+                    <LogoTab
+                      logos={logos
+                        .filter((logo) => isLogoDetail(logo.detail))
+                        .map((logo) => ({
+                          id: logo.id,
+                          name: logo.name,
+                          type: isLogoDetail(logo.detail) ? logo.detail.type : "primary",
+                          image: isLogoDetail(logo.detail) ? logo.detail.url : "",
+                        }))}
+                      onAddLogo={openCreateLogoModal}
+                      onEditLogo={openEditLogoModal}
+                      onDeleteLogo={handleDeleteLogo}
+                      logoModalOpen={isLogoModalOpen}
+                      logoModalMode={logoFormMode}
+                      logoModalLoading={logoFormLoading}
+                      logoModalInitialValues={logoInitialValues}
+                      onSubmitLogoModal={handleSubmitLogo}
+                      onCloseLogoModal={() => {
+                        setIsLogoModalOpen(false);
+                        setEditingLogoId(null);
+                        setLogoInitialValues({ name: "", url: "", logoType: "primary" });
+                      }}
+                      emptyState={logos.length === 0}
+                    />
                   );
                 }
                 if (selectedTab === "ci") {
@@ -851,12 +1012,12 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   );
                 }
                 if (selectedTab === "voice") {
-                  return allEmpty ? (
-                    <div style={{ color: "#e5e7eb", textAlign: "center", padding: 48, fontSize: 20 }}>
-                      🥣 No Brand Voice yet
-                    </div>
-                  ) : (
-                    <div style={{ color: "#e5e7eb" }}>Brand Voice Prompt</div>
+                  return (
+                    <BrandVoiceTab
+                      initialPrompt={voicePromptByKit[selectedKit.id] || ""}
+                      saving={voiceFormLoading}
+                      onSaveVoice={handleSaveVoice}
+                    />
                   );
                 }
                 return null;
@@ -868,7 +1029,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
         </Col>
       </Row>
 
-       <Modal
+      <Modal
         zIndex={1500}
         title={formMode === 'edit' ? 'Edit Brand Kit' : 'New Brand Kit'}
         open={isFormModalOpen}
@@ -926,50 +1087,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       >
         <BrandKitForm form={form} mode={formMode} />
       </Modal>
-
-      <style jsx global>{`
-        .brandkit-mobile-backdrop {
-          animation: brandkitBackdropFadeIn 220ms ease;
-        }
-
-        .brandkit-fab {
-          transition: transform 180ms ease, box-shadow 180ms ease;
-          animation: brandkitFabIn 320ms ease;
-        }
-
-        .brandkit-fab:hover {
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22) !important;
-        }
-
-        .brandkit-main-scroll::-webkit-scrollbar {
-          width: 9px;
-        }
-
-        .brandkit-main-scroll::-webkit-scrollbar-thumb {
-          background: rgba(120, 120, 120, 0.3);
-          border-radius: 999px;
-        }
-
-        .brandkit-main-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        @keyframes brandkitBackdropFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes brandkitMobilePanelIn {
-          from { opacity: 0; transform: translateX(-18px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes brandkitFabIn {
-          from { opacity: 0; transform: translateY(14px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   </>
 );
