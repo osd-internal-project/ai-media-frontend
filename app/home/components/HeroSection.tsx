@@ -85,6 +85,10 @@ export default function HeroSection() {
   };
 
   return (
+    <>
+    <style>{`
+      @keyframes heroFadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    `}</style>
     <section
       style={{
         position: "relative",
@@ -218,6 +222,8 @@ export default function HeroSection() {
             justifyContent: "center",
             alignItems: "center",
             columnGap: isMd ? "12px" : "6px",
+            animation: "heroFadeUp 0.9s ease forwards",
+            opacity: 0,
           }}
         >
           <span>Enterprise AI for</span>
@@ -266,6 +272,8 @@ export default function HeroSection() {
             lineHeight: 1.625,
             paddingLeft: "16px",
             paddingRight: "16px",
+            animation: "heroFadeUp 0.9s ease 0.2s forwards",
+            opacity: 0,
           }}
         >
           Create commercial-grade visuals in minutes — with full brand control, team governance, and enterprise security.
@@ -280,6 +288,8 @@ export default function HeroSection() {
             fontWeight: 400,
             marginBottom: "40px",
             letterSpacing: "0.01em",
+            animation: "heroFadeUp 0.9s ease 0.35s forwards",
+            opacity: 0,
           }}
         >
           Built for businesses. Powered by advanced AI.
@@ -296,6 +306,8 @@ export default function HeroSection() {
             width: "100%",
             paddingLeft: "16px",
             paddingRight: "16px",
+            animation: "heroFadeUp 0.9s ease 0.5s forwards",
+            opacity: 0,
           }}
         >
           <button
@@ -349,6 +361,8 @@ export default function HeroSection() {
             alignItems: "center",
             height: isMd ? "480px" : "280px",
             marginLeft: "auto",
+            animation: "heroFadeUp 0.9s ease 0.65s forwards",
+            opacity: 0,
             marginRight: "auto",
             perspective: "1200px",
           }}
@@ -396,5 +410,6 @@ export default function HeroSection() {
         </div>
       </div>
     </section>
+    </>
   );
 }

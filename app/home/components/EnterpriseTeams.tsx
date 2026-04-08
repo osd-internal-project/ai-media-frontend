@@ -236,6 +236,12 @@ export default function EnterpriseTeams() {
           {features.map((feature, index) => (
             <div
               key={index}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-6px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "none";
+              }}
               style={{
                 background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
                 border: "1px solid rgba(255,255,255,0.05)",
@@ -246,6 +252,8 @@ export default function EnterpriseTeams() {
                 gap: "24px",
                 alignItems: "flex-start",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                cursor: "pointer",
+                transition: "transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease",
               }}
             >
               {/* Icon Container */}

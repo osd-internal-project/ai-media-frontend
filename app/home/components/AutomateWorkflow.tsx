@@ -174,6 +174,12 @@ export default function AutomateWorkflow() {
             >
               {/* Square Image Box */}
               <div
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "none";
+                }}
                 style={{
                   width: "100%",
                   aspectRatio: "1/1",
@@ -182,6 +188,8 @@ export default function AutomateWorkflow() {
                   boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
                   position: "relative",
                   border: "1px solid rgba(255,255,255,0.05)",
+                  cursor: "pointer",
+                  transition: "transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease",
                 }}
               >
                 <img

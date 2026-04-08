@@ -14,6 +14,8 @@ const features = [
 
 export default function UltraRealisticHuman() {
   const [windowWidth, setWindowWidth] = useState(1200);
+  const [isImageHovered, setIsImageHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setWindowWidth(window.innerWidth);
@@ -172,7 +174,7 @@ export default function UltraRealisticHuman() {
             <p
               style={{
                 color: "#e2e8f0",
-                fontSize: "15px",
+                fontSize: isMd ? "20px" : "16px",
                 lineHeight: 1.6,
                 fontWeight: 500,
                 maxWidth: "450px",
@@ -186,34 +188,41 @@ export default function UltraRealisticHuman() {
               {features.map((feat, i) => (
                 <li
                   key={i}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "16px",
+                    transform: hoveredIndex === i ? "translateX(8px)" : "none",
+                    opacity: hoveredIndex === null || hoveredIndex === i ? 1 : 0.5,
+                    transition: "transform 0.3s ease, opacity 0.3s ease",
+                    cursor: "pointer",
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: "2px",
+                      background: "linear-gradient(90deg, #7a73ff 0%, #7cd4d8 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontSize: i === 0 ? "22px" : "18px",
+                      marginTop: 2,
                       flexShrink: 0,
                     }}
                   >
-                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 5L4 8L11 1" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
+                    ✔
+                  </span>
                   <span
                     style={{
-                      color: "#e2e8f0",
-                      fontSize: "14px",
-                      fontWeight: 400,
-                      lineHeight: 1.5,
-                      letterSpacing: "0.01em",
+                      fontSize: "16px",
+                      fontWeight: 600,
+                      lineHeight: 1.3,
+                      letterSpacing: "-0.01em",
+                      background: "#ffffff",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
                     {feat}
@@ -225,6 +234,8 @@ export default function UltraRealisticHuman() {
 
           {/* Right: Main Highlight Image */}
           <div
+            onMouseEnter={(e) => { setIsImageHovered(true); const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+            onMouseLeave={(e) => { setIsImageHovered(false); const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
             style={{
               width: "100%",
               borderRadius: "24px",
@@ -233,16 +244,13 @@ export default function UltraRealisticHuman() {
               boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
               position: "relative",
               display: "flex",
+              cursor: "pointer",
+              transform: isImageHovered ? "translateY(-10px) scale(1.02)" : "none",
+              transition: "transform 0.35s ease, box-shadow 0.35s ease",
             }}
           >
-            <div
-              style={{ position: "relative", width: "100%", aspectRatio: "3/3", borderRadius: "16px", overflow: "hidden", cursor: "pointer" }}
-              onMouseEnter={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
-              onMouseLeave={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
-            >
-              <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ultra-realistic-human/1.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
-            </div>
+            <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ultra-realistic-human/1.mp4" loop muted playsInline style={{ width: "100%", aspectRatio: "3/3", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
           </div>
         </div>
       </div>
