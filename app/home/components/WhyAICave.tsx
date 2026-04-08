@@ -183,7 +183,7 @@ export default function WhyAICave() {
           }}
         >
           <img
-            src="/images/why-ai-cave/1.jpg"
+            src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/why-ai-cave/1.jpg"
             alt="Why AI Cave cover"
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />

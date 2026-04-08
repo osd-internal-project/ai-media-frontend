@@ -160,7 +160,7 @@ export default function AIImageGeneration() {
               }}
             >
               <img
-                src="/images/ai-image-generation/2.png"
+                src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-image-generation/2.png"
                 alt="AI Generation Eyes"
                 style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%" }}
               />
@@ -178,7 +178,7 @@ export default function AIImageGeneration() {
               }}
             >
               <img
-                src="/images/ai-image-generation/3.png"
+                src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-image-generation/3.png"
                 alt="AI Generation Glow"
                 style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "95% 40%" }}
               />
@@ -208,7 +208,7 @@ export default function AIImageGeneration() {
             }}
           >
             <img
-              src="/images/ai-image-generation/1.jpeg"
+              src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-image-generation/1.jpeg"
               alt="Main AI Artwork Highlight"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />

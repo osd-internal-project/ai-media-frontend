@@ -20,11 +20,11 @@ export default function HeroSection() {
   const [hoveredBtn, setHoveredBtn] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [carouselItems, setCarouselItems] = useState([
-    { id: 1, src: "/images/herosection/5.jpeg", color: "rgba(37, 99, 235, 0.1)", alt: "Hero 1" },
-    { id: 2, src: "/images/herosection/2.png", color: "rgba(34, 211, 238, 0.1)", alt: "Hero 2" },
-    { id: 3, src: "/images/herosection/1.jpg", color: "rgba(245, 158, 11, 0.1)", alt: "Hero 3" },
-    { id: 4, src: "/images/herosection/3.png", color: "rgba(99, 102, 241, 0.1)", alt: "Hero 4" },
-    { id: 5, src: "/images/herosection/4.png", color: "rgba(168, 85, 247, 0.1)", alt: "Hero 5" },
+    { id: 1, src: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/5.jpeg", color: "rgba(37, 99, 235, 0.1)", alt: "Hero 5" },
+    { id: 2, src: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/2.mp4", color: "rgba(34, 211, 238, 0.1)", alt: "Hero 2" },
+    { id: 3, src: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/1.jpg", color: "rgba(245, 158, 11, 0.1)", alt: "Hero 1" },
+    { id: 4, src: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/3.mp4", color: "rgba(99, 102, 241, 0.1)", alt: "Hero 3" },
+    { id: 5, src: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/4.mp4", color: "rgba(168, 85, 247, 0.1)", alt: "Hero 4" },
   ]);
 
   useEffect(() => {
@@ -359,8 +359,8 @@ export default function HeroSection() {
             <div
               key={item.id}
               onClick={() => handleItemClick(index)}
-              onMouseEnter={() => setHoveredImg(item.id)}
-              onMouseLeave={() => setHoveredImg(null)}
+              onMouseEnter={(e) => { setHoveredImg(item.id); const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+              onMouseLeave={(e) => { setHoveredImg(null); const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
               style={getSlotStyle(index, hoveredImg === item.id, isMd)}
             >
               <div
@@ -376,11 +376,44 @@ export default function HeroSection() {
                   zIndex: 2,
                 }}
               ></div>
-              <img
-                src={item.src}
-                alt={item.alt}
-                style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 1 }}
-              />
+              {item.src.endsWith(".mp4") && hoveredImg !== item.id && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    zIndex: 3,
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                    backdropFilter: "blur(4px)",
+                    borderRadius: "50%",
+                    width: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5v14l11-7L8 5z" />
+                  </svg>
+                </div>
+              )}
+              {item.src.endsWith(".mp4") ? (
+                <video
+                  src={item.src}
+                  loop
+                  muted
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 1, borderRadius: "inherit" }}
+                />
+              ) : (
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, zIndex: 1, borderRadius: "inherit" }}
+                />
+              )}
             </div>
           ))}
         </div>

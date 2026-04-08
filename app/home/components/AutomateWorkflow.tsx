@@ -4,22 +4,22 @@ import React, { useState, useEffect } from "react";
 
 const automations = [
   {
-    image: "/images/automate-workflow/1.png",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/automate-workflow/1.png",
     fallbackColor: "bg-orange-500",
     label: "Approval routing\nsystem",
   },
   {
-    image: "/images/automate-workflow/2.png",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/automate-workflow/2.png",
     fallbackColor: "bg-gray-800",
     label: "AI risk escalation",
   },
   {
-    image: "/images/automate-workflow/3.png",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/automate-workflow/3.png",
     fallbackColor: "bg-blue-100",
     label: "Multi-Platform\nContent Distribution",
   },
   {
-    image: "/images/automate-workflow/4.png",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/automate-workflow/4.png",
     fallbackColor: "bg-pink-300",
     label: "Campaign batch\ndeployment",
   },

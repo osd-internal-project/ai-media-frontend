@@ -4,32 +4,32 @@ import React, { useState, useEffect } from "react";
 
 const cards = [
   {
-    image: "/images/future-of-ai/1.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/1.jpeg",
     fallbackColor: "bg-red-900",
     text: "AI Cave evolves\nwith your\nbusiness.",
   },
   {
-    image: "/images/future-of-ai/2.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/2.jpeg",
     fallbackColor: "bg-amber-900",
     text: "AI Creative\nCopilot",
   },
   {
-    image: "/images/future-of-ai/3.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/3.jpeg",
     fallbackColor: "bg-indigo-900",
     text: "Voice & Multi-\nmodal AI\nexpansion",
   },
   {
-    image: "/images/future-of-ai/4.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/4.jpeg",
     fallbackColor: "bg-purple-900",
     text: "Unified AI tool\nintegrations",
   },
   {
-    image: "/images/future-of-ai/5.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/5.jpeg",
     fallbackColor: "bg-pink-900",
     text: "Mobile\napplication for\non-the-go\napprovals",
   },
   {
-    image: "/images/future-of-ai/6.jpeg",
+    image: "https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/future-of-ai/6.jpeg",
     fallbackColor: "bg-emerald-900",
     text: "Your centralized\nAI creative hub.",
   },
