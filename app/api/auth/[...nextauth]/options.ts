@@ -4,6 +4,10 @@ import { JWT } from "next-auth/jwt";
 import config from "../../../config";
 import { decryptPassword } from "../../../utils/crypto";
 
+if (process.env.NODE_ENV === "development") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   console.log("🔄 Starting token refresh process...");
 
@@ -98,9 +102,28 @@ export const authOptions = {
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        accessToken: { label: "Access Token", type: "text" },
+        refreshToken: { label: "Refresh Token", type: "text" },
+        idToken: { label: "ID Token", type: "text" },
+        expiresIn: { label: "Expires In", type: "text" },
+        organizationId: { label: "Organization ID", type: "text" },
+        userId: { label: "User ID", type: "text" },
+        systemRole: { label: "System Role", type: "text" },
       },
       async authorize(credentials) {
         try {
+          if (credentials?.accessToken) {
+            return {
+              accessToken: credentials.accessToken,
+              refreshToken: credentials.refreshToken,
+              idToken: credentials.idToken,
+              id: credentials.userId || "user",
+              expiresIn: credentials.expiresIn,
+              organizationId: credentials.organizationId,
+              userId: credentials.userId,
+              systemRole: credentials.systemRole,
+            };
+          }
           const decryptedPassword = decryptPassword(
             credentials?.password || "",
           );

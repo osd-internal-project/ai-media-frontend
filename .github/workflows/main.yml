@@ -1,13 +1,33 @@
 name: CI Workflow
 
+concurrency:
+  group: deploy-aicave-console
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_env:
+        description: 'Deploy env'
+        required: true
+        type: choice
+        default: sit
+        options:
+          - sit
+          - uat
+          - prod
+
+env:
+  DEPLOY_ENV: ${{ inputs.deploy_env || 'sit' }}
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, k8s]
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.pkg.outputs.name }}
+      image_version: ${{ steps.pkg.outputs.ver }}
 
     steps:
       # ---------------------------------------------------------------------
@@ -26,7 +46,7 @@ jobs:
           echo "ver=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
           echo "📦 Package: $(jq -r .name package.json)"
           echo "📦 Version: $(jq -r .version package.json)"
-          echo "🌍 Deploy Env: ${{ secrets.DEPLOY_ENV }}"
+          echo "🌍 Deploy Env: ${{ env.DEPLOY_ENV }}"
 
       # ---------------------------------------------------------------------
       # Build Docker image
@@ -35,154 +55,155 @@ jobs:
         run: |
           docker build --no-cache --platform linux/amd64 \
             -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} -f ./Dockerfile .
-      
-      # ---------------------------------------------------------------------
-      # Save Docker image as TAR
-      # ---------------------------------------------------------------------
-      - name: Save Docker Image as TAR
-        run: |
-          docker save -o image.tar \
-            ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
 
       # ---------------------------------------------------------------------
-      - name: Prune Docker Image and Build Cache
+      # Login to Huawei Cloud Container Registry
+      # ---------------------------------------------------------------------
+      - name: Login to Huawei Cloud SWR
+        run: |
+          docker login -u ap-southeast-2@HPUAGIPPWFA7YCNYJIGE \
+            -p ${{ secrets.HUAWEI_REGISTRY_PASSWORD }} \
+            swr.ap-southeast-2.myhuaweicloud.com
+
+      # ---------------------------------------------------------------------
+      # Tag and Push Docker image to Registry
+      # ---------------------------------------------------------------------
+      - name: Tag and Push Docker Image
+        run: |
+          docker tag ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} \
+            swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
+          docker push swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}      
+      
+      # ---------------------------------------------------------------------
+      # Cleanup local Docker images
+      # ---------------------------------------------------------------------
+      - name: Cleanup Docker Images
+        if: always()
         run: |
           docker rmi ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} || true
+          docker rmi swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} || true
           docker image prune -f
           docker builder prune -f
 
-      # ---------------------------------------------------------------------
-      # Upload image TAR to all K8s workers
-      # ---------------------------------------------------------------------
-      - name: Upload TAR to Worker 1 (osd-saas01-worker-0001)
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.WORKER_1_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          source: "image.tar"
-          target: "/tmp/"
+  deploy:
+    runs-on: [self-hosted, k8s]
+    needs: build-and-deploy
 
-      - name: Upload TAR to Worker 2 (osd-saas01-worker-0002)
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.WORKER_2_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          source: "image.tar"
-          target: "/tmp/"
-
-      - name: Upload TAR to Worker 3 (osd-saas01-worker-0003)
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.WORKER_3_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          source: "image.tar"
-          target: "/tmp/"
+    steps:
+      # ---------------------------------------------------------------------
+      # Checkout (needed for helm charts)
+      # ---------------------------------------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       # ---------------------------------------------------------------------
-      # Import image into containerd (k8s.io namespace) on all workers
+      # Create / refresh image pull secret in the target namespace
       # ---------------------------------------------------------------------
-      - name: Import Image on Worker 1
-        uses: appleboy/ssh-action@master
-        env:
-          SUDO_PASS: ${{ secrets.PASSWORD }}
-          IMAGE_REF: docker.io/library/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
-        with:
-          host: ${{ secrets.WORKER_1_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          envs: SUDO_PASS,IMAGE_REF
-          script: |
-            set -e
-            trap 'rm -f /tmp/image.tar' EXIT
-            find /tmp -maxdepth 1 -name '*.tar.gz' -delete 2>/dev/null || true
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images rm "${IMAGE_REF}" 2>/dev/null || true
-            echo "Importing image on osd-saas01-worker-0001..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images label "${IMAGE_REF}" io.cri-containerd.pinned=pinned
-            echo "Done"
-
-      - name: Import Image on Worker 2
-        uses: appleboy/ssh-action@master
-        env:
-          SUDO_PASS: ${{ secrets.PASSWORD }}
-          IMAGE_REF: docker.io/library/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
-        with:
-          host: ${{ secrets.WORKER_2_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          envs: SUDO_PASS,IMAGE_REF
-          script: |
-            set -e
-            trap 'rm -f /tmp/image.tar' EXIT
-            find /tmp -maxdepth 1 -name '*.tar.gz' -delete 2>/dev/null || true
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images rm "${IMAGE_REF}" 2>/dev/null || true
-            echo "Importing image on osd-saas01-worker-0002..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images label "${IMAGE_REF}" io.cri-containerd.pinned=pinned
-            echo "Done"
-
-      - name: Import Image on Worker 3
-        uses: appleboy/ssh-action@master
-        env:
-          SUDO_PASS: ${{ secrets.PASSWORD }}
-          IMAGE_REF: docker.io/library/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
-        with:
-          host: ${{ secrets.WORKER_3_IP }}
-          username: ${{ secrets.WORKER_USER }}
-          key: ${{ secrets.K8S_SSH_KEY }}
-          envs: SUDO_PASS,IMAGE_REF
-          script: |
-            set -e
-            trap 'rm -f /tmp/image.tar' EXIT
-            find /tmp -maxdepth 1 -name '*.tar.gz' -delete 2>/dev/null || true
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images rm "${IMAGE_REF}" 2>/dev/null || true
-            echo "Importing image on osd-saas01-worker-0003..."
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images import /tmp/image.tar
-            echo "$SUDO_PASS" | sudo -S ctr -n k8s.io images label "${IMAGE_REF}" io.cri-containerd.pinned=pinned
-            echo "Done"
-
-      # ---------------------------------------------------------------------
-      # Cleanup runner workspace and orphaned SCP artifacts on Worker 1.
-      # ---------------------------------------------------------------------
-      - name: Cleanup Runner Workspace and Orphaned SCP Artifacts
-        if: always()
+      - name: Create Image Pull Secret
         run: |
-          rm -f image.tar
-          find /tmp -maxdepth 1 -name '*.tar.gz' -delete 2>/dev/null || true
+          kubectl create secret docker-registry huawei-swr-secret \
+            --docker-server=swr.ap-southeast-2.myhuaweicloud.com \
+            --docker-username=ap-southeast-2@HPUAGIPPWFA7YCNYJIGE \
+            --docker-password=${{ secrets.HUAWEI_REGISTRY_PASSWORD }} \
+            --namespace=aicave-${{ env.DEPLOY_ENV }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       # ---------------------------------------------------------------------
-      # Helm upgrade (runs directly on self-hosted runner)
+      # Fix stuck Helm release (pending-install / pending-upgrade / pending-rollback)
       # ---------------------------------------------------------------------
-      # - name: Helm Upgrade
-      #   run: |
-      #     set -e
+      - name: Fix Stuck Helm Release
+        run: |
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
+          NS="aicave-${DEPLOY_ENV}"
+          RELEASE="aicave-console"
+          STATUS=$(helm status ${RELEASE} -n ${NS} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "not-found")
+          echo "Current Helm release status: ${STATUS}"
+          if [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-upgrade" ] || [ "$STATUS" = "pending-rollback" ]; then
+            echo "Release ${RELEASE} is stuck (${STATUS}), rolling back..."
+            helm rollback ${RELEASE} 0 -n ${NS} || helm uninstall ${RELEASE} -n ${NS} || true
+          fi
 
-      #     DEPLOY_ENV="${{ secrets.DEPLOY_ENV }}"
-      #     NAME="${{ steps.pkg.outputs.name }}"
-      #     VER="${{ steps.pkg.outputs.ver }}"
+      # ---------------------------------------------------------------------
+      # Set Chart appVersion from package.json
+      # ---------------------------------------------------------------------
+      - name: Set Chart appVersion
+        run: |
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
+          sed -i "s/^appVersion:.*/appVersion: \"${VER}\"/" charts/aicave-console-chart/Chart.yaml
+          echo "Set appVersion to ${VER} in charts/aicave-console-chart/Chart.yaml"
 
-      #     echo "🚀 Helm upgrade aicave-console (env: prod)"
+      # ---------------------------------------------------------------------
+      # Helm upgrade (runs on self-hosted runner with cluster access)
+      # ---------------------------------------------------------------------
+      - name: Helm Upgrade
+        run: |
+          set -e
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
+          NAME="${{ needs.build-and-deploy.outputs.image_name }}"
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
 
-      #     helm upgrade --install aicave-console ./aicave-console-chart \
-      #       -f ./aicave-console-chart/values-${DEPLOY_ENV}.yaml \
-      #       --set image.repository=docker.io/library/${NAME} \
-      #       --set image.tag=${VER} \
-      #       --namespace aicave-${DEPLOY_ENV} \
-      #       --wait \
-      #       --timeout 5m \
-      #       --atomic
+          echo "🚀 Helm upgrade aicave-console (env: ${DEPLOY_ENV})"
+          echo "📦 Image: swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME}:${VER}"
 
-      #     echo "✅ Deployment completed: ${NAME}:${VER} (env: prod)"
+          helm upgrade --install aicave-console ./charts/aicave-console-chart \
+            -f ./charts/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
+            --set image.repository=swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME} \
+            --set image.tag=${VER} \
+            --namespace aicave-${DEPLOY_ENV} \
+            --wait \
+            --timeout 5m \
+            --atomic \
+            --history-max 10
+
+          echo "✅ Deployment completed: ${NAME}:${VER} (env: ${DEPLOY_ENV})"
+
+      # ---------------------------------------------------------------------
+      # Debug on failure — capture pod state before atomic rollback completes
+      # ---------------------------------------------------------------------
+      - name: Debug on Failure
+        if: failure()
+        run: |
+          NS="aicave-${{ env.DEPLOY_ENV }}"
+          echo "====== POD STATUS ======"
+          kubectl get pods -n ${NS} -l app=aicave-console -o wide
+
+          echo "====== POD EVENTS ======"
+          kubectl get events -n ${NS} --sort-by='.lastTimestamp' \
+            --field-selector involvedObject.kind=Pod | tail -40
+
+          echo "====== POD DESCRIBE ======"
+          kubectl describe pods -n ${NS} -l app=aicave-console | tail -80
+
+          echo "====== POD LOGS (last 50 lines each) ======"
+          for pod in $(kubectl get pods -n ${NS} -l app=aicave-console \
+            --no-headers -o custom-columns=':metadata.name'); do
+            echo "--- Logs: ${pod} ---"
+            kubectl logs -n ${NS} ${pod} --tail=50 2>/dev/null || echo "(no logs)"
+          done
 
       # ---------------------------------------------------------------------
       # Verify deployment
       # ---------------------------------------------------------------------
-      # - name: Verify Deployment
-      #   run: |
-      #     kubectl rollout status deployment/aicave-console \
-      #       -n aicave-${{ secrets.DEPLOY_ENV }}
-      #     kubectl get pods -n aicave-${{ secrets.DEPLOY_ENV }} \
-      #       -l app=aicave-console
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/aicave-console \
+            -n aicave-${{ env.DEPLOY_ENV }}
+          kubectl get pods -n aicave-${{ env.DEPLOY_ENV }} \
+            -l app=aicave-console
+
+      # ---------------------------------------------------------------------
+      # Tag deployment for rollback reference
+      # ---------------------------------------------------------------------
+      - name: Tag Deployment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          NAME="${{ needs.build-and-deploy.outputs.image_name }}"
+          VER="${{ needs.build-and-deploy.outputs.image_version }}"
+          DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
+          TAG="${NAME}/${DEPLOY_ENV}/v${VER}"
+
+          echo "Tagging deployment: ${TAG}"
+          git tag -f "${TAG}" -m "Deployed ${NAME}:${VER} to ${DEPLOY_ENV}"
+          git push origin "${TAG}" --force

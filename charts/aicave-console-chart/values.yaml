@@ -8,8 +8,12 @@ replicaCount: 5
 
 image:
   repository: docker.io/library/ai-media-fe
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: "v1.0.37"
+
+imagePullSecretName: huawei-swr-secret
+
+containerPort: 80
 
 strategy:
   rollingUpdate:
@@ -32,6 +36,12 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
     nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "32k"
     nginx.ingress.kubernetes.io/large-client-header-buffers: "4 32k"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:;";
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()";
   hosts:
     - host: www.aicave.ai
       paths:
@@ -58,10 +68,10 @@ env:
 
 resources:
   requests:
-    memory: "64Mi"
+    memory: "512Mi"
     cpu: "100m"
   limits:
-    memory: "256Mi"
+    memory: "768Mi"
     cpu: "500m"
 
 livenessProbe:
@@ -71,7 +81,7 @@ livenessProbe:
 
 readinessProbe:
   path: /
-  initialDelaySeconds: 5
+  initialDelaySeconds: 10
   periodSeconds: 5
 
 autoscaling:
