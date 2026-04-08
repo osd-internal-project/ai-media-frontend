@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const tabs = [
   "4K Image Generation",
@@ -20,10 +20,24 @@ export default function GenerateSmarter() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
     <div
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
       style={{
         position: "relative",
         width: "100%",
@@ -33,6 +47,9 @@ export default function GenerateSmarter() {
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #080c17 40%, rgba(31, 27, 62, 0.4) 100%)", // Blend into next section
         overflow: "hidden",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
       }}
     >
       {/* Background radial gradient glow */}

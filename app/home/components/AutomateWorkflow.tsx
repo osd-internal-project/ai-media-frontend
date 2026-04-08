@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const automations = [
   {
@@ -35,10 +35,24 @@ export default function AutomateWorkflow() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
     <section
+      ref={sectionRef}
       style={{
         position: "relative",
         width: "100%",
@@ -48,6 +62,9 @@ export default function AutomateWorkflow() {
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #05070a 0%, #0a0c10 50%, #0a0a0a 100%)", // Matches the deep dark tone
         overflow: "hidden",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
       }}
     >
       <div
