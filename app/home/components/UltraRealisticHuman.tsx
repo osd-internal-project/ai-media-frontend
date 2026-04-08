@@ -225,11 +225,6 @@ export default function UltraRealisticHuman() {
             >
               <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ultra-realistic-human/1.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 3, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5v14l11-7L8 5z" />
-                </svg>
-              </div>
             </div>
           </div>
         </div>
