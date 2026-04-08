@@ -1,0 +1,12 @@
+:where(.ant-card.typo-card-hover-group) { position: relative; }
+.typo-card-hover-group:hover .typo-action-btns,
+.typo-card-hover-group:focus-within .typo-action-btns {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.typo-action-btns button {
+  pointer-events: auto !important;
+}
+:where(.css-dev-only-do-not-override-1ww1alo).ant-layout-header {
+  padding: 0 !important;
+}

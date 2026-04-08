@@ -1,4 +1,9 @@
+@import 'antd/dist/reset.css';
 @import 'tailwindcss';
+
+:root {
+  --secondary: #0FEAB6;
+}
 
 * {
   font-family: 'Prompt', sans-serif !important;
@@ -6,6 +11,7 @@
 
 /* Base responsive styles */
 @media (min-width: 768px) {
+
   .mobile-menu-btn,
   .mobile-menu-btn.ant-btn {
     display: none !important;
@@ -17,37 +23,32 @@
   .mobile-hide {
     display: none !important;
   }
-  
+
   .mobile-full {
     width: 100% !important;
   }
-  
+
   .mobile-padding {
     padding: 0.5rem !important;
-  }
-  
-  /* Force sidebar to be hidden on mobile */
-  .ant-layout-sider {
-    display: none !important;
   }
   
   /* Ensure main content takes full width on mobile */
   .ant-layout-content {
     margin-left: 0 !important;
   }
-  
+
   /* Mobile drawer menu styling */
   .ant-drawer-body {
     padding: 0 !important;
   }
-  
+
   /* Mobile menu items - match desktop sidebar styling */
   .mobile-drawer .ant-menu-item {
     padding: 4px 0 !important;
     height: auto !important;
     line-height: normal !important;
   }
-  
+
   .mobile-drawer .ant-menu-item a {
     display: flex !important;
     flex-direction: column !important;
@@ -55,7 +56,7 @@
     justify-content: center !important;
     height: 100% !important;
   }
-  
+
   /* Mobile drawer icon container styling */
   .mobile-drawer .ant-menu-item-selected .menu-icon-container {
     background-color: #1677ff !important;
@@ -67,7 +68,7 @@
     align-items: center !important;
     justify-content: center !important;
   }
-  
+
   .mobile-drawer .menu-icon-container {
     padding: 8px !important;
     border-radius: 8px !important;
@@ -77,28 +78,15 @@
     align-items: center !important;
     justify-content: center !important;
   }
-  
+
   .mobile-drawer .menu-text-label {
     color: gray !important;
   }
-  
+
   .mobile-drawer .ant-menu-item-selected .menu-text-label {
     font-weight: bold !important;
-    color: white !important; 
+    color: white !important;
   }
-}
-
-.ant-select-selector {
-  background-color: black !important;
-  color: #fff !important;
-  border: none !important;
-  transition: background-color 0.2s ease;
-}
-
-/* Hover background */
-.ant-select:hover .ant-select-selector {
-  background-color: transparent !important;
-  /* your hover color */
 }
 
 .card-gradient {
@@ -139,6 +127,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -146,4 +135,87 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-in-out;
+}
+
+.activity-star-button.ant-btn {
+  color: #000000 !important;
+}
+
+.activity-star-button.ant-btn:hover,
+.activity-star-button.ant-btn:focus,
+.activity-star-button.ant-btn:active {
+  color: #facc15 !important;
+}
+
+
+
+
+/* =========================
+   Scroll bar styles for WebKit browsers
+========================= */
+
+/* =========================
+   🌙 DARK MODE
+========================= */
+.theme-dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.theme-dark ::-webkit-scrollbar-track {
+  background: #191C20; /* neutral900 */
+  border-radius: 999px;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+       #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0FEAB6 100%
+  );
+  border-radius: 999px;
+  border: 2px solid #191C20;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #4B49A1 0%,
+    #4B49A1 50%,
+    #0FEAB6 100%
+  );
+}
+
+/* =========================
+   ☀️ LIGHT MODE
+========================= */
+.theme-light ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.theme-light ::-webkit-scrollbar-track {
+  background: #F2F4F5; /* neutral200 */
+  border-radius: 999px;
+}
+
+.theme-light ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+     #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0FEAB6 100%
+  );
+  border-radius: 999px;
+  border: 2px solid #F2F4F5;
+}
+
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #6F6ADE 0%,
+    #6F6ADE 50%,
+    #0DCFA0 100%
+  );
 }

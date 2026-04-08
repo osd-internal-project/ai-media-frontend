@@ -51,6 +51,17 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    findAccessCodeByOrganizationId: async (organizationId: string): Promise<string[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/access-code/${organizationId}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
     createOwner: async (value: any) => {
       return await axiosInstance
         .post(`${baseUrl}/owner`, value)

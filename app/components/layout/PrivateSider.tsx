@@ -1,0 +1,128 @@
+import React, { useMemo } from "react";
+import { Layout, Menu, Image as AntdImage, Button } from "antd";
+import { MenuFoldOutlined } from "@ant-design/icons";
+import { MenuSider, renderMenuItems } from "@/app/config/menu";
+import { useThemeMode } from "../ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
+import "./LayoutStyle.css";
+
+const { Sider } = Layout;
+
+interface PrivateSiderProps {
+  organizationId: string;
+  mappedPath: string;
+  currentPathSub: string;
+  organizationRole: string;
+  onClose?: () => void;
+}
+
+const PrivateSider: React.FC<PrivateSiderProps> = ({
+  organizationId,
+  mappedPath,
+  currentPathSub,
+  organizationRole,
+  onClose,
+}) => {
+  const selectedKeys = useMemo(() => {
+    return [`${mappedPath}/${currentPathSub}`];
+  }, [mappedPath, currentPathSub]);
+
+    const { mode } = useThemeMode();
+    const semantic = getThemeConfig(mode).token ?? {};
+    const { isMobile, isTablet } = useResponsive();
+
+  return (
+    <Sider
+      className="private-sider-shell"
+      width={92}
+      trigger={null}
+      collapsible
+      collapsed={false}
+      style={{
+        borderRight: `1px solid ${semantic.colorBorder}`,
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        padding: "0 10px",
+        position: "relative",
+        transition: "background 0.2s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+      {/* Logo */}
+      <div className="private-sider-logo" style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 0", flexShrink: 0 }}>
+        <AntdImage
+          src="/images/logo-1.png"
+          alt="OSD Logo"
+          preview={false}
+          width={42}
+          style={{ background: "transparent" }}
+        />
+      </div>
+
+      {/* Menu */}
+      {organizationId && (
+        <div
+          className="private-sider-menu-scroll"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingBottom: isMobile && onClose ? 72 : 0,
+          }}
+        >
+          <Menu
+            selectedKeys={[
+              mappedPath,
+              `${mappedPath}/${currentPathSub}`,
+            ]}
+            defaultSelectedKeys={[
+              mappedPath,
+              `${mappedPath}/${currentPathSub}`,
+            ]}
+            items={renderMenuItems(MenuSider, organizationRole)}
+            className="osd-menu-padding"
+          />
+        </div>
+      )}
+
+      {(isMobile || isTablet) && onClose ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            padding: "12px 0 16px",
+            display: "flex",
+            justifyContent: "center",
+            background: semantic.colorBgContainer,
+          }}
+        >
+          <Button
+            className="private-sider-close-btn"
+            type="text"
+            onClick={onClose}
+            icon={<MenuFoldOutlined style={{ color: semantic.colorTextBase }} />}
+            style={{
+              width: 36,
+              height: 36,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `1px solid ${semantic.colorBorder}`,
+              borderRadius: 8,
+            }}
+          />
+        </div>
+      ) : null}
+
+      
+    </Sider>
+  );
+};
+
+export default PrivateSider;

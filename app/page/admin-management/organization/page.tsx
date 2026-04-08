@@ -142,36 +142,36 @@ export default function OrganizationPage() {
         </Tag>
       ),
     },
-    {
-      title: "Tokens",
-      dataIndex: "packageTokenAmount",
-      key: "packageTokenAmount",
-      width: 120,
-      render: (value, record) => (
-        <div>
-          <div className="text-white text-sm">
-            {record.remainTokenAmount?.toLocaleString() || 0} /{" "}
-            {value?.toLocaleString() || 0}
-          </div>
-          <div className="text-gray-400 text-xs">Remaining / Total</div>
-        </div>
-      ),
-    },
-    {
-      title: "Images",
-      dataIndex: "packageImageAmount",
-      key: "packageImageAmount",
-      width: 120,
-      render: (value, record) => (
-        <div>
-          <div className="text-white text-sm">
-            {record.remainImageAmount?.toLocaleString() || 0} /{" "}
-            {value?.toLocaleString() || 0}
-          </div>
-          <div className="text-gray-400 text-xs">Remaining / Total</div>
-        </div>
-      ),
-    },
+    // {
+    //   title: "Tokens",
+    //   dataIndex: "packageTokenAmount",
+    //   key: "packageTokenAmount",
+    //   width: 120,
+    //   render: (value, record) => (
+    //     <div>
+    //       <div className="text-white text-sm">
+    //         {record.remainTokenAmount?.toLocaleString() || 0} /{" "}
+    //         {value?.toLocaleString() || 0}
+    //       </div>
+    //       <div className="text-gray-400 text-xs">Remaining / Total</div>
+    //     </div>
+    //   ),
+    // },
+    // {
+    //   title: "Images",
+    //   dataIndex: "packageImageAmount",
+    //   key: "packageImageAmount",
+    //   width: 120,
+    //   render: (value, record) => (
+    //     <div>
+    //       <div className="text-white text-sm">
+    //         {record.remainImageAmount?.toLocaleString() || 0} /{" "}
+    //         {value?.toLocaleString() || 0}
+    //       </div>
+    //       <div className="text-gray-400 text-xs">Remaining / Total</div>
+    //     </div>
+    //   ),
+    // },
     {
       title: "Max Users",
       dataIndex: "maxUserAccess",

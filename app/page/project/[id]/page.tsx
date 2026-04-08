@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, type FC } from "react";
-import { Tabs, Drawer } from "antd";
-import "./styles.css";
+import { Tabs, Drawer, Space, Tag, Typography } from "antd";
+import "./styles/styles.css";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -11,46 +11,66 @@ import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  Image,
-  Video,
-  Folders,
-  Star,
-  LightbulbIcon,
-  Speech,
-  Clapperboard,
-} from "lucide-react";
+  PictureOutlined,
+  VideoCameraOutlined,
+  FolderOpenOutlined,
+  StarOutlined,
+  MessageOutlined,
+  BulbOutlined,
+  PlaySquareOutlined,
+} from "@ant-design/icons";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { TPromptGuideType } from "@/app/common/prompt-guide.type";
-import PromptLibrary from "./components/prompt-library";
-import PromptActivity from "./components/prompt-activity";
+import PromptLibrary from "./components/tabs/library/prompt-library";
+import PromptActivity from "./components/tabs/all-activity/prompt-activity";
 import AIModelServices from "@/app/services/ai-model.service";
-import { TAIModel } from "@/app/common/ai-model.type";
-import ChatGenerateImage from "./components/chat-generate-image";
-import ChatGenerateVideo from "./components/chat-generate-video";
-import ChatGenerateOmnihumen from "./components/chat-generate-omnihumen";
-import ChatGenerateDreamactor from "./components/chat-generate-dreamactor";
+import ChatGenerateImage from "./components/tabs/image-gen/chat-generate-image";
+import ChatGenerateVideo from "./components/tabs/video-gen/chat-generate-video";
+import ChatGenerateOmnihumen from "./components/tabs/omni-human/chat-generate-omnihumen";
+import ChatGenerateDreamactor from "./components/tabs/dream-actor/chat-generate-dreamactor";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
+import OrganizationServices from "@/app/services/organization.service";
+
+type GenerateTabKey =
+  | "image"
+  | "video"
+  | "omnihumen"
+  | "dreamactor"
+  | "library"
+  | "activity";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
   // const hiddenTabs = ["omnihumen", "dreamactor"];
   // const promptguideTypeService = PromptGuideTypeServices(axiosCore);
+  const [filteredAIModels, setFilteredAIModels] = useState<TMasterModelType[]>(
+    [],
+  );
   const projectService = ProjectService(axiosCore);
-  const aiModelService = AIModelServices(axiosCore);
+  const masterModelTypeServices = MasterModelTypeServices(axiosCore);
+  const organizationServices = OrganizationServices(axiosUser);
   const [getProject, setProject] = useState<IProject>();
   const [loadingData, setLoadingData] = useState<boolean>(true);
-  const [activeKey, setActiveKey] = useState<
-    "image" | "video" | "omnihumen" | "dreamactor" | "library" | "activity"
-  >("image");
+  const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
+  const [teamView, setTeamView] = useState<boolean>(true);
+  const [accessCode, setAccessCode] = useState<string[]>([]);
+
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile, isTablet } = useResponsive();
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
 
-  const [aiModels, setAIModels] = useState<TAIModel[]>([]);
+  const [aiModels, setAIModels] = useState<TMasterModelType[]>([]);
   const [selectedAIModel, setSelectedAIModel] = useState<
-    (TAIModel & { capabilities?: string[] }) | undefined
+    (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const { id } = params as { id: string };
   const organizationId = session?.user?.organizationId;
@@ -66,17 +86,19 @@ const GenerateImagePage: FC = () => {
     }
   };
 
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
+  const normalizedAccessCodes = useMemo(
+    () => accessCode.map((c) => c.toLowerCase().trim()),
+    [accessCode],
+  );
+  const hasAccessControl = normalizedAccessCodes.length > 0;
+  const canAccessImage =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("image"));
+  const canAccessVideo =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("video"));
+  const canAccessOmni =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("omni"));
+  const canAccessDream =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("dream"));
 
   useEffect(() => {
     const fetchProjectRole = async () => {
@@ -94,10 +116,23 @@ const GenerateImagePage: FC = () => {
           console.error("Failed to fetch project role:", error);
         }
       }
+      if (organizationId) {
+        try {
+          const code =
+            await organizationServices.findAccessCodeByOrganizationId(
+              organizationId,
+            );
+          if (code) {
+            setAccessCode(Array.isArray(code) ? code : []);
+          }
+        } catch (error) {
+          console.error("Failed to fetch brand kit:", error);
+        }
+      }
     };
 
     fetchProjectRole();
-  }, [session?.user?.id, id]);
+  }, [session?.user?.id, id, organizationId]);
 
   useEffect(() => {
     if (loadingData) {
@@ -105,12 +140,6 @@ const GenerateImagePage: FC = () => {
       masterdata();
     }
   }, [loadingData]);
-
-  useEffect(() => {
-    if (organizationId) {
-      masterdata();
-    }
-  }, [organizationId]);
 
   const fecthdata = async () => {
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -129,7 +158,7 @@ const GenerateImagePage: FC = () => {
   };
 
   const masterdata = async () => {
-    const models = await aiModelService.findAll();
+    const models = await masterModelTypeServices.findAll();
     setAIModels(models || []);
   };
 
@@ -144,49 +173,23 @@ const GenerateImagePage: FC = () => {
   ) => {
     setActiveKey(key);
 
-    if (processedModels.length > 0) {
+    if (aiModels.length > 0) {
       const savedModelId = localStorage.getItem(`selectedAIModel_${key}_${id}`);
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(
-          (m) =>
-            m.id === parseInt(savedModelId) &&
-            (key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor"),
+        modelToSelect = aiModels.find(
+          (m) => m.id === parseInt(savedModelId) && key === m.type,
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find(
-          (m) =>
-            m.isDefault &&
-            (key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor"),
-        );
+        modelToSelect = aiModels.find((m) => m.isDefault && key === m.type);
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
-          modelToSelect = processedModels.find((m) =>
-            key === "image"
-              ? m.type === "image"
-              : key === "video"
-                ? m.type === "video"
-                : key === "omnihumen"
-                  ? m.type === "omnihumen"
-                  : m.type === "dreamactor",
-          );
+          modelToSelect = aiModels.find((m) => key === m.type);
         }
       }
 
@@ -196,49 +199,50 @@ const GenerateImagePage: FC = () => {
     }
   };
 
-  const processedModels = useMemo(() => {
-    const grouped = aiModels.reduce(
-      (acc, model) => {
-        const key = `${model.name}-${model.type}`;
+  // const processedModels = useMemo(() => {
+  //   const grouped = aiModels.reduce(
+  //     (acc, model) => {
+  //       const key = `${model.name}-${model.type}`;
 
-        if (!acc[key]) {
-          acc[key] = {
-            ...model,
-            capabilities: [model.mode],
-          };
-        } else {
-          acc[key].capabilities.push(model.mode);
-        }
+  //       if (!acc[key]) {
+  //         acc[key] = {
+  //           ...model,
+  //           capabilities: [model.mode],
+  //         };
+  //       } else {
+  //         acc[key].capabilities.push(model.mode);
+  //       }
 
-        return acc;
-      },
-      {} as Record<string, TAIModel & { capabilities: string[] }>,
-    );
-    return Object.values(grouped);
-  }, [aiModels]);
+  //       return acc;
+  //     },
+  //     {} as Record<string, TMasterModelType & { capabilities: string[] }>,
+  //   );
+  //   return Object.values(grouped);
+  // }, [aiModels]);
 
   useEffect(() => {
-    if (processedModels.length > 0 && !selectedAIModel) {
+    console.log(filteredAIModels);
+    if (aiModels.length > 0 && !selectedAIModel) {
       const savedModelId = localStorage.getItem(
         `selectedAIModel_${activeKey}_${id}`,
       );
       let modelToSelect = null;
 
       if (savedModelId) {
-        modelToSelect = processedModels.find(
+        modelToSelect = aiModels.find(
           (m) => m.id === parseInt(savedModelId) && activeKey === m.type,
         );
       }
 
       if (!modelToSelect) {
         // Try to find default model first
-        modelToSelect = processedModels.find(
+        modelToSelect = aiModels.find(
           (m) => m.isDefault && activeKey === m.type,
         );
 
         // Fallback to first available if no default found
         if (!modelToSelect) {
-          modelToSelect = processedModels.find((m) => m.type === activeKey);
+          modelToSelect = aiModels.find((m) => m.type === activeKey);
         }
       }
 
@@ -246,629 +250,258 @@ const GenerateImagePage: FC = () => {
         setSelectedAIModel(modelToSelect);
       }
     }
-  }, [processedModels, activeKey, selectedAIModel, id]);
+    const models = aiModels.filter((model) => activeKey === model.type);
+    setFilteredAIModels(models);
+  }, [aiModels, activeKey, selectedAIModel, id]);
 
-  const filteredAIModels = processedModels.filter(
-    (model) => activeKey === model.type,
-  );
+  const tabIconColorByType: Record<GenerateTabKey, string> = {
+    image: "#1890ff",
+    video: semantic.colorPrimary || "#1677ff",
+    omnihumen: semantic.colorSuccess || "#52c41a",
+    dreamactor: semantic.colorWarning || "#faad14",
+    library: "#1890ff",
+    activity: semantic.colorTextSecondary || "#8c8c8c",
+  };
+
+  const renderTabLabel = (
+    key: GenerateTabKey,
+    text: string,
+    icon: React.ReactNode,
+  ) => {
+    const isDarkMode = mode === "dark";
+    const isActive = activeKey === key;
+
+    return (
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: isMobile ? 6 : 8,
+          padding: isMobile ? "4px 8px" : isTablet ? "5px 10px" : "6px 12px",
+          borderRadius: 8,
+          border:
+            isDarkMode && isActive
+              ? `1px solid ${semantic.colorBorderSecondary || semantic.colorPrimary}`
+              : "1px solid transparent",
+          background:
+            isDarkMode && isActive ? semantic.colorBgElevated : "transparent",
+          color:
+            isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
+          transition: "all 0.2s ease",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            color: isActive
+              ? tabIconColorByType[key]
+              : semantic.colorTextSecondary,
+          }}
+        >
+          {icon}
+        </span>
+        <Typography.Text
+          style={{
+            color:
+              isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
+            marginBottom: 0,
+            fontSize: isMobile ? 12 : isTablet ? 13 : 14,
+          }}
+        >
+          {text}
+        </Typography.Text>
+      </div>
+    );
+  };
+
   return (
     <div
-      className="h-full flex flex-col"
-      style={{ minHeight: "calc(100vh - 80px)" }}
+      className="h-full min-h-0 flex flex-col overflow-hidden"
+      style={{
+        backgroundColor: semantic.colorBgBase,
+      }}
     >
-      <div className="flex-shrink-0">
-        <HeaderGenerateImagePage
-          getProject={getProject}
-          activeKey={activeKey}
-          selectedAIModel={selectedAIModel}
-          filteredAIModels={filteredAIModels}
-          onAIModelChange={(value) => {
-            const model = filteredAIModels.find(
-              (m) => m.id === parseInt(value),
+      <HeaderGenerateImagePage
+        teamView={teamView}
+        setTeamView={setTeamView}
+        getProject={getProject}
+        activeKey={activeKey}
+        selectedAIModel={selectedAIModel}
+        filteredAIModels={filteredAIModels}
+        onAIModelChange={(value) => {
+          const model = filteredAIModels.find((m) => m.id === parseInt(value));
+          setSelectedAIModel(model);
+          if (model) {
+            localStorage.setItem(
+              `selectedAIModel_${activeKey}_${id}`,
+              model.id.toString(),
             );
-            setSelectedAIModel(model);
-            if (model) {
-              localStorage.setItem(
-                `selectedAIModel_${activeKey}_${id}`,
-                model.id.toString(),
-              );
-            }
-          }}
-          promptGuideOpenStatus={promptGuideOpenStatus}
-          onPromptGuideToggle={() =>
-            setPromptGuideOpenStatus(!promptGuideOpenStatus)
           }
-          onSetPromptText={handleSetPromptText}
-        />
-      </div>
-
-      {/* Viewer Role Notification */}
-      {/* {projectRole === "VIEWER" && (
-        <div className="mx-4 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-center gap-2 text-yellow-800">
-            <span className="text-lg">👀</span>
-            <div>
-              <div className="font-medium">Read-Only Access</div>
-              <div className="text-sm">
-                You have VIEWER permissions for this project. You can browse
-                content but cannot use chat features.
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
-
-      {/* Prompt Guide Drawer */}
-      <Drawer
-        title={
-          <div className="flex items-center gap-2">
-            <LightbulbIcon className="w-5 h-5" />
-            <span>Prompt Guide</span>
-          </div>
+        }}
+        promptGuideOpenStatus={promptGuideOpenStatus}
+        onPromptGuideToggle={() =>
+          setPromptGuideOpenStatus(!promptGuideOpenStatus)
         }
-        closable={{ "aria-label": "Close Button" }}
-        onClose={() => setOpen(false)}
-        open={open}
-        width={600}
-      >
-        <div className="space-y-6">
-          {/* Introduction */}
-          <p className="text-gray-300 leading-relaxed">
-            {`This article introduces prompt usage tips for Seedream 4.0's
-            text-to-image generation, image editing, reference-based generation
-            and multi-image creation, helping you quickly get started with video
-            creation and turn ideas into image creations.`}
-          </p>
+        onSetPromptText={handleSetPromptText}
+      />
 
-          {/* General Guidelines Section */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
-            <p className="text-gray-300 leading-relaxed">
-              {`Seedream 4.0 supports a wide range of tasks such as text-to-image
-              generation, image editing, reference-based generation and
-              multi-image creation. For optimal image creation results, consider
-              the following best practices when crafting prompts:`}
-            </p>
-          </div>
-
-          {/* Guidelines List */}
-          <div className="space-y-6">
-            {/* Guideline 1 */}
-            <div>
-              <h3 className="text-lg font-medium text-blue-400 mb-2">
-                1. Clearly describe the scene using natural language
-              </h3>
-              <p className="text-gray-300 mb-3">
-                Use coherent natural language to describe the subject + action +
-                environment. If aesthetics matter, include descriptors of style,
-                color, lighting, or composition.
-              </p>
-              <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> A girl
-                  in a lavish dress walking under a parasol along a tree-lined
-                  path, in the style of a Monet oil painting.
-                </li>
-                <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span> Girl, umbrella,
-                  tree-lined street, oil painting texture.
-                </li>
-              </ul>
-            </div>
-
-            {/* Guideline 2 */}
-            <div>
-              <h3 className="text-lg font-medium text-blue-400 mb-2">
-                2. Specify application scenario
-              </h3>
-              <p className="text-gray-300 mb-3">
-                If you have a specific use case, explicitly state the image
-                purpose and type in your prompt.
-              </p>
-              <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span>{" "}
-                  {`Design
-                  a logo for a gaming company. The logo features a dog playing
-                  with a game controller. The company name "PITBULL" is written
-                  on it.`}
-                </li>
-                <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span>{" "}
-                  {`An abstract
-                  image of a dog holding a controller, and the word PITBULL on
-                  it.`}
-                </li>
-              </ul>
-            </div>
-
-            {/* Guideline 3 */}
-            <div>
-              <h3 className="text-lg font-medium text-blue-400 mb-2">
-                3. Enhance stylistic rendering
-              </h3>
-              <p className="text-gray-300">
-                If a particular style is needed, use precise style keywords or
-                reference images to achieve better results.
-              </p>
-            </div>
-
-            {/* Guideline 4 */}
-            <div>
-              <h3 className="text-lg font-medium text-blue-400 mb-2">
-                4. Improve text rendering accuracy
-              </h3>
-              <p className="text-gray-300 mb-3">
-                Use double quotation marks for the text that needs to appear in
-                the generated image.
-              </p>
-              <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span>
-                  {`
-                  Generate a poster with the title "Seedream 4.0".`}
-                </li>
-                <li className="text-gray-300">
-                  <span className="text-red-400">• Avoid:</span>
-                  {` Generate a
-                  poster titled Seedream 4.0.`}
-                </li>
-              </ul>
-            </div>
-
-            {/* Guideline 5 */}
-            <div>
-              <h3 className="text-lg font-medium text-blue-400 mb-2">
-                5. Clearly define image editing goals and fixed elements
-              </h3>
-              <p className="text-gray-300 mb-3">
-                Use concise, unambiguous instructions for modifications. Avoid
-                vague pronouns. If other elements should remain unchanged,
-                specify that explicitly.
-              </p>
-              <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
-                  <span className="text-green-400">• Recommended:</span> Dress
-                  the tallest panda in pink Peking Opera costume and headgear,
-                  keeping its pose unchanged.
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </Drawer>
-
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 w-full overflow-hidden">
         <Tabs
-          tabPosition={isMobile ? "top" : "left"}
+          tabPosition="top"
           style={{
+            flex: 1,
             height: "100%",
             width: "100%",
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
+            background: semantic.colorBgContainer,
+            borderTop: `1px solid ${semantic.colorBorder}`,
+            minHeight: 0,
+            overflow: "hidden",
           }}
-          className="custom-tabs"
+          className="ant-tabs-full generate-tabs"
           activeKey={activeKey}
           size={isMobile ? "small" : "large"}
-          // tabBarExtraContent={
-          //   activeKey === "image" || activeKey === "video" ? (
-          //     <div className="flex gap-4 items-center relative">
-          //       <div className="flex items-center gap-3">
-          //         <span className="text-sm font-medium text-gray-600 whitespace-nowrap">
-          //           AI Model:
-          //         </span>
-          //         <Select
-          //           size="middle"
-          //           style={{
-          //             minWidth: 280,
-          //           }}
-          //           className="dark-select"
-          //           placeholder="Choose an AI model"
-          //           value={selectedAIModel?.id}
-          //           onChange={(value) => {
-          //             const model = filteredAIModels.find((m) => m.id === value);
-          //             setSelectedAIModel(model || null);
-          //             if (model) {
-          //               localStorage.setItem(
-          //                 `selectedAIModel_${activeKey}_${id}`,
-          //                 model.id.toString()
-          //               );
-          //             }
-          //           }}
-          //           optionLabelProp="label"
-          //         >
-          //           {filteredAIModels
-          //             .filter((model) => model && model.name)
-          //             .map((model) => (
-          //               <Select.Option
-          //                 key={model.id}
-          //                 value={model.id}
-          //                 label={model.name}
-          //               >
-          //                 <Tooltip
-          //                   title={
-          //                     <div className="p-4 max-w-sm">
-          //                       <div className="flex items-center justify-between mb-2">
-          //                         <div className="font-medium text-white">
-          //                           {model.name}
-          //                         </div>
-          //                         {selectedAIModel?.id === model.id && (
-          //                           <div className="text-blue-400 text-xs">
-          //                             ✓ Selected
-          //                           </div>
-          //                         )}
-          //                       </div>
-
-          //                       {model.modelDetails?.description && (
-          //                         <div className="text-gray-300 text-sm leading-relaxed mb-3">
-          //                           {model.modelDetails.description}
-          //                         </div>
-          //                       )}
-
-          //                       {model.modelDetails?.modelId && (
-          //                         <div className="mb-3">
-          //                           <div className="text-gray-400 text-xs mb-1">
-          //                             Model ID
-          //                           </div>
-          //                           <div className="text-gray-200 text-sm font-mono">
-          //                             {model.modelDetails.modelId}
-          //                           </div>
-          //                         </div>
-          //                       )}
-
-          //                       {model.modelDetails?.pricing && (
-          //                         <div className="mb-3">
-          //                           <div className="text-gray-400 text-xs mb-1">
-          //                             Pricing
-          //                           </div>
-          //                           <div className="flex gap-4">
-          //                             {model.modelDetails.pricing
-          //                               .imageToVideo && (
-          //                               <div>
-          //                                 <div className="text-gray-300 text-xs">
-          //                                   Image-to-video
-          //                                 </div>
-          //                                 <div className="text-white font-medium">
-          //                                   {
-          //                                     model.modelDetails.pricing
-          //                                       .imageToVideo
-          //                                   }{" "}
-          //                                   {model.modelDetails.pricing.unit ||
-          //                                     "USD/M tokens"}
-          //                                 </div>
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.pricing.textToVideo && (
-          //                               <div>
-          //                                 <div className="text-gray-300 text-xs">
-          //                                   Text-to-video
-          //                                 </div>
-          //                                 <div className="text-white font-medium">
-          //                                   {
-          //                                     model.modelDetails.pricing
-          //                                       .textToVideo
-          //                                   }{" "}
-          //                                   {model.modelDetails.pricing.unit ||
-          //                                     "USD/M tokens"}
-          //                                 </div>
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.pricing
-          //                               .imageToImage && (
-          //                               <div>
-          //                                 <div className="text-gray-300 text-xs">
-          //                                   Image-to-image
-          //                                 </div>
-          //                                 <div className="text-white font-medium">
-          //                                   {
-          //                                     model.modelDetails.pricing
-          //                                       .imageToImage
-          //                                   }{" "}
-          //                                   {model.modelDetails.pricing.unit ||
-          //                                     "USD/Piece"}
-          //                                 </div>
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.pricing.textToImage && (
-          //                               <div>
-          //                                 <div className="text-gray-300 text-xs">
-          //                                   Text-to-image
-          //                                 </div>
-          //                                 <div className="text-white font-medium">
-          //                                   {
-          //                                     model.modelDetails.pricing
-          //                                       .textToImage
-          //                                   }{" "}
-          //                                   {model.modelDetails.pricing.unit ||
-          //                                     "USD/Piece"}
-          //                                 </div>
-          //                               </div>
-          //                             )}
-          //                           </div>
-          //                         </div>
-          //                       )}
-
-          //                       {(model.modelDetails?.limitations?.resolution ||
-          //                         model.modelDetails?.limitations?.duration ||
-          //                         model.modelDetails?.limitations?.frameRate ||
-          //                         model.modelDetails?.limitations
-          //                           ?.concurrentTasks ||
-          //                         model.modelDetails?.limitations?.rpm) && (
-          //                         <div className="mb-3">
-          //                           <div className="text-gray-400 text-xs mb-1">
-          //                             Limitations
-          //                           </div>
-          //                           <div className="space-y-1">
-          //                             {model.modelDetails.limitations
-          //                               ?.resolution && (
-          //                               <div className="text-gray-300 text-sm">
-          //                                 <span className="text-gray-400">
-          //                                   Resolution:
-          //                                 </span>{" "}
-          //                                 {model.modelDetails.limitations.resolution.join(
-          //                                   ", "
-          //                                 )}
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.limitations
-          //                               ?.duration && (
-          //                               <div className="text-gray-300 text-sm">
-          //                                 <span className="text-gray-400">
-          //                                   Duration:
-          //                                 </span>{" "}
-          //                                 {
-          //                                   model.modelDetails.limitations
-          //                                     .duration
-          //                                 }
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.limitations
-          //                               ?.frameRate && (
-          //                               <div className="text-gray-300 text-sm">
-          //                                 <span className="text-gray-400">
-          //                                   Frame rate:
-          //                                 </span>{" "}
-          //                                 {
-          //                                   model.modelDetails.limitations
-          //                                     .frameRate
-          //                                 }
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.limitations
-          //                               ?.concurrentTasks && (
-          //                               <div className="text-gray-300 text-sm">
-          //                                 <span className="text-gray-400">
-          //                                   Concurrent tasks:
-          //                                 </span>{" "}
-          //                                 {
-          //                                   model.modelDetails.limitations
-          //                                     .concurrentTasks
-          //                                 }
-          //                               </div>
-          //                             )}
-          //                             {model.modelDetails.limitations?.rpm && (
-          //                               <div className="text-gray-300 text-sm">
-          //                                 <span className="text-gray-400">
-          //                                   RPM:
-          //                                 </span>{" "}
-          //                                 {model.modelDetails.limitations.rpm}
-          //                               </div>
-          //                             )}
-          //                           </div>
-          //                         </div>
-          //                       )}
-
-          //                       {model.modelDetails?.status && (
-          //                         <div className="mb-3">
-          //                           <div className="text-gray-400 text-xs mb-1">
-          //                             Status
-          //                           </div>
-          //                           <div
-          //                             className={`inline-block px-2 py-1 text-xs rounded ${
-          //                               model.modelDetails.status === "Activated"
-          //                                 ? "bg-green-600 text-white"
-          //                                 : "bg-gray-600 text-gray-200"
-          //                             }`}
-          //                           >
-          //                             {model.modelDetails.status}
-          //                           </div>
-          //                         </div>
-          //                       )}
-
-          //                       <div className="flex flex-wrap gap-1 mt-2">
-          //                         {model.capabilities?.map(
-          //                           (capability: string) => (
-          //                             <span
-          //                               key={capability}
-          //                               className="px-2 py-0.5 bg-gray-700 text-xs text-gray-200 rounded"
-          //                             >
-          //                               {capability.replace("-", " ")}
-          //                             </span>
-          //                           )
-          //                         )}
-          //                       </div>
-          //                     </div>
-          //                   }
-          //                   placement="right"
-          //                   overlayStyle={{ maxWidth: "none" }}
-          //                 >
-          //                   <div className="flex items-center justify-between">
-          //                     <span>{model.name}</span>
-          //                     {selectedAIModel?.id === model.id && (
-          //                       <span className="text-blue-400 ml-2">✓</span>
-          //                     )}
-          //                   </div>
-          //                 </Tooltip>
-          //               </Select.Option>
-          //             ))}
-          //         </Select>
-          //       </div>
-          //       <Button
-          //         type={promptGuideOpenStatus ? "primary" : "default"}
-          //         ghost={promptGuideOpenStatus}
-          //         onClick={() => setPromptGuideOpenStatus(!promptGuideOpenStatus)}
-          //       >
-          //         Prompt Guild
-          //       </Button>
-          //     </div>
-          //   ) : (
-          //     ""
-          //   )
-          // }
-          onChange={(key) =>
-            onChangeTab(key as "image" | "video" | "library" | "activity")
-          }
+          tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
+          tabBarStyle={{
+            margin: 0,
+            paddingInline: isMobile ? 8 : isTablet ? 10 : 14,
+            overflowX: "auto",
+            overflowY: "hidden",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "thin",
+            scrollBehavior: "smooth",
+          }}
+          onChange={(key) => onChangeTab(key as GenerateTabKey)}
           items={[
-            {
-              disabled: disableTab,
-              key: "image",
-              forceRender: true,
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Image size={20} />
-                  <span className="text-base font-medium">Image Gen</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateImage
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  key={`image`}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  username={session?.user?.name || ""}
-                  selectedAIModel={selectedAIModel}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "video",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Video size={20} />
-                  <span className="text-base font-medium">Video Gen</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateVideo
-                  key={"video"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "omnihumen",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Speech size={20} />
-                  <span className="text-base font-medium">OmniHuman</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateOmnihumen
-                  key={"omnihumen"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "dreamactor",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Clapperboard size={20} />
-                  <span className="text-base font-medium">DreamActor</span>
-                </div>
-              ),
-              children: (
-                <ChatGenerateDreamactor
-                  key={"dreamactor"}
-                  activeKey={activeKey}
-                  projectId={id}
-                  userId={session?.user?.id}
-                  projectRole={projectRole}
-                  promptGuideOpenStatus={promptGuideOpenStatus}
-                  selectedAIModel={selectedAIModel}
-                  username={session?.user?.name || ""}
-                  setDisableTab={setDisableTab}
-                  onSetPromptTextRef={onSetPromptTextRef}
-                />
-              ),
-            },
-            // {
-            //   forceRender: true,
-            //   key: "omnihumen",
-            //   label: (
-            //     <span className="flex justify-center gap-2">
-            //       <ContactRound />
-            //       <div>{`Omni human`}</div>
-            //     </span>
-            //   ),
-            //   children: (
-            //     <PromptOmnihumen
-            //       key={`avatar-${activeKey}`}
-            //       projectId={id}
-            //       token={session?.user?.id}
-            //       isActive={activeKey === "omnihumen"}
-            //     />
-            //   ),
-            // },
-            // {
-            //   forceRender: true,
-            //   key: "omnihumen",
-            //   label: (
-            //     <span className="flex justify-center gap-2">
-            //       <ContactRound />
-            //       <div>{`Omni human`}</div>
-            //     </span>
-            //   ),
-            //   children: (
-            //     <PromptGenerateAvatar
-            //       key={`avatar-${activeKey}`}
-            //       projectId={id}
-            //       userId={session?.user?.id}
-            //     />
-            //   ),
-            // },
+            ...(canAccessImage
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "image",
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    label: renderTabLabel(
+                      "image",
+                      "Image Gen",
+                      <PictureOutlined />,
+                    ),
+                    children: activeKey === "image" && (
+                      <ChatGenerateImage
+                        teamView={teamView}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        key={`image`}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        username={session?.user?.name || ""}
+                        selectedAIModel={selectedAIModel}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(canAccessVideo
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "video",
+                    label: renderTabLabel(
+                      "video",
+                      "Video Gen",
+                      <VideoCameraOutlined />,
+                    ),
+                    children: activeKey === "video" && (
+                      <ChatGenerateVideo
+                        teamView={teamView}
+                        key={"video"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(canAccessOmni
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "omnihumen",
+                    label: renderTabLabel(
+                      "omnihumen",
+                      "OmniHuman",
+                      <MessageOutlined />,
+                    ),
+                    children: activeKey === "omnihumen" && (
+                      <ChatGenerateOmnihumen
+                        teamView={teamView}
+                        key={"omnihumen"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+            ...(canAccessDream
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    destroyOnHidden: true,
+                    key: "dreamactor",
+                    label: renderTabLabel(
+                      "dreamactor",
+                      "DreamActor",
+                      <PlaySquareOutlined />,
+                    ),
+                    children: activeKey === "dreamactor" && (
+                      <ChatGenerateDreamactor
+                        teamView={teamView}
+                        key={"dreamactor"}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        promptGuideOpenStatus={promptGuideOpenStatus}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                        onSetPromptTextRef={onSetPromptTextRef}
+                      />
+                    ),
+                  },
+                ]
+              : []),
             {
               disabled: disableTab,
               forceRender: true,
               key: "library",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Star size={20} />
-                  <span className="text-base font-medium">Library</span>
-                </div>
-              ),
+              label: renderTabLabel("library", "Library", <StarOutlined />),
               children: (
                 <div className="h-full">
                   <PromptLibrary
-                    key={`activity-${activeKey}`}
                     activeKey={activeKey}
+                    key={`activity-${activeKey}`}
                   />
                 </div>
               ),
@@ -877,24 +510,19 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               forceRender: true,
               key: "activity",
-              label: (
-                <div className="flex items-center gap-2 px-2 py-1 w-full">
-                  <Folders size={20} />
-                  <span className="text-base font-medium">All Activity</span>
-                </div>
+              label: renderTabLabel(
+                "activity",
+                "All Activity",
+                <FolderOpenOutlined />,
               ),
               children: (
-                <div className="h-full">
-                  <PromptActivity
-                    activeKey={activeKey}
-                    key={`activity-${activeKey}`}
-                  />
-                </div>
+                <PromptActivity
+                  activeKey={activeKey}
+                  key={`activity-${activeKey}`}
+                />
               ),
             },
-          ]
-          // .filter((item) => !hiddenTabs.includes(item.key))
-        }
+          ]}
         />
       </div>
     </div>

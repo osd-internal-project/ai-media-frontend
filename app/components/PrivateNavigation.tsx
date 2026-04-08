@@ -3,17 +3,17 @@
 import { usePathname } from "next/navigation";
 import Navbar from "./PrivateNavbar";
 import { findMenuLabel, MenuSider } from "../config/menu";
-import { IOrganization } from "../common/organization.type";
+import { ICreditBalance, IOrganization } from "../common/organization.type";
 interface NavigationProps {
   user?: { fullname: string };
   organizationId?: string;
   personalOrganizations: IOrganization[];
   teamOrganizations: IOrganization[];
   handleOrganizationChange: (value: string) => void;
-  handleOpenCreateOrg: () => void;
   handleManageOrg: () => void;
   organizationRole?: string;
   currentOrganization: IOrganization | undefined;
+  creditBalance: ICreditBalance | undefined;
   systemRole?: string;
 }
 
@@ -23,10 +23,10 @@ const PrivateNavigation: React.FC<NavigationProps> = ({
   personalOrganizations,
   teamOrganizations,
   handleOrganizationChange,
-  handleOpenCreateOrg,
   handleManageOrg,
   organizationRole,
   currentOrganization,
+  creditBalance,
   systemRole,
 }) => {
   const pathname = usePathname(); // /page/roles
@@ -40,10 +40,10 @@ const PrivateNavigation: React.FC<NavigationProps> = ({
       personalOrganizations={personalOrganizations}
       teamOrganizations={teamOrganizations}
       handleOrganizationChange={handleOrganizationChange}
-      handleOpenCreateOrg={handleOpenCreateOrg}
       handleManageOrg={handleManageOrg}
       organizationRole={organizationRole}
       currentOrganization={currentOrganization}
+      creditBalance={creditBalance}
       systemRole={systemRole}
     />
   );

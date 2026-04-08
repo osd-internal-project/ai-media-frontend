@@ -2,14 +2,16 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Modal, Image } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "../lib/axios/axios";
-import PlanServices, { Plan } from "../services/plan.service";
+import PlanServices from "../services/plan.service";
 import PricingCards from "../package/components/PricingCards";
 import DetailedComparisonTable from "../package/components/DetailedComparisonTable";
+import { TPlan } from "../common/plan.type";
+// import { Plan } from "../services/plan.service";
 
 interface PackageModalProps {
   open: boolean;
   onClose: () => void;
-  onPlanSelect?: (plan: Plan) => void;
+  onPlanSelect?: (plan: TPlan) => void;
 }
 
 const PackageModal: React.FC<PackageModalProps> = ({
@@ -18,7 +20,7 @@ const PackageModal: React.FC<PackageModalProps> = ({
   onPlanSelect,
 }) => {
   const router = useRouter();
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<TPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
     "monthly",
@@ -28,7 +30,7 @@ const PackageModal: React.FC<PackageModalProps> = ({
 
   // Sort plans by price whenever plans state changes
   const sortedPlans = useMemo(() => {
-    return [...plans].sort((a, b) => a.price.monthly - b.price.monthly);
+    return [...plans];
   }, [plans]);
 
   const fetchPlans = React.useCallback(async () => {
@@ -51,7 +53,7 @@ const PackageModal: React.FC<PackageModalProps> = ({
     }
   }, [open, fetchPlans]);
 
-  const handleGetStarted = (plan: Plan) => {
+  const handleGetStarted = (plan: TPlan) => {
     if (onPlanSelect) {
       onPlanSelect(plan);
       onClose();
@@ -139,8 +141,7 @@ const PackageModal: React.FC<PackageModalProps> = ({
         {!loading && (
           <div className="max-h-[70vh] overflow-y-auto px-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
             <PricingCards
-              plans={sortedPlans}
-              billingPeriod={billingPeriod}
+              plans={sortedPlans} 
               onGetStarted={handleGetStarted}
             />
 

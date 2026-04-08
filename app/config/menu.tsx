@@ -1,14 +1,11 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { CodeOutlined, FileImageOutlined } from "@ant-design/icons";
 import {
-  Bot,
-  LayoutTemplate,
   LayoutDashboard,
-  Settings,
-  ShieldUser,
-  SlidersHorizontal,
+  FolderOpen,
+  PaletteIcon,
+  BookTemplate,
   MessageSquare,
 } from "lucide-react";
 
@@ -26,20 +23,36 @@ export const MenuSider = [
       //   icon: <Bot size={24} />,
       //   label: `Project`,
       // },
+      // {
+      //   key: `project`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
+      //   icon: <MessageSquare size={22} />,
+      //   label: (
+      //     <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
+      //   ),
+      // },
       {
         key: `project`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"],
-        icon: <MessageSquare size={22} />,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
+        icon: <FolderOpen size={22} />,
         label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>Teams</span>
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Projects</span>
         ),
       },
       {
-        key: `settings/template-setting`,
-        role: ["OWNER", "ADMIN", "MEMBER","SUPER_ADMIN"],
-        icon: <SlidersHorizontal size={22} />,
+        key: `settings/template-new`,
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+        icon: <BookTemplate size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Templates</span>
+        ),
+      },
+      {
+        key: `brand-kit`,
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+        icon: <PaletteIcon size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Brand Kit</span>
         ),
       },
       // {
@@ -50,10 +63,18 @@ export const MenuSider = [
       // },
       {
         key: `dashboard`,
-        role: ["OWNER", "ADMIN","SUPER_ADMIN"],
+        role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
         icon: <LayoutDashboard size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Dashboard</span>
+        ),
+      },
+      {
+        key: `assistant`,
+        // role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+        icon: <MessageSquare size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Assistant</span>
         ),
       },
     ],

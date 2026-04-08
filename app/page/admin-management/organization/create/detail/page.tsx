@@ -9,6 +9,7 @@ import PlanServices from "@/app/services/plan.service";
 import UserServices from "@/app/services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { ArrowLeft } from "lucide-react";
+import { TPlan, TPlanPrice } from "@/app/common/plan.type";
 
 export default function CreateOrganizationPage() {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function CreateOrganizationPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
-  const [rawPlans, setRawPlans] = useState<any[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [planPrice, setPlanPrice] = useState<TPlanPrice | undefined>(undefined);
+  // const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const organizationService = OrganizationService(axiosUser);
   const userServices = UserServices(axiosUser);
 
@@ -26,27 +27,24 @@ export default function CreateOrganizationPage() {
 
   useEffect(() => {
     const fetchPlans = async () => {
-      const raw = await planService.findAll();
-      setRawPlans(raw);
-
-      const planId = searchParams.get("plan");
-
-      if (planId) {
-        const rawPlan = raw.find((p) => p.id === planId);
-        if (rawPlan) {
-          setSelectedPlan(rawPlan);
-        }
+      const planPriceId = searchParams.get("price");
+      const raw = await planService.findPlanWithPrice(planPriceId || "");
+      if (!raw) {
+        messageApi.error("Plan not found");
+        router.push("/page/admin-management/organization");
+        return;
       }
+      setPlanPrice(raw);
     };
     fetchPlans();
   }, [planService, searchParams]);
 
   const onFinish = async (values: any) => {
-    if (!selectedPlan) {
+    if (!planPrice || !planPrice.plan) {
       messageApi.error("Please select a plan first");
       return;
     }
-
+    const plan = planPrice.plan;
     setLoading(true);
 
     try {
@@ -56,18 +54,11 @@ export default function CreateOrganizationPage() {
 
       const payload = {
         ...values,
-        packageTokenAmount:
-          parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
-        packageImageAmount:
-          parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
-        remainTokenAmount:
-          parseInt(selectedPlan.detailJson.packageTokenAmount) || 0,
-        remainImageAmount:
-          parseInt(selectedPlan.detailJson.packageImageAmount) || 0,
-        maxUserAccess: parseInt(selectedPlan.detailJson.maxUserAccess) || 1,
+        planId: plan?.id || "",
+        priceId: planPrice?.id || "",
         type: "team",
         createdById: userDetail?.userId || "",
-        slug: values.name.toLowerCase().replace(/ /g, "-"),
+        // slug: values.name.toLowerCase().replace(/ /g, "-"),
       };
 
       // console.log("Payload being sent:", payload);
@@ -135,28 +126,34 @@ export default function CreateOrganizationPage() {
             }}
           >
             {/* Selected Plan Details */}
-            {selectedPlan?.detailJson && (
+            {planPrice?.plan?.detailJson && (
               <div className="mb-6 p-4 bg-[#27272a] rounded-lg border border-[#3f3f46]">
                 <h3 className="text-white font-medium mb-3">
-                  Selected Plan: {selectedPlan.name}
+                  Selected Plan: {planPrice.plan.name}
                 </h3>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-gray-400">Max Users</p>
                     <p className="text-white font-semibold">
-                      {selectedPlan.detailJson.maxUserAccess}
+                      {planPrice.plan.detailJson.maxUserAccess}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Package Tokens</p>
+                    <p className="text-gray-400">Price</p>
                     <p className="text-white font-semibold">
-                      {selectedPlan.detailJson.packageTokenAmount}
+                      {planPrice.price}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Package Images</p>
+                    <p className="text-gray-400">Image</p>
                     <p className="text-white font-semibold">
-                      {selectedPlan.detailJson.packageImageAmount}
+                      {planPrice.plan.detailJson.imageAllowance}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Credit</p>
+                    <p className="text-white font-semibold">
+                      {planPrice.plan.detailJson.creditAllowance}
                     </p>
                   </div>
                 </div>
