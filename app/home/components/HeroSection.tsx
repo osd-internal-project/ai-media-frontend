@@ -22,7 +22,12 @@ export default function HeroSection() {
   useEffect(() => {
     if (!sectionRef.current) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
       { threshold: 0.1 }
     );
     observer.observe(sectionRef.current);
