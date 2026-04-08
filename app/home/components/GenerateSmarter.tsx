@@ -196,23 +196,32 @@ export default function GenerateSmarter() {
           {/* Column 1 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/herosection/5.jpeg" alt="Watch" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/5.jpeg" alt="Watch" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)", pointerEvents: "none" }} />
             </div>
             <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/2.jpeg" alt="Portrait" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/2.jpeg" alt="Portrait" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
             </div>
           </div>
 
           {/* Column 2 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/1.png" alt="Boy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden", cursor: "pointer" }}
+              onMouseEnter={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+              onMouseLeave={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
+            >
+              <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/1.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 3, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 5v14l11-7L8 5z" />
+                </svg>
+              </div>
             </div>
             <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/7.jpg" alt="Face Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/7.jpg" alt="Face Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)", pointerEvents: "none" }} />
             </div>
           </div>
@@ -220,26 +229,35 @@ export default function GenerateSmarter() {
           {/* Column 3 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/6.jpeg" alt="Pig Chef" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/6.jpeg" alt="Pig Chef" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)", pointerEvents: "none" }} />
             </div>
             <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden", backgroundColor: "#ebd5d5" }}>
-              <img src="/images/generate-smarter/3.jpeg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/3.jpeg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/8.jpg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/8.jpg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
             </div>
           </div>
 
           {/* Column 4 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/4.jpeg" alt="Floral Perfume" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top right, rgba(0,0,0,0.6), transparent)", pointerEvents: "none" }} />
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", cursor: "pointer" }}
+              onMouseEnter={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+              onMouseLeave={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
+            >
+              <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/4.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 3, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 5v14l11-7L8 5z" />
+                </svg>
+              </div>
             </div>
             <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden" }}>
-              <img src="/images/generate-smarter/5.jpg" alt="Burger" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/5.jpg" alt="Burger" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)", pointerEvents: "none" }} />
             </div>
           </div>

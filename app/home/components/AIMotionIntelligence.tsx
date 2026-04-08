@@ -34,7 +34,8 @@ export default function AIMotionIntelligence() {
         paddingLeft: "16px",
         paddingRight: "16px",
         // Blends vertically from the previous section
-        background: "linear-gradient(to bottom, #05070a 0%, #0a0e14 40%, #080a0f 100%)",
+        background:
+          "linear-gradient(to bottom, #05070a 0%, #0a0e14 40%, #080a0f 100%)",
         overflow: "hidden",
       }}
     >
@@ -77,7 +78,8 @@ export default function AIMotionIntelligence() {
           style={{
             fontSize: isMd ? "100px" : "40px",
             fontWeight: 900,
-            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            backgroundImage:
+              "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
             WebkitBackgroundClip: "text",
             color: "transparent",
             letterSpacing: "-0.04em",
@@ -90,7 +92,8 @@ export default function AIMotionIntelligence() {
           style={{
             fontSize: isMd ? "100px" : "40px",
             fontWeight: 900,
-            backgroundImage: "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
+            backgroundImage:
+              "linear-gradient(to right, rgba(135, 206, 250, 0.1), rgba(216, 180, 255, 0.1))",
             WebkitBackgroundClip: "text",
             color: "transparent",
             letterSpacing: "-0.04em",
@@ -168,9 +171,14 @@ export default function AIMotionIntelligence() {
                 }}
               >
                 <img
-                  src="/images/ai-motion-intelligence/3.png"
+                  src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-motion-intelligence/3.png"
                   alt="AI Generation Glow"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "95% 40%" }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "95% 40%",
+                  }}
                 />
               </div>
 
@@ -186,9 +194,14 @@ export default function AIMotionIntelligence() {
                 }}
               >
                 <img
-                  src="/images/ai-motion-intelligence/2.png"
+                  src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-motion-intelligence/2.png"
                   alt="AI Generation Eyes"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%" }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center 35%",
+                  }}
                 />
               </div>
             </div>
@@ -208,25 +221,97 @@ export default function AIMotionIntelligence() {
           <div
             style={{
               width: "100%",
+              aspectRatio: "16/10",
               borderRadius: "24px",
               overflow: "hidden",
               border: "1px solid rgba(255,255,255,0.05)",
               boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
               position: "relative",
-              display: "flex",
             }}
           >
-            <img
-              src="/images/ai-motion-intelligence/1.png" // Expected path for actual image if added
-              alt="AI Motion Intelligence Showcase"
-              style={{ width: "100%", height: "auto", display: "block", objectFit: "contain" }}
-
-            />
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "4/3",
+                borderRadius: "16px",
+                overflow: "hidden",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                const v = e.currentTarget.querySelector("video");
+                if (v) v.play();
+              }}
+              onMouseLeave={(e) => {
+                const v = e.currentTarget.querySelector("video");
+                if (v) v.pause();
+              }}
+            >
+              <video
+                src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-motion-intelligence/1.mp4"
+                loop
+                muted
+                playsInline
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.4), transparent)",
+                  pointerEvents: "none",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  zIndex: 3,
+                  backgroundColor: "rgba(0,0,0,0.55)",
+                  backdropFilter: "blur(4px)",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  pointerEvents: "none",
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="white"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M8 5v14l11-7L8 5z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Right: Feature Checklist */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "32px", padding: isMd ? "0 16px" : "0" }}>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "28px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "32px",
+              padding: isMd ? "0 16px" : "0",
+            }}
+          >
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: "28px",
+              }}
+            >
               {features.map((feat, i) => (
                 <li
                   key={i}
@@ -247,8 +332,20 @@ export default function AIMotionIntelligence() {
                       flexShrink: 0,
                     }}
                   >
-                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 5L4 8L11 1" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      width="12"
+                      height="10"
+                      viewBox="0 0 12 10"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1 5L4 8L11 1"
+                        stroke="#ffffff"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
                   <span
