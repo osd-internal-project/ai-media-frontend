@@ -9,6 +9,7 @@ import ByTypeChart from "./by-type-chart";
 import ResourceAlert from "./resource-alert";
 import PendingApprovalCard from "./pending-approval";
 import dayjs from "dayjs";
+import { formatNumber } from "@/app/utils/format";
 
 export default function OverviewTab({
   loading,
@@ -202,7 +203,9 @@ export default function OverviewTab({
                       {item.name}
                     </Typography.Text>
                   </Space>
-                  <Typography.Text>{item.value}</Typography.Text>
+                  <Typography.Text>
+                    {formatNumber(item.value || 0)}
+                  </Typography.Text>
                 </div>
               ))}
             </Space>
