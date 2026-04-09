@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const features = [
   "Turn ideas into high-impact videos - in minutes.",
@@ -14,6 +14,8 @@ const features = [
 
 export default function AIMotionIntelligence() {
   const [windowWidth, setWindowWidth] = useState(1200);
+  const [isImageHovered, setIsImageHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setWindowWidth(window.innerWidth);
@@ -22,10 +24,29 @@ export default function AIMotionIntelligence() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
+    <>
+    <style>{`
+      @keyframes motionFloat1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-14px); } }
+      @keyframes motionFloat2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    `}</style>
     <section
+      ref={sectionRef}
       style={{
         position: "relative",
         width: "100%",
@@ -37,6 +58,9 @@ export default function AIMotionIntelligence() {
         background:
           "linear-gradient(to bottom, #05070a 0%, #0a0e14 40%, #080a0f 100%)",
         overflow: "hidden",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
       }}
     >
       <div
@@ -168,6 +192,7 @@ export default function AIMotionIntelligence() {
                   boxShadow: "0 10px 20px rgba(0,0,0,0.5)",
                   position: "relative",
                   flexShrink: 0,
+                  animation: "motionFloat1 4s ease-in-out infinite",
                 }}
               >
                 <img
@@ -191,6 +216,7 @@ export default function AIMotionIntelligence() {
                   border: "1px solid rgba(255,255,255,0.05)",
                   boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
                   position: "relative",
+                  animation: "motionFloat2 4.5s ease-in-out infinite",
                 }}
               >
                 <img
@@ -219,6 +245,8 @@ export default function AIMotionIntelligence() {
         >
           {/* Left: Main Highlight Image */}
           <div
+            onMouseEnter={(e) => { setIsImageHovered(true); const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+            onMouseLeave={(e) => { setIsImageHovered(false); const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
             style={{
               width: "100%",
               aspectRatio: "16/10",
@@ -227,70 +255,19 @@ export default function AIMotionIntelligence() {
               border: "1px solid rgba(255,255,255,0.05)",
               boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
               position: "relative",
+              cursor: "pointer",
+              transform: isImageHovered ? "translateY(-10px) scale(1.02)" : "none",
+              transition: "transform 0.35s ease, box-shadow 0.35s ease",
             }}
           >
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                aspectRatio: "4/3",
-                borderRadius: "16px",
-                overflow: "hidden",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                const v = e.currentTarget.querySelector("video");
-                if (v) v.play();
-              }}
-              onMouseLeave={(e) => {
-                const v = e.currentTarget.querySelector("video");
-                if (v) v.pause();
-              }}
-            >
-              <video
-                src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-motion-intelligence/1.mp4"
-                loop
-                muted
-                playsInline
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to top, rgba(0,0,0,0.4), transparent)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  zIndex: 3,
-                  backgroundColor: "rgba(0,0,0,0.55)",
-                  backdropFilter: "blur(4px)",
-                  borderRadius: "50%",
-                  width: "32px",
-                  height: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  pointerEvents: "none",
-                }}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M8 5v14l11-7L8 5z" />
-                </svg>
-              </div>
-            </div>
+            <video
+              src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/ai-motion-intelligence/1.mp4"
+              loop
+              muted
+              playsInline
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
           </div>
 
           {/* Right: Feature Checklist */}
@@ -309,52 +286,47 @@ export default function AIMotionIntelligence() {
                 margin: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: "28px",
+                gap: "24px",
               }}
             >
               {features.map((feat, i) => (
                 <li
                   key={i}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "16px",
+                    transform: hoveredIndex === i ? "translateX(8px)" : "none",
+                    opacity: hoveredIndex === null || hoveredIndex === i ? 1 : 0.5,
+                    transition: "transform 0.3s ease, opacity 0.3s ease",
+                    cursor: "pointer",
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginTop: "2px",
+                      background: "linear-gradient(90deg, #7a73ff 0%, #7cd4d8 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      fontSize: i === 0 ? "22px" : "18px",
+                      marginTop: 2,
                       flexShrink: 0,
                     }}
                   >
-                    <svg
-                      width="12"
-                      height="10"
-                      viewBox="0 0 12 10"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 5L4 8L11 1"
-                        stroke="#ffffff"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
+                    ✔
+                  </span>
                   <span
                     style={{
-                      color: "#e2e8f0",
-                      fontSize: "14px",
-                      fontWeight: 400,
-                      lineHeight: 1.5,
-                      letterSpacing: "0.01em",
+                      fontSize: "16px",
+                      fontWeight: 600,
+                      lineHeight: 1.3,
+                      letterSpacing: "-0.01em",
+                      background: "#ffffff",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
                     {feat}
@@ -366,5 +338,6 @@ export default function AIMotionIntelligence() {
         </div>
       </div>
     </section>
+    </>
   );
 }

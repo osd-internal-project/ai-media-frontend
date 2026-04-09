@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const features = [
   {
@@ -70,6 +70,8 @@ const features = [
 
 export default function EnterpriseTeams() {
   const [windowWidth, setWindowWidth] = useState(1200);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
     setWindowWidth(window.innerWidth);
@@ -78,11 +80,25 @@ export default function EnterpriseTeams() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
     <section
+      ref={sectionRef}
       style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
         position: "relative",
         width: "100%",
         paddingTop: "148px",
@@ -220,6 +236,12 @@ export default function EnterpriseTeams() {
           {features.map((feature, index) => (
             <div
               key={index}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-6px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "none";
+              }}
               style={{
                 background: "linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
                 border: "1px solid rgba(255,255,255,0.05)",
@@ -230,6 +252,8 @@ export default function EnterpriseTeams() {
                 gap: "24px",
                 alignItems: "flex-start",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+                cursor: "pointer",
+                transition: "transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease",
               }}
             >
               {/* Icon Container */}

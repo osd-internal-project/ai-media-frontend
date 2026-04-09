@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const tabs = [
   "4K Image Generation",
@@ -20,10 +20,24 @@ export default function GenerateSmarter() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
     <div
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
       style={{
         position: "relative",
         width: "100%",
@@ -33,6 +47,9 @@ export default function GenerateSmarter() {
         paddingRight: "16px",
         background: "linear-gradient(to bottom, #080c17 40%, rgba(31, 27, 62, 0.4) 100%)", // Blend into next section
         overflow: "hidden",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
       }}
     >
       {/* Background radial gradient glow */}
@@ -195,11 +212,19 @@ export default function GenerateSmarter() {
         >
           {/* Column 1 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/herosection/5.jpeg" alt="Watch" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6), transparent)", pointerEvents: "none" }} />
             </div>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/2.jpeg" alt="Portrait" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
             </div>
@@ -208,19 +233,18 @@ export default function GenerateSmarter() {
           {/* Column 2 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div
-              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden", cursor: "pointer" }}
-              onMouseEnter={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
-              onMouseLeave={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
+              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden", cursor: "pointer", transition: "transform 0.35s ease, box-shadow 0.35s ease" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
             >
               <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/1.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 3, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5v14l11-7L8 5z" />
-                </svg>
-              </div>
             </div>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/7.jpg" alt="Face Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)", pointerEvents: "none" }} />
             </div>
@@ -228,14 +252,26 @@ export default function GenerateSmarter() {
 
           {/* Column 3 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/6.jpeg" alt="Pig Chef" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.5), transparent)", pointerEvents: "none" }} />
             </div>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden", backgroundColor: "#ebd5d5" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden", backgroundColor: "#ebd5d5", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/3.jpeg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/8.jpg" alt="Hummingbird" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
             </div>
@@ -244,19 +280,18 @@ export default function GenerateSmarter() {
           {/* Column 4 */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div
-              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", cursor: "pointer" }}
-              onMouseEnter={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
-              onMouseLeave={(e) => { const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "16px", overflow: "hidden", cursor: "pointer", transition: "transform 0.35s ease, box-shadow 0.35s ease" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; const v = e.currentTarget.querySelector("video"); if (v) v.play(); }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; const v = e.currentTarget.querySelector("video"); if (v) v.pause(); }}
             >
               <video src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/4.mp4" loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 3, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 5v14l11-7L8 5z" />
-                </svg>
-              </div>
             </div>
-            <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden" }}>
+            <div
+              style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden", transition: "transform 0.35s ease, box-shadow 0.35s ease", cursor: "pointer" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <img src="https://ai-cave.tos-ap-southeast-3.bytepluses.com/mockup/generate-smarter/5.jpg" alt="Burger" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)", pointerEvents: "none" }} />
             </div>

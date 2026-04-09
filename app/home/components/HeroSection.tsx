@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
 
 export default function HeroSection() {
@@ -15,6 +15,24 @@ export default function HeroSection() {
 
   const isMd = windowWidth >= 768;
   const isLg = windowWidth >= 1024;
+
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const [hoveredImg, setHoveredImg] = useState<number | null>(null);
   const [hoveredBtn, setHoveredBtn] = useState<number | null>(null);
@@ -85,7 +103,9 @@ export default function HeroSection() {
   };
 
   return (
+    <>
     <section
+      ref={sectionRef}
       style={{
         position: "relative",
         width: "100%",
@@ -218,6 +238,9 @@ export default function HeroSection() {
             justifyContent: "center",
             alignItems: "center",
             columnGap: isMd ? "12px" : "6px",
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(40px)",
+            transition: "opacity 0.9s ease, transform 0.9s ease",
           }}
         >
           <span>Enterprise AI for</span>
@@ -266,6 +289,9 @@ export default function HeroSection() {
             lineHeight: 1.625,
             paddingLeft: "16px",
             paddingRight: "16px",
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(40px)",
+            transition: "opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s",
           }}
         >
           Create commercial-grade visuals in minutes — with full brand control, team governance, and enterprise security.
@@ -280,6 +306,9 @@ export default function HeroSection() {
             fontWeight: 400,
             marginBottom: "40px",
             letterSpacing: "0.01em",
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(40px)",
+            transition: "opacity 0.9s ease 0.3s, transform 0.9s ease 0.3s",
           }}
         >
           Built for businesses. Powered by advanced AI.
@@ -296,6 +325,9 @@ export default function HeroSection() {
             width: "100%",
             paddingLeft: "16px",
             paddingRight: "16px",
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(40px)",
+            transition: "opacity 0.9s ease 0.45s, transform 0.9s ease 0.45s",
           }}
         >
           <button
@@ -349,6 +381,9 @@ export default function HeroSection() {
             alignItems: "center",
             height: isMd ? "480px" : "280px",
             marginLeft: "auto",
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(40px)",
+            transition: "opacity 0.9s ease 0.6s, transform 0.9s ease 0.6s",
             marginRight: "auto",
             perspective: "1200px",
           }}
@@ -376,29 +411,6 @@ export default function HeroSection() {
                   zIndex: 2,
                 }}
               ></div>
-              {item.src.endsWith(".mp4") && hoveredImg !== item.id && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    zIndex: 3,
-                    backgroundColor: "rgba(0,0,0,0.55)",
-                    backdropFilter: "blur(4px)",
-                    borderRadius: "50%",
-                    width: "32px",
-                    height: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    pointerEvents: "none",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 5v14l11-7L8 5z" />
-                  </svg>
-                </div>
-              )}
               {item.src.endsWith(".mp4") ? (
                 <video
                   src={item.src}
@@ -419,5 +431,6 @@ export default function HeroSection() {
         </div>
       </div>
     </section>
+    </>
   );
 }

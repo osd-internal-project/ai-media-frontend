@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function WhyAICave() {
   const [windowWidth, setWindowWidth] = useState(1200);
+  const [isImageHovered, setIsImageHovered] = useState(false);
 
   useEffect(() => {
     setWindowWidth(window.innerWidth);
@@ -12,10 +13,24 @@ export default function WhyAICave() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const isMd = windowWidth >= 768;
 
   return (
     <section
+      ref={sectionRef}
       style={{
         position: "relative",
         width: "100%",
@@ -28,6 +43,9 @@ export default function WhyAICave() {
         flexDirection: "column",
         alignItems: "center",
         overflow: "hidden",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(40px)",
+        transition: "opacity 0.9s ease, transform 0.9s ease",
       }}
     >
       <div
@@ -161,7 +179,12 @@ export default function WhyAICave() {
               "Scalable across departments",
               "Backed by enterprise AI infrastructure"
             ].map((item, index) => (
-              <li key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <li
+                key={index}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateX(6px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; }}
+                style={{ display: "flex", alignItems: "center", gap: "12px", transition: "transform 0.25s ease", cursor: "pointer" }}
+              >
                 <svg width="12" height="12" viewBox="0 0 14 10" fill="none" style={{ flexShrink: 0 }}>
                   <path d="M1 5L5 9L13 1" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -173,6 +196,8 @@ export default function WhyAICave() {
 
         {/* Right Side: Image */}
         <div
+          onMouseEnter={() => setIsImageHovered(true)}
+          onMouseLeave={() => setIsImageHovered(false)}
           style={{
             flex: 1,
             width: "100%",
@@ -180,6 +205,9 @@ export default function WhyAICave() {
             overflow: "hidden",
             boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
             aspectRatio: isMd ? "1.1/1" : "1/1",
+            cursor: "pointer",
+            transform: isImageHovered ? "translateY(-8px) scale(1.02)" : "none",
+            transition: "transform 0.35s ease, box-shadow 0.35s ease",
           }}
         >
           <img
