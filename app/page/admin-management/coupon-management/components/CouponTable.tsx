@@ -70,13 +70,13 @@ const CouponTable: React.FC<Props> = ({
         </Typography.Paragraph>
       ),
     },
-    {
-      title: "Credit",
-      dataIndex: "onTopCredit",
-      key: "onTopCredit",
-      width: 100,
-      render: (val: number) => formatNumber(val),
-    },
+    // {
+    //   title: "Credit",
+    //   dataIndex: "onTopCredit",
+    //   key: "onTopCredit",
+    //   width: 100,
+    //   render: (val: number) => formatNumber(val),
+    // },
     {
       title: " Limit",
       dataIndex: "usageLimit",
