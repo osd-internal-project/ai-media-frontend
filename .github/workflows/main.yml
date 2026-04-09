@@ -153,6 +153,9 @@ jobs:
             -f ./charts/aicave-console-chart/values-${DEPLOY_ENV}.yaml \
             --set image.repository=swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${NAME} \
             --set image.tag=${VER} \
+            --set secretEnv.NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }} \
+            --set secretEnv.KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID }} \
+            --set secretEnv.KEYCLOAK_CLIENT_SECRET=${{ secrets.KEYCLOAK_CLIENT_SECRET }} \
             --namespace aicave-${DEPLOY_ENV} \
             --wait \
             --timeout 5m \
