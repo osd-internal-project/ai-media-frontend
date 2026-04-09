@@ -57,6 +57,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build --no-cache --platform linux/amd64 \
+            --build-arg BUILD_ENV=${{ env.DEPLOY_ENV }} \
             -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} -f ./Dockerfile .
 
       # ---------------------------------------------------------------------

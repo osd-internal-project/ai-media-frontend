@@ -21,11 +21,16 @@ RUN yarn install --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 
+ARG BUILD_ENV=sit
+
 # Copy node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy entire project
 COPY . .
+
+# Use the environment-specific .env file
+RUN cp .env.${BUILD_ENV} .env
 
 # Build Next.js standalone output
 RUN yarn build
