@@ -281,6 +281,7 @@ const AdminUsersManagementPage = () => {
             showSizeChanger: false,
           }}
           scroll={{ x: "max-content" }}
+          size="small"
         />
       </Spin>
     </div>

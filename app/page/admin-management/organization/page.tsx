@@ -285,6 +285,7 @@ export default function OrganizationPage() {
           rowKey="organizationId"
           loading={loading}
           scroll={{ x: 1400 }}
+          size="small"
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

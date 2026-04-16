@@ -248,6 +248,7 @@ export default function PlanManagementPage() {
             pageSize: 10,
             showTotal: (total) => `Total ${total} plans`,
           }}
+          size="small"
           className="custom-table"
           locale={{ emptyText: "No plans found" }}
         />

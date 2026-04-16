@@ -233,6 +233,7 @@ const ModelPricingManagementPage = () => {
       <Table
         dataSource={models}
         columns={columns}
+        size="small"
         rowKey="id"
         loading={loading}
         pagination={false}
