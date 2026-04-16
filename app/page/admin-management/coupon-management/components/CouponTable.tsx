@@ -142,7 +142,7 @@ const CouponTable: React.FC<Props> = ({
   ];
 
   return (
-    <div style={{ padding: 24, borderRadius: 8 }}>
+    <div style={{  borderRadius: 8 }}>
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
         <Space size="middle">
           <Input

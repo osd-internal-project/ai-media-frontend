@@ -186,7 +186,7 @@ const ModelPricingManagementPage = () => {
       render: (details) => {
         if (!details) return "-";
         return (
-          <div className="max-w-md truncate text-gray-400 text-xs bg-gray-900 p-2 rounded">
+          <div className="max-w-md truncate text-gray-400 text-xs bg-gray-800 p-2 rounded">
             {JSON.stringify(details)}
           </div>
         );
@@ -215,10 +215,10 @@ const ModelPricingManagementPage = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Model Calculation Logic</h1>
+          <h1 className="text-2xl font-bold  mb-2">Model Calculation Logic</h1>
           <p className="text-gray-400">Manage credit/token formulas for each GenAI model</p>
         </div>
         <Button
@@ -236,7 +236,7 @@ const ModelPricingManagementPage = () => {
         rowKey="id"
         loading={loading}
         pagination={false}
-        className="bg-[#141414] rounded-lg border border-gray-800"
+        className="rounded-lg  "
       />
 
       <Modal

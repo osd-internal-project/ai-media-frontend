@@ -53,8 +53,7 @@ const UserFiltersPage: FC<props> = ({
           prefix={<SearchOutlined className="text-gray-500" />}
           className="w-10  text-white "
           style={{
-            backgroundColor: "#1f2937",
-            borderColor: "#374151",
+       
             color: "white",
           }}
           value={search}
@@ -63,21 +62,20 @@ const UserFiltersPage: FC<props> = ({
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700"
+            className="!border-gray-700 !hover:bg-gray-700"
             onClick={onRefresh}
           />
           <Button
             icon={<DownloadOutlined />}
-            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-7000"
+            className="!border-gray-700 !hover:bg-gray-7000"
           />
           <Button
             icon={<SettingOutlined />}
-            className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700"
+            className="!border-gray-700  !hover:bg-gray-700"
           />
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            className="!bg-indigo-600 hover:!bg-indigo-700"
             onClick={() => handleManage("create")}
           >
             Create New User

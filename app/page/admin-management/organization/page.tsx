@@ -217,29 +217,25 @@ export default function OrganizationPage() {
   ];
 
   return (
-    <div className="w-full h-full bg-[#0f1419] p-6">
+    <div className="w-full h-full ">
       {contextHolder}
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-2">
+      <div className="">
+        <h1 className="text-2xl font-bold mb-2">
           Organization Management
         </h1>
         <p className="text-gray-400">Manage all organizations in the system</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-800/50 p-4 rounded-lg mb-4">
+      <div className=" p-4 rounded-lg mb-4">
         <div className="flex items-center justify-between gap-2">
           <Input
             placeholder="Search organizations..."
-            prefix={<SearchOutlined className="text-gray-500" />}
-            className="w-96 text-white"
-            style={{
-              backgroundColor: "#1f2937",
-              borderColor: "#374151",
-              color: "white",
-            }}
+            prefix={<SearchOutlined className="" />}
+            className="w-96"
+         
             value={searchObject.searchText}
             onChange={(e) =>
               setSearchObject({ ...searchObject, searchText: e.target.value })
@@ -248,17 +244,13 @@ export default function OrganizationPage() {
           <Select
             allowClear
             placeholder="Search organizations..."
-            prefix={<SearchOutlined className="text-gray-500" />}
-            className="w-96 text-white"
+            prefix={<SearchOutlined />}
+            className="w-96 "
             value={searchObject.type}
             onChange={(value) =>
               setSearchObject({ ...searchObject, type: value })
             }
-            style={{
-              backgroundColor: "#1f2937",
-              borderColor: "#374151",
-              color: "white",
-            }}
+        
             options={[
               { value: "team", label: "Team" },
               { value: "personal", label: "Personal" },
@@ -267,14 +259,12 @@ export default function OrganizationPage() {
           <Space>
             <Button
               icon={<ReloadOutlined />}
-              className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700"
               onClick={fetchData}
               loading={loading}
             />
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              className="!bg-indigo-600 hover:!bg-indigo-700"
               onClick={() =>
                 router.push(
                   "/page/admin-management/organization/create/package",
@@ -288,7 +278,7 @@ export default function OrganizationPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800/50 rounded-lg overflow-hidden">
+      <div className=" rounded-lg overflow-hidden">
         <Table
           columns={columns}
           dataSource={data}

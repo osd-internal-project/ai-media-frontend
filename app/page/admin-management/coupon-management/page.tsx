@@ -144,15 +144,15 @@ export default function CouponManagementPage() {
   };
 
   return (
-    <div style={{ padding: "24px 48px" }}>
+    <div>
       <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
         {contextHolder}
-        <Breadcrumb style={{ marginBottom: 16 }}>
+        {/* <Breadcrumb style={{ marginBottom: 16 }}>
           <Breadcrumb.Item>
             <Link href="/page/admin-management">Admin Management</Link>
           </Breadcrumb.Item>
           <Breadcrumb.Item>Coupon Management</Breadcrumb.Item>
-        </Breadcrumb>
+        </Breadcrumb> */}
 
         <Title level={2}>Coupon Management</Title>
 

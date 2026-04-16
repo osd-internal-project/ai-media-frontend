@@ -3,9 +3,11 @@
 import type { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import { useThemeMode } from "@/app/components/ThemeProvider";
+import { axiosUser } from "@/app/lib/axios/axios";
 import type { ByTypeItem } from "@/app/page/dashboard/components/tabs/types";
+import CouponService from "@/app/services/coupon.service";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
-import { Button, Card, Col, Progress, Row, Space, Typography, theme } from "antd";
+import { Button, Card, Col, Form, Modal, Row, Space, Typography, theme } from "antd";
 import {
   CalendarDays,
   Gauge,
@@ -14,13 +16,15 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { FC } from "react";
+import { FC, useState } from "react";
+import { useSession } from "next-auth/react";
 import DailyCreditAct from "./components/daily-credit-act";
 import SpendByTypeChart from "./components/spend-by-type-chart";
 import CreditStatic from "./components/credit-static";
 import "./styles/credit-style.css"
 import TransactionHistory from "./components/transaction-history";
 import ExpireNotice from "./components/expire-notice";
+import RedeemCouponModal from "./components/redeem-coupon-modal";
 
 type CreditStatCard = {
   label: string;
@@ -43,9 +47,12 @@ const usedCreditPerMonthMock: IDashboardCreditPerMonthAndType[] = [
 ];
 
 const CreditPage: FC = () => {
+  const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { token } = theme.useToken();
+  const couponService = CouponService(axiosUser);
+  const [modal, contextHolder] = Modal.useModal();
 
   const usedCreditByTypeMock: ByTypeItem[] = [
     { name: "Image", value: 1785, color: token.colorPrimary },
@@ -95,9 +102,68 @@ const CreditPage: FC = () => {
       iconColor: token.colorSuccess,
     },
   ];
+  const [open, setOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [form] = Form.useForm();
+
+  const showModal = () => {
+      setOpen(true);
+    };
+  
+  const handleOk = () => {
+    form.submit();
+  };
+
+  const handleCouponSubmit = async (values: { couponCode: string }) => {
+    const organizationId = session?.user?.organizationId;
+    const userId = session?.user?.userId;
+
+    if (!organizationId || !userId) {
+      modal.error({
+        title: "Error",
+        content: "Session expired or missing organization information",
+      });
+      return;
+    }
+
+    setConfirmLoading(true);
+    try {
+      await couponService.useCoupon({
+        code: values.couponCode.trim(),
+        organizationId,
+        userId,
+      });
+
+      modal.success({
+        title: "Success",
+        content: "Coupon applied successfully!",
+      });
+
+      form.resetFields();
+      setOpen(false);
+      window.location.reload();
+    } catch (error: any) {
+      const errorMessage = Array.isArray(error?.response?.data?.message)
+        ? error.response.data.message.join(", ")
+        : error?.response?.data?.message || "Failed to apply coupon";
+
+      modal.error({
+        title: "Error",
+        content: errorMessage,
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+  
+  const handleCancel = () => {
+    form.resetFields();
+    setOpen(false);
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {contextHolder}
       <PageSubHeader
         title="Credit Usage"
         subtitle="Real-time credit tracking & history"
@@ -108,7 +174,7 @@ const CreditPage: FC = () => {
         chipBg={semantic.colorBgTextActive!!}
         chipText={semantic.colorTextSecondary!!}
         rightSlot={
-          <Button type="primary" icon={<Ticket size={14} />}>
+          <Button type="primary" onClick={showModal} icon={<Ticket size={14} />} >
             Redeem Coupon
           </Button>
         }
@@ -118,61 +184,7 @@ const CreditPage: FC = () => {
           {/* Content */}
               <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
            <Space direction="vertical" style={{ width: "100%", paddingTop: 24, paddingBottom: 12 }} size={16} >   
-      {/* <Row gutter={[16, 16]} style={{padding: "0 24px" }}>
-        {statCards.map((card) => (
-          <Col xs={24} sm={12} lg={6} key={card.label}>
-            <Card style={{ height: "100%" }}>
-              <div className="mb-2 flex items-center justify-between">
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {card.label}
-                </Typography.Text>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 8,
-                    background: card.iconBg,
-                    color: card.iconColor,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {card.icon}
-                </div>
-              </div>
-
-              <Typography.Title level={3} style={{ margin: 0 }}>
-                {card.value}
-              </Typography.Title>
-
-              {typeof card.progress === "number" ? (
-                <>
-                  <Progress percent={Math.min(card.progress, 100)} showInfo={false} />
-                  <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                    {card.sub} · {card.progress.toFixed(0)}% used
-                  </Typography.Text>
-                </>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                    {card.sub}
-                  </Typography.Text>
-                  {card.trend && (
-                    <span
-                      className="ml-auto flex items-center gap-1"
-                      style={{ fontSize: 11, color: token.colorSuccess }}
-                    >
-                      <TrendingUp size={12} />
-                      {card.trend}
-                    </span>
-                  )}
-                </div>
-              )}
-            </Card>
-          </Col>
-        ))}
-      </Row> */}
+    
           <CreditStatic />
 
       <Row gutter={[16, 16]} align="stretch"  style={{padding: "0 24px" }}>
@@ -233,7 +245,15 @@ const CreditPage: FC = () => {
                       <TransactionHistory />  </div> 
                  <div style={{ padding: "0 24px" }}> <ExpireNotice/></div>
           </Space>
-          </div>
+      </div>
+        <RedeemCouponModal
+          open={open}
+          form={form}
+          handleOk={handleOk}
+          handleFinish={handleCouponSubmit}
+          confirmLoading={confirmLoading}
+          handleCancel={handleCancel}
+        />
           </div>
   );
 };

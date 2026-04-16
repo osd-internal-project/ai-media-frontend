@@ -56,16 +56,21 @@ type CreditTransaction = {
   generationType?: "image" | "video" | "omnihuman" | "dreamactor";
 };
 
-export default function TransactionHistory() {
+type TransactionHistoryProps = {
+  size?: "default" | "compact";
+};
+
+export default function TransactionHistory({ size = "default" }: TransactionHistoryProps) {
   const { mode } = useThemeMode();
   const { isMobile } = useResponsive();
   const semantic = getThemeConfig(mode).token ?? {};
+  const isCompact = size === "compact";
   const [filterType, setFilterType] = useState("allType");
-  const [visibleCount, setVisibleCount] = useState(8);
+  const pageSize = isCompact ? 4 : 8;
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const now = new Date("2026-04-01");
-  const pageSize = 8;
   const colorPrimary = semantic.colorPrimary ?? aiCaveColors.primary;
   const colorSuccess = semantic.colorSuccess ?? aiCaveColors.success;
   const colorInfo = semantic.colorInfo ?? aiCaveColors.secondary;
@@ -174,7 +179,7 @@ export default function TransactionHistory() {
         <Space>
           <Select
             defaultValue="allType"
-            style={{ width: 150 }}
+            style={{ width: isCompact ? 124 : 150 }}
             onChange={handleChange}
             options={[
               { value: "allType", label: "All Types" },
@@ -190,7 +195,7 @@ export default function TransactionHistory() {
         borderRadius: 22,
         border: `1px solid ${semantic.colorBorder}`,
         background: semantic.colorBgContainer,
-        height: isMobile ? 480 : 560,
+        height: isCompact ? (isMobile ? 380 : 430) : (isMobile ? 480 : 560),
         overflow: "hidden",
         boxShadow:
           mode === "dark"
@@ -199,7 +204,7 @@ export default function TransactionHistory() {
       }}
       styles={{
         body: {
-          padding: isMobile ? 18 : 24,
+          padding: isCompact ? (isMobile ? 14 : 16) : (isMobile ? 18 : 24),
           display: "flex",
           flexDirection: "column",
         },
@@ -208,7 +213,7 @@ export default function TransactionHistory() {
       <div
         id="credit-transaction-scroll"
         style={{
-          height: isMobile ? 340 : 410,
+          height: isCompact ? (isMobile ? 255 : 285) : (isMobile ? 340 : 410),
           overflowY: "auto",
           overflowX: "hidden",
         }}
@@ -246,7 +251,7 @@ export default function TransactionHistory() {
                       style={{
                         display: "block",
                         margin: 0,
-                        fontSize: 12,
+                        fontSize: isCompact ? 11 : 12,
                         lineHeight: 1.3,
                       }}
                       ellipsis={{ tooltip: title }}
@@ -255,17 +260,17 @@ export default function TransactionHistory() {
                     </Text>
                   }
                   description={
-                    <Text style={{ fontSize: 10,}} type="secondary" ellipsis={{ tooltip: `${formatDate(item.timestamp)} | ${item.description}` }}>
+                    <Text style={{ fontSize: isCompact ? 9 : 10,}} type="secondary" ellipsis={{ tooltip: `${formatDate(item.timestamp)} | ${item.description}` }}>
                       {formatDate(item.timestamp)} | {item.description}
                     </Text>
                   }
                 />
                 <div style={{ flexShrink: 0, paddingRight: 8}}>
                   <Space direction="vertical" align="end" size={2}>
-                    <Text style={{ color: amountColor, fontSize: 12,  }}>
+                    <Text style={{ color: amountColor, fontSize: isCompact ? 11 : 12,  }}>
                       {item.amount > 0 ? `+${item.amount}` : item.amount} cr
                     </Text>
-                    <Text style={{fontSize: 10,}} type="secondary">{item.balanceAfter} bal</Text>
+                    <Text style={{fontSize: isCompact ? 9 : 10,}} type="secondary">{item.balanceAfter} bal</Text>
                   </Space>
                 </div>
               </List.Item>
