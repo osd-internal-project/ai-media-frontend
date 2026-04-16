@@ -92,6 +92,7 @@ jobs:
   deploy:
     runs-on: [self-hosted, k8s]
     needs: build-and-deploy
+    environment: ${{ inputs.deploy_env || 'sit' }}
 
     steps:
       # ---------------------------------------------------------------------
