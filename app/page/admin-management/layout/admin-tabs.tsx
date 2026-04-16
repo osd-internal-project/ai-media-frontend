@@ -3,7 +3,7 @@
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { Button } from "antd";
-import { Building2, Cpu, PersonStanding, Ticket, User2 } from "lucide-react";
+import { Box, Building2, Cpu, PersonStanding, Ticket, User2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FC, useState, useTransition, type CSSProperties } from "react";
 
@@ -35,7 +35,7 @@ const adminTabs: AdminTabItem[] = [
         label: "Plans",
         href: "/page/admin-management/plan-management",
         matchers: ["/plan-management"],
-        icon: <Ticket size={16} />,
+        icon: <Box size={16} />,
     },
     {
         key: "model-pricing",
@@ -49,7 +49,7 @@ const adminTabs: AdminTabItem[] = [
         label: "Coupons",
         href: "/page/admin-management/coupon-management",
         matchers: ["/coupon-management"],
-        icon: <Building2 size={16} />,
+        icon: <Ticket size={16} />,
     },
 ];
 
