@@ -140,9 +140,9 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
       items={[
         { key: "colors", label: <Space size={isMobile ? 2 : 4}><BgColorsOutlined />Colors</Space> },
         { key: "typography", label: <Space size={isMobile ? 2 : 4}><FontSizeOutlined />Typography</Space> },
-        { key: "logos", label: <Space size={isMobile ? 2 : 4}><PictureOutlined />Logos</Space> },
+        // { key: "logos", label: <Space size={isMobile ? 2 : 4}><PictureOutlined />Logos</Space> },
         { key: "ci", label: <Space size={isMobile ? 2 : 4}><BranchesOutlined />CI Prompt</Space> },
-        { key: "voice", label: <Space size={isMobile ? 2 : 4}><MessageOutlined />Brand Voice</Space> },
+        // { key: "voice", label: <Space size={isMobile ? 2 : 4}><MessageOutlined />Brand Voice</Space> },
       ]}
     />
 
