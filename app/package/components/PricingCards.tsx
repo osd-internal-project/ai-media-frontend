@@ -11,7 +11,7 @@ interface PricingCardsProps {
 }
 
 const PricingCards: React.FC<PricingCardsProps> = ({
-  plans,
+  plans, 
   // billingPeriod,
   onGetStarted,
 }) => {

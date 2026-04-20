@@ -1,15 +1,13 @@
 "use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Button, Image } from "antd";
+import { Button, Image, Segmented } from "antd";
 import { useRouter } from "next/navigation";
 import { axiosCore } from "@/app/lib/axios/axios";
-import PlanServices from "@/app/services/plan.service"; 
+import PlanServices from "@/app/services/plan.service";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { TPlan } from "@/app/common/plan.type";
-import DetailedComparisonTable from "@/app/package/components/DetailedComparisonTable";
+import { TPlan, TPlanInterval } from "@/app/common/plan.type";
+// import DetailedComparisonTable from "@/app/package/components/DetailedComparisonTable";
 import PricingCards from "@/app/components/package/PricingCards";
- ;
-
 const PackagePage = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -17,6 +15,8 @@ const PackagePage = () => {
   //   "monthly",
   // );
   const [plans, setPlans] = useState<TPlan[]>([]);
+  const [interval, setInterval] = useState<TPlanInterval>("MONTH");
+
   const [loading, setLoading] = useState(true);
   const pricingRef = useRef<HTMLDivElement | null>(null);
   const featureRef = useRef<HTMLDivElement | null>(null);
@@ -45,7 +45,7 @@ const PackagePage = () => {
       // const sortedPlans = [...data].sort(
       //   (a: Plan, b: Plan) => a.price.monthly - b.price.monthly,
       // );
-console.log(data)
+      console.log(data);
       setPlans(data);
     } catch (error) {
       console.error("Failed to fetch plans:", error);
@@ -80,12 +80,21 @@ console.log(data)
       {/* Content */}
       {/* What is AI Cave Section */}
 
-      <div ref={pricingRef} className="container mx-auto px-4 py-8">
+      <div
+        ref={pricingRef}
+        className="container mx-auto px-4 py-8 justify-between"
+      >
         {/* Header */}
         <div>
           <Button type="link" onClick={handleToOrganizationPage}>
             <ArrowLeftOutlined /> Back
-          </Button>
+          </Button>{" "}
+          <Segmented<TPlanInterval>
+            options={["MONTH", "YEAR"]}
+            onChange={(value) => {
+              setInterval(value);
+            }}
+          />
         </div>
         {/* <div className="text-center mb-8">
           <div className="inline-flex bg-gray-800 rounded-lg p-1 mb-6">
@@ -114,14 +123,14 @@ console.log(data)
             </button>
           </div>
         </div> */}
-
         {/* Pricing Cards */}
         <PricingCards
           plans={sortedPlans}
           // billingPeriod={billingPeriod}
           onGetStarted={handleGetStarted}
+          planInterval={interval}
+          generateManualPrice={true}
         />
-
         {/* Detailed Comparison Table */}
         {/* <div ref={featureRef}>
           <DetailedComparisonTable plans={sortedPlans} />

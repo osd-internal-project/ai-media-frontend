@@ -58,3 +58,4 @@ export interface TPlan {
   createdAt?: string;
   updatedAt?: string;
 }
+export type TPlanInterval = "MONTH" | "YEAR" | "DAY";

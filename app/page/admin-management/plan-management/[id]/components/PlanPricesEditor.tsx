@@ -30,7 +30,7 @@ export const PlanPricesEditor: React.FC<PlanPricesEditorProps> = ({
 
   const handleAddPrice = () => {
     const newPrice: TPlanPrice = {
-      interval: "month",
+      interval: "MONTH",
       price: 0,
       duration: 30,
       creditAllowance: 0,
@@ -104,11 +104,16 @@ export const PlanPricesEditor: React.FC<PlanPricesEditorProps> = ({
       key: "interval",
       width: 120,
       render: (text: string, record: TPlanPrice, index: number) => (
-        <Input
+        <Select
           value={text}
           onChange={(val) =>
-            handleUpdatePrice(index, "interval", val.target.value)
+            handleUpdatePrice(index, "interval", val)
           }
+          options={[
+            { value: "MONTH", label: "MONTH" },
+            { value: "YEAR", label: "YEAR" },
+            { value: "DAY", label: "DAY" },
+          ]}
           className="w-full"
         />
       ),

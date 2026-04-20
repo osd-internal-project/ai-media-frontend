@@ -1,19 +1,24 @@
 import React from "react";
-import { Check } from "lucide-react";
-import { TPlan } from "@/app/common/plan.type";
+
+import { TPlan, TPlanFeature, TPlanInterval } from "@/app/common/plan.type";
 import { Button } from "antd";
 // import { TPlan } from "@/app/common/plan.type";
 
 interface PricingCardsProps {
   plans: TPlan[];
+  planInterval: TPlanInterval;
+
   // billingPeriod: "monthly" | "annually";
   onGetStarted: (plan: string) => void;
+  generateManualPrice?: boolean;
 }
 
 const PricingCards: React.FC<PricingCardsProps> = ({
   plans,
+  planInterval = "MONTH",
   // billingPeriod,
   onGetStarted,
+  generateManualPrice = false,
 }) => {
   const getBorderClass = (borderColor: string | undefined) => {
     const classMap: Record<string, string> = {
@@ -33,25 +38,25 @@ const PricingCards: React.FC<PricingCardsProps> = ({
   };
 
   return (
-    <div className="flex flex-nowrap gap-6 overflow-x-auto w-full pb-4">
+    <div className="flex flex-nowrap gap-3 w-full pb-4">
       {plans.map((plan, index) => {
-        const borderClass = getBorderClass(plan.borderColor ?? undefined);
+        // const borderClass = getBorderClass(plan.borderColor ?? undefined);
 
         return (
           <div
             key={index}
-            className={`shrink-0 bg-[#171717] rounded-lg overflow-hidden border-t-4 ${borderClass} relative w-[80vw] sm:w-[40vw] md:w-[320px] lg:w-[calc(33.333%-1rem)] max-w-[320px]`}
+            className="shrink-0 bg-[#353538] rounded-2xl overflow-hidden relative w-[80vw] sm:w-[40vw] md:w-[320px] lg:w-[calc(25%-0.75rem)] max-w-[320px] shadow-lg flex flex-col font-clash"
           >
-            <div className="p-6 pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white mb-2">
+            <div className="p-8 pb-6 bg-[#4D4D4D] border-b border-[#4D4D4D]">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-[32px] tracking-tight font-medium text-white mb-0">
                   {plan.name}
                 </h3>
-                {plan.badge && (
-                  <span className="bg-pink-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                {/* {plan.badge && (
+                  <span className="item-top bg-pink-500 text-[10px] text-white text-xs px-3 py-1 rounded-full font-semibold">
                     {plan.badge}
                   </span>
-                )}
+                )} */}
               </div>
               {/* <div className="flex items-baseline gap-1 mb-4">
                 <span className="text-g font-bold text-white">
@@ -64,44 +69,48 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                 Contact Sale
               </div>
               {/*Add Organization*/}
-              {plan.prices.map((price) => {
-                return (
-                  <div
-                    key={price.id}
-                    className="mb-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 flex justify-between"
-                  >
-                    <div className="">
-                      <span className="text-gray-400 font-medium text-sm">
-                        {price.interval}
-                      </span>
-                      <div className="text-right">
-                        {/* <span className="text-white text-2xl font-bold">
-                          ฿ {Number(price.price).toLocaleString()}
-                        </span> */}
-                        <span className="text-white text-sm font-bold ">
-                          ฿ {Number(price.price).toLocaleString()}
-                        </span>
-                        {/* <span className="text-gray-500 text-xs block">
-                          {price.interval}
-                        </span> */}
-                      </div>
-                    </div>
-                    <Button
-                      size="large"
-                      color="blue"
-                      type="primary"
-                      onClick={() => onGetStarted(price.id || "")}
-                      // className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                    >
-                      Get Started
-                    </Button>
-                  </div>
-                );
-              })}
 
-              <p className="text-gray-400 text-sm leading-relaxed">
-                {plan.description}
-              </p>
+              <div
+                className="text-[#D4D4D4] text-[15px] leading-snug mb-6"
+                dangerouslySetInnerHTML={{ __html: plan.description || "" }}
+              />
+
+              <div className="mb-2">
+                <div className="flex items-baseline gap-2 mb-4 items-center">
+                  <span className="text-[22px] font-bold text-white tracking-tight">
+                    {Number(
+                      plan.detailJson?.creditAllowance || 0,
+                    ).toLocaleString()}
+                  </span>
+                  <span className="text-[#A3A3A3] text-[11px] font-bold tracking-widest uppercase">
+                    CREDITS/MONTH
+                  </span>
+                </div>
+
+                {plan.prices
+                  .filter((price) => price.interval === planInterval)
+                  .map((price) => {
+                    return (
+                      price.price !== undefined &&
+                      price.price !== null &&
+                      price.price > 0 && (
+                        <div key={price.id} className="flex flex-col">
+                          <div className="flex items-baseline gap-2 items-center">
+                            <span className="text-[24px] font-bold text-white tracking-tight">
+                              {Number(price.price).toLocaleString()}
+                            </span>
+                            <span className="text-[#A3A3A3] text-[11px] font-bold tracking-widest uppercase">
+                              BAHT
+                            </span>
+                          </div>
+                          <div className="text-[#A3A3A3] text-[10px] font-bold tracking-widest uppercase mt-[1px]">
+                            PER {price.interval}
+                          </div>
+                        </div>
+                      )
+                    );
+                  })}
+              </div>
             </div>
 
             {/* <div className="px-6 pb-6">
@@ -128,24 +137,86 @@ const PricingCards: React.FC<PricingCardsProps> = ({
               </div>
             </div> */}
 
-            <div className="bg-gray-750 px-6 py-6">
-              <div className="space-y-3">
-                {plan.features
-                  .slice(plan.features[1]?.icon === "♾️" ? 2 : 1)
-                  .map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center gap-3">
-                      <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
-                      <span
-                        className={`text-gray-300 text-sm ${
-                          feature.isHighlight
-                            ? "text-green-400 font-semibold"
-                            : ""
-                        }`}
+            <div className="bg-[#2A2A2A] px-8 py-8 flex-grow flex flex-col justify-between">
+              <div className="flex flex-col mb-10">
+                {(() => {
+                  const groupedFeatures = plan.features.reduce(
+                    (acc, feature) => {
+                      const cat = feature.category || "";
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(feature);
+                      return acc;
+                    },
+                    {} as Record<string, TPlanFeature[]>,
+                  );
+
+                  return Object.entries(groupedFeatures).map(
+                    ([category, items], idx) => (
+                      <div
+                        key={category || idx}
+                        className={idx === 0 && !category ? "" : "mt-8"}
                       >
-                        {feature.text}
-                      </span>
-                    </div>
-                  ))}
+                        {category && (
+                          <div className="text-[11px] font-bold text-[#A3A3A3] uppercase tracking-widest mb-4">
+                            {category}
+                          </div>
+                        )}
+                        <div className="space-y-4">
+                          {items.map((feature, featureIndex) => (
+                            <div
+                              key={featureIndex}
+                              className="flex items-start gap-3"
+                            >
+                              <div className="w-[4px] h-[4px] bg-[#6966FF] mt-2 flex-shrink-0 rounded-[1px]"></div>
+                              <span
+                                className={`text-[#D4D4D4] text-[13px] leading-snug ${
+                                  feature.isHighlight
+                                    ? "text-[#6966FF] font-medium"
+                                    : ""
+                                }`}
+                              >
+                                {feature.text}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ),
+                  );
+                })()}{" "}
+                <div className="mt-8">
+                  {!generateManualPrice && (
+                    <button
+                      className="bg-[#6966FF] text-black font-semibold text-[14px] px-8 py-2.5 rounded-full hover:bg-[#5A55CC] transition-colors"
+                      // onClick={() => {
+                      //   const priceId = plan.prices.filter(
+                      //     (p) => p.interval === planInterval,
+                      //   )[0]?.id;
+                      //   onGetStarted(priceId || "");
+                      // }}
+                      hidden
+                    >
+                      See more
+                    </button>
+                  )}
+                  {generateManualPrice &&
+                    plan.prices
+                      .filter((price) => price.interval === planInterval)
+                      .map((price) => {
+                        return (
+                          <div key={price.id} className="mt-4">
+                            <Button
+                              size="large"
+                              color="blue"
+                              type="primary"
+                              onClick={() => onGetStarted(price.id || "")}
+                            >
+                              Admin Get Started
+                            </Button>
+                          </div>
+                        );
+                      })}
+                </div>
               </div>
             </div>
           </div>
