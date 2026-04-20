@@ -16,7 +16,7 @@ import {
   Col,
 } from "antd";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { notFound, usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./../PrivateNavigation";
@@ -258,33 +258,37 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       // </ConfigProvider>
     );
   }
-  //Admin Pages
+
   const isAdminRoute = pathname.startsWith("/page/admin-management");
 
-  if (isAdminRoute) {
-    return (
-      // <ConfigProvider
-      //   theme={{
-      //     algorithm: theme.darkAlgorithm,
-      //     token: {
-      //       colorBgBase: "#000000",
-      //       colorBgContainer: "#000000",
-      //       colorBgElevated: "#1a1a1a",
-      //       colorTextBase: "#f0f0f0",
-      //     },
-      //   }}
-      // >
-      <Spin spinning={loading || reload}>
-        <OrganizationProvider
-          value={{
-            organizationRole,
-          }}
-        >
-          {children}
-        </OrganizationProvider>
-      </Spin>
-      // </ConfigProvider>
-    );
+  // if (isAdminRoute) {
+  //   return (
+  //     // <ConfigProvider
+  //     //   theme={{
+  //     //     algorithm: theme.darkAlgorithm,
+  //     //     token: {
+  //     //       colorBgBase: "#000000",
+  //     //       colorBgContainer: "#000000",
+  //     //       colorBgElevated: "#1a1a1a",
+  //     //       colorTextBase: "#f0f0f0",
+  //     //     },
+  //     //   }}
+  //     // >
+  //     <Spin spinning={loading || reload}>
+  //       <OrganizationProvider
+  //         value={{
+  //           organizationRole,
+  //         }}
+  //       >
+  //         {children}
+  //       </OrganizationProvider>
+  //     </Spin>
+  //     // </ConfigProvider>
+  //   );
+  // }
+  
+  if (isAdminRoute && session?.user?.systemRole !== "SUPER_ADMIN") {
+    notFound();
   }
 
   // Use Coupon

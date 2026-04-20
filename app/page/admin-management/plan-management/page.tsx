@@ -188,7 +188,7 @@ export default function PlanManagementPage() {
   ];
 
   return (
-    <div className="w-full h-full bg-[#0f1419] p-6">
+    <div className="w-full h-full ">
       {contextHolder}
 
       <PlanFormModal
@@ -201,7 +201,7 @@ export default function PlanManagementPage() {
       {/* Header */}
       <div className="mb-6 flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold mb-2">
             Pricing Plan Management
           </h1>
           <p className="text-gray-400">
@@ -211,14 +211,13 @@ export default function PlanManagementPage() {
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            className="bg-gray-800! border-gray-700! text-white! hover:bg-gray-700!"
+            className=" border-gray-700! hover:bg-gray-700!"
             onClick={fetchData}
             loading={loading}
           />
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            className="bg-indigo-600! hover:bg-indigo-700!"
             onClick={() => setIsModalOpen(true)}
           >
             Create Plan
@@ -227,23 +226,19 @@ export default function PlanManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-gray-800/50 p-4 rounded-lg mb-4">
+      <div className=" p-4 rounded-lg mb-4">
         <Input
           placeholder="Search plans by name or description..."
           prefix={<SearchOutlined className="text-gray-500" />}
-          className="w-full text-white"
-          style={{
-            backgroundColor: "#1f2937",
-            borderColor: "#374151",
-            color: "white",
-          }}
+          className="w-full "
+     
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800/50 rounded-lg overflow-hidden">
+      <div className=" rounded-lg overflow-hidden">
         <Table
           columns={columns}
           dataSource={filteredData}
@@ -253,6 +248,7 @@ export default function PlanManagementPage() {
             pageSize: 10,
             showTotal: (total) => `Total ${total} plans`,
           }}
+          size="small"
           className="custom-table"
           locale={{ emptyText: "No plans found" }}
         />

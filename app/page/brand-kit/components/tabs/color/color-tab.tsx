@@ -244,7 +244,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
             const groupColors = colorsByType[type];
             return (
               <div key={type} className="color-tab-group" style={{ marginTop: 24 }}>
-                <Text style={{ color: "#64748b", fontSize: 12, fontWeight: 500 }}>
+                <Text style={{ color: semantic.colorTextSecondary, fontSize: 12, fontWeight: 500 }}>
                   {type.toUpperCase()}
                 </Text>
 
@@ -309,7 +309,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    color: '#222',
+                                    color: '#',
                                     boxShadow: '0 1px 4px #0001',
                                   }}
                                 />

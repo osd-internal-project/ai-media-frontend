@@ -61,7 +61,7 @@ export default function CreditStatic() {
             <Text
               style={{
                 margin: 0,
-                fontSize: isMobile ? 34 : 40,
+                fontSize: isMobile ? 24 : 32,
                 lineHeight: 1,
                 color: semantic.colorPrimary ,
               }}
@@ -122,7 +122,7 @@ export default function CreditStatic() {
             <Text
               style={{
                 margin: 0,
-                fontSize: isMobile ? 34 : 40,
+                fontSize: isMobile ? 24 : 32,
                 lineHeight: 1,
                 color: semantic.colorSuccess,
               }}
@@ -178,7 +178,7 @@ export default function CreditStatic() {
             <Text
               style={{
                 margin: 0,
-                fontSize: isMobile ? 34 : 40,
+                fontSize: isMobile ? 24 : 32,
                 lineHeight: 1,
                 color: semantic.colorTextBase,
               }}
@@ -288,7 +288,7 @@ export default function CreditStatic() {
 
                   <Text
                     style={{
-                      color: "#7c6cf6",
+                      color:semantic.colorPrimary,
                       fontSize: 13,
                       fontWeight: 600,
                     }}

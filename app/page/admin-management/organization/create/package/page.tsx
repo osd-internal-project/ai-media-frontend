@@ -123,9 +123,9 @@ console.log(data)
         />
 
         {/* Detailed Comparison Table */}
-        <div ref={featureRef}>
+        {/* <div ref={featureRef}>
           <DetailedComparisonTable plans={sortedPlans} />
-        </div>
+        </div> */}
       </div>
     </div>
   );

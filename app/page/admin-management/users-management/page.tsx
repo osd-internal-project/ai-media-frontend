@@ -18,6 +18,7 @@ import type { TUser, TUserForm } from "@/app/common/user.type";
 import type { ColumnsType } from "antd/es/table";
 import { TGroup } from "@/app/common/groups.type";
 import GroupsServices from "@/app/services/groups.service";
+import { aiCaveColors } from "@/app/theme/themeConfig";
 
 const AdminUsersManagementPage = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -154,7 +155,7 @@ const AdminUsersManagementPage = () => {
       width: 200,
       render: (text, record) => (
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mr-3 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full mr-3 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${aiCaveColors.primary} 0%, ${aiCaveColors.primary} 50%, ${aiCaveColors.secondary} 100%)`, }}>
             <span className="text-white text-sm font-bold">
               {text.substring(0, 2).toUpperCase()}
             </span>
@@ -281,6 +282,7 @@ const AdminUsersManagementPage = () => {
             showSizeChanger: false,
           }}
           scroll={{ x: "max-content" }}
+          size="small"
         />
       </Spin>
     </div>
