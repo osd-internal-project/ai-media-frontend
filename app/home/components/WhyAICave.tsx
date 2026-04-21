@@ -267,7 +267,7 @@ export default function WhyAICave() {
             width: isMd ? "auto" : "100%",
           }}
         >
-          <button
+          <button disabled
             style={{
               padding: "16px 40px",
               borderRadius: "40px",
@@ -297,7 +297,7 @@ export default function WhyAICave() {
               Book a Demo
             </span>
           </button>
-          <button
+          <a href="/contact-sale" 
             style={{
               padding: "16px 40px",
               borderRadius: "40px",
@@ -319,7 +319,7 @@ export default function WhyAICave() {
             }}
           >
             Contact Sales
-          </button>
+          </a>
         </div>
       </div>
       <footer style={{

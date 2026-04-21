@@ -77,17 +77,17 @@ export default function Footer() {
           </h3>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
             <li>
-              <a href="#" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
+              <a href="/home" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
                 Home
               </a>
             </li>
             <li>
-              <a href="#" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
+              <a href="/features" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
                 Features
               </a>
             </li>
             <li>
-              <a href="#" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
+              <a href="/contact-sale" style={{ color: "#cbd5e1", fontSize: "14px", textDecoration: "none", transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"} onMouseOut={(e) => e.currentTarget.style.color = "#cbd5e1"}>
                 Contact Sales
               </a>
             </li>

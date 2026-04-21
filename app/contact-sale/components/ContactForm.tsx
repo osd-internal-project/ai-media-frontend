@@ -62,7 +62,7 @@ export default function ContactForm({ messageApi }: props) {
       messageApi.success("Success! We have received your contact details.");
       form.resetFields();
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       messageApi.error("Failed to submit contact form.");
     } finally {
       setLoading(false);

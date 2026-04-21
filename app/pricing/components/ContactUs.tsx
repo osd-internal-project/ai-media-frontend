@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Image } from "antd";
+import { Button, Image } from "antd";
 const tabs = [
   "4K Image Generation",
   "Multi-shot AI Video Creation",
@@ -127,9 +127,12 @@ export default function ContactUs() {
                 Custom plan for enterpirse
               </div>
             </div>
-            <button className="bg-[#353535] text-white px-10 py-3 rounded-full font-medium text-lg hover:bg-black transition-colors shadow-xl">
-              Contact us
-            </button>
+            <a
+              href="/contact-sale"
+              className="bg-[#353535] text-white px-10 py-3 rounded-full font-medium text-lg hover:bg-black transition-colors shadow-xl"
+            >
+              Contact Us
+            </a>
           </div>
 
           {/* Right Image Box */}

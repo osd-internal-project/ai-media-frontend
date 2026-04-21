@@ -48,12 +48,13 @@ export default function PublicNavbar() {
           </Link>
         </div>
 
-        <button
+        <a
+          href="/contact-sale"
           className="bg-[#6b7cff] hover:bg-[#5a6bed] text-white text-[15px] font-medium px-8 py-2.5 rounded-full transition-colors hidden md:block"
           style={{ letterSpacing: "-0.01em" }}
         >
           Contact Sales
-        </button>
+        </a>
       </div>
     </nav>
   );

@@ -31,7 +31,7 @@ export default function FeaturesCTA() {
                         Start Creating Now
                     </button>
 
-                    <button
+                    <a href="/contact-sale" 
                         onMouseEnter={() => setHoveredBtn(2)}
                         onMouseLeave={() => setHoveredBtn(null)}
                         className="w-full sm:w-auto px-8 py-4 rounded-full text-white font-medium transition-all duration-200 border"
@@ -41,7 +41,7 @@ export default function FeaturesCTA() {
                         }}
                     >
                         Contact Sales
-                    </button>
+                    </a>
                 </div>
 
                 <p className="text-sm text-gray-500 mt-6">
