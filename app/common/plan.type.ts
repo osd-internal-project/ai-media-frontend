@@ -36,7 +36,7 @@ export interface TPlan {
   name: string;
   description: string | null;
   badge: string | null;
-  popular: boolean;
+  isPopular: boolean;
   borderColor: string | null;
   isDefault: boolean;
   status: boolean;

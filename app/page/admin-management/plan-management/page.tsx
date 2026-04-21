@@ -9,6 +9,7 @@ import {
   message,
   Typography,
   Popconfirm,
+  Radio,
 } from "antd";
 import {
   SearchOutlined,
@@ -17,6 +18,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   TrophyOutlined,
+  UnorderedListOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { TPlan } from "@/app/common/plan.type";
@@ -24,6 +27,12 @@ import PlanServices from "@/app/services/plan.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { useRouter } from "next/navigation";
 import { PlanFormModal } from "./components/PlanFormModal";
+import { Dice1 } from "lucide-react";
+import useResponsive from "@/app/hooks/useResponsive";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
+import PlanListView from "./components/plan-list-view";
+import PlanGridView from "./components/plan-grid-view";
 
 const { Text } = Typography;
 
@@ -35,6 +44,11 @@ export default function PlanManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
+  
+  const { isMobile,isTablet } = useResponsive();
 
   const planServices = PlanServices(axiosCore);
 
@@ -94,99 +108,100 @@ export default function PlanManagementPage() {
       item.description?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
-  const columns: ColumnsType<TPlan> = [
-    {
-      title: "Plan Name",
-      dataIndex: "name",
-      key: "name",
-      width: 250,
-      render: (text, record) => (
-        <Space direction="vertical" size={0}>
-          <div className="flex items-center gap-2">
-            <Text className="text-white font-medium">{text}</Text>
-          </div>
-          <Text type="secondary" className="text-xs">
-            {record.id}
-          </Text>
-        </Space>
-      ),
-    },
-    {
-      title: "Monthly Price",
-      dataIndex: ["price", "monthly"],
-      key: "monthlyPrice",
-      width: 150,
-      render: (price) => (
-        <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
-      ),
-    },
-    {
-      title: "Annual Price",
-      dataIndex: ["price", "annually"],
-      key: "annualPrice",
-      width: 150,
-      render: (price) => (
-        <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
-      ),
-    },
-    {
-      title: "Features",
-      key: "features",
-      width: 120,
-      render: (_, record) => (
-        <Tag color="cyan">{record.features?.length || 0} Features</Tag>
-      ),
-    },
-    {
-      title: "Tags",
-      dataIndex: "tags",
-      key: "tags",
-      render: (tags, record) => (
-        <Space size={"small"}>
-          {record.popular && (
-            <Tag color="gold" icon={<TrophyOutlined />}>
-              Popular
-            </Tag>
-          )}
-          {record.badge && <Tag color="blue">{record.badge}</Tag>}
-          {record.isDefault && <Tag color="green">Default</Tag>}
-        </Space>
-      ),
-    },
-    {
-      title: "Action",
-      key: "action",
-      width: 120,
-      fixed: "right",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() =>
-              router.push(`/page/admin-management/plan-management/${record.id}`)
-            }
-            className="text-blue-400! hover:text-blue-300!"
-          />
-          <Popconfirm
-            title="Delete Plan"
-            description="Are you sure you want to delete this plan?"
-            onConfirm={() => handleDeletePlan(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button
-              type="text"
-              icon={<DeleteOutlined />}
-              className="text-red-400! hover:text-red-300!"
-              danger
-            />
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  // const columns: ColumnsType<TPlan> = [
+  //   {
+  //     title: "Plan Name",
+  //     dataIndex: "name",
+  //     key: "name",
+  //     width: 250,
+  //     render: (text, record) => (
+  //       <Space direction="vertical" size={0}>
+  //         <div className="flex items-center gap-2">
+  //           <Text className="text-white font-medium">{text}</Text>
+  //         </div>
+  //         <Text type="secondary" className="text-xs">
+  //           {record.id}
+  //         </Text>
+  //       </Space>
+  //     ),
+  //   },
+  //   {
+  //     title: "Monthly Price",
+  //     dataIndex: ["price", "monthly"],
+  //     key: "monthlyPrice",
+  //     width: 150,
+  //     render: (price) => (
+  //       <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
+  //     ),
+  //   },
+  //   {
+  //     title: "Annual Price",
+  //     dataIndex: ["price", "annually"],
+  //     key: "annualPrice",
+  //     width: 150,
+  //     render: (price) => (
+  //       <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
+  //     ),
+  //   },
+  //   {
+  //     title: "Features",
+  //     key: "features",
+  //     width: 120,
+  //     render: (_, record) => (
+  //       <Tag color="cyan">{record.features?.length || 0} Features</Tag>
+  //     ),
+  //   },
+  //   {
+  //     title: "Tags",
+  //     dataIndex: "tags",
+  //     key: "tags",
+  //     render: (tags, record) => (
+  //       <Space size={"small"}>
+  //         {record.popular && (
+  //           <Tag color="gold" icon={<TrophyOutlined />}>
+  //             Popular
+  //           </Tag>
+  //         )}
+  //         {record.badge && <Tag color="blue">{record.badge}</Tag>}
+  //         {record.isDefault && <Tag color="green">Default</Tag>}
+  //       </Space>
+  //     ),
+  //   },
+  //   {
+  //     title: "Action",
+  //     key: "action",
+  //     width: 120,
+  //     fixed: "right",
+  //     render: (_, record) => (
+  //       <Space>
+  //         <Button
+  //           type="text"
+  //           icon={<EditOutlined />}
+  //           onClick={() =>
+  //             router.push(`/page/admin-management/plan-management/${record.id}`)
+  //           }
+  //           className="text-blue-400! hover:text-blue-300!"
+  //         />
+  //         <Popconfirm
+  //           title="Delete Plan"
+  //           description="Are you sure you want to delete this plan?"
+  //           onConfirm={() => handleDeletePlan(record.id)}
+  //           okText="Yes"
+  //           cancelText="No"
+  //         >
+  //           <Button
+  //             type="text"
+  //             icon={<DeleteOutlined />}
+  //             className="text-red-400! hover:text-red-300!"
+  //             danger
+  //           />
+  //         </Popconfirm>
+  //       </Space>
+  //     ),
+  //   },
+  // ];
 
+  
   return (
     <div className="w-full h-full ">
       {contextHolder}
@@ -222,6 +237,61 @@ export default function PlanManagementPage() {
           >
             Create Plan
           </Button>
+           <Radio.Group
+              className="project-view-toggle"
+              value={viewType}
+              onChange={(e) => setViewType(e.target.value)}
+              style={{
+                background: "transparent",
+                borderRadius: 8,
+                padding: isMobile ? "1px" : isTablet ? "2px" : "3px",
+                border: `1px solid ${semantic.colorBorder}`,
+                display: "flex",
+                gap: isMobile ? 2 : isTablet ? 3 : 4,
+              }}
+            >
+              <Radio.Button
+                value="list"
+                style={{
+                  background:
+                    viewType === "list" ? semantic.colorPrimary : "transparent",
+                  color: viewType === "list" ? "#fff" : semantic.colorTextBase,
+                  borderRadius: isMobile || isTablet ? 4 : "6px 0px 0px 6px",
+                  
+                  width: isMobile ? 20 : isTablet ? 22 : 24,
+                  height: isMobile ? 20 : isTablet ? 22 : 24,
+                  padding: 0,
+                  border: "none",
+                  transition: "background 0.2s",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <UnorderedListOutlined
+                  style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
+                />
+              </Radio.Button>
+              <Radio.Button
+                value="grid"
+                style={{
+                  background:
+                    viewType === "grid" ? semantic.colorPrimary : "transparent",
+                  color: viewType === "grid" ? "#fff" : semantic.colorTextBase,
+                  borderRadius: isMobile || isTablet ? 4 : "0px 6px 6px 0px",
+                  width: isMobile ? 20 : isTablet ? 22 : 24,
+                  height: isMobile ? 20 : isTablet ? 22 : 24,
+                  padding: 0,
+                  border: "none",
+                  transition: "background 0.2s",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <AppstoreOutlined style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }} />
+              </Radio.Button>
+            </Radio.Group>
         </Space>
       </div>
 
@@ -238,7 +308,7 @@ export default function PlanManagementPage() {
       </div>
 
       {/* Table */}
-      <div className=" rounded-lg overflow-hidden">
+      {/* <div className=" rounded-lg overflow-hidden">
         <Table
           columns={columns}
           dataSource={filteredData}
@@ -252,7 +322,20 @@ export default function PlanManagementPage() {
           className="custom-table"
           locale={{ emptyText: "No plans found" }}
         />
-      </div>
+      </div> */}
+      {viewType === "grid" ?
+      <PlanGridView
+        loading={loading}
+        filteredData={filteredData}
+        handleDeletePlan={handleDeletePlan}
+      />
+        :
+         <PlanListView
+         loading={loading}
+         filteredData={filteredData}
+         handleDeletePlan={handleDeletePlan}
+        />
+      }
     </div>
   );
 }
