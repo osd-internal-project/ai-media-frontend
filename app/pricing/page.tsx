@@ -8,6 +8,7 @@ import PricingCards from "@/app/components/package/PricingCards";
 import Navbar from "@/app/home/components/Navbar";
 import Plan from "./components/Plan";
 import ContactUs from "./components/ContactUs";
+import PublicNavbar from "../components/layout/PublicNavbar";
 
 export default function PricingPage() {
   return (
@@ -74,6 +75,7 @@ export default function PricingPage() {
           flexDirection: "column",
         }}
       >
+        <PublicNavbar />
         <Plan />
         <ContactUs />
         {/* <Footer /> */}

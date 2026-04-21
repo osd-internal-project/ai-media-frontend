@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import Navbar from "./Navbar";
+// import Navbar from "./Navbar";
 import PricingCards from "@/app/components/package/PricingCards";
 import { useRouter } from "next/navigation";
 import PlanServices from "@/app/services/plan.service";
@@ -101,7 +101,7 @@ export default function Plan() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <Navbar />
+        {/* <Navbar /> */}
         {/* Background Collage representing Image 2 */}
 
         {/* Gradient overlays to match Hero image 1 dark fading */}
