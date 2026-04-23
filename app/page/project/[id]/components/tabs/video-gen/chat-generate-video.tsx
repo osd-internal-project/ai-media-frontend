@@ -1072,26 +1072,29 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     //         firstImage?.imagePath ? firstImage.imagePath : null,
     //         lastImage?.imagePath ? lastImage.imagePath : null,
     //       ];
-    const files = await Promise.all(refImage.map(async (image) => ({
-      type:await getTypeFile(image.imagePath),
-      url: image.imagePath, 
-    }))); 
-    const image = firstImage
-      ? [
-          firstImage?.imagePath
-            ? { type: "image", url: firstImage.imagePath }
-            : null,
-          lastImage?.imagePath
-            ? { type: "image", url: lastImage.imagePath }
-            : null,
-        ]
-      : [];
+    const files = await Promise.all(
+      refImage.map(async (image) => ({
+        type: await getTypeFile(image.imagePath),
+        url: image.imagePath,
+      })),
+    );
+    // const image = firstImage
+    //   ? [
+    //       firstImage?.imagePath
+    //         ? { type: "image", url: firstImage.imagePath }
+    //         : null,
+    //       lastImage?.imagePath
+    //         ? { type: "image", url: lastImage.imagePath }
+    //         : null,
+    //     ]
+    //   : [];
+    const image = firstImage ? [firstImage.imagePath, lastImage?.imagePath] : [];
     const message = {
       taskId: tempTask,
       model: selectedAIModel.modelType,
       prompt: values.prompt,
-      image: image,
-      files: files,
+      image: selectedAIModel.description !== "seeda2" ? image : [],
+      files: selectedAIModel.description === "seeda2" ? files : [],
       sequentialImageGeneration: "auto",
       size: selectedResolution,
       maxImages: 0,
@@ -1108,7 +1111,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       draft: draftMode,
       organizationId: session?.user?.organizationId,
     };
-    // console.log(message)
+    // console.log(message);
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
