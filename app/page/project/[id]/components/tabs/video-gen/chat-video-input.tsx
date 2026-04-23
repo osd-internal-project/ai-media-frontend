@@ -509,8 +509,8 @@ export default function ChatVideoInput(props: Props) {
                     </Typography.Text>
                   </Flex>
                   <Slider
-                    min={1}
-                    max={12}
+                    min={3}
+                    max={selectedModel?.description === "seeda2" ? 15 : 12}
                     value={selectedDuration}
                     onChange={(value) => {
                       if (typeof value === "number") {
