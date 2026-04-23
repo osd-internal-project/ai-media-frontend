@@ -37,9 +37,9 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
           <Tag>{totalImages}</Tag>
         </Space>
 
-        <Button danger size="small" onClick={onClear}>
+        {/* <Button danger size="small" onClick={onClear}>
           Clear All
-        </Button>
+        </Button> */}
       </Flex>
     </div>
   );

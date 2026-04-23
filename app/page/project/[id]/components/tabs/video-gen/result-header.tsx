@@ -66,14 +66,14 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
           )}
         </Space>
 
-        <Button
+        {/* <Button
           danger
           size="small"
           onClick={onClear}
           disabled={messages.length === 0}
         >
           Clear All
-        </Button>
+        </Button> */}
       </Flex>
     </div>
   );

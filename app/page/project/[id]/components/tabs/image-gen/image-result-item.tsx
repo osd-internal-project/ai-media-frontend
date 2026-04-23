@@ -218,7 +218,7 @@ const ResultItem: FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Typography.Text>
-              <Button
+              {/* <Button
                 type="text"
                 icon={<Trash2 size={14} />}
                 danger
@@ -228,7 +228,7 @@ const ResultItem: FC<Props> = ({
                 }
               >
                
-              </Button>
+              </Button> */}
             </Space>
           </Col>
           </Row>

@@ -112,7 +112,7 @@ const Page: FC = () => {
           {/* Left Side: Form */}
           <div className="w-full lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center relative z-10 bg-[#0E0E12]">
             {/* Logo Placeholder */}
-            <div className="absolute top-8 left-8 lg:left-12">
+            <div className="absolute top-8 left-8 lg:left-12 w-full">
               {/* Use a simple logo or icon here, or import Image if available */}
               <div className="flex items-center gap-2">
                 <div className="relative w-10 h-10">
@@ -316,13 +316,15 @@ const Page: FC = () => {
           <div className="hidden lg:flex w-1/2 bg-[#050505] relative overflow-hidden items-center justify-center">
             {/* Background effects */}
             <div className="relative w-full h-[110%] animate-float">
-              <Image
-                src="/images/login-visual.jpg"
-                alt="Login Visual"
-                fill
-                className="object-cover"
-                priority
-              />
+              <a href="/home">
+                <Image
+                  src="/images/login-visual.jpg"
+                  alt="Login Visual"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </a>
             </div>
           </div>
         </div>

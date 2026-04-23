@@ -17,6 +17,7 @@ import {
   type UploadFile,
   Typography,
   notification,
+  UploadProps,
 } from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
@@ -42,6 +43,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import VideoMessageItem from "./result-item";
 import VideoResultItem from "./result-item";
 import ResultHeader from "./result-header";
+import { RcFile } from "antd/es/upload";
 
 interface VideoChatProps {
   teamView: boolean;
@@ -195,6 +197,17 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       imagePath: string;
     }[]
   >([]);
+  const [refImage, setRefImage] = useState<
+    {
+      name: string;
+      status: string;
+      uid: string;
+      url: string;
+      imagePath: string;
+    }[]
+  >([]);
+  const [files, setFiles] = useState<UploadFile[]>([]);
+
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
   const isFetchingRef = useRef<boolean>(false);
   const [draftMode, setDraftMode] = useState<boolean>(false);
@@ -222,7 +235,6 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
-
     if (shouldAutoScrollRef.current && messages.length > 0) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -859,10 +871,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
   }) => {
     if (file && status === "upload") {
       // Optimistic preview so selected image appears immediately in upload tiles.
+      const newName = `image${index + 1}`;
+      const renamedFile = { ...file, name: newName };
+
       if (index === 0) {
-        setFilesFirst([file]);
+        setFilesFirst([renamedFile]);
       } else {
-        setFilesLast([file]);
+        setFilesLast([renamedFile]);
       }
 
       const fileToUpload = file.originFileObj || file;
@@ -1044,20 +1059,42 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     }
   }
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = async (values: any) => {
     if (!selectedAIModel)
       return openNotificationWithIcon("error", "Please select an AI model");
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
     const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
     const tempTask = `temp-${Date.now()}`;
+    // const image =
+    //   selectedAIModel.description === "seeda2"
+    //     ? refImage.map((image) => image.imagePath)
+    //     : [
+    //         firstImage?.imagePath ? firstImage.imagePath : null,
+    //         lastImage?.imagePath ? lastImage.imagePath : null,
+    //       ];
+    const files = await Promise.all(
+      refImage.map(async (image) => ({
+        type: await getTypeFile(image.imagePath),
+        url: image.imagePath,
+      })),
+    );
+    // const image = firstImage
+    //   ? [
+    //       firstImage?.imagePath
+    //         ? { type: "image", url: firstImage.imagePath }
+    //         : null,
+    //       lastImage?.imagePath
+    //         ? { type: "image", url: lastImage.imagePath }
+    //         : null,
+    //     ]
+    //   : [];
+    const image = firstImage ? [firstImage.imagePath, lastImage?.imagePath] : [];
     const message = {
       taskId: tempTask,
       model: selectedAIModel.modelType,
       prompt: values.prompt,
-      image: [
-        firstImage?.imagePath ? firstImage.imagePath : null,
-        lastImage?.imagePath ? lastImage.imagePath : null,
-      ],
+      image: selectedAIModel.description !== "seeda2" ? image : [],
+      files: selectedAIModel.description === "seeda2" ? files : [],
       sequentialImageGeneration: "auto",
       size: selectedResolution,
       maxImages: 0,
@@ -1074,6 +1111,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       draft: draftMode,
       organizationId: session?.user?.organizationId,
     };
+    // console.log(message);
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
@@ -1123,6 +1161,212 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     socket.emit("generate:video", message);
   };
 
+  //Fix Upload Model Seedream 2.0 function
+  const handleUploadChangeMuti: UploadProps["onChange"] = async ({
+    file,
+    fileList: newFileList,
+  }) => {
+    if (newFileList.length >= 1 && file.status !== "removed") {
+      let imageCount = 1;
+      let videoCount = 1;
+      let audioCount = 1;
+
+      const renamedFileList = newFileList.map((f) => {
+        const typeStr = f.type || "";
+        const isImage =
+          typeStr.startsWith("image/") ||
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name);
+        const isVideo =
+          typeStr.startsWith("video/") ||
+          /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name);
+        const isAudio =
+          typeStr.startsWith("audio/") || /\.(mp3|wav|aac|ogg)$/i.test(f.name);
+
+        // keep old original file object safely
+        const fClone = { ...f };
+        if (isImage) fClone.name = `image${imageCount++}`;
+        else if (isVideo) fClone.name = `video${videoCount++}`;
+        else if (isAudio) fClone.name = `audio${audioCount++}`;
+
+        return fClone;
+      });
+
+      setFiles(renamedFileList);
+
+      const renamedFile =
+        renamedFileList.find((f) => f.uid === file.uid) || file;
+      const fileToUpload = renamedFile.originFileObj || renamedFile;
+
+      if (
+        fileToUpload instanceof Blob &&
+        fileToUpload.type.startsWith("image/")
+      ) {
+        setIsLoadingUpload(true);
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const img = new window.Image();
+            img.src = URL.createObjectURL(fileToUpload as Blob);
+            img.onload = () => {
+              const minSide = Math.min(img.width, img.height);
+              URL.revokeObjectURL(img.src);
+              if (minSide < 300) {
+                reject(
+                  "Image size is too small, minimum side length must not be less than 300 px",
+                );
+              } else {
+                resolve();
+              }
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
+          });
+        } catch (error) {
+          openNotificationWithIcon("error", String(error));
+          setIsLoadingUpload(false);
+          return;
+        }
+      }
+
+      setIsLoadingUpload(true);
+      const formData = new FormData();
+      formData.append("userId", userId ? userId : "");
+      formData.append("index", newFileList.length.toString());
+      formData.append("projectId", projectId);
+      formData.append("generateType", "video");
+      formData.append("uid", file.uid);
+      formData.append("file", fileToUpload as Blob);
+      formData.append("organizationId", session?.user?.organizationId || "");
+
+      try {
+        const result = await UploadsServices(axiosWorker).upload(formData);
+        console.log("Upload result:", result);
+        setRefImage((prev) => [...prev, result]);
+
+        // Update the file in the list with result URL for preview
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uid === file.uid
+              ? {
+                  ...f,
+                  status: "done" as const,
+                  url: result.url,
+                  response: result,
+                }
+              : f,
+          ),
+        );
+      } catch (error) {
+        console.error("Upload failed:", error);
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.uid === file.uid ? { ...f, status: "error" as const } : f,
+          ),
+        );
+      } finally {
+        setIsLoadingUpload(false);
+      }
+    } else if (file.status === "removed") {
+      setIsLoadingUpload(false);
+      onRemoveFileMuti(file);
+    } else {
+      setIsLoadingUpload(false);
+      setFiles(newFileList);
+    }
+  };
+
+  const onRemoveFileMuti = async (file: UploadFile) => {
+    setRefImage((prev) => prev.filter((f) => f.uid !== file.uid));
+
+    setFiles((prev) => {
+      const filtered = prev.filter((f) => f.uid !== file.uid);
+      let imageCount = 1;
+      let videoCount = 1;
+      let audioCount = 1;
+
+      const nameMap = new Map<string, string>();
+
+      const renamedList = filtered.map((f) => {
+        const typeStr = f.type || "";
+        const isImage =
+          typeStr.startsWith("image/") ||
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name) ||
+          f.name.startsWith("image");
+        const isVideo =
+          typeStr.startsWith("video/") ||
+          /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name) ||
+          f.name.startsWith("video");
+        const isAudio =
+          typeStr.startsWith("audio/") ||
+          /\.(mp3|wav|aac|ogg)$/i.test(f.name) ||
+          f.name.startsWith("audio");
+
+        let newName = f.name;
+        if (isImage) newName = `image${imageCount++}`;
+        else if (isVideo) newName = `video${videoCount++}`;
+        else if (isAudio) newName = `audio${audioCount++}`;
+
+        if (newName !== f.name) {
+          nameMap.set(f.name, newName);
+        }
+
+        return { ...f, name: newName };
+      });
+
+      const currentPrompt = form.getFieldValue("prompt") || "";
+      if (typeof currentPrompt === "string") {
+        let newPrompt = currentPrompt;
+
+        if (file.name) {
+          newPrompt = newPrompt.replace(
+            new RegExp(`@${file.name}\\b`, "g"),
+            "",
+          );
+        }
+
+        nameMap.forEach((newN, oldN) => {
+          newPrompt = newPrompt.replace(
+            new RegExp(`@${oldN}\\b`, "g"),
+            `@${newN}`,
+          );
+        });
+
+        if (currentPrompt !== newPrompt) {
+          setTimeout(() => form.setFieldValue("prompt", newPrompt), 0);
+        }
+      }
+
+      return renamedList;
+    });
+
+    await UploadsServices(axiosWorker).remove(file.uid);
+  };
+
+  const beforeUploadMuti = (file: RcFile) => {
+    if (files.find((f) => f.name === file.name)) {
+      message.warning(`Duplicate file: ${file.name}`);
+      return false;
+    }
+
+    if (files.length >= 15) {
+      messageApi.warning(`Upload limit: 15 files max`);
+      return false;
+    }
+
+    return false;
+  };
+  const getTypeFile = (path: string) => {
+    console.log(path);
+    const imageExt = ["jpg", "jpeg", "png", "gif", "webp"];
+    const audioExt = ["mp3", "wav", "aac", "ogg"];
+    const videoExt = ["mp4", "mov", "avi", "mkv"];
+    const ext = path.split(".").pop()?.toLowerCase();
+    if (imageExt.includes(ext!)) return "image";
+    if (audioExt.includes(ext!)) return "audio";
+    if (videoExt.includes(ext!)) return "video";
+    return "unknown";
+  };
   return (
     <Flex
       vertical
@@ -1167,8 +1411,14 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
             handleUsePromptGuide={handleUsePromptGuide}
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
-            selectedModel={selectedAIModel?.modelType || undefined}
+            selectedModel={selectedAIModel}
             organizationId={session?.user?.organizationId || undefined}
+            //Fix Muti
+
+            files={files}
+            handleUploadChangeMuti={handleUploadChangeMuti}
+            beforeUploadMuti={beforeUploadMuti}
+            onRemoveFileMuti={onRemoveFileMuti}
           />
         }
         loading={loading}
