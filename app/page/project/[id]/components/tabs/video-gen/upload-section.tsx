@@ -98,28 +98,40 @@ export default function UploadSection({
           renderContent
         ) : (
           <Flex vertical gap={8}>
-            <Flex align="center" justify="space-between">
+            <Flex align="flex-start" justify="space-between">
               <Typography.Text
-                style={{ fontSize: 12, color: semantic.colorTextSecondary }}
+                style={{
+                  fontSize: 12,
+                  color: semantic.colorTextSecondary,
+
+                  flex: 1,
+                  minWidth: 0, // สำคัญสำหรับ flex
+                  whiteSpace: "normal", // ✅ อนุญาตให้ขึ้นบรรทัดใหม่
+                  wordBreak: "break-word", // กันคำยาวทะลุ
+                }}
               >
                 {displayDescription}
               </Typography.Text>
+
               {files.length > 0 && (
-                <Typography.Text
-                  style={{
-                    fontSize: 12,
-                    color: semantic.colorPrimary,
-                    fontWeight: 600,
-                  }}
-                >
-                  {files.length}/{maxUploadFiles}
-                </Typography.Text>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Typography.Text
+                    style={{
+                      fontSize: 12,
+                      color: semantic.colorPrimary,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap", // ✅ ขวาอยู่บรรทัดเดียวเสมอ
+                    }}
+                  >
+                    {files.length}/{maxUploadFiles}
+                  </Typography.Text>
+                </div>
               )}
             </Flex>
 
             <Flex gap={8} wrap>
               {files.map((file, index) => {
-                const source = 
+                const source =
                   file.thumbUrl ||
                   file.url ||
                   (typeof file.preview === "string" ? file.preview : "") ||
@@ -181,7 +193,7 @@ export default function UploadSection({
                         }}
                       />
                     )}
-                    
+
                     <div
                       style={{
                         position: "absolute",

@@ -142,7 +142,7 @@ export default function PromptSection({
         </Typography.Text>
       </Flex>
 
-      {showRegenerateButton && promptText.trim() && (
+      {/* {showRegenerateButton && promptText.trim() && (
         <Button
           block
           type="text"
@@ -158,7 +158,7 @@ export default function PromptSection({
         >
           {regenerateLabel}
         </Button>
-      )}
+      )} */}
     </Flex>
   );
 }

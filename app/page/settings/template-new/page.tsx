@@ -152,7 +152,6 @@ const TemplateSettingPage: FC = (): ReactElement => {
 
         // For video type, separate into firstFrame (index 1) and lastFrame (index 2)
         if (
-          generateType === "video" ||
           generateType === "omnihumen" ||
           generateType === "dreamactor"
         ) {

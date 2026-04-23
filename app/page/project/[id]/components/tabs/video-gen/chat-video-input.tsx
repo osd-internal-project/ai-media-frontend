@@ -467,7 +467,7 @@ export default function ChatVideoInput(props: Props) {
           )}
           <PromptSection
             semantic={semantic}
-            placeholder="Describe what you want to video...\n\nBe specific about style, lighting, mood, and details for best results."
+            placeholder="Describe what you want to video... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
             rows={5}
             maxLength={8000}
             required={true}
@@ -509,7 +509,7 @@ export default function ChatVideoInput(props: Props) {
                     </Typography.Text>
                   </Flex>
                   <Slider
-                    min={3}
+                    min={4}
                     max={selectedModel?.description === "seeda2" ? 15 : 12}
                     value={selectedDuration}
                     onChange={(value) => {

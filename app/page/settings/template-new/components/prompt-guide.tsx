@@ -155,8 +155,9 @@ const PromptGuideComponent: FC<props> = ({
     setIsEditModalOpen(true);
   };
 
-  const renderImageUpload = () => (
+  const renderVideoUpload = () => (
     <Upload
+      accept="image/*,video/*,audio/*"
       listType="picture-card"
       fileList={files}
       onChange={handleUploadChange}
@@ -175,7 +176,27 @@ const PromptGuideComponent: FC<props> = ({
       )}
     </Upload>
   );
-
+  const renderImageUpload = () => (
+    <Upload
+      accept="image/*"
+      listType="picture-card"
+      fileList={files}
+      onChange={handleUploadChange}
+      beforeUpload={beforeUpload}
+      onRemove={onRemoveFile}
+      multiple
+      maxCount={3}
+      showUploadList
+      disabled={isLoadingUpload}
+    >
+      {files.length >= 3 ? null : (
+        <div className="flex flex-col items-center text-sm">
+          {isLoadingUpload ? <LoadingOutlined /> : <ImagePlus />}
+          <div>New Image</div>
+        </div>
+      )}
+    </Upload>
+  );
   const renderDualUpload = (
     leftProps: {
       accept?: string;
@@ -239,24 +260,7 @@ const PromptGuideComponent: FC<props> = ({
 
   const renderFileEditor = () => {
     if (generateType === "video") {
-      return renderDualUpload(
-        {
-          accept: "image/*",
-          fileList: firstFrame,
-          loading: isLoadingFirstFrame,
-          label: "Image",
-          icon: <ImagePlus />,
-          onChange: (info) => handleVideoImageUploadChange(info, "1"),
-        },
-        {
-          accept: "image/*",
-          fileList: lastFrame,
-          loading: isLoadingLastFrame,
-          label: "Last Frame",
-          icon: <ImagePlus />,
-          onChange: (info) => handleVideoImageUploadChange(info, "2"),
-        },
-      );
+      return renderVideoUpload();
     }
 
     if (generateType === "omnihumen") {

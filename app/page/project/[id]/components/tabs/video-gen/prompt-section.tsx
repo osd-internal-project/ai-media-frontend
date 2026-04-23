@@ -27,7 +27,7 @@ export default function PromptSection({
   isAiAssisting,
   fieldName = "prompt",
   title = "Prompt",
-  placeholder = "Describe what you want to create...\n\nBe specific about style, lighting, mood, and details for best results.",
+  placeholder = "Describe what you want to create... Be specific about style, lighting, mood, and details for best results.",
   requiredMessage = "Please enter your prompt",
   maxLength = 6000,
   rows = 6,
@@ -77,7 +77,7 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {showAiAssist && (
+        {/* {showAiAssist && (
           <Button
             size="small"
             type="text"
@@ -104,7 +104,7 @@ export default function PromptSection({
           >
             {loading ? aiAssistThinkingLabel : aiAssistLabel}
           </Button>
-        )}
+        )} */}
       </Flex>
 
       <Form.Item
@@ -118,7 +118,7 @@ export default function PromptSection({
         ]}
       >
         <Mentions
-          rows={rows}
+          autoSize={{ minRows: rows }}
           maxLength={maxLength}
           placeholder={placeholder}
           options={mentionOptions}
@@ -142,7 +142,7 @@ export default function PromptSection({
         </Typography.Text>
       </Flex>
 
-      {showRegenerateButton && promptText.trim() && (
+      {/* {showRegenerateButton && promptText.trim() && (
         <Button
           block
           type="text"
@@ -158,7 +158,7 @@ export default function PromptSection({
         >
           {regenerateLabel}
         </Button>
-      )}
+      )} */}
     </Flex>
   );
 }

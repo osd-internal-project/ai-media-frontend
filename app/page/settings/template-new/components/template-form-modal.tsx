@@ -95,11 +95,14 @@ const extractPromptVariables = (prompt: string) => {
   return Array.from(unique);
 };
 
-const normalizeGenerateType = (
-  value?: string,
-): TGenerateType => {
+const normalizeGenerateType = (value?: string): TGenerateType => {
   if (value === "dream-actor") return "dreamactor";
-  if (value === "image" || value === "video" || value === "omnihumen" || value === "dreamactor") {
+  if (
+    value === "image" ||
+    value === "video" ||
+    value === "omnihumen" ||
+    value === "dreamactor"
+  ) {
     return value;
   }
   return "image";
@@ -138,7 +141,11 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
 
   const isCompact = isMobile || isTablet;
-  const headerPadding = isMobile ? "12px 14px" : isTablet ? "14px 16px" : "16px 20px";
+  const headerPadding = isMobile
+    ? "12px 14px"
+    : isTablet
+      ? "14px 16px"
+      : "16px 20px";
   const sectionPadding = isMobile ? 12 : isTablet ? 14 : 16;
 
   const selectedTypeId = Form.useWatch("promptGuideTypeId", form);
@@ -155,14 +162,12 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
 
   const modelOptions = useMemo(() => {
     return allModel
-      .filter(
-        (item: TMasterModelType) => item.type === selectedType?.generateType,
-      )
+      .filter((item: TMasterModelType) => item.type === selectedGenerateType)
       .map((item: TMasterModelType) => ({
         label: item.modelType,
         value: item.modelType,
       }));
-  }, [selectedType?.generateType]); 
+  }, [selectedType?.generateType,selectedGenerateType]);
 
   const categoryOptions = useMemo(() => {
     return promptGuideTypes.map((type) => ({
@@ -198,8 +203,9 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
   const isReady = Boolean(
     templateName.trim() && promptText.trim() && selectedType,
   );
-  const currentGenerateType: TGenerateType =
-    normalizeGenerateType(selectedGenerateType ?? selectedType?.generateType);
+  const currentGenerateType: TGenerateType = normalizeGenerateType(
+    selectedGenerateType ?? selectedType?.generateType,
+  );
   const currentTypeMeta = TYPE_META[currentGenerateType] ?? TYPE_META.image;
 
   const handleReset = () => {
@@ -211,16 +217,14 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
       promptGuideTypes[0]?.id;
     const fallbackType = promptGuideTypes.find(
       (item) => item.id === fallbackTypeId,
-    ); 
+    );
     form.setFieldsValue({
       id: initialValues?.id,
       title: initialValues?.title || "",
       description: initialValues?.description || "",
       textPrompt: initialValues?.textPrompt || "",
       status: initialValues?.status ?? true,
-      generateType: normalizeGenerateType(
-        fallbackType?.generateType || initialValues?.generateType,
-      ),
+      generateType: initialValues?.generateType,
       promptGuideTypeId: fallbackTypeId,
       model: initialValues?.model || "",
     });
@@ -245,7 +249,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
   const handleTypeChange = (value: number) => {
     const type = promptGuideTypes.find((item) => item.id === value);
     if (type?.generateType) {
-      form.setFieldValue("generateType", normalizeGenerateType(type.generateType));
+      form.setFieldValue(
+        "generateType",
+        normalizeGenerateType(type.generateType),
+      );
     }
     form.setFieldValue("promptGuideTypeId", value);
     // form.setFieldValue("model", getModelsByType(type?.generateType)[0]);
@@ -265,7 +272,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
         title: values.title?.trim(),
         textPrompt: values.textPrompt?.trim(),
         promptGuideTypeId: type.id,
-        generateType: type.generateType,
+        generateType: values.generateType,
         description: values.description,
         model: values.model,
         status: values.status ?? true,
@@ -356,7 +363,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
           >
             {formMode === "create" ? "Create New Template" : "Edit Template"}
           </Typography.Title>
-          <Typography.Text type="secondary" style={{ fontSize: isMobile ? 12 : 13 }}>
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: isMobile ? 12 : 13 }}
+          >
             {formMode === "create"
               ? "Build a reusable prompt template using system categories and services"
               : "Update template details and prompt content using system categories and services"}
@@ -397,7 +407,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                   { required: true, message: "Template name is required" },
                 ]}
               >
-                <Input size={isMobile ? "middle" : "large"} placeholder="Product Photography" />
+                <Input
+                  size={isMobile ? "middle" : "large"}
+                  placeholder="Product Photography"
+                />
               </Form.Item>
 
               <Form.Item
@@ -405,7 +418,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 label="Description"
                 style={{ marginBottom: 0 }}
               >
-                <Input.TextArea rows={isMobile ? 2 : 3} placeholder="Short description" />
+                <Input.TextArea
+                  rows={isMobile ? 2 : 3}
+                  placeholder="Short description"
+                />
               </Form.Item>
 
               <Form.Item
@@ -761,16 +777,33 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
           gap: isMobile ? 10 : 0,
         }}
       >
-        <Button size={isMobile ? "middle" : "large"} icon={<ReloadOutlined />} onClick={handleReset} block={isMobile}>
+        <Button
+          size={isMobile ? "middle" : "large"}
+          icon={<ReloadOutlined />}
+          onClick={handleReset}
+          block={isMobile}
+        >
           Reset
         </Button>
-        <Space style={{ width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "flex-end" : undefined }}>
+        <Space
+          style={{
+            width: isMobile ? "100%" : "auto",
+            justifyContent: isMobile ? "flex-end" : undefined,
+          }}
+        >
           {formMode === "edit" && onDelete && (
-            <Button size={isMobile ? "middle" : "large"} danger icon={<DeleteOutlined />} onClick={onDelete}>
+            <Button
+              size={isMobile ? "middle" : "large"}
+              danger
+              icon={<DeleteOutlined />}
+              onClick={onDelete}
+            >
               Delete
             </Button>
           )}
-          <Button size={isMobile ? "middle" : "large"} onClick={onCancel}>Cancel</Button>
+          <Button size={isMobile ? "middle" : "large"} onClick={onCancel}>
+            Cancel
+          </Button>
           <Button
             type="primary"
             size={isMobile ? "middle" : "large"}

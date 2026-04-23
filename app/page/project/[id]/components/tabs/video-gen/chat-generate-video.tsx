@@ -1020,36 +1020,52 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         });
 
         const results = await Promise.all(uploadPromises);
-        const successfulResults = results.filter(
-          (res): res is { result: any; index: number } =>
-            res !== null && res.result !== null,
-        );
+        if (selectedAIModel?.description === "seeda2") {
+          const successfulResults = await Promise.all(results.filter((res: any) => res !== null).map((res: any) => res.result));
 
-        const firstImage = successfulResults.find((r) => r.index === 0);
-        const lastImage = successfulResults.find((r) => r.index === 1);
+          setRefImage(successfulResults);
 
-        if (firstImage) {
-          setRefImageFrist([firstImage.result]);
-          const newFile = {
-            uid: firstImage.result.uid || `rc-upload-${Date.now()}-0`,
-            name: firstImage.result.name,
+          const newFiles = successfulResults.map((res: any, index: number) => ({
+            uid: res.uid || `rc-upload-${Date.now()}-${index}`,
+            name: res.name,
             status: "done" as const,
-            url: firstImage.result.url,
-            response: firstImage.result,
-          };
-          setFilesFirst([newFile]);
-        }
+            url: res.url,
+            response: res, // Keep consistency with response mapping
+          }));
 
-        if (lastImage) {
-          setRefImageLast([lastImage.result]);
-          const newFile = {
-            uid: lastImage.result.uid || `rc-upload-${Date.now()}-1`,
-            name: lastImage.result.name,
-            status: "done" as const,
-            url: lastImage.result.url,
-            response: lastImage.result,
-          };
-          setFilesLast([newFile]);
+          setFiles(newFiles);
+        } else {
+          const successfulResults = results.filter(
+            (res): res is { result: any; index: number } =>
+              res !== null && res.result !== null,
+          );
+
+          const firstImage = successfulResults.find((r) => r.index === 0);
+          const lastImage = successfulResults.find((r) => r.index === 1);
+
+          if (firstImage) {
+            setRefImageFrist([firstImage.result]);
+            const newFile = {
+              uid: firstImage.result.uid || `rc-upload-${Date.now()}-0`,
+              name: firstImage.result.name,
+              status: "done" as const,
+              url: firstImage.result.url,
+              response: firstImage.result,
+            };
+            setFilesFirst([newFile]);
+          }
+
+          if (lastImage) {
+            setRefImageLast([lastImage.result]);
+            const newFile = {
+              uid: lastImage.result.uid || `rc-upload-${Date.now()}-1`,
+              name: lastImage.result.name,
+              status: "done" as const,
+              url: lastImage.result.url,
+              response: lastImage.result,
+            };
+            setFilesLast([newFile]);
+          }
         }
       } catch (error) {
         console.error("Error in handleUsePromptGuide:", error);
@@ -1088,7 +1104,9 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     //         : null,
     //     ]
     //   : [];
-    const image = firstImage ? [firstImage.imagePath, lastImage?.imagePath] : [];
+    const image = firstImage
+      ? [firstImage.imagePath, lastImage?.imagePath]
+      : [];
     const message = {
       taskId: tempTask,
       model: selectedAIModel.modelType,
