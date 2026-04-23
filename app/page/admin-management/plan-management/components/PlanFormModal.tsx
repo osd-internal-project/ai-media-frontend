@@ -66,7 +66,7 @@ export const PlanFormModal: React.FC<PlanFormModalProps> = ({
         // Fallback for pricing 
         form.setFieldsValue({
           ...initialValues,
-          popular: initialValues.popular, 
+          popular: initialValues.isPopular,
           maxUserAccess: initialValues.detailJson?.maxUserAccess,
           creditAllowance: initialValues.detailJson?.creditAllowance,
           imageAllowance: initialValues.detailJson?.imageAllowance,
