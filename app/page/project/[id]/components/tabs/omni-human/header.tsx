@@ -39,9 +39,9 @@ const OmnihumenResultHeader: FC<ResultHeaderProps> = ({
           <Tag>{totalVideos}</Tag>
         </Space>
 
-        <Button danger size="small" onClick={onClear}>
+        {/* <Button danger size="small" onClick={onClear}>
           Clear All
-        </Button>
+        </Button> */}
       </Flex>
     </div>
   );

@@ -77,7 +77,7 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {showAiAssist && (
+        {/* {showAiAssist && (
           <Button
             size="small"
             type="text"
@@ -104,7 +104,7 @@ export default function PromptSection({
           >
             {loading ? aiAssistThinkingLabel : aiAssistLabel}
           </Button>
-        )}
+        )} */}
       </Flex>
 
       <Form.Item
@@ -142,7 +142,7 @@ export default function PromptSection({
         </Typography.Text>
       </Flex>
 
-      {showRegenerateButton && promptText.trim() && (
+      {/* {showRegenerateButton && promptText.trim() && (
         <Button
           block
           type="text"
@@ -158,7 +158,7 @@ export default function PromptSection({
         >
           {regenerateLabel}
         </Button>
-      )}
+      )} */}
     </Flex>
   );
 }

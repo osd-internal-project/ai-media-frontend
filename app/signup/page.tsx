@@ -21,7 +21,7 @@ export default function SignupPage() {
 
   const showMessage = (
     type: "error" | "success" | "warning" | "loading",
-    content: string
+    content: string,
   ) => {
     messageApi.open({
       type: type,
@@ -36,7 +36,10 @@ export default function SignupPage() {
       const { confirmPassword, ...registerData } = values;
       await userService.register(registerData);
       setRegistrationSuccess(true);
-      showMessage("success", "Registration successful! Please check your email.");
+      showMessage(
+        "success",
+        "Registration successful! Please check your email.",
+      );
       // router.push("/login");
     } catch (error: any) {
       console.error("Error accepting invitation:", error);
@@ -107,7 +110,9 @@ export default function SignupPage() {
               marginBottom: "48px",
             }}
           >
-            <div style={{ position: "relative", width: "32px", height: "32px" }}>
+            <div
+              style={{ position: "relative", width: "32px", height: "32px" }}
+            >
               <Image
                 src="/images/logo-1.png"
                 alt="Logo"
@@ -175,7 +180,9 @@ export default function SignupPage() {
                     marginBottom: "24px",
                   }}
                 >
-                  <CheckCircleOutlined style={{ fontSize: "40px", color: "#22c55e" }} />
+                  <CheckCircleOutlined
+                    style={{ fontSize: "40px", color: "#22c55e" }}
+                  />
                 </div>
                 <h2
                   style={{
@@ -188,7 +195,8 @@ export default function SignupPage() {
                   Verify your email
                 </h2>
                 <p style={{ color: "#9ca3af", marginBottom: "32px" }}>
-                  We've sent a verification link to your email address. Please click the link to verify your account.
+                  We've sent a verification link to your email address. Please
+                  click the link to verify your account.
                 </p>
                 <Link href="/login" style={{ width: "100%" }}>
                   <Button
@@ -227,7 +235,13 @@ export default function SignupPage() {
                   <Form.Item
                     name="fullname"
                     label={
-                      <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
                         Fullname
                       </span>
                     }
@@ -249,7 +263,13 @@ export default function SignupPage() {
                   <Form.Item
                     name="username"
                     label={
-                      <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
                         Username
                       </span>
                     }
@@ -271,7 +291,13 @@ export default function SignupPage() {
                   <Form.Item
                     name="email"
                     label={
-                      <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
                         Email Address
                       </span>
                     }
@@ -282,7 +308,16 @@ export default function SignupPage() {
                     style={{ marginBottom: "16px" }}
                   >
                     <Input
-                      prefix={<Mail style={{ color: "gray", width: "16px", height: "16px", marginRight: "8px" }} />}
+                      prefix={
+                        <Mail
+                          style={{
+                            color: "gray",
+                            width: "16px",
+                            height: "16px",
+                            marginRight: "8px",
+                          }}
+                        />
+                      }
                       placeholder="Email"
                       style={{
                         backgroundColor: "#1A1D21",
@@ -297,7 +332,13 @@ export default function SignupPage() {
                   <Form.Item
                     name="phoneNumber"
                     label={
-                      <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
                         Phone number
                       </span>
                     }
@@ -463,13 +504,15 @@ export default function SignupPage() {
           }}
         >
           <div style={{ width: "100%", height: "100%" }}>
-            <Image
-              src="/images/login-visual.jpg"
-              alt="Visual"
-              fill
-              style={{ objectFit: "cover" }}
-              priority
-            />
+            <a href="/home" className=" cursor-pointer">
+              <Image
+                src="/images/login-visual.jpg"
+                alt="Visual"
+                fill
+                style={{ objectFit: "cover" }}
+                priority
+              />
+            </a>
             {/* Overlay */}
             <div
               style={{
@@ -484,29 +527,29 @@ export default function SignupPage() {
       </div>
       <style jsx global>{`
         .custom-checkbox .ant-checkbox-inner {
-            background-color: transparent;
-            border-color: #333;
+          background-color: transparent;
+          border-color: #333;
         }
         .custom-checkbox .ant-checkbox-checked .ant-checkbox-inner {
-            background-color: #5465FF;
-            border-color: #5465FF;
+          background-color: #5465ff;
+          border-color: #5465ff;
         }
         .custom-checkbox .ant-checkbox-wrapper:hover .ant-checkbox-inner {
-            border-color: #5465FF;
+          border-color: #5465ff;
         }
         /* Mobile adjustment for inline styles approach if needed */
         @media (max-width: 1024px) {
-           /* ... we generally rely on flex-wrap if we were pure css, 
+          /* ... we generally rely on flex-wrap if we were pure css, 
               but with inline style width="50%", it's hard. 
               Accepting fixed layout as per heavy 'style' usage request */
         }
         /* Override Input placeholders color which inline style cannot fully touch easily without pseudo-elements */
         input::placeholder {
-            color: #4b5563 !important;
+          color: #4b5563 !important;
         }
         .ant-input-password input {
-            background-color: transparent !important;
-            color: white !important;
+          background-color: transparent !important;
+          color: white !important;
         }
       `}</style>
     </div>

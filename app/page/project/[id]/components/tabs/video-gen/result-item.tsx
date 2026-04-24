@@ -134,7 +134,7 @@ const VideoResultItem: FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Typography.Text>
-              <Button
+              {/* <Button
                 type="text"
                 danger
                 icon={<Trash2 size={14} />}
@@ -145,7 +145,7 @@ const VideoResultItem: FC<Props> = ({
                 }
               >
                 
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
@@ -252,7 +252,7 @@ const VideoResultItem: FC<Props> = ({
                     minute: "2-digit",
                   })}
                 </Typography.Text>
-                <Button
+                {/* <Button
                   type="text"
                   icon={<Trash2 size={12} />}
                   danger
@@ -262,7 +262,7 @@ const VideoResultItem: FC<Props> = ({
                   }
                 >
                   
-                </Button>
+                </Button> */}
               </Space>
             </Col>
           </Row>

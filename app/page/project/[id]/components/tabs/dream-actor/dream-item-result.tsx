@@ -112,14 +112,14 @@ const DreamactorResultItem: FC<Props> = ({
                   minute: "2-digit",
                 })}
               </Typography.Text>
-              <Button
+              {/* <Button
                 type="text"
                 danger
                 icon={<Trash2 size={14} />}
                 size="small"
                 style={{ padding: 0 }}
                 onClick={() => onDeleteMessage(message.id)}
-              />
+              /> */}
             </div>
           </div>
         </div>
