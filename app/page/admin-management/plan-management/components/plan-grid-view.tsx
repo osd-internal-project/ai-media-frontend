@@ -10,6 +10,7 @@ import {
   Empty,
   Avatar,
   Switch,
+  message,
 } from "antd";
 import {
   DeleteOutlined,
@@ -21,11 +22,14 @@ import { FC, useMemo } from "react";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { Boxes } from "lucide-react";
+import PlanServices from "@/app/services/plan.service";
+import { axiosCore } from "@/app/lib/axios/axios";
 
 interface PlanGridViewProps {
   loading: boolean;
   filteredData: TPlan[];
   handleDeletePlan: (planId: string) => void;
+  onRefresh?: () => void; 
 }
 
 const { Text, Title } = Typography;
@@ -34,10 +38,25 @@ const PlanGridView: FC<PlanGridViewProps> = ({
   loading,
   filteredData,
   handleDeletePlan,
+  onRefresh
 }) => {
   const router = useRouter();
     const { mode } = useThemeMode();
-    const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = getThemeConfig(mode).token ?? {};
+  const planService = PlanServices(axiosCore);
+
+  // 1. Handler สำหรับอัปเดต status
+const handleStatusChange = async (planId: string, checked: boolean) => {
+  try {
+    const plan = filteredData.find((p) => p.id === planId);
+    if (!plan) return;
+    await planService.update(planId, { ...plan, status: checked });
+    message.success("Status updated");
+    if (onRefresh) onRefresh();
+  } catch (e) {
+    message.error("Failed to update status");
+  }
+};
 
   return (
     <div className="rounded-lg overflow-hidden ">
@@ -104,7 +123,19 @@ const PlanGridView: FC<PlanGridViewProps> = ({
       {record.description}
     </Text>
   </div>
-  <Switch defaultChecked style={{ marginLeft: "auto" }} />
+<Popconfirm
+  title="Change Status"
+  description={`Are you sure you want to ${record.status ? "deactivate" : "activate"} this plan?`}
+  onConfirm={() => handleStatusChange(record.id, !record.status)}
+  okText="Yes"
+  cancelText="No"
+>
+  <Switch
+    checked={record.status}
+    onChange={() => {}} // ป้องกันเปลี่ยนทันที ให้เปลี่ยนผ่าน Popconfirm เท่านั้น
+    style={{ marginLeft: "auto" }}
+  />
+</Popconfirm>
 </Space>
                       <div className="flex flex-col gap-2 py-5" >
                       {/* Price */}
