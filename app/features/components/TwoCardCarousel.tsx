@@ -11,91 +11,93 @@ const images = [
 
 export default function TwoCardCarousel() {
   const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // 🔥 เปลี่ยนจาก +1 เป็น -1
-      setIndex((prev) => (prev - 1 + images.length) % images.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const leftImage = images[(index + 1) % images.length];
   const rightImage = images[index];
 
-  return (
-    <div style={styles.wrapper}>
-      <div style={styles.frame}>
-        <div style={styles.container}>
-          {/* LEFT CARD */}
-          <div
-            style={{
-              ...styles.left,
-              backgroundImage: `url(${leftImage})`,
-            }}
-          />
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // 🔥 เปลี่ยนจาก +1 เป็น -1
+  //     setIndex((prev) => (prev - 1 + images.length) % images.length);
+  //   }, 3000);
 
-          {/* RIGHT CARD */}
-          <div
-            style={{
-              ...styles.right,
-              backgroundImage: `url(${rightImage})`,
-            }}
-          />
-        </div>
+  //   return () => clearInterval(interval);
+  // }, []);
+
+
+  useEffect(() => {
+  const img1 = new window.Image();
+  const img2 = new window.Image();
+
+  img1.src = leftImage;
+  img2.src = rightImage;
+
+  Promise.all([
+    new Promise((res) => (img1.onload = res)),
+    new Promise((res) => (img2.onload = res)),
+  ]);
+  }, [leftImage, rightImage]);
+
+  return (
+<div className="w-full flex items-center justify-center">
+  <div className="p-2 md:p-5 rounded-[40px]">
+    <div
+      className="flex items-center justify-center [perspective:900px] md:[perspective:1000px]"
+    >
+      {/* LEFT CARD */}
+      <div
+        className={`
+          flex
+          w-[100px] h-[120px]
+          md:w-[300px] md:h-[360px]
+          lg:w-[400px] lg:h-[440px]
+          rounded-xl overflow-hidden
+          mr-[-32px] md:mr-[-40px]
+          bg-black shadow-lg
+          items-center justify-center
+        `}
+        style={{
+          transform: "rotateY(-25deg)",
+          transformOrigin: "left center",
+          transition: "all 600ms ease",
+        }}
+      >
+        <video
+          src="/images/feature-page/img-vid-gen/video1.webm"
+          className="w-full h-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      </div>
+      {/* RIGHT CARD */}
+      <div
+        className={`
+          flex
+          w-[80px] h-[120px]
+          md:w-[220px] md:h-[360px]
+          lg:w-[300px] lg:h-[440px]
+          rounded-xl overflow-hidden
+          bg-black shadow-lg
+          items-center justify-center
+        `}
+        style={{
+          transform: "rotateY(25deg)",
+          transformOrigin: "right center",
+          transition: "all 600ms ease",
+        }}
+      >
+        <video
+          src="/images/feature-page/img-vid-gen/video1.webm"
+          className="w-full h-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
       </div>
     </div>
+  </div>
+</div>
   );
 }
-
-const styles: any = {
-  wrapper: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  frame: {
-    padding: "20px",
-    borderRadius: "40px",
-
-   
-  },
-
-  container: {
-    display: "flex",
-    perspective: "1000px",
-  },
-
-  left: {
-    width: "400px",
-    height: "440px",
-    borderRadius: "16px",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-
-    transform: "rotateY(-25deg)",
-    transformOrigin: "left center",
-
-    marginRight: "-40px",
-
-    transition: "all 600ms ease",
-    boxShadow: "0 10px 60px rgba(0,0,0,0.6)",
-  },
-
-  right: {
-    width: "300px",
-    height: "440px",
-    borderRadius: "16px",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-
-    transform: "rotateY(25deg)",
-    transformOrigin: "right center",
-
-    transition: "all 600ms ease",
-    boxShadow: "0 10px 60px rgba(0,0,0,0.6)",
-  },
-};

@@ -4,86 +4,33 @@ import React, { useRef, useEffect } from "react";
 
 export default function PromptStandardization() {
     const [hoveredChip, setHoveredChip] = React.useState<number | null>(null);
+
     return (
         <section
+            className="w-full min-h-screen h-screen flex flex-col items-center justify-center px-4 py-12 md:py-16 overflow-hidden"
             style={{
-                width: "100%",
-                minHeight: "100vh",
-                height: "100vh",
                 backgroundImage: "url('/images/feature-page/prompt-standardization/bg.png')",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "top left",
                 backgroundSize: "auto 30%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingTop: "64px",
-                paddingBottom: "64px",
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                overflow: "hidden",
             }}
         >
-            <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', marginTop: 48, marginBottom: 32 }}>
-                <h2
-                    style={{
-                        fontFamily: 'Clash Display Variable',
-                        fontWeight: 700,
-                        fontStyle: 'Medium',
-                        fontSize: '50px',
-                        lineHeight: '120%',
-                        color: '#fff',
-                        letterSpacing: '-2%',
-                        textAlign: 'center',
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 72,
-                        width: '100%',
-                    }}
-                >
-                    <span
-                        style={{
-                            display: 'inline-block',
-                            background: 'linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            marginRight: 16,
-                        }}
-                    >
+            <div className="w-full max-w-[1600px] mx-auto px-4 md:px-6 mt-8 md:mt-12 mb-6 md:mb-8">
+                
+                {/* TITLE */}
+                <h2 className="text-white font-bold text-[28px] md:text-[50px] leading-[120%] text-center flex items-center justify-center mb-10 md:mb-[72px]">
+                    <span className="bg-gradient-to-r from-indigo-500 to-cyan-300 bg-clip-text text-transparent mr-2 md:mr-4">
                         Prompt
                     </span>
-                    <span style={{ display: 'inline-block', color: '#fff' }}>Standardization</span>
+                    <span>Standardization</span>
                 </h2>
-                {/* Chips/Tags Marquee */}
-                <div
-                    style={{
-                        position: 'relative',
-                        width: '100vw',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        overflow: 'hidden',
-                        marginTop: 0,
-                        marginBottom: 56,
-                        height: 64,
-                    }}
-                >
+
+                {/* CHIPS */}
+                <div className="relative w-screen left-1/2 -translate-x-1/2 overflow-hidden mb-10 md:mb-14 h-[48px] md:h-[64px]">
                     <div
+                        className="flex items-center gap-3 md:gap-6 whitespace-nowrap absolute left-0 top-0 h-full"
                         style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 24,
-                            whiteSpace: 'nowrap',
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            height: '100%',
-                            animation: 'marqueeLoop 24s linear infinite',
+                            animation: "marqueeLoop 24s linear infinite",
                         }}
                     >
                         {[
@@ -96,32 +43,24 @@ export default function PromptStandardization() {
                                 key={idx}
                                 onMouseEnter={() => setHoveredChip(idx)}
                                 onMouseLeave={() => setHoveredChip(null)}
+                                className="inline-flex items-center rounded-full border text-gray-300 gap-2 md:gap-3 transition-all"
                                 style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    borderRadius: '9999px',
-                                    background: hoveredChip === idx ? 'rgba(99, 102, 241, 0.35)' : 'rgba(17, 19, 34, 0.8)',
-                                    border: '1px solid rgba(107, 124, 255, 0.3)',
-                                    color: '#D1D5DB',
-                                    fontWeight: 500,
-                                    fontSize: 18,
-                                    padding: '12px 32px',
-                                    marginRight: 0,
-                                    boxShadow: hoveredChip === idx ? '0 0 24px rgba(107,124,255,0.28)' : '0 0 16px rgba(107,124,255,0.12)',
-                                    gap: 12,
-                                    transform: hoveredChip === idx ? 'translateY(-4px) scale(1.02)' : 'none',
-                                    transition: 'transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
+                                    background:
+                                        hoveredChip === idx
+                                            ? "rgba(99,102,241,0.35)"
+                                            : "rgba(17,19,34,0.8)",
+                                    border: "1px solid rgba(107,124,255,0.3)",
+                                    fontSize: "14px",
+                                    padding: "8px 16px",
                                 }}
                             >
-                                {/* Tick icon SVG */}
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="18" height="18" className="md:w-6 md:h-6">
                                     <circle cx="12" cy="12" r="12" fill="#87DDDE" />
-                                    <path d="M7 13.5L10.5 17L17 10" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                                 <span>{text}</span>
                             </span>
                         ))}
-                        {/* Duplicate chips for seamless loop */}
+
                         {[
                             "Animate characters using reference image + driving video",
                             "Realistic full-body gestures and natural movement",
@@ -130,86 +69,42 @@ export default function PromptStandardization() {
                         ].map((text, idx) => (
                             <span
                                 key={'loop-'+idx}
-                                onMouseEnter={() => setHoveredChip(idx+4)}
-                                onMouseLeave={() => setHoveredChip(null)}
+                                className="inline-flex items-center rounded-full border text-gray-300 gap-2 md:gap-3"
                                 style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    borderRadius: '9999px',
-                                    background: hoveredChip === idx+4 ? 'rgba(99, 102, 241, 0.35)' : 'rgba(17, 19, 34, 0.8)',
-                                    border: '1px solid rgba(107, 124, 255, 0.3)',
-                                    color: '#D1D5DB',
-                                    fontWeight: 500,
-                                    fontSize: 18,
-                                    padding: '12px 32px',
-                                    marginRight: 0,
-                                    boxShadow: hoveredChip === idx+4 ? '0 0 24px rgba(107,124,255,0.28)' : '0 0 16px rgba(107,124,255,0.12)',
-                                    gap: 12,
-                                    transform: hoveredChip === idx+4 ? 'translateY(-4px) scale(1.02)' : 'none',
-                                    transition: 'transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease',
+                                    fontSize: "14px",
+                                    padding: "8px 16px",
+                                    background: "rgba(17,19,34,0.8)",
+                                    border: "1px solid rgba(107,124,255,0.3)",
                                 }}
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="18" height="18" className="md:w-6 md:h-6">
                                     <circle cx="12" cy="12" r="12" fill="#87DDDE" />
-                                    <path d="M7 13.5L10.5 17L17 10" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                                 <span>{text}</span>
                             </span>
                         ))}
                     </div>
-                    {/* Marquee loop animation style */}
-                    <style dangerouslySetInnerHTML={{
-                        __html: `
-                        @keyframes marqueeLoop {
-                            0% { transform: translateX(0); }
-                            100% { transform: translateX(-50%); }
-                        }
-                    `
-                    }} />
                 </div>
             </div>
-            {/* Slider Images */}
-            {/* Slider Images with auto scroll and no side padding */}
-            <div
-                style={{
-                    width: '100vw',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    position: 'relative',
-                    marginTop: 0,
-                    marginBottom: 48,
-                    overflow: 'hidden',
-                }}
-            >
+
+            {/* SLIDER */}
+            <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden mb-8 md:mb-12">
                 <div
                     ref={slider => {
                         if (!slider) return;
                         const s: any = slider;
                         if (s._autoScrollAttached) return;
                         s._autoScrollAttached = true;
-                        let scrollAmount = 0;
-                        const scrollStep = 2;
                         const interval = setInterval(() => {
-                            if (!slider) return;
                             if (slider.scrollLeft + slider.offsetWidth >= slider.scrollWidth - 1) {
                                 slider.scrollLeft = 0;
-                                scrollAmount = 0;
                             } else {
-                                slider.scrollLeft += scrollStep;
-                                scrollAmount += scrollStep;
+                                slider.scrollLeft += 2;
                             }
                         }, 24);
                         s._autoScrollInterval = interval;
                     }}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: 24,
-                        overflowX: 'auto',
-                        scrollbarWidth: 'none',
-                        paddingBottom: 8,
-                        width: '100vw',
-                    }}
+                    className="flex gap-3 md:gap-6 overflow-x-auto w-screen pb-2"
                 >
                     {[
                         '/images/feature-page/prompt-standardization/img1.png',
@@ -222,38 +117,20 @@ export default function PromptStandardization() {
                         <img
                             key={idx}
                             src={src}
-                            alt={`Dynamic Character ${idx+1}`}
-                            style={{
-                                width: 386,
-                                height: 312,
-                                borderRadius: 32,
-                                boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)',
-                                objectFit: 'cover',
-                                opacity: 1,
-                                transform: 'rotate(0deg)',
-                                flexShrink: 0,
-                                transition: 'transform 0.3s cubic-bezier(.4,1,.4,1), box-shadow 0.3s cubic-bezier(.4,1,.4,1)',
-                                cursor: 'pointer',
-                            }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'scale(1.04)';
-                                e.currentTarget.style.boxShadow = '0 16px 48px 0 rgba(0,0,0,0.28)';
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'rotate(0deg)';
-                                e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(0,0,0,0.18)';
-                            }}
+                            className="w-[220px] h-[180px] md:w-[386px] md:h-[312px] rounded-[20px] md:rounded-[32px] object-cover flex-shrink-0"
                         />
                     ))}
                 </div>
-                {/* Hide scrollbar style */}
-                <style dangerouslySetInnerHTML={{
-                    __html: `
-                        .slider-hide-scrollbar::-webkit-scrollbar { display: none; }
-                        .slider-hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-                    `
-                }} />
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes marqueeLoop {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+            `
+            }} />
         </section>
     );
 }

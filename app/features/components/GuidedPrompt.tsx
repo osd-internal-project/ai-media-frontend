@@ -2,9 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-
 export default function GuidedPrompt() {
-    // Motion state
     const [motion, setMotion] = useState([false, false, false]);
     const [inView, setInView] = useState(false);
     const sectionRef = useRef<HTMLElement | null>(null);
@@ -39,178 +37,114 @@ export default function GuidedPrompt() {
     }, [inView]);
 
     return (
-        <section
-            ref={sectionRef}
-            style={{
-                width: "100%",
-                minHeight: "100vh",
-                height: "100vh",
-                backgroundImage: "url('/images/feature-page/guided-prompt/Guided Prompt Builder.png')",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "center left",
-                backgroundSize: "auto 30%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "center",
-                paddingTop: "64px",
-                paddingBottom: "64px",
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                overflow: "hidden",
-                opacity: inView ? 1 : 0,
-                transform: inView ? "translateY(0)" : "translateY(32px)",
-                transition: "opacity 0.9s ease, transform 0.9s ease",
-            }}
-        >
-            <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', height: '100%' }}>
-                {/* Left column: Title */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
-                    <h2
-                        style={{
-                            fontFamily: 'Clash Display Variable',
-                            fontWeight: 700,
-                            fontStyle: 'Medium',
-                            fontSize: '50px',
-                            lineHeight: '120%',
-                            color: '#fff',
-                            letterSpacing: '-2%',
-                            textAlign: 'left',
-                            marginBottom: 0,
-                        }}
-                    >
-                        Guided <span
-                            style={{
-                                display: 'inline-block',
-                                background: 'linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                            }}
-                        >Prompt Builder</span>
+      <section
+    ref={sectionRef}
+    className={`w-full min-h-full flex flex-col justify-center px-4 py-8 md:py-16 overflow-visible transition-all duration-700 ${
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+    }`}
+    style={{
+        backgroundImage: "url('/images/feature-page/guided-prompt/Guided Prompt Builder.png')",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center left",
+        backgroundSize: "auto 30%",
+    }}
+>
+            <div className="w-full max-w-[1600px] mx-auto px-6 h-full flex flex-col md:flex-row items-center justify-start">
+                
+                {/* LEFT */}
+                <div className="flex-1 flex flex-col justify-center items-start">
+                    <h2 className="text-white font-bold text-3xl md:text-[50px] leading-[120%]">
+                        Guided{" "}
+                        <span className="bg-gradient-to-r from-indigo-500 to-cyan-300 bg-clip-text text-transparent">
+                            Prompt Builder
+                        </span>
                     </h2>
                 </div>
-                {/* Right column: (empty for now) */}
-                <div style={{ flex: 1, position: 'relative' }}>
-                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%',  justifyContent: 'flex-end', gap: 16}}>
-                        {/* Left column: Box 1 & 3 */}
-                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+
+                {/* RIGHT */}
+                <div className="flex-1 relative w-full">
+                    
+                    <div className="flex flex-col md:flex-row w-full justify-center md:justify-end items-center md:items-stretch gap-4">
+                        
+                        {/* LEFT COLUMN */}
+                        <div className="flex flex-col justify-center gap-4 items-center md:items-start">
+                            
+                            {/* BOX 1 */}
                             <div
-                                className="guided-prompt-box"
-                                style={{
-                                    width: 303,
-                                    height: 313,
-                                    background: '#6366F1',
-                                    borderRadius: 32,
-                                    boxShadow: '0 4px 24px 0 rgba(99,102,241,0.18)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    justifyContent: 'flex-start',
-                                    color: '#000',
-                                    fontWeight: 500,
-                                    fontSize: 24,
-                                    marginLeft: 72,
-                                    marginBottom: 0,
-                                    padding: 32,
-                                    gap: 18,
-                                    transition: 'transform 0.25s cubic-bezier(.4,1,.4,1), box-shadow 0.25s cubic-bezier(.4,1,.4,1), opacity 0.6s cubic-bezier(.4,1,.4,1)',
-                                    cursor: 'pointer',
-                                    opacity: motion[0] ? 1 : 0,
-                                    transform: motion[0] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'scale(1.04)';
-                                    e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(99,102,241,0.28)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = motion[0] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)';
-                                    e.currentTarget.style.boxShadow = '0 4px 24px 0 rgba(99,102,241,0.18)';
-                                }}
-                            >
-                                <span style={{ color: '#87DDDE', fontWeight: 700, fontSize: 48, }}>01</span>
-                                <span>Use dropdown-style presets and branded templates</span>
+  className="guided-prompt-box w-[90%] max-w-[280px] md:w-[303px] h-[260px] md:h-[313px] bg-[#6366F1] rounded-[32px] shadow-[0_4px_24px_rgba(99,102,241,0.18)] p-6 md:p-8 flex flex-col gap-4 md:gap-5 md:ml-[72px]"
+  style={{
+    opacity: motion[0] ? 1 : 0,
+    transform: motion[0]
+      ? "translateY(0) scale(1)"
+      : "translateY(40px) scale(0.96)",
+  }}
+>
+                                <span className="text-[#87DDDE] font-bold text-4xl md:text-5xl">01</span>
+                                <span className="text-black text-base md:text-xl">
+                                    Use dropdown-style presets and branded templates
+                                </span>
                             </div>
+
+                            {/* 🔥 BOX 2 (mobile only) */}
                             <div
-                                className="guided-prompt-box"
+                                className="guided-prompt-box md:hidden w-[90%] max-w-[280px] h-[260px] bg-[#6366F1] rounded-[32px] p-6 flex flex-col gap-4"
                                 style={{
-                                    width: 303,
-                                    height: 313,
-                                    background: '#6366F1',
-                                    borderRadius: 32,
-                                    boxShadow: '0 4px 24px 0 rgba(99,102,241,0.18)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    justifyContent: 'flex-start',
-                                    color: '#000',
-                                    fontWeight: 500,
-                                    fontSize: 24,
-                                    marginLeft: 0,
-                                    padding: 32,
-                                    gap: 16,
-                                    transition: 'transform 0.25s cubic-bezier(.4,1,.4,1), box-shadow 0.25s cubic-bezier(.4,1,.4,1), opacity 0.6s cubic-bezier(.4,1,.4,1)',
-                                    cursor: 'pointer',
-                                    opacity: motion[1] ? 1 : 0,
-                                    transform: motion[1] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'scale(1.04)';
-                                    e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(99,102,241,0.28)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = motion[1] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)';
-                                    e.currentTarget.style.boxShadow = '0 4px 24px 0 rgba(99,102,241,0.18)';
+                                    opacity: motion[2] ? 1 : 0,
+                                    transform: motion[2]
+                                        ? "translateY(0) scale(1)"
+                                        : "translateY(40px) scale(0.96)",
                                 }}
                             >
-                                <span style={{ color: '#87DDDE', fontWeight: 700, fontSize: 48 }}>03</span>
-                                <span>
-                                    Designed for <span style={{ color: '#87DDDE', fontWeight: 700 }}>non-technical users</span>—anyone can generate expert-level results
+                                <span className="text-[#87DDDE] font-bold text-4xl">02</span>
+                                <span className="text-black text-base">
+                                    Includes auto-suggestions to improve prompt quality
+                                </span>
+                            </div>
+
+                            {/* BOX 3 */}
+                            <div
+                                className="guided-prompt-box w-[90%] max-w-[280px] md:w-[303px] h-[260px] md:h-[313px] bg-[#6366F1] rounded-[32px] shadow-[0_4px_24px_rgba(99,102,241,0.18)] p-6 md:p-8 flex flex-col gap-4"
+                                style={{
+                                    opacity: motion[1] ? 1 : 0,
+                                    transform: motion[1]
+                                        ? "translateY(0) scale(1)"
+                                        : "translateY(40px) scale(0.96)",
+                                }}
+                            >
+                                <span className="text-[#87DDDE] font-bold text-4xl md:text-5xl">03</span>
+                                <span className="text-black text-base md:text-xl">
+                                    Designed for{" "}
+                                    <span className="text-[#87DDDE] font-bold">
+                                        non-technical users
+                                    </span>
+                                    —anyone can generate expert-level results
                                 </span>
                             </div>
                         </div>
-                        {/* Right column: Box 2 */}
-                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end' }}>
+
+                        {/* RIGHT COLUMN */}
+                        <div className="flex flex-col justify-center items-center md:items-end">
+                            
+                            {/* 🔥 BOX 2 (desktop only) */}
                             <div
-                                className="guided-prompt-box"
+                                className="guided-prompt-box hidden md:flex w-[303px] h-[313px] bg-[#6366F1] rounded-[32px] shadow-[0_4px_24px_rgba(99,102,241,0.18)] p-8 flex-col gap-5"
                                 style={{
-                                    width: 303,
-                                    height: 313,
-                                    background: '#6366F1',
-                                    borderRadius: 32,
-                                    boxShadow: '0 4px 24px 0 rgba(99,102,241,0.18)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    justifyContent: 'flex-start',
-                                    color: '#000',
-                                    fontWeight: 500,
-                                    fontSize: 24,
-                                    marginLeft: 0,
-                                    marginBottom: 0,
-                                    padding: 32,
-                                    gap: 18,
-                                    transition: 'transform 0.25s cubic-bezier(.4,1,.4,1), box-shadow 0.25s cubic-bezier(.4,1,.4,1), opacity 0.6s cubic-bezier(.4,1,.4,1)',
-                                    cursor: 'pointer',
                                     opacity: motion[2] ? 1 : 0,
-                                    transform: motion[2] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.transform = 'scale(1.04)';
-                                    e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(99,102,241,0.28)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.transform = motion[2] ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.96)';
-                                    e.currentTarget.style.boxShadow = '0 4px 24px 0 rgba(99,102,241,0.18)';
+                                    transform: motion[2]
+                                        ? "translateY(0) scale(1)"
+                                        : "translateY(40px) scale(0.96)",
                                 }}
                             >
-                                <span style={{ color: '#87DDDE', fontWeight: 700, fontSize: 48,}}>02</span>
-                                <span>Includes auto-suggestions to improve prompt quality</span>
+                                <span className="text-[#87DDDE] font-bold text-5xl">02</span>
+                                <span className="text-black text-xl">
+                                    Includes auto-suggestions to improve prompt quality
+                                </span>
                             </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     );
-};
+}

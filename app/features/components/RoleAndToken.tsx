@@ -33,36 +33,16 @@ export default function RoleAndToken() {
 	return (
 		<section
 			ref={sectionRef}
-			style={{
-				width: "100vw",
-				minHeight: "100vh",
-				height: "100vh",
-				background: "#171717",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				padding: 0,
-				margin: 0,
-				overflow: "hidden",
-				opacity: inView ? 1 : 0,
-				transform: inView ? "translateY(0)" : "translateY(32px)",
-				transition: "opacity 0.9s ease, transform 0.9s ease",
-			}}
+			className={`w-screen min-h-screen flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ${
+				inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+			}`}
+			style={{ background: "#171717" }}
 		>
-			<div
-				style={{
-					width: "100vw",
-					display: "flex",
-					flexDirection: "row",
-					alignItems: "stretch",
-					justifyContent: "flex-start",
-					padding: 0,
-					margin: 0,
-				}}
-			>
-				{/* Left column: Image */}
-				<div style={{ width: "50vw", height: "100vh", display: "flex", padding: 0, margin: 0 }}>
+			{/* 🔥 KEY: column ใน mobile / row ใน desktop */}
+			<div className="w-screen flex flex-col md:flex-row items-stretch justify-start">
+				
+				{/* IMAGE */}
+				<div className="w-full md:w-1/2 h-[40vh] md:h-screen flex">
 					<Image
 						src="/images/feature-page/RoleAndToken/img1.png"
 						alt="Role And Token Image"
@@ -73,88 +53,65 @@ export default function RoleAndToken() {
 						style={{
 							width: "100%",
 							height: "100%",
-							borderRadius: 0,
 							objectFit: "cover",
-							margin: 0,
-							padding: 0,
 							transform: isImageHovered ? "scale(1.03)" : "none",
 							transition: "transform 0.3s ease",
 						}}
 					/>
 				</div>
-				{/* Right column: Content (add your content here) */}
-				<div className={inView ? "role-token-content in-view" : "role-token-content"} style={{ width: "50vw", height: "100vh", display: "flex", flexDirection: "column", alignItems: "flex-start", color: "#fff", padding: 98, margin: 0, justifyContent: "flex-start" }}>
-					<h1
-						style={{
-							fontFamily: 'Clash Display Variable',
-							fontWeight: 700,
-							fontStyle: 'Medium',
-							fontSize: '64px',
-							lineHeight: '110%',
-							letterSpacing: '-2%',
-							marginBottom: '40px',
-							color: '#fff',
-							textAlign: 'left',
-						}}
-					>
-						<span
-							style={{
-								display: 'inline-block',
-								background: 'linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)',
-								WebkitBackgroundClip: 'text',
-								WebkitTextFillColor: 'transparent',
-								backgroundClip: 'text',
-							}}
-						>Role & Token</span>
+
+				{/* CONTENT */}
+				<div className="w-full md:w-1/2 flex flex-col items-start justify-start text-white px-6 md:px-[98px] py-10 md:py-[98px]">
+					
+					<h1 className="font-bold leading-[110%] tracking-[-2%] text-left mb-6 md:mb-10 text-[32px] md:text-[64px]">
+						<span className="bg-gradient-to-r from-indigo-500 to-cyan-300 bg-clip-text text-transparent">
+							Role & Token
+						</span>
 						<br />
-						<span style={{ color: '#fff' }}>Management</span>
+						<span>Management</span>
 					</h1>
-						{/* Content List */}
-						<div style={{ width: '100%' }}>
-							{bullets.map((text, idx) => {
-								const baseTransform = inView ? "translateY(0)" : "translateY(22px)";
-								const isHovered = hoveredBullet === idx;
-								return (
-									<React.Fragment key={idx}>
-										<div
-											style={{
-												marginBottom: 0,
-												display: 'flex',
-												flexDirection: 'column',
-												gap: 12,
-												opacity: inView ? 1 : 0,
-												transform: isHovered ? 'translateY(-10px) scale(1.02)' : baseTransform,
-												transition: `opacity 0.7s ease ${idx * 120}ms, transform 0.7s ease ${idx * 120}ms, box-shadow 0.3s ease`,
-												borderRadius: 24,
-												padding: 24,
-												cursor: 'pointer',
-												boxShadow: isHovered ? '0 20px 40px rgba(0,0,0,0.25)' : 'none',
-											}}
-											onMouseEnter={() => setHoveredBullet(idx)}
-											onMouseLeave={() => setHoveredBullet(null)}
-										>
-											<div style={{ color: '#6366F1', fontWeight: 700, fontSize: 48, minWidth: 48, lineHeight: '1.1' }}>
-												{String(idx + 1).padStart(2, '0')}
-											</div>
-											<div style={{ fontSize: 22, fontWeight: 500, color: '#fff' }}>{text}</div>
+
+					<div className="w-full">
+						{bullets.map((text, idx) => {
+							const baseTransform = inView ? "translateY(0)" : "translateY(22px)";
+							const isHovered = hoveredBullet === idx;
+
+							return (
+								<React.Fragment key={idx}>
+									<div
+										className="flex flex-col gap-2 md:gap-3 rounded-2xl p-4 md:p-6 cursor-pointer transition-all"
+										style={{
+											opacity: inView ? 1 : 0,
+											transform: isHovered
+												? "translateY(-10px) scale(1.02)"
+												: baseTransform,
+											boxShadow: isHovered
+												? "0 20px 40px rgba(0,0,0,0.25)"
+												: "none",
+											transition: `opacity 0.7s ease ${idx * 120}ms, transform 0.7s ease ${idx * 120}ms`,
+										}}
+										onMouseEnter={() => setHoveredBullet(idx)}
+										onMouseLeave={() => setHoveredBullet(null)}
+									>
+										<div className="text-indigo-500 font-bold text-[28px] md:text-[48px]">
+											{String(idx + 1).padStart(2, "0")}
 										</div>
-										{idx !== bullets.length - 1 && (
-											<hr
-												style={{
-													border: 'none',
-													borderTop: '1px solid #6366F1',
-													margin: '24px 0',
-												}}
-											/>
-										)}
-									</React.Fragment>
-								);
-							})}
-						</div>
-                </div>
-                
+
+										<div className="text-white font-medium text-[16px] md:text-[22px]">
+											{text}
+										</div>
+									</div>
+
+									{idx !== bullets.length - 1 && (
+										<hr className="border-t border-indigo-500 my-4 md:my-6" />
+									)}
+								</React.Fragment>
+							);
+						})}
+					</div>
+
 				</div>
-		
+			</div>
 		</section>
 	);
 }

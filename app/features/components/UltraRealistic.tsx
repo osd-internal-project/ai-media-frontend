@@ -34,130 +34,111 @@ export default function UltraRealistic() {
     ];
 
     return (
-        <section
-            ref={sectionRef}
-            style={{
-                width: "100vw",
-                minHeight: "100vh",
-                height: "100vh",
-                backgroundImage: "url('/images/feature-page/ultra-realistic/bg.svg')",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right top",
-                backgroundSize: "auto 30%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                justifyContent: "flex-start",
-                paddingTop: "64px",
-                paddingBottom: "64px",
-                paddingLeft: "16px",
-                paddingRight: "16px",
-                overflow: "hidden",
-                opacity: inView ? 1 : 0,
-                transform: inView ? "translateY(0)" : "translateY(32px)",
-                transition: "opacity 0.9s ease, transform 0.9s ease",
-            }}
-        >
+       <section
+      ref={sectionRef}
+      className={`
+        w-full min-h-screen
+        flex flex-col
+        items-end justify-start
+        pt-10 pb-10 md:pt-16 md:pb-16
+        px-4 md:px-6
+        overflow-hidden
+        transition-all duration-700
+        ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
+      `}
+      style={{
+        backgroundImage: "url('/images/feature-page/ultra-realistic/bg.svg')",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right top",
+        backgroundSize: "auto 30%",
+      }}
+    >
             {/* Heading on top right */}
-            <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-start', marginTop: 32 }}>
-                <h2
-                    style={{
-                        fontFamily: 'Clash Display Variable',
-                        fontWeight: 700,
-                        fontStyle: 'Medium',
-                        fontSize: '50px',
-                        lineHeight: '120%',
-                        color: '#fff',
-                        letterSpacing: '-2%',
-                        textAlign: 'right',
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        marginRight: 64,
-                        marginBottom: 32,
-                    }}
-                >
-                    <span style={{ display: 'block' }}>Ultra-Realistic</span>
-                    <span
-                        style={{
-                            display: 'block',
-                            background: 'linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                        }}
-                    >
-                        AI Humans
-                    </span>
-                </h2>
-            </div>
+          <div className="w-full max-w-[1600px] mx-auto px-2 md:px-6 flex flex-row md:justify-end items-start mt-4 md:mt-8">
+        <h2
+          className={`
+            font-bold
+            text-[28px] md:text-[50px]
+            leading-[120%]
+            text-white
+            tracking-tight
+            text-right
+            flex flex-col items-end
+            mr-0 md:mr-16 mb-4 md:mb-8
+          `}
+          style={{
+            fontFamily: "Clash Display Variable",
+            fontStyle: "Medium",
+          }}
+        >
+          <span>Ultra-Realistic</span>
+          <span
+            style={{
+              background: "linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            AI Humans
+          </span>
+        </h2>
+      </div>
             {/* Columns section below heading */}
-            <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                {/* Left column: bullet list */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center', alignItems: 'flex-start', marginLeft: 64 }}>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        {bullets.map((text, idx) => (
-                            <li
-                                key={idx}
-                                onMouseEnter={() => setHoveredBullet(idx)}
-                                onMouseLeave={() => setHoveredBullet(null)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'flex-start',
-                                    gap: 16,
-                                    marginBottom: idx === bullets.length - 1 ? 0 : 18,
-                                    transform: hoveredBullet === idx ? 'translateX(8px)' : 'none',
-                                    opacity: hoveredBullet === null || hoveredBullet === idx ? 1 : 0.6,
-                                    transition: 'transform 0.3s ease, opacity 0.3s ease',
-                                }}
-                            >
-                                <span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-                                <span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-                                    {text}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
+             <div className="w-full max-w-[1600px] mx-auto px-2 md:px-6 flex flex-col md:flex-row justify-between items-center">
+        {/* Left: bullet list */}
+        <div className="flex-1 min-w-0 flex flex-col gap-4 md:gap-6 justify-center items-start md:ml-16">
+          <ul className="list-none p-0 m-0">
+            {bullets.map((text, idx) => (
+              <li
+                key={idx}
+                onMouseEnter={() => setHoveredBullet(idx)}
+                onMouseLeave={() => setHoveredBullet(null)}
+                className={`
+                  flex items-start gap-4 mb-4 last:mb-0
+                  transition-all duration-300
+                  ${hoveredBullet === idx ? "translate-x-2" : ""}
+                  ${hoveredBullet !== null && hoveredBullet !== idx ? "opacity-60" : "opacity-100"}
+                `}
+              >
+                <span className="text-[#87DDDE] text-[18px] md:text-[22px] mt-[2px]">✔</span>
+                <span className="text-white text-[14px] md:text-[18px] leading-snug">
+                  {text}
+                </span>
+              </li>
+            ))}
+          </ul>
                 </div>
                 {/* Right column: image */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginRight: 64, justifyContent: 'center', height: '100%', position: "relative",
-                overflow: "hidden", }}>
-                    <img 
-                        src={"/images/feature-page/ultra-realistic/content.png"}
-                        alt="Ultra Realistic Content"
-                        onMouseEnter={() => setIsImageHovered(true)}
-                        onMouseLeave={() => setIsImageHovered(false)}
-                        style={{
-                            width: '90%',
-                            height: '90%',
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            borderRadius: '32px',
-                            boxShadow: isImageHovered ? '0 12px 40px 0 rgba(0,0,0,0.28)' : '0 8px 32px 0 rgba(0,0,0,0.18)',
-                            objectFit: 'cover',
-                            transform: isImageHovered ? 'translateY(-12px) scale(1.03)' : 'none',
-                            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                        }}
-                    />
-                    {/* Small absolute image bottom left in this column */}
-                    <img
-                        src={"/images/feature-page/ultra-realistic/content.png"}
-                        alt="Ultra Realistic Content Small"
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            bottom: 0,
-                            width: 200,
-                            height: 200,
-                            borderRadius: 18,
-                            boxShadow: '0 4px 16px 0 rgba(0,0,0,0.14)',
-                            objectFit: 'cover',
-                            zIndex: 2,
-                        }}
-                    />
-                </div>
-            </div>
+                <div className="flex-1 min-w-0 flex flex-col items-end md:mr-16 justify-center h-full relative mt-8 md:mt-0">
+          <video
+  src="/images/feature-page/ultra-realistic/content-vid.webm"
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="none"
+  onMouseEnter={() => setIsImageHovered(true)}
+  onMouseLeave={() => setIsImageHovered(false)}
+  className={`
+    w-[90%] max-w-full max-h-[320px] md:max-h-[480px] rounded-2xl object-cover
+    transition-all duration-300
+    ${isImageHovered ? "scale-105 -translate-y-2 shadow-2xl" : "shadow-lg"}
+  `}
+  style={{
+    boxShadow: isImageHovered
+      ? "0 12px 40px 0 rgba(0,0,0,0.28)"
+      : "0 8px 32px 0 rgba(0,0,0,0.18)",
+  }}
+/>
+{/* Small absolute image bottom left */}
+<img
+  src="/images/feature-page/ultra-realistic/content.webp"
+  alt="Ultra Realistic Content Small"
+  className="absolute left-0 bottom-0 w-[100px] h-[100px] md:w-[200px] md:h-[200px] rounded-xl object-cover z-20 shadow-md"
+/>
+        </div>
+      </div>
         </section>
     );
 }   

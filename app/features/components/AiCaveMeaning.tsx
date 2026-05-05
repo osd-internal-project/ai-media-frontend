@@ -10,6 +10,7 @@ export default function AiCaveMeaning() {
 
     useEffect(() => {
         if (!sectionRef.current) return;
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
@@ -19,6 +20,7 @@ export default function AiCaveMeaning() {
             },
             { threshold: 0.2 }
         );
+
         observer.observe(sectionRef.current);
         return () => observer.disconnect();
     }, []);
@@ -26,75 +28,67 @@ export default function AiCaveMeaning() {
     return (
         <section
             ref={sectionRef}
-            className="w-full py-10 px-4 md:px-6 lg:px-[2%] flex flex-col items-center justify-center"
+            className="w-full py-12 px-4 md:px-6 flex items-center justify-center"
             style={{
-                minHeight: '100vh',
-                height: '100vh',
+                minHeight: "100vh", // ❗ เอา height 100vh ออก
                 opacity: inView ? 1 : 0,
-                transform: inView ? 'translateY(0)' : 'translateY(32px)',
-                transition: 'opacity 0.9s ease, transform 0.9s ease',
+                transform: inView ? "translateY(0)" : "translateY(32px)",
+                transition: "opacity 0.9s ease, transform 0.9s ease",
             }}
         >
-            <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-[2%]"  style={{ animation: "float 6s ease-in-out infinite" }}>
+            <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-[2%]">
                 <div
-                    className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+                    className="
+                        w-full 
+                        grid grid-cols-1 md:grid-cols-2 
+                        gap-6 md:gap-10 
+                        items-center
+                        p-6 md:p-10 lg:p-14
+                        rounded-[24px] md:rounded-[40px]
+                    "
                     style={{
-                        borderRadius: "32px",
-                        backgroundImage: "url('/images/feature-page/ai-cave-meaning/bg.png')",
+                        backgroundImage: "url('/images/feature-page/ai-cave-meaning/bg.webp')",
                         backgroundSize: "cover",
                         backgroundPosition: "center",
-                        backgroundRepeat: "no-repeat",
                         boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                        padding: "48px 32px",
                     }}
                 >
-                    {/* Left: Title + Paragraph SVGs */}
-                    <div className="relative flex flex-col justify-center items-start p-10 md:p-12 gap-6">
+                    {/* LEFT */}
+                    <div className="flex flex-col gap-4 md:gap-6">
                         <h1
-                            style={{
-                                fontFamily: 'Clash Display Variable',
-                                fontWeight: 700,
-                                fontStyle: 'Medium',
-                                fontSize: '64px',
-                                lineHeight: '100%',
-                                letterSpacing: '-2%',
-                                marginBottom: '12px',
-                                color: '#fff',
-                            }}
+                            className="
+                                text-[32px] 
+                                md:text-[48px] 
+                                lg:text-[64px]
+                                leading-tight
+                                text-white
+                                font-bold
+                            "
                         >
                             What is AI Cave?
                         </h1>
-                        <p
-                            style={{
-                                fontFamily: 'Clash Display Variable',
-                                fontWeight: 400,
-                                fontStyle: 'Regular',
-                                fontSize: '24px',
-                                lineHeight: '139%',
-                                letterSpacing: '-2%',
-                                color: '#fff',
-                                marginBottom: '8px',
-                            }}
-                        >
-                            <span style={{ color: '#87DDDE', borderRadius: '6px', padding: '0 4px', fontWeight: 500, fontSize: '48px' }}>AI Cave</span> is an enterprise-grade image and video generation platform designed to eliminate content bottlenecks and empower marketing, design, and creative teams. Built on <span style={{ color: '#87DDDE', borderRadius: '6px', padding: '0 4px', fontWeight: 500, fontSize: '28px' }}>BytePlus’s top-tier AI infrastructure</span> and localized for <span style={{ color: '#87DDDE', borderRadius: '6px', padding: '0 4px', fontWeight: 500, fontSize: '28px' }}>business use in Thailand</span>, AI Cave removes the technical barrier from AI content creation.
+
+                        <p className="text-white text-[16px] md:text-[20px] lg:text-[24px] leading-relaxed">
+                            <span className="text-[#87DDDE] font-semibold text-[22px] md:text-[32px] lg:text-[48px]">
+                                AI Cave
+                            </span>{" "}
+                            is an enterprise-grade image and video generation platform designed to eliminate content bottlenecks.
                         </p>
-                        <p
-                            style={{
-                                fontFamily: 'Clash Display Variable',
-                                fontWeight: 400,
-                                fontStyle: 'Regular',
-                                fontSize: '24px',
-                                lineHeight: '139%',
-                                letterSpacing: '-2%',
-                                color: '#fff',
-                                marginBottom: '8px',
-                            }}
-                        >
-                            Whether you're a startup or an enterprise, AI Cave is fully <span style={{ color: '#87DDDE', borderRadius: '6px', padding: '0 4px', fontWeight: 500, fontSize: '28px' }}>customizable to your brand’s workflow</span>, tone, and user roles—enabling faster content production and reducing dependence on external agencies.
+
+                        <p className="text-white text-[16px] md:text-[20px] lg:text-[24px] leading-relaxed">
+                            Built on{" "}
+                            <span className="text-[#87DDDE] font-semibold">
+                                BytePlus AI infrastructure
+                            </span>{" "}
+                            and localized for{" "}
+                            <span className="text-[#87DDDE] font-semibold">
+                                Thailand businesses
+                            </span>
+                            .
                         </p>
                     </div>
 
-                    {/* Right: Content Image */}
+                    {/* RIGHT */}
                     <div
                         className="flex justify-center"
                         onMouseEnter={() => setIsImageHovered(true)}
@@ -105,9 +99,16 @@ export default function AiCaveMeaning() {
                             alt="AI Cave Meaning Content"
                             width={620}
                             height={520}
-                            className="w-full h-auto object-contain"
+                            
+                            // ✅ Lazy load control
+                            loading="lazy"
+                            sizes="(max-width: 768px) 100vw, 50vw"
+
+                            className="w-full max-w-[500px] md:max-w-[620px] h-auto object-contain"
                             style={{
-                                transform: isImageHovered ? "translateY(-10px) scale(1.03)" : "none",
+                                transform: isImageHovered
+                                    ? "translateY(-10px) scale(1.03)"
+                                    : "none",
                                 transition: "transform 0.4s ease",
                             }}
                         />
