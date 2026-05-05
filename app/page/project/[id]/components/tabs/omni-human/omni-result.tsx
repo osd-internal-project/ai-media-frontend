@@ -2,11 +2,11 @@ import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Card, Space, Typography, Divider, Row, Col, Button } from "antd";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
-
-import VideoItem from "../video-gen/video-player";
+ 
 import { Message } from "./chat-generate-omnihumen";
 import OmniActionBar from "./action-bar";
 import { Trash2, User } from "lucide-react";
+import VideoItem from "../../chat-components/video-player";
 
 interface Props {
   message: Message;

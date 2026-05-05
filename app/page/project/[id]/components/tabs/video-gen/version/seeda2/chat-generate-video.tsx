@@ -35,34 +35,14 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
-import ChatVideoInput from "./chat-video-input"; 
+import ChatVideoInput from "./chat-video-input";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import VideoMessageItem from "./result-item";
 import VideoResultItem from "./result-item";
 import ResultHeader from "./result-header";
 import { RcFile } from "antd/es/upload";
 import GenerateTwoPaneLayout from "../../../../tab-layout/generate-two-pane-layout";
-
-interface VideoChatProps {
-  teamView: boolean;
-  projectId: string;
-  userId?: string;
-  activeKey:
-    | "image"
-    | "video"
-    | "omnihumen"
-    | "dreamactor"
-    | "library"
-    | "activity";
-  projectRole?: string | null;
-  promptGuideOpenStatus: boolean;
-  username?: string; // Added username
-  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
-  setDisableTab: (disable: boolean) => void;
-  onSetPromptTextRef?: React.MutableRefObject<
-    ((id: number) => Promise<void>) | null
-  >;
-}
+import { VideoFormManagerProps } from "../../video-form-renderer";
 
 interface UserMessage {
   id?: number;
@@ -125,7 +105,7 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateVideo: FC<VideoChatProps> = ({
+const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
   teamView,
   projectId,
   userId,
@@ -1017,25 +997,24 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
           }
         });
 
-        const results = await Promise.all(uploadPromises); 
-          const successfulResults = await Promise.all(
-            results
-              .filter((res: any) => res !== null)
-              .map((res: any) => res.result),
-          );
+        const results = await Promise.all(uploadPromises);
+        const successfulResults = await Promise.all(
+          results
+            .filter((res: any) => res !== null)
+            .map((res: any) => res.result),
+        );
 
-          setRefImage(successfulResults);
+        setRefImage(successfulResults);
 
-          const newFiles = successfulResults.map((res: any, index: number) => ({
-            uid: res.uid || `rc-upload-${Date.now()}-${index}`,
-            name: res.name,
-            status: "done" as const,
-            url: res.url,
-            response: res, // Keep consistency with response mapping
-          }));
+        const newFiles = successfulResults.map((res: any, index: number) => ({
+          uid: res.uid || `rc-upload-${Date.now()}-${index}`,
+          name: res.name,
+          status: "done" as const,
+          url: res.url,
+          response: res, // Keep consistency with response mapping
+        }));
 
-          setFiles(newFiles);
-     
+        setFiles(newFiles);
       } catch (error) {
         console.error("Error in handleUsePromptGuide:", error);
       } finally {
@@ -1056,7 +1035,7 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         url: image.imagePath,
       })),
     );
- 
+
     const message = {
       taskId: tempTask,
       model: selectedAIModel.modelType,

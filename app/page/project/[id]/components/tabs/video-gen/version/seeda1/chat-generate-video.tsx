@@ -2,18 +2,14 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useMemo,
   useCallback,
   type FC,
 } from "react";
 import {
-  Button,
-  Card,
   Flex,
   Form,
   message,
   type UploadFile,
-  Typography,
   notification,
   UploadProps,
 } from "antd";
@@ -26,43 +22,19 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
 import LogsServices from "@/app/services/logs.service";
 import GenerateServices from "@/app/services/generate.service";
-import VideoItem from "./video-player";
-import VideoSmartReference from "./video-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import ChatVideoInput from "./chat-video-input";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import VideoMessageItem from "./result-item";
 import VideoResultItem from "./result-item";
 import ResultHeader from "./result-header";
 import { RcFile } from "antd/es/upload";
 import GenerateTwoPaneLayout from "../../../../tab-layout/generate-two-pane-layout";
-
-interface VideoChatProps {
-  teamView: boolean;
-  projectId: string;
-  userId?: string;
-  activeKey:
-    | "image"
-    | "video"
-    | "omnihumen"
-    | "dreamactor"
-    | "library"
-    | "activity";
-  projectRole?: string | null;
-  promptGuideOpenStatus: boolean;
-  username?: string; // Added username
-  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
-  setDisableTab: (disable: boolean) => void;
-  onSetPromptTextRef?: React.MutableRefObject<
-    ((id: number) => Promise<void>) | null
-  >;
-}
+import { VideoFormManagerProps } from "../../video-form-renderer";
 
 interface UserMessage {
   id?: number;
@@ -125,7 +97,7 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateVideo: FC<VideoChatProps> = ({
+const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
   teamView,
   projectId,
   userId,

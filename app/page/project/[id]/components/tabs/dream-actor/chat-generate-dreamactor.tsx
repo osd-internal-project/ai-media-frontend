@@ -22,8 +22,7 @@ import {
 } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
-import VideoItem from "../video-gen/video-player";
-import DreamactorSmartReference from "./dreamactor-smart-reference";
+
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";

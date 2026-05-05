@@ -2,11 +2,11 @@ import React, { FC, useRef, useState, useEffect } from "react";
 import { Card, Typography, Divider, Row, Col, Button, Space } from "antd";
 
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
-import VideoItem from "../video-gen/video-player";
 import { Message } from "./chat-generate-dreamactor";
 import DreamActionBar from "./action-bar";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Trash2, User } from "lucide-react";
+import VideoItem from "../../chat-components/video-player";
 
 interface Props {
   message: Message;

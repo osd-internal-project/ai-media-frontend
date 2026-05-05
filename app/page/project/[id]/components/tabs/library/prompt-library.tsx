@@ -18,22 +18,36 @@ import {
   message,
   Typography,
   Empty,
+  Modal,
+  Spin,
 } from "antd";
 import dynamic from "next/dynamic";
-import { Download, ExternalLink, Eye, Loader, Trash2, User } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  Eye,
+  Loader,
+  Paintbrush,
+  Trash2,
+  User,
+} from "lucide-react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import ImageEditor from "../../chat-components/image-editor";
 
 export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
 }
 
-const PreviewImage = dynamic(() => import("../../chat-components/preview-image"), { ssr: false });
+const PreviewImage = dynamic(
+  () => import("../../chat-components/preview-image"),
+  { ssr: false },
+);
 
 const PromptLibrary: FC<props> = ({
   shouldRefetch,
@@ -70,6 +84,8 @@ const PromptLibrary: FC<props> = ({
 
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingDownload, setLoadingDownload] = useState<boolean>(false);
+  const [imageEditorUrl, setImageEditorUrl] = useState<string | null>(null);
+  const [openEditor, setOpenEditor] = useState<boolean>(false);
 
   const [api, contextHolders] = notification.useNotification();
 
@@ -126,7 +142,7 @@ const PromptLibrary: FC<props> = ({
       organizationId,
       page,
       pageSize,
-      true
+      true,
     );
 
     setTotal(res.total);
@@ -140,7 +156,21 @@ const PromptLibrary: FC<props> = ({
   const onSelectItem = (item: any) => {
     setSelected(item);
   };
+  // =========================
+  // EDIT (ONLY IMAGE)
+  // =========================
+  const openImageEditor = async (id: string) => {
+    setOpenEditor(true);
+    const response = await galleryservices.downloadFile(id, organizationId);
+    if (!response) {
+      setOpenEditor(false);
+      message.error("Download failed or response is empty");
+      return;
+    }
 
+    const url = URL.createObjectURL(response);
+    setImageEditorUrl(url);
+  };
   // =========================
   // DOWNLOAD (FIXED)
   // =========================
@@ -150,7 +180,7 @@ const PromptLibrary: FC<props> = ({
     try {
       const response = await galleryservices.downloadFile(
         imageId,
-        session?.user?.organizationId || ""
+        session?.user?.organizationId || "",
       );
 
       if (!response) throw new Error("Download failed");
@@ -293,9 +323,7 @@ const PromptLibrary: FC<props> = ({
               <Typography.Title level={4} style={{ margin: 0 }}>
                 Library
               </Typography.Title>
-              <Typography.Text type="secondary">
-                {total} items
-              </Typography.Text>
+              <Typography.Text type="secondary">{total} items</Typography.Text>
             </div>
           </Flex>
 
@@ -336,7 +364,7 @@ const PromptLibrary: FC<props> = ({
                   >
                     {renderPreview(item)}
 
-                   <Tag
+                    <Tag
                       style={{
                         position: "absolute",
                         left: 8,
@@ -356,18 +384,23 @@ const PromptLibrary: FC<props> = ({
                       className="absolute inset-0 bg-black/35 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 pointer-events-auto"
                       style={{ padding: 8 }}
                     >
+                      {/* Edit (image only) */}
+                      {!item.typeGenerate.toLowerCase().includes("video") && (
+                        <Button
+                          icon={<Paintbrush size={16} />}
+                          onClick={() => openImageEditor(item.id)}
+                          style={actionButtonStyle}
+                          disabled={!item.imageUrl}
+                        />
+                      )}
                       <Button
                         icon={<Download size={16} />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDownloadFile(
-                            item.fileName || "file",
-                            item.id
-                          );
+                          onDownloadFile(item.fileName || "file", item.id);
                         }}
                         style={actionButtonStyle}
                       />
-
                       <Button
                         icon={<ExternalLink size={16} />}
                         onClick={(e) => {
@@ -376,7 +409,6 @@ const PromptLibrary: FC<props> = ({
                         }}
                         style={actionButtonStyle}
                       />
-
                       <Button
                         icon={<Trash2 size={16} />}
                         onClick={(e) => {
@@ -421,7 +453,9 @@ const PromptLibrary: FC<props> = ({
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {item?.resolution || item?.generateConfig?.resolution || "-"}
+                        {item?.resolution ||
+                          item?.generateConfig?.resolution ||
+                          "-"}
                       </Typography.Text>
 
                       <Typography.Text
@@ -461,13 +495,19 @@ const PromptLibrary: FC<props> = ({
                     </Typography.Paragraph>
 
                     <Flex justify="space-between" align="center">
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {item?.createdAt
                           ? new Date(item.createdAt).toLocaleDateString()
                           : "-"}
                       </Typography.Text>
 
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {item?.createdAt
                           ? new Date(item.createdAt).toLocaleTimeString([], {
                               hour: "2-digit",
@@ -530,8 +570,8 @@ const PromptLibrary: FC<props> = ({
         }
       `}</style>
       {/* PREVIEW MODAL */}
-      {previewItem && (
-        previewItem.typeGenerate === "image" ? (
+      {previewItem &&
+        (previewItem.typeGenerate === "image" ? (
           <PreviewImage
             closePreview={handleClosePreview}
             previewImage={previewItem.imageUrl}
@@ -545,17 +585,46 @@ const PromptLibrary: FC<props> = ({
               className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
               onClick={handleClosePreview}
             >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
             <video
               src={previewItem.imageUrl}
               controls
               autoPlay
               className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
-        )
+        ))}
+      {/* ImageEditorModal */}
+      {openEditor && (
+        <Modal
+          open={openEditor}
+          onCancel={() => {
+            setOpenEditor(false);
+            setImageEditorUrl(null);
+          }}
+          // closeIcon={false}
+          footer={null}
+          width={1200}
+          className="z-[1000000]"
+          title="Image Editor"
+        >
+          <Spin spinning={imageEditorUrl === null}>
+            {imageEditorUrl && <ImageEditor imageUrl={imageEditorUrl} />}
+          </Spin>
+        </Modal>
       )}
     </div>
   );

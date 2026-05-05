@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, type FC, type ReactElement } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  type FC,
+  type ReactElement,
+} from "react";
 import {
   Button,
   Empty,
@@ -15,7 +21,15 @@ import dynamic from "next/dynamic";
 import { Eye } from "lucide-react";
 
 import type { ColumnsType } from "antd/es/table";
-import { Loader2, Star, Download, Trash2, Share2, Copy } from "lucide-react";
+import {
+  Loader2,
+  Star,
+  Download,
+  Trash2,
+  Share2,
+  Copy,
+  Paintbrush,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -29,6 +43,7 @@ import {
 } from "@ant-design/icons";
 import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
+import ImageEditor from "../../chat-components/image-editor";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -59,7 +74,7 @@ const PromptActivity: FC<props> = ({
   const [api, contextHolders] = notification.useNotification();
   const [previewItem, setPreviewItem] = useState<any>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-
+  const [imageEditorUrl, setImageEditorUrl] = useState<string | null>(null);
   useEffect(() => {
     if (activeKey === "activity" && loading) {
       fectData();
@@ -149,6 +164,14 @@ const PromptActivity: FC<props> = ({
     };
   };
 
+  const openImageEditor = async (id: string) => {
+    const response = await galleryservices.downloadFile(id, organizationId);
+    if (!response) throw new Error("Download failed or response is empty");
+
+    const url = URL.createObjectURL(response);
+    setImageEditorUrl(url);
+  };
+
   const columns: ColumnsType<any> = [
     {
       title: "Preview",
@@ -156,20 +179,23 @@ const PromptActivity: FC<props> = ({
       key: "preview",
       width: 140,
       render: (_, record) => {
-        const isVideo = record.typeGenerate === "video" || record.typeGenerate === "dreamactor" || record.typeGenerate === "omnihumen" || record.typeGenerate === "omnihuman";
+        const isVideo =
+          record.typeGenerate === "video" ||
+          record.typeGenerate === "dreamactor" ||
+          record.typeGenerate === "omnihumen" ||
+          record.typeGenerate === "omnihuman";
         return (
-            <div
-              style={{
-                width: 112,
-                height: 64,
-                borderRadius: 8,
-                overflow: "hidden",
-                border: `1px solid ${semantic.colorBorder}`,
-                position: "relative",
-                cursor: "pointer",
-                display: 'flex',
-            
-              }}
+          <div
+            style={{
+              width: 112,
+              height: 64,
+              borderRadius: 8,
+              overflow: "hidden",
+              border: `1px solid ${semantic.colorBorder}`,
+              position: "relative",
+              cursor: "pointer",
+              display: "flex",
+            }}
             onMouseEnter={() => setHoveredId(record.id)}
             onMouseLeave={() => setHoveredId(null)}
             onClick={() => setPreviewItem(record)}
@@ -182,21 +208,21 @@ const PromptActivity: FC<props> = ({
                     src={record.imageUrl || undefined}
                     muted
                     style={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      width: 'auto',
-                      height: 'auto',
-                      objectFit: 'contain',
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain",
                       opacity: hoveredId === record.id ? 1 : 0.7,
-                      transition: 'opacity 0.2s',
-                      display: 'block',
-                      margin: 'auto',
-                      background: 'transparent',
+                      transition: "opacity 0.2s",
+                      display: "block",
+                      margin: "auto",
+                      background: "transparent",
                     }}
                     playsInline
                     loop
                     preload="metadata"
-                    onMouseOver={async e => {
+                    onMouseOver={async (e) => {
                       if (hoveredId === record.id) {
                         try {
                           if (e.currentTarget.paused) {
@@ -207,7 +233,7 @@ const PromptActivity: FC<props> = ({
                         }
                       }
                     }}
-                    onMouseOut={e => {
+                    onMouseOut={(e) => {
                       e.currentTarget.pause();
                       e.currentTarget.currentTime = 0;
                     }}
@@ -227,44 +253,42 @@ const PromptActivity: FC<props> = ({
                   </div>
                 </>
               ) : null
-            ) : (
-              record.imageUrl ? (
-                <>
-                  <Image
-                    src={record.imageUrl || undefined}
-                    alt={record.prompt || "preview"}
-                    preview={false}
-                    width={112}
-                    height={64}
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      width: 'auto',
-                      height: 'auto',
-                      objectFit: 'contain',
-                      opacity: hoveredId === record.id ? 1 : 0.85,
-                      transition: 'opacity 0.2s',
-                      display: 'block',
-                      margin: 'auto',
-                      background: 'transparent',
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      background: "rgba(0,0,0,0.5)",
-                      borderRadius: 4,
-                      padding: 2,
-                      zIndex: 2,
-                    }}
-                  >
-                    <Eye size={16} color="#fff" />
-                  </div>
-                </>
-              ) : null
-            )}
+            ) : record.imageUrl ? (
+              <>
+                <Image
+                  src={record.imageUrl || undefined}
+                  alt={record.prompt || "preview"}
+                  preview={false}
+                  width={112}
+                  height={64}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    width: "auto",
+                    height: "auto",
+                    objectFit: "contain",
+                    opacity: hoveredId === record.id ? 1 : 0.85,
+                    transition: "opacity 0.2s",
+                    display: "block",
+                    margin: "auto",
+                    background: "transparent",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    background: "rgba(0,0,0,0.5)",
+                    borderRadius: 4,
+                    padding: 2,
+                    zIndex: 2,
+                  }}
+                >
+                  <Eye size={16} color="#fff" />
+                </div>
+              </>
+            ) : null}
             {/* Overlay on hover */}
             {hoveredId === record.id && (
               <div
@@ -306,12 +330,26 @@ const PromptActivity: FC<props> = ({
       ellipsis: true,
       render: (value, record) => (
         <div
-          style={{ display: 'flex', alignItems: 'center', position: 'relative' }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            position: "relative",
+          }}
           onMouseEnter={() => setHoveredId(record.id)}
           onMouseLeave={() => setHoveredId(null)}
         >
           <Tooltip title={value}>
-            <Typography.Text style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }}>{value || "-"}</Typography.Text>
+            <Typography.Text
+              style={{
+                maxWidth: 250,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "inline-block",
+              }}
+            >
+              {value || "-"}
+            </Typography.Text>
           </Tooltip>
           {hoveredId === record.id && !!value && (
             <Button
@@ -333,7 +371,8 @@ const PromptActivity: FC<props> = ({
       title: "Model",
       key: "model",
       width: 180,
-      render: (_, record) => record?.generateConfig?.modelName || "Unknown model",
+      render: (_, record) =>
+        record?.generateConfig?.modelName || "Unknown model",
     },
     {
       title: "Created By",
@@ -355,9 +394,33 @@ const PromptActivity: FC<props> = ({
       width: 180,
       render: (_, record) => {
         const isLiked = Boolean(record?.status);
-        const isVideo = record.typeGenerate === "video" || record.typeGenerate === "dreamactor" || record.typeGenerate === "omnihumen" || record.typeGenerate === "omnihuman";
+        const isVideo =
+          record.typeGenerate === "video" ||
+          record.typeGenerate === "dreamactor" ||
+          record.typeGenerate === "omnihumen";
         return (
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', width: '100%' }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 2,
+              justifyContent: "center",
+              width: "100%",
+            }}
+          >
+            {/* Edit (image only) */}
+            {!isVideo && (
+              <Button
+                icon={<Paintbrush size={16} style={{color:' #ffff'}}  
+                // className=" text-yellow-500 drop-shadow-[0_0_5px_#f59e0b] animate-pulse"
+                />
+              }
+                onClick={() => openImageEditor(record.id)}
+                type="text"
+                shape="circle"
+                className="activity-star-button"
+                disabled={!record.imageUrl}
+              />
+            )}
             {/* Like/Unlike */}
             <Button
               icon={
@@ -373,11 +436,14 @@ const PromptActivity: FC<props> = ({
                 if (loadingButton === record.id) return;
                 if (isLiked) {
                   setLoadingButton(record.id);
-                  galleryservices.updateStatus(record.id, false)
+                  galleryservices
+                    .updateStatus(record.id, false)
                     .then(() => {
                       setData((prev) => {
                         const updated = prev.data.map((entry) =>
-                          entry.id === record.id ? { ...entry, status: false } : entry
+                          entry.id === record.id
+                            ? { ...entry, status: false }
+                            : entry,
                         );
                         return { ...prev, data: updated };
                       });
@@ -407,16 +473,17 @@ const PromptActivity: FC<props> = ({
                 let hide: () => void = () => {};
                 try {
                   const maybeHide = api.info({
-                    message: 'Downloading...'
+                    message: "Downloading...",
                   });
-                  if (typeof maybeHide === 'function') {
+                  if (typeof maybeHide === "function") {
                     hide = maybeHide;
                   }
                   const response = await galleryservices.downloadFile(
                     record.id,
                     organizationId,
                   );
-                  if (!response) throw new Error("Download failed or response is empty");
+                  if (!response)
+                    throw new Error("Download failed or response is empty");
                   let ext = "";
                   if (record.typeGenerate === "image") {
                     ext = ".jpg";
@@ -428,7 +495,7 @@ const PromptActivity: FC<props> = ({
                   ) {
                     ext = ".mp4";
                   }
-                  const fileName = (record.prompt ? record.prompt.substring(0, 30).replace(/[^a-zA-Z0-9-_]/g, "_") : "file") + ext;
+                  const fileName = "image" + ext;
                   const url = URL.createObjectURL(response);
                   const link = document.createElement("a");
                   link.href = url;
@@ -451,17 +518,20 @@ const PromptActivity: FC<props> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 Modal.confirm({
-                  title: 'Delete this item?',
+                  title: "Delete this item?",
                   icon: <ExclamationCircleOutlined />,
-                  content: 'Are you sure you want to delete this item? This action cannot be undone.',
-                  okText: 'Delete',
-                  okType: 'danger',
-                  cancelText: 'Cancel',
+                  content:
+                    "Are you sure you want to delete this item? This action cannot be undone.",
+                  okText: "Delete",
+                  okType: "danger",
+                  cancelText: "Cancel",
                   onOk: async () => {
                     try {
                       await galleryservices.deleteById(record.id);
                       setData((prev) => {
-                        const updated = prev.data.filter((entry) => entry.id !== record.id);
+                        const updated = prev.data.filter(
+                          (entry) => entry.id !== record.id,
+                        );
                         return { ...prev, data: updated };
                       });
                       api.success({ message: "Deleted" });
@@ -552,8 +622,8 @@ const PromptActivity: FC<props> = ({
         </Flex>
       )}
       {/* PREVIEW MODAL */}
-      {previewItem && (
-        previewItem.typeGenerate === "image" ? (
+      {previewItem &&
+        (previewItem.typeGenerate === "image" ? (
           <PreviewImage
             closePreview={() => setPreviewItem(null)}
             previewImage={previewItem.imageUrl}
@@ -567,17 +637,41 @@ const PromptActivity: FC<props> = ({
               className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
               onClick={() => setPreviewItem(null)}
             >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
             <video
               src={previewItem.imageUrl}
               controls
               autoPlay
               className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
-        )
+        ))}
+      {/* ImageEditorModal */}
+      {imageEditorUrl && (
+        <Modal
+          open={imageEditorUrl ? true : false}
+          onCancel={() => setImageEditorUrl(null)}
+          // closeIcon={false}
+          footer={null}
+          width={1200}
+          className="z-[1000000]"
+          title="Image Editor"
+        >
+          <ImageEditor imageUrl={imageEditorUrl} />
+        </Modal>
       )}
     </div>
   );

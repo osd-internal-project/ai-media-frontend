@@ -1,6 +1,6 @@
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { FC } from "react";
-interface VideoChatProps {
+export interface VideoFormManagerProps {
   teamView: boolean;
   projectId: string;
   userId?: string;
@@ -23,7 +23,7 @@ interface VideoChatProps {
 import Seeda1 from "./version/seeda1/chat-generate-video";
 import Seeda2 from "./version/seeda1/chat-generate-video";
 
-const FormVersionManager: FC<VideoChatProps> = (props) => {
+const VideoFormRenderer: FC<VideoFormManagerProps> = (props) => {
   const { selectedAIModel } = props;
   const description = selectedAIModel?.description?.toLowerCase() || "";
   switch (description) {
@@ -35,4 +35,4 @@ const FormVersionManager: FC<VideoChatProps> = (props) => {
       return <></>; // default version
   }
 };
-export default FormVersionManager;
+export default VideoFormRenderer;
