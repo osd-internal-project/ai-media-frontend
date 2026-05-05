@@ -6,6 +6,7 @@ import {
   Badge,
   Button,
   Col,
+  Form,
   InputNumber,
   Layout,
   Modal,
@@ -17,7 +18,7 @@ import {
   Typography,
   theme,
 } from "antd";
-import { axiosReport, axiosCore } from "@/app/lib/axios/axios";
+import { axiosReport, axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import DashboardServices from "@/app/services/dashboard.service";
 import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
@@ -38,6 +39,7 @@ import {
   CreditCard,
   FolderOpen,
   Sparkles,
+  Ticket,
   Users,
 } from "lucide-react";
 import { formatCompactNumber, formatNumber } from "@/app/utils/format";
@@ -54,6 +56,8 @@ import ApprovalsTab from "./components/tabs/approval/approval-tab";
 import { mockPendingApprovals } from "./components/tabs/approval/static";
 import DashboardCustomTab from "./components/customtab";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
+import RedeemCouponModal from "./components/redeem-coupon-modal";
+import CouponService from "@/app/services/coupon.service";
 
 type QuotaOverride = {
   limitCredit: number;
@@ -66,6 +70,9 @@ const DashboardPage: FC = () => {
   const { token } = theme.useToken();
   const organizationId = session?.user?.organizationId;
   const dashboardServices = useMemo(() => DashboardServices(axiosReport), []);
+    const couponService = useMemo(() => CouponService(axiosUser), []);
+
+  
   const projectServices = useMemo(() => ProjectService(axiosCore), []);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -83,6 +90,8 @@ const DashboardPage: FC = () => {
     projectId: string;
     createdAt: Date | string;
   }>({ projectId: "", createdAt: dayjs().format("YYYY-MM") });
+    const [modal, contextHolder] = Modal.useModal();
+
   const [activeTab, setActiveTab] = useState("overview");
   const [userSearch, setUserSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
@@ -114,6 +123,10 @@ const DashboardPage: FC = () => {
   const [generatedByType, setGeneratedCreditByType] =
     useState<IDashboardGeneratedPerMonthAndType>();
 
+  
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [redeemCouponForm] = Form.useForm();
+  const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
   useEffect(() => {
     if (!organizationId || !session?.user?.id) return;
 
@@ -656,7 +669,60 @@ const DashboardPage: FC = () => {
       </div>
     );
   }
+  const showRedeemCouponModal = () => {
+    setRedeemCouponOpen(true);
+  };
 
+   const handleRedeemCouponSubmit = async (values: { couponCode: string }) => {
+    const organizationId = session?.user?.organizationId;
+    const userId = session?.user?.userId;
+
+    if (!organizationId || !userId) {
+      modal.error({
+        title: "Error",
+        content: "Session expired or missing organization information",
+      });
+      return;
+    }
+
+    setConfirmLoading(true);
+    try {
+      await couponService.useCoupon({
+        code: values.couponCode.trim(),
+        organizationId,
+        userId,
+      });
+
+      modal.success({
+        title: "Success",
+        content: "Coupon applied successfully!",
+      });
+
+      redeemCouponForm.resetFields();
+      setRedeemCouponOpen(false);
+      // window.location.reload();
+    } catch (error: any) {
+      const errorMessage = Array.isArray(error?.response?.data?.message)
+        ? error.response.data.message.join(", ")
+        : error?.response?.data?.message || "Failed to apply coupon";
+
+      modal.error({
+        title: "Error",
+        content: errorMessage,
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+    
+  const handleRedeemCouponOk = () => {
+    redeemCouponForm.submit();
+  };
+
+  const handleRedeemCouponCancel = () => {
+    redeemCouponForm.resetFields();
+    setRedeemCouponOpen(false);
+  };
   return (
     <Layout style={{ width: "100%", background: "transparent" }}>
       <Layout.Header
@@ -667,6 +733,7 @@ const DashboardPage: FC = () => {
           padding: 0,
         }}
       >
+        {contextHolder}
         <PageSubHeader
           title="Organization Dashboard"
           subtitle="Monitor usage and manage resources across all projects"
@@ -688,6 +755,15 @@ const DashboardPage: FC = () => {
           //     </Badge>
           //   ) : null
           // }
+          rightSlot={
+            <Button
+              type="primary"
+              onClick={showRedeemCouponModal}
+              icon={<Ticket size={14} />}
+            >
+              Redeem Coupon
+            </Button>
+          }
           compact
         />
       </Layout.Header>
@@ -861,6 +937,14 @@ const DashboardPage: FC = () => {
           </Space>
         )}
       </Modal>
+      <RedeemCouponModal
+        open={redeemCouponOpen}
+        form={redeemCouponForm}
+        handleOk={handleRedeemCouponOk}
+        handleFinish={handleRedeemCouponSubmit}
+        confirmLoading={confirmLoading}
+        handleCancel={handleRedeemCouponCancel}
+      />
     </Layout>
   );
 };
