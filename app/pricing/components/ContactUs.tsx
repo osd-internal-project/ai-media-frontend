@@ -1,148 +1,74 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button, Image } from "antd";
-const tabs = [
-  "4K Image Generation",
-  "Multi-shot AI Video Creation",
-  "Brand-Controlled Prompts",
-  "Brand-Controlled Prompts", // duplicated in mockup
-  "Enterprise-Grade",
-];
+import React from "react";
+import { Image } from "antd";
 
 export default function ContactUs() {
-  const [windowWidth, setWindowWidth] = useState(1200);
-
-  useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 },
-    );
-    observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const isMd = windowWidth >= 768;
-
   return (
     <div
-      ref={sectionRef as React.RefObject<HTMLDivElement>}
-      style={{
-        position: "relative",
-        width: "100%",
-        paddingTop: "10px",
-        paddingBottom: "62px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-        background:
-          "linear-gradient(to bottom, #080c17 40%, rgba(31, 27, 62, 0.4) 100%)", // Blend into next section
-        overflow: "hidden",
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(40px)",
-        transition: "opacity 0.9s ease, transform 0.9s ease",
-      }}
+      className="relative w-full overflow-hidden bg-[linear-gradient(to_bottom,#080c17_40%,rgba(31,27,62,0.4)_100%)] px-4 pb-14 pt-6 sm:px-5 sm:pb-16"
     >
       {/* Background radial gradient glow */}
       <div
+        className="pointer-events-none absolute left-0 top-[90%] z-0 h-[220px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-[30%] opacity-60 blur-[48px] sm:h-[320px] sm:w-[620px] sm:blur-[64px]"
         style={{
-          position: "absolute",
-          top: "90%",
-          left: "0%",
-          transform: "translate(-50%, -50%)",
-          width: "900px",
-          height: "400px",
-          borderRadius: "30%",
           background: `
       radial-gradient(circle at 40% 50%, rgba(120,110,255,0.45) 0%, rgba(120,110,255,0.25) 30%, rgba(120,110,255,0.1) 55%, rgba(0,0,0,0) 70%),
       radial-gradient(circle at 70% 50%, rgba(120,180,255,0.35) 0%, rgba(120,180,255,0.15) 35%, rgba(0,0,0,0) 65%)
     `,
-          filter: "blur(80px)",
-          opacity: 0.9,
-          pointerEvents: "none",
-          zIndex: 0,
         }}
       />
 
       {/* Galaxy Plan */}
 
       {/* Bottom Images & Contacts Section matching reference */}
-      <div className="mt-32 max-w-5xl mx-auto relative px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-0">
+      <div className="relative mx-auto mt-14 max-w-6xl px-0 sm:mt-20 sm:px-4 md:mt-24">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-8 lg:gap-12">
           {/* Left Image Box */}
-          <div className="relative pt-6 pr-6 w-full md:w-auto flex justify-center md:justify-start">
+          <div className="relative order-1 flex w-full justify-center pt-4 pr-4 sm:pt-6 sm:pr-6 md:justify-start">
             {/* Dot Grid Background */}
             <div
-              className="absolute top-0 right-0 w-40 h-40 opacity-40 pointer-events-none"
+              className="pointer-events-none absolute right-0 top-0 h-24 w-24 opacity-40 sm:h-40 sm:w-40"
               style={{
                 backgroundImage: "radial-gradient(#888 3px, transparent 3px)",
-                backgroundSize: "24px 24px",
+                backgroundSize: "20px 20px",
               }}
             ></div>
             <Image
               src="/images/pricing-page/img1.png"
               alt="Creative Tools"
-              className="w-[280px] h-[340px] object-cover rounded-[40px] shadow-2xl relative z-10 border-8 border-white"
+              preview={false}
+              className="relative z-10 h-[240px] w-[210px] rounded-[28px] border-4 border-white object-cover shadow-2xl sm:h-[320px] sm:w-[260px] sm:rounded-[40px] sm:border-8"
             />
           </div>
 
           {/* Center Contact Us */}
-          <div className="text-center z-20 space-y-10">
-            <div className=" space-y-5">
-              <div
-                style={{
-                  fontWeight: 500,
-                  fontSize: "50px",
-                  lineHeight: "100%",
-                  letterSpacing: "-2%",
-                  textAlign: "center",
-                }}
-              >
+          <div className="order-3 z-20 space-y-6 px-2 pb-2 text-center sm:space-y-8 md:order-2 md:max-w-[320px] lg:max-w-none">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="text-3xl font-medium leading-none tracking-tight sm:text-[50px]">
                 Galaxy Plan
               </div>
-              <div
-                style={{
-                  fontWeight: 400,
-                  fontSize: "18px",
-                  lineHeight: "139%",
-                  letterSpacing: "-2%",
-                  textAlign: "center",
-                }}
-              >
-                Custom plan for enterpirse
+              <div className="mx-auto max-w-xs text-sm leading-6 text-white/75 sm:text-lg sm:leading-[139%]">
+                Custom plan for enterprise
               </div>
             </div>
             <a
               href="/contact-sale"
-              className="bg-[#353535] text-white px-10 py-3 rounded-full font-medium text-lg hover:bg-black transition-colors shadow-xl"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#353535] px-8 py-3 text-base font-medium text-white shadow-xl transition-colors hover:bg-black sm:w-auto sm:px-10 sm:text-lg"
             >
               Contact Us
             </a>
           </div>
 
           {/* Right Image Box */}
-          <div className="relative pl-6 pb-6 w-full md:w-auto flex justify-center md:justify-end">
+          <div className="relative order-2 flex w-full justify-center pl-4 pb-4 sm:pl-6 sm:pb-6 md:order-3 md:justify-end">
             {/* Gray Circle Background */}
             {/* <div className="absolute bottom-0 right-[-20px] w-48 h-48 bg-[#E5E5E5] rounded-full z-0 pointer-events-none"></div> */}
             <Image
               src="/images/pricing-page/img2.png"
               alt="Ai Generation"
-              className="w-[260px] h-[260px] object-cover rounded-[40px] shadow-2xl relative z-10 border-8 border-white"
+              preview={false}
+              className="relative z-10 h-[220px] w-[220px] rounded-[28px] border-4 border-white object-cover shadow-2xl sm:h-[260px] sm:w-[260px] sm:rounded-[40px] sm:border-8"
             />
           </div>
         </div>{" "}

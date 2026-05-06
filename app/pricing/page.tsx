@@ -1,26 +1,48 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { axiosCore } from "@/app/lib/axios/axios";
-import PlanServices from "@/app/services/plan.service";
-import { TPlan, TPlanInterval } from "@/app/common/plan.type";
-import PricingCards from "@/app/components/package/PricingCards";
+import React from "react";
 import Navbar from "@/app/home/components/Navbar";
-import Plan from "./components/Plan";
-import ContactUs from "./components/ContactUs";
-import PublicNavbar from "../components/layout/PublicNavbar";
+import dynamic from "next/dynamic";
+
+const Plan = dynamic(() => import("./components/Plan"), {
+  ssr: false,
+  loading: () => (
+    <div className="px-4 pb-10 pt-24 sm:pt-28 md:pt-32">
+      <div className="mx-auto max-w-7xl animate-pulse">
+        <div className="mb-4 h-10 w-48 rounded-full bg-white/10 sm:mb-6 sm:h-12 sm:w-64" />
+        <div className="mb-10 h-5 w-60 rounded-full bg-white/5 sm:mb-14 sm:h-6 sm:w-80" />
+        <div className="mb-8 flex justify-center md:mb-10">
+          <div className="h-10 w-44 rounded-full bg-white/10 sm:w-56" />
+        </div>
+        <div className="flex gap-4 overflow-hidden md:grid md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[540px] min-w-[240px] flex-1 rounded-[28px] bg-white/5 sm:h-[620px] sm:min-w-[280px]"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  ),
+});
+
+const ContactUs = dynamic(() => import("./components/ContactUs"), {
+  ssr: false,
+  loading: () => (
+    <div className="px-4 py-16 sm:py-20 md:py-24">
+      <div className="mx-auto max-w-5xl animate-pulse rounded-[32px] bg-white/5 px-5 py-10 sm:rounded-[40px] sm:px-6 sm:py-12">
+        <div className="mx-auto mb-5 h-10 w-44 rounded-full bg-white/10 sm:mb-6 sm:h-12 sm:w-56" />
+        <div className="mx-auto h-5 w-56 rounded-full bg-white/5 sm:h-6 sm:w-72" />
+      </div>
+    </div>
+  ),
+});
 
 export default function PricingPage() {
   return (
     <main
-      style={{
-        fontFamily: "Clash Display Variable",
-        minHeight: "100vh",
-        backgroundColor: "#020308",
-        color: "#ffffff",
-        overflowX: "hidden",
-        position: "relative",
-      }}
+      className="relative min-h-screen overflow-x-hidden bg-[#020308] text-white"
+      style={{ fontFamily: "Clash Display Variable" }}
     >
       {/* Ambient Background Glows */}
       <div
@@ -46,7 +68,7 @@ export default function PricingPage() {
             transform: "translate(-50%, -50%)",
             background:
               "radial-gradient(circle, rgba(20, 24, 60, 0.4) 0%, rgba(2, 3, 8, 0) 60%)",
-            filter: "blur(100px)",
+            filter: "blur(72px)",
           }}
         />
 
@@ -61,24 +83,16 @@ export default function PricingPage() {
             transform: "translateY(-50%)",
             background:
               "radial-gradient(circle, rgba(30, 45, 80, 0.25) 0%, rgba(2, 3, 8, 0) 60%)",
-            filter: "blur(120px)",
+            filter: "blur(84px)",
           }}
         />
       </div>
 
       {/* Content wrapper with z-index to sit above the fixed background */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <PublicNavbar />
+      <div className="relative z-10 flex flex-col">
+        <Navbar />
         <Plan />
         <ContactUs />
-        {/* <Footer /> */}
       </div>
     </main>
   );

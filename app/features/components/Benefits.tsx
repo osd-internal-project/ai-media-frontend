@@ -37,7 +37,9 @@ const blogPosts = [
 
 export default function Benefits() {
   const cardRefs = useRef<HTMLDivElement[]>([]);
-  const [visible, setVisible] = useState<boolean[]>(new Array(blogPosts.length).fill(false));
+  const [visible, setVisible] = useState<boolean[]>(
+    new Array(blogPosts.length).fill(false)
+  );
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -67,55 +69,29 @@ export default function Benefits() {
 
   return (
     <section
+      className="w-full min-h-screen flex justify-center px-4 py-12 md:py-[80px]"
       style={{
-        width: "100%",
-        minHeight: "100vh",
-        padding: "80px 24px",
         backgroundImage: "url('/images/feature-page/Benefits/bg.png')",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center top",
         backgroundSize: "cover",
-        display: "flex",
-        justifyContent: "center",
-        boxSizing: "border-box",
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1400px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "48px",
-        }}
-      >
+      <div className="w-full max-w-[1400px] flex flex-col gap-8 md:gap-12">
+        
         {/* TITLE */}
-        <h2
-          style={{
-            fontFamily: "Clash Display Variable",
-            fontWeight: 700,
-            fontSize: "64px",
-            lineHeight: "100%",
-            letterSpacing: "-0.02em",
-            color: "#fff",
-            textAlign: "center",
-          }}
-        >
+        <h2 className="text-white text-center font-bold leading-none text-[32px] md:text-[64px]">
           Benefits
         </h2>
 
-        {/* GRID */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: "32px",
-            width: "100%",
-          }}
-        >
+        {/* 🔥 GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full">
+          
           {blogPosts.map((post, idx) => {
             const isVisible = visible[idx];
-            const baseTransform = isVisible ? "translateY(0)" : "translateY(28px)";
+            const baseTransform = isVisible
+              ? "translateY(0)"
+              : "translateY(28px)";
 
             return (
               <div
@@ -124,68 +100,38 @@ export default function Benefits() {
                   cardRefs.current[idx] = el as HTMLDivElement;
                 }}
                 data-idx={idx}
-                className="benefit-card"
+                className="benefit-card relative flex flex-col justify-end text-white rounded-[20px] md:rounded-[32px] p-4 md:p-8 overflow-hidden cursor-pointer"
                 style={{
-                  width: "100%",
                   aspectRatio: "4 / 5",
-                  borderRadius: "32px",
-                  padding: "32px",
                   background: `url(${post.image}) center/cover no-repeat`,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  color: "#fff",
-                  position: "relative",
-                  overflow: "hidden",
-                  cursor: "pointer",
                   opacity: isVisible ? 1 : 0,
                   transform: baseTransform,
-                  transition: `opacity 0.8s ease ${idx * 80}ms, transform 0.8s ease ${idx * 80}ms, box-shadow 0.4s cubic-bezier(.4,2,.6,1)`,
+                  transition: `opacity 0.8s ease ${
+                    idx * 80
+                  }ms, transform 0.8s ease ${idx * 80}ms`,
                   boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-16px) scale(1.045) rotateZ(-1.5deg)";
-                  e.currentTarget.style.boxShadow = "0 12px 48px 0 rgba(0,0,0,0.18)";
+                  e.currentTarget.style.transform =
+                    "translateY(-16px) scale(1.045) rotateZ(-1.5deg)";
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 48px rgba(0,0,0,0.18)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = baseTransform;
-                  e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.07)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 24px rgba(0,0,0,0.07)";
                 }}
               >
-                {/* overlay gradient */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%)",
-                    pointerEvents: "none",
-                  }}
-                />
+                {/* overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
 
-                <div
-                  style={{
-                    position: "relative",
-                    zIndex: 2,
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontFamily: "Clash Display Variable",
-                      fontWeight: 500,
-                      fontSize: "32px",
-                      marginBottom: "12px",
-                    }}
-                  >
+                <div className="relative z-10">
+                  <h3 className="font-medium mb-2 md:mb-3 text-[20px] md:text-[32px]">
                     {post.title}
                   </h3>
 
-                  <p
-                    style={{
-                      fontSize: "20px",
-                      lineHeight: "140%",
-                    }}
-                  >
+                  <p className="text-[14px] md:text-[20px] leading-[140%]">
                     {post.description}
                   </p>
                 </div>

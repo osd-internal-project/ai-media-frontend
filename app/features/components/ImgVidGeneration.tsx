@@ -32,96 +32,97 @@ export default function ImgVidGeneration() {
 
 	return (
 		   <section
-			ref={sectionRef}
-			   style={{
-				   width: "100%",
-				   minHeight: "100vh",
-				   height: "100vh",
-				   backgroundImage: "url('/images/feature-page/img-vid-gen/bg.svg')",
-				   backgroundRepeat: "no-repeat",
-				   backgroundPosition: "left top",
-				   backgroundSize: "auto 40%",
-				   display: "flex",
-				   alignItems: "flex-start",
-				   justifyContent: "flex-start",
-				   paddingTop: "64px",
-				   paddingBottom: "64px",
-				   paddingLeft: "16px",
-				   paddingRight: "16px",
-				   overflow: "hidden",
-			   opacity: inView ? 1 : 0,
-			   transform: inView ? "translateY(0)" : "translateY(32px)",
-			   transition: "opacity 0.9s ease, transform 0.9s ease",
-			   }}
+      ref={sectionRef}
+      className={`
+        w-full min-h-screen
+        flex flex-col
+        items-start justify-start
+        pt-10 pb-10 md:pt-16 md:pb-16
+        px-4 md:px-6
+        overflow-hidden
+        transition-all duration-700
+        ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
+      `}
+      style={{
+        backgroundImage: inView
+          ? "url('/images/feature-page/img-vid-gen/bg.svg')"
+          : "none",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "left top",
+        backgroundSize: "auto 25%",
+          }}
 		   >
-			<div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto', padding: '0 24px', marginTop: 32 }}>
-				<h2
-					style={{
-						fontFamily: 'Clash Display Variable',
-						fontWeight: 700,
-						fontStyle: 'Medium',
-						fontSize: '50px',
-						lineHeight: '120%',
-						color: '#fff',
-						letterSpacing: '-2%',
-						textAlign: 'left',
-						position: 'relative',
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'flex-start',
-					}}
-				>
-					<span style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
-						<span style={{ marginRight: 12 }}>4K</span>
-						<span>Image &</span>
-					</span>
-					<span
-						style={{
-							display: 'block',
-							marginLeft: 66, // ให้ตรงกับตำแหน่ง Image & (4K + marginRight)
-							background: 'linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)',
-							WebkitBackgroundClip: 'text',
-							WebkitTextFillColor: 'transparent',
-							backgroundClip: 'text',
-						}}
-					>
-						Video Generation
-					</span>
+			<div className="w-full max-w-[1600px] mx-auto px-2 md:px-6 mt-4 md:mt-8">
+        <h2
+          className={`
+            font-bold
+            text-[28px] md:text-[50px]
+            leading-[120%]
+            text-white
+            tracking-tight
+            text-left
+            flex flex-col items-start
+          `}
+          style={{
+            fontFamily: "Clash Display Variable",
+            fontStyle: "Medium",
+          }}
+        >
+          <span className="flex flex-row items-baseline">
+            <span className="mr-3">4K</span>
+            <span>Image &</span>
+          </span>
+          <span
+            className="block md:ml-[66px]"
+            style={{
+              background: "linear-gradient(90deg, #6366F1 0%, #87DDDE 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Video Generation
+          </span>
 				</h2>
+				
 				{/* 2 Columns Section */}
-				<div style={{ display: 'flex', flexDirection: 'row', gap: 48, marginTop: 48, width: '100%' }}>
+				<div
+          className={`
+            flex flex-col md:flex-row
+            gap-6 md:gap-12
+            mt-6 md:mt-12
+            w-full
+          `}
+        >
 					{/* Left column: wide carousel */}
-					<div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-						<TwoCardCarousel />
-					</div>
+					 <div className="flex-1 min-w-0 flex items-center justify-center">
+            <TwoCardCarousel />
+          </div>
 					{/* Right column: bullet list */}
-					<div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24, justifyContent: 'center' }}>
-						<ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-							{bullets.map((text, idx) => (
-								<li
-									key={idx}
-									onMouseEnter={() => setHoveredIndex(idx)}
-									onMouseLeave={() => setHoveredIndex(null)}
-									style={{
-										display: 'flex',
-										alignItems: 'flex-start',
-										gap: 16,
-										marginBottom: idx === bullets.length - 1 ? 0 : 18,
-										transform: hoveredIndex === idx ? 'translateX(8px)' : 'none',
-										transition: 'transform 0.3s ease, opacity 0.3s ease',
-										opacity: hoveredIndex === null || hoveredIndex === idx ? 1 : 0.6,
-									}}
-								>
-									<span style={{ color: '#87DDDE', fontSize: 22, marginTop: 2 }}>✔</span>
-									<span style={{ color: '#fff', fontSize: 18, lineHeight: 1.5 }}>
-										{text}
-									</span>
-								</li>
-							))}
-						</ul>
-					</div>
-				</div>
-			</div>
+					<div className="flex-1 min-w-0 flex flex-col gap-6 md:gap-8 justify-center">
+            <ul className="list-none p-0 m-0">
+              {bullets.map((text, idx) => (
+                <li
+                  key={idx}
+                  onMouseEnter={() => setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  className={`
+                    flex items-start gap-4 mb-4 last:mb-0
+                    transition-all duration-300
+                    ${hoveredIndex === idx ? "translate-x-2" : ""}
+                    ${hoveredIndex !== null && hoveredIndex !== idx ? "opacity-60" : "opacity-100"}
+                  `}
+                >
+                  <span className="text-[#87DDDE] text-[22px] mt-[2px]">✔</span>
+                  <span className="text-white text-[14px] md:text-[18px] leading-snug">
+                    {text}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
 		</section>
 	);
 }

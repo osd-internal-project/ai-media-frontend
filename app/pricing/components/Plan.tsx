@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-// import Navbar from "./Navbar";
+import React, { useState, useEffect, useMemo } from "react";
 import PricingCards from "@/app/components/package/PricingCards";
 import { useRouter } from "next/navigation";
 import PlanServices from "@/app/services/plan.service";
@@ -9,34 +8,43 @@ import { TPlan, TPlanInterval } from "@/app/common/plan.type";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Segmented } from "antd";
 
+function PlanSkeleton() {
+  return (
+    <div className="mb-10 mt-0 flex w-full flex-col items-center justify-center">
+      <div className="mb-6 h-10 w-44 animate-pulse rounded-full bg-white/10 sm:w-56" />
+      <div className="flex w-full gap-3 overflow-hidden pb-4 md:grid md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex h-[560px] w-[78vw] max-w-[320px] shrink-0 animate-pulse flex-col overflow-hidden rounded-2xl bg-[#353538] sm:h-[620px] sm:w-[40vw] md:h-[580px] md:w-auto md:max-w-none lg:min-w-0"
+          >
+            <div className="border-b border-[#4D4D4D] bg-[#4D4D4D] p-5 pb-5 sm:p-8 sm:pb-6">
+              <div className="mb-4 h-9 w-32 rounded-full bg-white/12" />
+              <div className="mb-2 h-4 w-full rounded-full bg-white/8" />
+              <div className="mb-6 h-4 w-4/5 rounded-full bg-white/8" />
+              <div className="mb-4 h-8 w-28 rounded-full bg-white/12" />
+              <div className="h-10 w-24 rounded-full bg-white/8" />
+            </div>
+            <div className="flex flex-1 flex-col justify-between bg-[#2A2A2A] px-5 py-6 sm:px-8 sm:py-8">
+              <div className="space-y-4">
+                {Array.from({ length: 6 }).map((__, featureIndex) => (
+                  <div key={featureIndex} className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-[#6966FF]/70" />
+                    <div className="h-4 flex-1 rounded-full bg-white/8" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 h-10 w-32 rounded-full bg-white/10" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Plan() {
-  const [windowWidth, setWindowWidth] = useState(1200);
-
-  useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [plans, setPlans] = useState<TPlan[]>([]);
   const [interval, setInterval] = useState<TPlanInterval>("MONTH");
   const [loading, setLoading] = useState(true);
@@ -69,37 +77,14 @@ export default function Plan() {
   }, [planService]);
 
   useEffect(() => {
-    setMounted(true);
     fetchPlans();
   }, [fetchPlans]);
-
-  if (!mounted) return null;
-
-  const isMd = windowWidth >= 768;
-  const isLg = windowWidth >= 1024;
 
   return (
     <>
       <section
-        ref={sectionRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingTop: "112px",
-          paddingBottom: "40px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
-          overflow: "hidden",
-          backgroundColor: "#0a0a0f",
-          backgroundImage: 'url("/images/herosection/bg.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
+        className="relative flex w-full flex-col items-center overflow-hidden bg-[#0a0a0f] bg-cover bg-center bg-no-repeat px-4 pb-12 pt-24 sm:px-5 sm:pb-14 sm:pt-28 md:pt-[112px]"
+        style={{ backgroundImage: 'url("/images/herosection/bg.png")' }}
       >
         {/* <Navbar /> */}
         {/* Background Collage representing Image 2 */}
@@ -131,24 +116,22 @@ export default function Plan() {
             pointerEvents: "none",
           }}
         />
-        <div className="pt-20 pb-16 overflow-hidden z-10">
-          <div className="container mx-auto px-4">
-            <div className="text-left mb-16 text-white ">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <div className="z-10 w-full overflow-hidden pb-10 pt-8 sm:pb-16 sm:pt-14 md:pt-20">
+          <div className="mx-auto w-full max-w-7xl px-0 sm:px-2 md:px-4">
+            <div className="mb-8 text-left text-white sm:mb-12 md:mb-16">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
                 Pricing Plans
               </h1>
-              <p className="text-lg">
+              <p className="mt-3 max-w-2xl text-sm text-white/80 sm:text-lg">
                 Choose the perfect plan for you and your team.
               </p>
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center min-h-[300px]">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#6966FF] mx-auto"></div>
-              </div>
+              <PlanSkeleton />
             ) : (
-              <div className=" flex flex-col justify-center items-center mt-0 mb-10">
-                <div className="mb-4 text-center">
+              <div className="mb-10 mt-0 flex flex-col items-center justify-center">
+                <div className="mb-5 w-full text-center sm:mb-6">
                   <Segmented
                     value={interval}
                     onChange={(value) => setInterval(value as TPlanInterval)}
@@ -172,12 +155,14 @@ export default function Plan() {
                     ]}
                   />
                 </div>
-                <PricingCards
-                  plans={sortedPlans}
-                  onGetStarted={handleGetStarted}
-                  planInterval={interval}
-                  generateManualPrice={false}
-                />
+                <div className="w-full">
+                  <PricingCards
+                    plans={sortedPlans}
+                    onGetStarted={handleGetStarted}
+                    planInterval={interval}
+                    generateManualPrice={false}
+                  />
+                </div>
               </div>
             )}
           </div>

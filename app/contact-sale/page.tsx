@@ -1,9 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { axiosCore } from "@/app/lib/axios/axios";
-import PlanServices from "@/app/services/plan.service";
-import { TPlan, TPlanInterval } from "@/app/common/plan.type";
+import React from "react";
 import CompanyProfile from "./components/CompanyProfile";
 import ContactForm from "./components/ContactForm";
 import PublicNavbar from "../components/layout/PublicNavbar";
@@ -14,14 +10,8 @@ export default function PricingPage() {
 
   return (
     <main
-      style={{
-        fontFamily: "Clash Display Variable",
-        minHeight: "100vh",
-        backgroundColor: "#020308",
-        color: "#ffffff",
-        overflowX: "hidden",
-        position: "relative",
-      }}
+      className="relative overflow-x-hidden bg-[#020308] text-white"
+      style={{ fontFamily: "Clash Display Variable" }}
     >
       {/* Ambient Background Glows */}
       <div
@@ -47,7 +37,7 @@ export default function PricingPage() {
             transform: "translate(-50%, -50%)",
             background:
               "radial-gradient(circle, rgba(20, 24, 60, 0.4) 0%, rgba(2, 3, 8, 0) 60%)",
-            filter: "blur(100px)",
+            filter: "blur(72px)",
           }}
         />
 
@@ -62,7 +52,7 @@ export default function PricingPage() {
             transform: "translateY(-50%)",
             background:
               "radial-gradient(circle, rgba(30, 45, 80, 0.25) 0%, rgba(2, 3, 8, 0) 60%)",
-            filter: "blur(120px)",
+            filter: "blur(84px)",
           }}
         />
       </div>
@@ -70,7 +60,7 @@ export default function PricingPage() {
       <div
         style={{
           position: "relative",
-          zIndex: 1,
+          zIndex: 10,
           display: "flex",
           flexDirection: "column",
         }}

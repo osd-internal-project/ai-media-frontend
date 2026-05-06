@@ -1,11 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-// import Navbar from "./Navbar";
-import PricingCards from "@/app/components/package/PricingCards";
-import { useRouter } from "next/navigation";
-import PlanServices from "@/app/services/plan.service";
-import { TPlan, TPlanInterval } from "@/app/common/plan.type";
+import React, { useMemo, useState } from "react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Form, Input, Button } from "antd";
 import ContactSaleLogServices from "@/app/services/contact-sale-log.service";
@@ -16,44 +11,13 @@ interface props {
   messageApi: MessageInstance;
 }
 export default function ContactForm({ messageApi }: props) {
-  const [windowWidth, setWindowWidth] = useState(1200);
   const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-  const [mounted, setMounted] = useState(false);
   const [form] = Form.useForm();
 
   const contactSaleLogService = useMemo(
     () => ContactSaleLogServices(axiosCore),
     [],
   );
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
 
   async function handleSubmitForm(values: TContactSaleLog) {
     try {
@@ -72,25 +36,8 @@ export default function ContactForm({ messageApi }: props) {
   return (
     <>
       <section
-        ref={sectionRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingTop: "112px",
-          paddingBottom: "40px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
-          overflow: "hidden",
-          backgroundColor: "#0a0a0f",
-          backgroundImage: 'url("/images/herosection/bg.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
+        className="relative flex w-full flex-col items-center overflow-hidden bg-[#0a0a0f] bg-cover bg-center bg-no-repeat px-4 pb-10 pt-24 sm:px-5 sm:pb-12 sm:pt-28 md:pt-[112px]"
+        style={{ backgroundImage: 'url("/images/herosection/bg.png")' }}
       >
         {/* <Navbar /> */}
         {/* Background Collage representing Image 2 */}
@@ -122,45 +69,46 @@ export default function ContactForm({ messageApi }: props) {
             pointerEvents: "none",
           }}
         />
-        <div className=" pb-16 overflow-hidden z-10">
-          <div className="container mx-auto px-4">
-            <div className=" grid md:grid-cols-2 sm:grid-cols-1">
-              <div className=" hidden  md:flex flex-col justify-center items-center">
-                <h1 className="text-4xl md:text-4xl font-bold tracking-tight">
+        <div className="z-10 w-full overflow-hidden pb-10 sm:pb-16">
+          <div className="mx-auto w-full max-w-7xl px-0 sm:px-2 md:px-4">
+            <div className="grid items-center gap-8 md:grid-cols-2 md:gap-10 lg:gap-14">
+              <div className="order-2 flex flex-col justify-center md:order-1 md:items-start">
+                <h1 className="max-w-xl text-center text-3xl font-bold tracking-tight sm:text-4xl md:text-left md:text-4xl lg:text-5xl">
                   Unlock a New Standard of Creative Performance with{" "}
                   <span className=" bg-gradient-to-r from-[#6366F1] to-[#87DDDE] bg-clip-text text-transparent">
                     Ai Cave
                   </span>{" "}
                   .
                 </h1>
-                <p className="text-lg">
+                <p className="mt-4 max-w-xl text-center text-sm text-white/80 sm:text-base md:text-left md:text-lg">
                   From concept to production in minutes, AiCave enables
                   enterprises to accelerate content creation, optimize
                   resources, and lead every campaign with confidence and
                   clarity.
                 </p>
               </div>
-              <div className="flex flex-col justify-center items-center">
+              <div className="order-1 flex flex-col justify-center md:order-2 md:items-end">
                 <Card
                   bordered={false}
                   style={{
                     background: "rgba(30, 25, 45, 0.4)",
-                    // backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(8px)",
                     border: "1px solid rgba(255, 255, 255, 0.15)",
                     boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
-                    borderRadius: "32px",
+                    borderRadius: "28px",
                     width: "100%",
+                    maxWidth: "640px",
                   }}
                   styles={{
-                    body: { padding: "40px" },
+                    body: { padding: "24px" },
                   }}
+                  className="w-full max-w-[640px] sm:[&_.ant-card-body]:!p-8"
                 >
-                  <div className="text-center mb-8">
+                  <div className="mb-6 text-center sm:mb-8">
                     <p className="text-[11px] text-gray-300 font-bold uppercase tracking-[0.15em] mb-4">
                       Contact Us
                     </p>
-                    <h2 className="text-2xl font-medium text-white tracking-tight leading-snug">
+                    <h2 className="text-xl font-medium leading-snug tracking-tight text-white sm:text-2xl">
                       Please fill out your details so our team can get back to
                       you promptly
                     </h2>
@@ -173,7 +121,7 @@ export default function ContactForm({ messageApi }: props) {
                     className="w-full"
                     onFinish={handleSubmitForm}
                   >
-                    <div className="flex flex-col md:flex-row gap-x-4">
+                    <div className="flex flex-col gap-x-4 md:flex-row">
                       <Form.Item
                         name="firstName"
                         rules={[{ message: "Please Enter", required: true }]}
@@ -186,7 +134,7 @@ export default function ContactForm({ messageApi }: props) {
                       >
                         <Input
                           placeholder="First Name"
-                          className="h-12 rounded-full px-6 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base shadow-sm"
+                          className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                         />
                       </Form.Item>
                       <Form.Item
@@ -201,7 +149,7 @@ export default function ContactForm({ messageApi }: props) {
                       >
                         <Input
                           placeholder="Last Name"
-                          className="h-12 rounded-full px-6 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base shadow-sm"
+                          className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                         />
                       </Form.Item>
                     </div>
@@ -218,7 +166,7 @@ export default function ContactForm({ messageApi }: props) {
                     >
                       <Input
                         placeholder="Company name"
-                        className="h-12 rounded-full px-6 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base shadow-sm"
+                        className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                       />
                     </Form.Item>
 
@@ -235,7 +183,7 @@ export default function ContactForm({ messageApi }: props) {
                       <Input
                         placeholder="Email"
                         type="email"
-                        className="h-12 rounded-full px-6 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base shadow-sm"
+                        className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                       />
                     </Form.Item>
 
@@ -251,7 +199,7 @@ export default function ContactForm({ messageApi }: props) {
                     >
                       <Input
                         placeholder="Phone Number"
-                        className="h-12 rounded-full px-6 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base shadow-sm"
+                        className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                       />
                     </Form.Item>
 
@@ -267,15 +215,15 @@ export default function ContactForm({ messageApi }: props) {
                     >
                       <Input.TextArea
                         placeholder="Your message"
-                        className="rounded-3xl px-6 py-4 bg-white border-none text-gray-900 placeholder:text-gray-600 text-base min-h-[140px] shadow-sm"
+                        className="min-h-[140px] rounded-3xl border-none bg-white px-5 py-4 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
                       />
                     </Form.Item>
 
-                    <div className="flex justify-center mt-2">
+                    <div className="mt-2 flex justify-center md:justify-start">
                       <Button
                         type="primary"
                         htmlType="submit"
-                        className="h-[52px] px-16 rounded-full bg-[#6966FF] hover:bg-[#5A55CC] border-none text-lg font-medium shadow-lg w-full md:w-auto min-w-[240px]"
+                        className="h-[52px] min-w-[200px] w-full rounded-full border-none bg-[#6966FF] px-10 text-base font-medium shadow-lg hover:bg-[#5A55CC] sm:min-w-[240px] sm:text-lg md:w-auto"
                       >
                         Submit
                       </Button>
