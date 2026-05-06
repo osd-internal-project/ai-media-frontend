@@ -108,7 +108,7 @@ export default function PlanDetailPage() {
   }
 
   return (
-    <div className="w-full h-full bg-[#0f1419] p-6 text-white pb-20">
+    <div className="w-full h-full  p-6 text-white pb-20">
       {contextHolder}
       <div className="mb-6">
         <Breadcrumb
@@ -162,7 +162,7 @@ export default function PlanDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
           <Card
             title="Basic Information"
-            className="bg-[#1a1a1a] border-[#303030]"
+            className=""
           >
             <Form.Item
               name="name"

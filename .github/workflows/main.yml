@@ -2,7 +2,7 @@ name: CI Workflow
 
 concurrency:
   group: deploy-aicave-console
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image_name: ${{ steps.pkg.outputs.name }}
-      image_version: ${{ steps.pkg.outputs.ver }}
+      image_version: ${{ steps.pkg.outputs.ver }}-${{ inputs.deploy_env || 'sit' }}
 
     steps:
       # ---------------------------------------------------------------------
@@ -58,7 +58,7 @@ jobs:
         run: |
           docker build --no-cache --platform linux/amd64 \
             --build-arg BUILD_ENV=${{ env.DEPLOY_ENV }} \
-            -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} -f ./Dockerfile .
+            -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} -f ./Dockerfile .
 
       # ---------------------------------------------------------------------
       # Login to Huawei Cloud Container Registry
@@ -74,18 +74,18 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Tag and Push Docker Image
         run: |
-          docker tag ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} \
-            swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}
-          docker push swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}      
-      
+          docker tag ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} \
+            swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }}
+          docker push swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }}
+
       # ---------------------------------------------------------------------
       # Cleanup local Docker images
       # ---------------------------------------------------------------------
       - name: Cleanup Docker Images
         if: always()
         run: |
-          docker rmi ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} || true
-          docker rmi swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }} || true
+          docker rmi ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} || true
+          docker rmi swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} || true
           docker image prune -f
           docker builder prune -f
 

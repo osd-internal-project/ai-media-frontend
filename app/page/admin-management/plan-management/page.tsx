@@ -324,11 +324,12 @@ export default function PlanManagementPage() {
         />
       </div> */}
       {viewType === "grid" ?
-      <PlanGridView
-        loading={loading}
-        filteredData={filteredData}
-        handleDeletePlan={handleDeletePlan}
-      />
+     <PlanGridView
+  loading={loading}
+  filteredData={filteredData}
+  handleDeletePlan={handleDeletePlan}
+  onRefresh={fetchData} // เพิ่ม prop นี้
+/>
         :
          <PlanListView
          loading={loading}
