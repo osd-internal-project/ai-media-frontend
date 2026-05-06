@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Checkbox, message } from "antd";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,13 +11,34 @@ import "react-phone-input-2/lib/style.css";
 import { Mail, User, Lock, Phone, CheckCircle } from "lucide-react";
 import { CheckCircleOutlined } from "@ant-design/icons";
 
+type SignupFormValues = {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  confirmPassword?: string;
+};
+
 export default function SignupPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const userService = UserServices(axiosUser);
   const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const showMessage = (
     type: "error" | "success" | "warning" | "loading",
@@ -29,12 +50,17 @@ export default function SignupPage() {
     });
   };
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: SignupFormValues) => {
     setLoading(true);
     try {
       // Remove confirmPassword from payload
-      const { confirmPassword, ...registerData } = values;
-      await userService.register(registerData);
+      const { confirmPassword, firstName, lastName, ...registerData } = values;
+      const fullname = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+      await userService.register({
+        ...registerData,
+        fullname,
+      });
       setRegistrationSuccess(true);
       showMessage(
         "success",
@@ -64,9 +90,9 @@ export default function SignupPage() {
         backgroundColor: "black",
         color: "white",
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "stretch" : "center",
         justifyContent: "center",
-        padding: "16px",
+        padding: isMobile ? "12px" : "16px",
       }}
     >
       {contextHolder}
@@ -75,11 +101,12 @@ export default function SignupPage() {
         style={{
           width: "100%",
           maxWidth: "1400px",
-          height: "800px",
+          minHeight: isMobile ? "auto" : "800px",
           backgroundColor: "#0E0E12",
-          borderRadius: "30px",
-          overflow: "hidden",
+          borderRadius: isMobile ? "24px" : "30px",
+          overflow: isMobile ? "visible" : "hidden",
           display: "flex",
+          flexDirection: isMobile ? "column" : "row",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           position: "relative",
           border: "1px solid #1E1E24",
@@ -88,17 +115,14 @@ export default function SignupPage() {
         {/* Left Side: Form */}
         <div
           style={{
-            width: "50%",
-            padding: "48px",
+            width: isMobile ? "100%" : "50%",
+            padding: isMobile ? "24px 20px 28px" : "48px",
             display: "flex",
             flexDirection: "column",
             position: "relative",
             zIndex: 10,
             backgroundColor: "#0E0E12",
-            // Using a hack for responsiveness since inline styles don't support media queries easily:
-            // For a production app without classes, window listener is needed, but we'll stick to flex layout.
-            // Assuming desktop-first as per previous design.
-            minWidth: "320px",
+            minWidth: 0,
           }}
         >
           {/* Header */}
@@ -107,7 +131,7 @@ export default function SignupPage() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "48px",
+              marginBottom: isMobile ? "28px" : "48px",
             }}
           >
             <div
@@ -147,11 +171,11 @@ export default function SignupPage() {
           >
             <h1
               style={{
-                fontSize: "1.875rem",
-                lineHeight: "2.25rem",
+                fontSize: isMobile ? "1.5rem" : "1.875rem",
+                lineHeight: isMobile ? "2rem" : "2.25rem",
                 fontWeight: 400,
                 color: "white",
-                marginBottom: "40px",
+                marginBottom: isMobile ? "24px" : "40px",
               }}
             >
               Connect with your team and bring your creative ideas to life.
@@ -228,12 +252,12 @@ export default function SignupPage() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
                     columnGap: "16px",
                   }}
                 >
                   <Form.Item
-                    name="fullname"
+                    name="firstName"
                     label={
                       <span
                         style={{
@@ -242,14 +266,42 @@ export default function SignupPage() {
                           marginLeft: "4px",
                         }}
                       >
-                        Fullname
+                        First Name
                       </span>
                     }
                     rules={[{ required: true, message: "Required" }]}
                     style={{ marginBottom: "16px" }}
                   >
                     <Input
-                      placeholder="Fullname"
+                      placeholder="First Name"
+                      style={{
+                        backgroundColor: "#1A1D21",
+                        border: "1px solid #333",
+                        color: "white",
+                        borderRadius: "0.5rem",
+                        height: "44px",
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="lastName"
+                    label={
+                      <span
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
+                      >
+                        Last Name
+                      </span>
+                    }
+                    rules={[{ required: true, message: "Required" }]}
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <Input
+                      placeholder="Last Name"
                       style={{
                         backgroundColor: "#1A1D21",
                         border: "1px solid #333",
@@ -481,7 +533,7 @@ export default function SignupPage() {
               alignItems: "center",
               fontSize: "10px",
               color: "#6b7280",
-              marginTop: "32px",
+              marginTop: isMobile ? "24px" : "32px",
             }}
           >
             <p>aicave.ai @ 2026</p>
@@ -494,7 +546,7 @@ export default function SignupPage() {
         {/* Right Side: Visual */}
         <div
           style={{
-            display: "flex", // Keeping flex for visual centering, assuming desktop mainly
+            display: isMobile ? "none" : "flex",
             width: "50%",
             backgroundColor: "#050505",
             position: "relative",
@@ -536,12 +588,6 @@ export default function SignupPage() {
         }
         .custom-checkbox .ant-checkbox-wrapper:hover .ant-checkbox-inner {
           border-color: #5465ff;
-        }
-        /* Mobile adjustment for inline styles approach if needed */
-        @media (max-width: 1024px) {
-          /* ... we generally rely on flex-wrap if we were pure css, 
-              but with inline style width="50%", it's hard. 
-              Accepting fixed layout as per heavy 'style' usage request */
         }
         /* Override Input placeholders color which inline style cannot fully touch easily without pseudo-elements */
         input::placeholder {

@@ -28,21 +28,46 @@ type TInvitationDetail = {
 type FormValues = {
     email: string;
     password: string;
-    fullname: string;
+    firstName: string;
+    lastName: string;
     username: string;
     phoneNumber: string;
+    confirmPassword?: string;
+    agreement?: boolean;
 }
 
 const organizationService = OrganizationServices(axiosUser);
 
-// Reusing style constants for consistency
-const INPUT_STYLE = "bg-[#1A1D21] border border-[#333] text-white placeholder-gray-500 rounded-lg hover:border-gray-500 focus:bg-[#1A1D21] focus:border-[#4F8EF7] h-12 [&>input]:bg-transparent [&>input]:text-white";
-const LABEL_STYLE = "text-[#9ca3af] text-xs ml-1";
+const FORM_ITEM_MARGIN = 12;
+const INPUT_HEIGHT = 42;
+const INPUT_STYLE = {
+    backgroundColor: "#1A1D21",
+    border: "1px solid #333",
+    color: "white",
+    borderRadius: "0.5rem",
+    height: `${INPUT_HEIGHT}px`,
+};
+const LABEL_STYLE = { color: "#9ca3af", fontSize: "12px", marginLeft: "4px" };
+
+const splitFullName = (fullname?: string) => {
+    const trimmedName = fullname?.trim() ?? "";
+
+    if (!trimmedName) {
+        return { firstName: "", lastName: "" };
+    }
+
+    const [firstName, ...lastNameParts] = trimmedName.split(/\s+/);
+
+    return {
+        firstName,
+        lastName: lastNameParts.join(" "),
+    };
+};
 
 const InvitationInfo = ({ form, userExists }: { form: FormInstance; userExists: boolean }) => {
     return (
-        <div className="mb-6 p-5 rounded-xl bg-[#1A1D21] border border-[#333]">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mb-5 rounded-xl border border-[#333] bg-[#1A1D21] p-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                 <div>
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold mb-2">
                         Invited Email
@@ -79,61 +104,59 @@ const InvitationInfo = ({ form, userExists }: { form: FormInstance; userExists: 
 const RegistrationFields = () => {
     return (
         <>
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    columnGap: "16px",
-                }}
-            >
+            <div className="grid grid-cols-1 gap-x-[14px] gap-y-0 md:grid-cols-2">
                 <Form.Item
-                    name="fullname"
+                    name="firstName"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
-                            Fullname
+                        <span style={LABEL_STYLE}>
+                            First Name
                         </span>
                     }
                     rules={[{ required: true, message: "Required" }]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <Input
-                        placeholder="Fullname"
-                        style={{
-                            backgroundColor: "#1A1D21",
-                            border: "1px solid #333",
-                            color: "white",
-                            borderRadius: "0.5rem",
-                            height: "44px",
-                        }}
+                        placeholder="First Name"
+                        style={INPUT_STYLE}
+                    />
+                </Form.Item>
+
+                <Form.Item
+                    name="lastName"
+                    label={
+                        <span style={LABEL_STYLE}>
+                            Last Name
+                        </span>
+                    }
+                    rules={[{ required: true, message: "Required" }]}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
+                >
+                    <Input
+                        placeholder="Last Name"
+                        style={INPUT_STYLE}
                     />
                 </Form.Item>
 
                 <Form.Item
                     name="username"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                        <span style={LABEL_STYLE}>
                             Username
                         </span>
                     }
                     rules={[{ required: true, message: "Required" }]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <Input
                         placeholder="Username"
-                        style={{
-                            backgroundColor: "#1A1D21",
-                            border: "1px solid #333",
-                            color: "white",
-                            borderRadius: "0.5rem",
-                            height: "44px",
-                        }}
+                        style={INPUT_STYLE}
                     />
                 </Form.Item>
 
                 <Form.Item
                     name="email"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                        <span style={LABEL_STYLE}>
                             Email Address
                         </span>
                     }
@@ -141,37 +164,31 @@ const RegistrationFields = () => {
                         { required: true, message: "Required" },
                         { type: "email", message: "Invalid email" },
                     ]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <Input
                         prefix={<Mail style={{ color: "gray", width: "16px", height: "16px", marginRight: "8px" }} />}
                         placeholder="Email"
                         disabled
-                        style={{
-                            backgroundColor: "#1A1D21",
-                            border: "1px solid #333",
-                            color: "white",
-                            borderRadius: "0.5rem",
-                            height: "44px",
-                        }}
+                        style={INPUT_STYLE}
                     />
                 </Form.Item>
 
                 <Form.Item
                     name="phoneNumber"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                        <span style={LABEL_STYLE}>
                             Phone number
                         </span>
                     }
                     rules={[{ required: true, message: "Required" }]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <PhoneInput
                         country={"th"}
                         inputStyle={{
                             width: "100%",
-                            height: "44px",
+                            height: `${INPUT_HEIGHT}px`,
                             backgroundColor: "#1A1D21",
                             border: "1px solid #333",
                             borderRadius: "0.5rem",
@@ -183,6 +200,7 @@ const RegistrationFields = () => {
                             border: "1px solid #333",
                             borderRight: "none",
                             borderRadius: "0.5rem 0 0 0.5rem",
+                            height: `${INPUT_HEIGHT}px`,
                         }}
                         dropdownStyle={{
                             backgroundColor: "#1A1D21",
@@ -195,29 +213,23 @@ const RegistrationFields = () => {
                 <Form.Item
                     name="password"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                        <span style={LABEL_STYLE}>
                             Password
                         </span>
                     }
                     rules={[{ required: true, message: "Required" }]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <Input.Password
                         placeholder="*************"
-                        style={{
-                            backgroundColor: "#1A1D21",
-                            border: "1px solid #333",
-                            color: "white",
-                            borderRadius: "0.5rem",
-                            height: "44px",
-                        }}
+                        style={INPUT_STYLE}
                     />
                 </Form.Item>
 
                 <Form.Item
                     name="confirmPassword"
                     label={
-                        <span style={{ color: "#9ca3af", fontSize: "12px", marginLeft: "4px" }}>
+                        <span style={LABEL_STYLE}>
                             Repeat password
                         </span>
                     }
@@ -233,24 +245,18 @@ const RegistrationFields = () => {
                             },
                         }),
                     ]}
-                    style={{ marginBottom: "16px" }}
+                    style={{ marginBottom: `${FORM_ITEM_MARGIN}px` }}
                 >
                     <Input.Password
                         placeholder="*************"
-                        style={{
-                            backgroundColor: "#1A1D21",
-                            border: "1px solid #333",
-                            color: "white",
-                            borderRadius: "0.5rem",
-                            height: "44px",
-                        }}
+                        style={INPUT_STYLE}
                     />
                 </Form.Item>
             </div>
             <Form.Item
                 name="agreement"
                 valuePropName="checked"
-                className="mb-6"
+                className="mb-5"
                 rules={[
                     {
                       validator: (_, value) =>
@@ -304,11 +310,14 @@ const AcceptInviteContent = () => {
             const verifyToken = await organizationService.invitationDetail(token)
             if (verifyToken) {
                 const invitationDetail: TInvitationDetail = verifyToken;
+                const { firstName, lastName } = splitFullName(invitationDetail.fullname);
                 form.setFieldsValue({
                     email: invitationDetail.email,
                     organizationName: invitationDetail.organizationName,
                     role: invitationDetail.role,
                     organizationId: invitationDetail.organizationId,
+                    firstName,
+                    lastName,
                     fullname: invitationDetail.fullname,
                 })
                 setUserExists(invitationDetail.hasAccount);
@@ -324,14 +333,16 @@ const AcceptInviteContent = () => {
         }
     }
 
-    const onFinish = async (values: any) => {
+    const onFinish = async (values: FormValues) => {
         setSubmitting(true);
         try {
             // Remove confirmPassword and agreement from payload
-            const { confirmPassword, agreement, ...registerData } = values;
+            const { confirmPassword, agreement, firstName, lastName, ...registerData } = values;
+            const fullname = [firstName, lastName].filter(Boolean).join(" ").trim();
 
             const response = await organizationService.acceptInvitation({
                 ...registerData,
+                fullname,
                 token: token ?? ""
             });
             if (response) {
@@ -389,22 +400,22 @@ const AcceptInviteContent = () => {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+        <div className="min-h-screen bg-black p-3 text-white sm:p-4 lg:flex lg:items-center lg:justify-center">
             {contextHolder}
             {contextHolderNotification}
-            <div className="w-full max-w-[1400px] h-[800px] bg-[#0E0E12] rounded-[30px] overflow-hidden flex shadow-2xl relative border border-[#1E1E24]">
+            <div className="relative w-full max-w-[1400px] rounded-[24px] border border-[#1E1E24] bg-[#0E0E12] shadow-2xl lg:flex lg:h-[800px] lg:overflow-hidden lg:rounded-[30px]">
                 {/* Left Side: Form */}
-                <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center relative z-10 bg-[#0E0E12] overflow-y-auto custom-scrollbar">
+                <div className="relative z-10 flex w-full flex-col bg-[#0E0E12] px-4 pb-6 pt-6 sm:px-6 sm:pb-8 sm:pt-8 lg:w-1/2 lg:justify-center lg:overflow-y-auto lg:p-12 custom-scrollbar">
                     {/* Logo */}
-                    <div className="absolute top-8 left-8 lg:left-12">
+                    <div className="absolute left-4 top-4 sm:left-6 sm:top-6 lg:left-12 lg:top-8">
                         <div className="relative w-8 h-8">
                             <Image src="/images/logo-1.png" alt="Logo" fill className="object-contain" />
                         </div>
                     </div>
 
-                    <div className="max-w-md w-full mx-auto mt-8">
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-bold mb-2 text-white">
+                    <div className="mx-auto mt-12 w-full max-w-md sm:mt-14 lg:mt-8">
+                        <div className="mb-6 sm:mb-8">
+                            <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
                                 {userExists ? "Accept Invitation" : "Create Account"}
                             </h1>
                             <p className="text-gray-400 text-sm">
@@ -418,25 +429,25 @@ const AcceptInviteContent = () => {
                             form={form}
                             layout="vertical"
                             requiredMark={false}
-                            className="space-y-4"
+                            className="space-y-3"
                         >
                             <InvitationInfo form={form} userExists={userExists} />
 
                             {!userExists && <RegistrationFields />}
 
-                            <Form.Item className="mt-8 mb-0">
+                            <Form.Item className="mb-0 mt-6">
                                 <Button
                                     htmlType="submit"
                                     loading={submitting}
                                     style={{
                                         backgroundColor: "#5465FF",
                                         color: "white",
-                                        height: "48px",
+                                        height: "44px",
                                         borderRadius: "12px",
                                         fontWeight: 600,
                                         border: "none",
                                         width: "100%",
-                                        fontSize: "16px",
+                                        fontSize: "15px",
                                     }}
                                 >
                                     {userExists ? "Accept and Join now" : "Create account"}
@@ -449,7 +460,7 @@ const AcceptInviteContent = () => {
                             </Form.Item>
                         </Form>
 
-                        <div className="mt-12 flex justify-between items-center text-[10px] text-gray-600">
+                        <div className="mt-8 flex items-center justify-between text-[10px] text-gray-600 sm:mt-12">
                             <p>aicave.ai @ 2026</p>
                             <Link href="#" className="hover:text-gray-400 transition-colors">Privacy Policy</Link>
                         </div>

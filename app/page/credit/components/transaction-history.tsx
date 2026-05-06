@@ -10,6 +10,7 @@ import {
   Select,
   List,
   Skeleton,
+  Empty,
 } from "antd";
 import {
   DownloadOutlined,
@@ -30,8 +31,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ICouponCodeUsage } from "@/app/common/coupon.type";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 type TransactionType =
   | "generation_image"
@@ -58,9 +60,13 @@ type CreditTransaction = {
 
 type TransactionHistoryProps = {
   size?: "default" | "compact";
+  couponCodeUsage: { data: ICouponCodeUsage[]; total: number };
 };
 
-export default function TransactionHistory({ size = "default" }: TransactionHistoryProps) {
+export default function TransactionHistory({
+  size = "default",
+  couponCodeUsage,
+}: TransactionHistoryProps) {
   const { mode } = useThemeMode();
   const { isMobile } = useResponsive();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -69,38 +75,27 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
   const pageSize = isCompact ? 4 : 8;
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const now = new Date("2026-04-01");
+  const [isLoadingExport, setIsLoadingExport] = useState(false);
   const colorPrimary = semantic.colorPrimary ?? aiCaveColors.primary;
   const colorSuccess = semantic.colorSuccess ?? aiCaveColors.success;
   const colorInfo = semantic.colorInfo ?? aiCaveColors.secondary;
   const colorError = semantic.colorError ?? aiCaveColors.error;
 
-  function daysAgo(d: number): string {
-    const date = new Date(now);
-    date.setDate(date.getDate() - d);
-    return date.toISOString();
-  }
-
-  const mockCreditTransactions: CreditTransaction[] = [
-    { id: "tx1", type: "topup_coupon", amount: 500, balanceAfter: 3250, description: "Coupon: TRIAL2026", timestamp: daysAgo(30), couponCode: "TRIAL2026" },
-    { id: "tx2", type: "topup_purchase", amount: 2000, balanceAfter: 5250, description: "Purchase - Pro Plan (Mar)", timestamp: daysAgo(29) },
-    { id: "tx3", type: "generation_image", amount: -5, balanceAfter: 5245, description: "Image gen x 1 - ATOM PROJECT", timestamp: daysAgo(28), projectName: "ATOM PROJECT", generationType: "image" },
-    { id: "tx4", type: "generation_image", amount: -25, balanceAfter: 5220, description: "Image gen x 5 - OSD DEMO", timestamp: daysAgo(27), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx5", type: "generation_video", amount: -80, balanceAfter: 5140, description: "Video gen x 2 - Demo_KTC", timestamp: daysAgo(25), projectName: "Demo_KTC", generationType: "video" },
-    { id: "tx6", type: "generation_omnihuman", amount: -120, balanceAfter: 5020, description: "OmniHuman - ATOM PROJECT", timestamp: daysAgo(22), projectName: "ATOM PROJECT", generationType: "omnihuman" },
-    { id: "tx7", type: "generation_image", amount: -30, balanceAfter: 4990, description: "Image gen x 6 - OSD DEMO", timestamp: daysAgo(20), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx8", type: "admin_grant", amount: 200, balanceAfter: 5190, description: "Admin grant - Q1 bonus", timestamp: daysAgo(18) },
-    { id: "tx9", type: "generation_dreamactor", amount: -150, balanceAfter: 5040, description: "DreamActor - Demo_KTC", timestamp: daysAgo(15), projectName: "Demo_KTC", generationType: "dreamactor" },
-    { id: "tx10", type: "generation_image", amount: -15, balanceAfter: 5025, description: "Image gen x 3 - ATOM PROJECT", timestamp: daysAgo(12), projectName: "ATOM PROJECT", generationType: "image" },
-    { id: "tx11", type: "topup_coupon", amount: 300, balanceAfter: 5325, description: "Coupon: PROMO500", timestamp: daysAgo(10), couponCode: "PROMO500" },
-    { id: "tx12", type: "generation_video", amount: -40, balanceAfter: 5285, description: "Video gen x 1 - ATOM PROJECT", timestamp: daysAgo(8), projectName: "ATOM PROJECT", generationType: "video" },
-    { id: "tx13", type: "generation_image", amount: -20, balanceAfter: 5265, description: "Image gen x 4 - OSD DEMO", timestamp: daysAgo(6), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx14", type: "generation_omnihuman", amount: -120, balanceAfter: 5145, description: "OmniHuman - ATOM PROJECT", timestamp: daysAgo(4), projectName: "ATOM PROJECT", generationType: "omnihuman" },
-    { id: "tx15", type: "generation_image", amount: -10, balanceAfter: 5135, description: "Image gen x 2 - Demo_KTC", timestamp: daysAgo(2), projectName: "Demo_KTC", generationType: "image" },
-    { id: "tx16", type: "generation_video", amount: -40, balanceAfter: 5095, description: "Video gen x 1 - OSD DEMO", timestamp: daysAgo(1), projectName: "OSD DEMO Test", generationType: "video" },
-    { id: "tx17", type: "generation_image", amount: -5, balanceAfter: 5090, description: "Image gen x 1 - ATOM PROJECT", timestamp: daysAgo(0), projectName: "ATOM PROJECT", generationType: "image" },
-  ];
+  const transactions = useMemo<CreditTransaction[]>(
+    () =>
+      (couponCodeUsage.data || []).map((item) => ({
+        id: item.id,
+        type: "topup_coupon",
+        amount: Number(item.onTopCredit || 0),
+        balanceAfter: Number(item.remainCredit || 0),
+        description: item.couponCode?.code
+          ? `Coupon: ${item.couponCode.code}`
+          : "Coupon top-up",
+        timestamp: new Date(item.usedAt).toISOString(),
+        couponCode: item.couponCode?.code,
+      })),
+    [couponCodeUsage.data],
+  );
 
   const TYPE_CONFIG: Record<
     TransactionType,
@@ -118,17 +113,17 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
   };
 
   const filteredData = useMemo(() => {
-    if (filterType === "allType") return mockCreditTransactions;
+    if (filterType === "allType") return transactions;
     if (filterType === "generations") {
-      return mockCreditTransactions.filter((item) => item.type.startsWith("generation_"));
+      return [];
     }
     if (filterType === "topUps") {
-      return mockCreditTransactions.filter(
+      return transactions.filter(
         (item) => item.type === "topup_coupon" || item.type === "topup_purchase",
       );
     }
-    return mockCreditTransactions.filter((item) => item.type === "admin_grant");
-  }, [filterType]);
+    return [];
+  }, [filterType, transactions]);
 
   const visibleData = filteredData.slice(0, visibleCount);
 
@@ -154,6 +149,38 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
 
     if (reachedBottom) {
       loadMoreData();
+    }
+  };
+
+  const exportToCsv = () => {
+    try {
+      setIsLoadingExport(true);
+
+      const headers = ["Code", "Date", "Increase Credit", "Credit Balance"];
+      const rows = (couponCodeUsage.data || []).map((item) => [
+        item.couponCode?.code ?? "",
+        item.usedAt ? new Date(item.usedAt).toLocaleString("en-GB") : "",
+        item.onTopCredit ?? 0,
+        item.remainCredit ?? 0,
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map((row) =>
+          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+        )
+        .join("\n");
+
+      const blob = new Blob(["\uFEFF" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `coupon-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsLoadingExport(false);
     }
   };
 
@@ -188,7 +215,14 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
               { value: "adminGrant", label: "Admin Grant" },
             ]}
           />
-          <Button type="text" shape="circle" icon={<DownloadOutlined />} />
+          <Button
+            type="text"
+            shape="circle"
+            icon={<DownloadOutlined />}
+            onClick={exportToCsv}
+            disabled={couponCodeUsage.total === 0}
+            loading={isLoadingExport}
+          />
         </Space>
       }
       style={{
@@ -222,6 +256,14 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
         <List
           itemLayout="horizontal"
           dataSource={visibleData}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No transaction data"
+              />
+            ),
+          }}
           renderItem={(item) => {
             const typeConfig = TYPE_CONFIG[item.type];
             const amountColor = item.amount > 0 ? colorSuccess : colorError;
@@ -278,7 +320,7 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
           }}
         />
         {isLoadingMore && <Skeleton avatar paragraph={{ rows: 1 }} active />}
-        {!isLoadingMore && visibleData.length >= filteredData.length && (
+        {!isLoadingMore && filteredData.length > 0 && visibleData.length >= filteredData.length && (
           <Divider plain>No more transactions</Divider>
         )}
       </div>

@@ -245,7 +245,7 @@ const ModelPricingManagementPage = () => {
         open={isModalOpen}
         onCancel={handleCancel}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         className="dark-modal"
         width={700}
       >

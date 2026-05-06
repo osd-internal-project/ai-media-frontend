@@ -7,6 +7,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import TransactionHistory from "./transaction-history";
+import { ICouponCodeUsage } from "@/app/common/coupon.type";
 
 interface ColorModalProps {
   open: boolean;
@@ -15,8 +16,32 @@ interface ColorModalProps {
   handleFinish: (values: { couponCode: string }) => Promise<void> | void;
   confirmLoading: boolean;
   handleCancel: () => void;
+  balance?: number;
+  totalAllowance?: number;
+  totalSpent?: number;
+  expiresAt?: string | Date | null;
+  couponCodeUsage: { data: ICouponCodeUsage[]; total: number };
 }
 
+const formatMetric = (value?: number) => {
+  if (typeof value !== "number") {
+    return "-";
+  }
+
+  return value.toLocaleString();
+};
+
+const formatDate = (value?: string | Date | null) => {
+  if (!value) {
+    return "No expiry data";
+  }
+
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const RedeemCouponModal: FC<ColorModalProps> = ({
   open,
@@ -25,6 +50,11 @@ const RedeemCouponModal: FC<ColorModalProps> = ({
   handleFinish,
   confirmLoading,
   handleCancel,
+  balance,
+  totalAllowance,
+  totalSpent,
+  expiresAt,
+  couponCodeUsage,
 }) => {
 const { Text } = Typography;
 const { mode } = useThemeMode();
@@ -72,7 +102,7 @@ const { isMobile } = useResponsive();
           </Card>
           </Space>
       ) : (
-        <TransactionHistory size="compact" />
+        <TransactionHistory size="compact" couponCodeUsage={couponCodeUsage} />
       ),
     };
   });
@@ -93,7 +123,7 @@ const { isMobile } = useResponsive();
               <Col>
                 <Space direction="vertical" size={0}>
                 <Text>Current Balance</Text>
-                <Text color={semantic.colorPrimary} style={{fontSize: isMobile ? 24 : 32,}}>5,090</Text>
+                <Text color={semantic.colorPrimary} style={{fontSize: isMobile ? 24 : 32,}}>{formatMetric(balance)}</Text>
                 <Text>credits</Text></Space>
               </Col>
               <Col>
@@ -104,13 +134,13 @@ const { isMobile } = useResponsive();
                 }}>
                 <RiseOutlined
                   />
-                  +3000 earned
+                  +{formatMetric(totalAllowance)} earned
                 </Text>
                 <Text>
-                  -635 spent
+                  -{formatMetric(totalSpent)} spent
                 </Text>
                 <Text style={{ color: semantic.colorError}}>
-                  Expires 2026-06-30
+                  Expires {formatDate(expiresAt)}
                   </Text>
                 </Space>
               </Col>

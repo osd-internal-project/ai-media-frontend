@@ -1,23 +1,35 @@
 "use client";
 
+import type { ICouponCodeUsage } from "@/app/common/coupon.type";
 import type { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
+import type {
+  ICreditBalance,
+  IOrganizationSubscription,
+} from "@/app/common/organization.type";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { axiosUser } from "@/app/lib/axios/axios";
 import type { ByTypeItem } from "@/app/page/dashboard/components/tabs/types";
 import CouponService from "@/app/services/coupon.service";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
+import DashboardServices from "@/app/services/dashboard.service";
+import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
-import { Button, Card, Col, Form, Modal, Row, Space, Typography, theme } from "antd";
 import {
-  CalendarDays,
-  Gauge,
-  Sparkles,
-  Ticket,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
-import { FC, useState } from "react";
+  Button,
+  Card,
+  Col,
+  Empty,
+  Form,
+  Modal,
+  Row,
+  Space,
+  Typography,
+  theme,
+} from "antd";
+import { Ticket } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { FC, useEffect, useMemo, useState } from "react";
 import DailyCreditAct from "./components/daily-credit-act";
 import SpendByTypeChart from "./components/spend-by-type-chart";
 import CreditStatic from "./components/credit-static";
@@ -26,82 +38,168 @@ import TransactionHistory from "./components/transaction-history";
 import ExpireNotice from "./components/expire-notice";
 import RedeemCouponModal from "./components/redeem-coupon-modal";
 
-type CreditStatCard = {
-  label: string;
-  value: string | number;
-  sub: string;
-  trend?: string;
-  progress?: number;
-  icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
-};
-
-const usedCreditPerMonthMock: IDashboardCreditPerMonthAndType[] = [
-  { month: "Jan", image: 220, video: 120, omnihuman: 80, dreamactor: 50 },
-  { month: "Feb", image: 260, video: 150, omnihuman: 95, dreamactor: 55 },
-  { month: "Mar", image: 310, video: 180, omnihuman: 110, dreamactor: 62 },
-  { month: "Apr", image: 295, video: 165, omnihuman: 120, dreamactor: 70 },
-  { month: "May", image: 340, video: 190, omnihuman: 130, dreamactor: 76 },
-  { month: "Jun", image: 360, video: 210, omnihuman: 140, dreamactor: 82 },
-];
-
 const CreditPage: FC = () => {
   const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { token } = theme.useToken();
-  const couponService = CouponService(axiosUser);
+  const couponService = useMemo(() => CouponService(axiosUser), []);
+  const creditBalanceService = useMemo(
+    () => CreditBalanceServices(axiosUser),
+    [],
+  );
+  const dashboardService = useMemo(() => DashboardServices(axiosUser), []);
+  const organizationSubscriptionService = useMemo(
+    () => OrganizationSubscriptionServices(axiosUser),
+    [],
+  );
   const [modal, contextHolder] = Modal.useModal();
+  const organizationId = session?.user?.organizationId;
+  const [overviewSummary, setOverviewSummary] = useState<{
+    usedCredit: number;
+    creditAllowance: number;
+  } | null>(null);
+  const [usedCreditPerMonth, setUsedCreditPerMonth] = useState<
+    IDashboardCreditPerMonthAndType[]
+  >([]);
+  const [couponCodeUsage, setCouponCodeUsage] = useState<{
+    data: ICouponCodeUsage[];
+    total: number;
+  }>({ data: [], total: 0 });
+  const [creditBalance, setCreditBalance] = useState<ICreditBalance | null>(null);
+  const [organizationSubscription, setOrganizationSubscription] =
+    useState<IOrganizationSubscription | null>(null);
 
-  const usedCreditByTypeMock: ByTypeItem[] = [
-    { name: "Image", value: 1785, color: token.colorPrimary },
-    { name: "Video", value: 1015, color: token.colorInfo },
-    { name: "Human", value: 675, color: token.colorWarning },
-    { name: "Dream", value: 395, color: aiCaveColors.dreamActor },
-  ];
+  useEffect(() => {
+    if (!organizationId) {
+      setOverviewSummary(null);
+      setUsedCreditPerMonth([]);
+      setCouponCodeUsage({ data: [], total: 0 });
+      setCreditBalance(null);
+      setOrganizationSubscription(null);
+      return;
+    }
 
-  const totalUsed = usedCreditByTypeMock.reduce((sum, item) => sum + item.value, 0);
-  const allowance = 5200;
-  const usagePercent = (totalUsed / allowance) * 100;
+    let ignore = false;
 
-  const statCards: CreditStatCard[] = [
-    {
-      label: "Monthly Credit Used",
-      value: totalUsed.toLocaleString(),
-      sub: `Limit ${allowance.toLocaleString()} credits`,
-      progress: usagePercent,
-      icon: <Wallet size={15} />,
-      iconBg: token.colorPrimaryBg,
-      iconColor: token.colorPrimary,
-    },
-    {
-      label: "Current Cycle Balance",
-      value: (allowance - totalUsed).toLocaleString(),
-      sub: "Available this cycle",
-      icon: <Gauge size={15} />,
-      iconBg: token.colorInfoBg,
-      iconColor: token.colorInfo,
-    },
-    {
-      label: "Today Credit Activity",
-      value: "324",
-      sub: "Compared to yesterday",
-      trend: "+7.2%",
-      icon: <CalendarDays size={15} />,
-      iconBg: token.colorWarningBg,
-      iconColor: token.colorWarning,
-    },
-    {
-      label: "Peak Generator",
-      value: "Image",
-      sub: "Most used type this month",
-      trend: "+4.8%",
-      icon: <Sparkles size={15} />,
-      iconBg: token.colorSuccessBg,
-      iconColor: token.colorSuccess,
-    },
-  ];
+    const fetchCreditData = async () => {
+      const [overview, creditPerMonth, usage, balance, subscription] =
+        await Promise.all([
+          dashboardService.findOverviewSummary(organizationId, {}),
+          dashboardService.countUsedCreditPerMonth(organizationId, {}),
+          couponService.findUsageManyByOrganizationId(organizationId),
+          creditBalanceService.findByOrganizationId(organizationId),
+          organizationSubscriptionService.findByOrganizationId(organizationId),
+        ]);
+
+      if (ignore) {
+        return;
+      }
+
+      setOverviewSummary(
+        overview
+          ? {
+              usedCredit: Number(overview.usedCredit || 0),
+              creditAllowance: Number(overview.creditAllowance || 0),
+            }
+          : null,
+      );
+      setUsedCreditPerMonth(creditPerMonth || []);
+      setCouponCodeUsage(usage || { data: [], total: 0 });
+      setCreditBalance(balance || null);
+      setOrganizationSubscription(subscription || null);
+    };
+
+    fetchCreditData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [
+    couponService,
+    creditBalanceService,
+    dashboardService,
+    organizationId,
+    organizationSubscriptionService,
+  ]);
+
+  const selectedMonthlyUsage = useMemo(() => {
+    if (!usedCreditPerMonth.length) {
+      return null;
+    }
+
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+    const currentMonthUsage = usedCreditPerMonth.find(
+      (item) => item.month === currentMonthKey,
+    );
+
+    if (currentMonthUsage) {
+      return currentMonthUsage;
+    }
+
+    const latestActiveUsage = [...usedCreditPerMonth]
+      .reverse()
+      .find(
+        (item) =>
+          item.image > 0 ||
+          item.video > 0 ||
+          item.omnihuman > 0 ||
+          item.dreamactor > 0,
+      );
+
+    return latestActiveUsage || usedCreditPerMonth[usedCreditPerMonth.length - 1];
+  }, [usedCreditPerMonth]);
+
+  const usedCreditByType = useMemo<ByTypeItem[]>(() => {
+    if (!selectedMonthlyUsage) {
+      return [];
+    }
+
+    return [
+      {
+        name: "Image",
+        value: Number(selectedMonthlyUsage.image || 0),
+        color: token.colorPrimary,
+      },
+      {
+        name: "Video",
+        value: Number(selectedMonthlyUsage.video || 0),
+        color: token.colorInfo,
+      },
+      {
+        name: "Human",
+        value: Number(selectedMonthlyUsage.omnihuman || 0),
+        color: token.colorWarning,
+      },
+      {
+        name: "Dream",
+        value: Number(selectedMonthlyUsage.dreamactor || 0),
+        color: aiCaveColors.dreamActor,
+      },
+    ];
+  }, [selectedMonthlyUsage, token.colorInfo, token.colorPrimary, token.colorWarning]);
+
+  const totalBalance =
+    Number(creditBalance?.currentCycleBalance || 0) +
+    Number(creditBalance?.onTopBalance || 0);
+  const totalAllowance = Number(
+    overviewSummary?.creditAllowance ||
+      organizationSubscription?.creditAllowance ||
+      0,
+  );
+  const totalSpent = Number(overviewSummary?.usedCredit || 0);
+  const totalCouponTopUp = couponCodeUsage.data.reduce(
+    (sum, item) => sum + Number(item.onTopCredit || 0),
+    0,
+  );
+  const hasTrendData = usedCreditPerMonth.some(
+    (item) =>
+      item.image > 0 ||
+      item.video > 0 ||
+      item.omnihuman > 0 ||
+      item.dreamactor > 0,
+  );
+  const hasSpendByTypeData = usedCreditByType.some((item) => item.value > 0);
   const [open, setOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [form] = Form.useForm();
@@ -185,65 +283,103 @@ const CreditPage: FC = () => {
               <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
            <Space direction="vertical" style={{ width: "100%", paddingTop: 24, paddingBottom: 12 }} size={16} >   
     
-          <CreditStatic />
+          <CreditStatic
+            balance={totalBalance}
+            totalAllowance={totalAllowance}
+            totalSpent={totalSpent}
+            couponUsageCount={couponCodeUsage.total}
+            couponTopUpTotal={totalCouponTopUp}
+          />
 
       <Row gutter={[16, 16]} align="stretch"  style={{padding: "0 24px" }}>
         <Col xs={24} lg={16} className="flex">
           <Card title="Daily Credit Activity" style={{ height: "100%", width: "100%" }}>
-            <DailyCreditAct
-              data={usedCreditPerMonthMock}
-              colors={{
-                image: token.colorPrimary,
-                video: token.colorInfo,
-                human: token.colorWarning,
-                dreamactor: token.colorError,
-                axis: token.colorTextSecondary,
-                grid: token.colorBorder,
-                tooltipBg: token.colorBgContainer,
-                tooltipBorder: token.colorBorder,
-                tooltipText: token.colorTextBase,
-              }}
-            />
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={8} className="flex">
-          <Card title="Spend by Type" style={{ height: "100%", width: "100%" }}>
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
-              <SpendByTypeChart
-                data={usedCreditByTypeMock}
+            {hasTrendData ? (
+              <DailyCreditAct
+                data={usedCreditPerMonth}
                 colors={{
+                  image: token.colorPrimary,
+                  video: token.colorInfo,
+                  human: token.colorWarning,
+                  dreamactor: token.colorError,
+                  axis: token.colorTextSecondary,
+                  grid: token.colorBorder,
                   tooltipBg: token.colorBgContainer,
                   tooltipBorder: token.colorBorder,
                   tooltipText: token.colorTextBase,
                 }}
               />
-              {usedCreditByTypeMock.map((item) => (
-                <div className="flex items-center justify-between" key={item.name}>
-                  <Space size={8}>
-                    <span
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: 999,
-                        background: item.color,
-                        display: "inline-block",
-                      }}
-                    />
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      {item.name}
-                    </Typography.Text>
-                  </Space>
-                  <Typography.Text>{item.value}</Typography.Text>
-                </div>
-              ))}
-            </Space>
+            ) : (
+              <div
+                style={{
+                  minHeight: 320,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No credit activity data"
+                />
+              </div>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8} className="flex">
+          <Card title="Spend by Type" style={{ height: "100%", width: "100%" }}>
+            {hasSpendByTypeData ? (
+              <Space direction="vertical" style={{ width: "100%" }} size={8}>
+                <SpendByTypeChart
+                  data={usedCreditByType}
+                  colors={{
+                    tooltipBg: token.colorBgContainer,
+                    tooltipBorder: token.colorBorder,
+                    tooltipText: token.colorTextBase,
+                  }}
+                />
+                {usedCreditByType.map((item) => (
+                  <div className="flex items-center justify-between" key={item.name}>
+                    <Space size={8}>
+                      <span
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 999,
+                          background: item.color,
+                          display: "inline-block",
+                        }}
+                      />
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {item.name}
+                      </Typography.Text>
+                    </Space>
+                    <Typography.Text>{item.value}</Typography.Text>
+                  </div>
+                ))}
+              </Space>
+            ) : (
+              <div
+                style={{
+                  minHeight: 260,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No spend-by-type data"
+                />
+              </div>
+            )}
           </Card>
         </Col>
                   </Row>
                   <div style={{ padding: "0 24px" }}>
-                      <TransactionHistory />  </div> 
-                 <div style={{ padding: "0 24px" }}> <ExpireNotice/></div>
+                      <TransactionHistory couponCodeUsage={couponCodeUsage} />  </div> 
+                 <div style={{ padding: "0 24px" }}> <ExpireNotice expiresAt={organizationSubscription?.currentPeriodEnd || null} /></div>
           </Space>
       </div>
         <RedeemCouponModal
@@ -253,6 +389,11 @@ const CreditPage: FC = () => {
           handleFinish={handleCouponSubmit}
           confirmLoading={confirmLoading}
           handleCancel={handleCancel}
+          balance={totalBalance}
+          totalAllowance={totalAllowance}
+          totalSpent={totalSpent}
+          expiresAt={organizationSubscription?.currentPeriodEnd || null}
+          couponCodeUsage={couponCodeUsage}
         />
           </div>
   );

@@ -530,7 +530,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
       onCancel={onCancel}
       footer={null}
       width={isMobile ? "90%" : 660}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

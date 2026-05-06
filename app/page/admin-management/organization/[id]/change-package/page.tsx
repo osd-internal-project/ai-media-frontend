@@ -31,7 +31,15 @@ const ChangePackagePage = () => {
 
   // Sort plans by price whenever plans state changes
   const sortedPlans = useMemo(() => {
-    return [...plans].sort((a, b) => a.prices[0].price - b.prices[0].price);
+    const getSortPrice = (plan: TPlan) => {
+      const firstPrice = plan.prices.find(
+        (price) => typeof price.price === "number" && Number.isFinite(price.price),
+      );
+
+      return firstPrice?.price ?? Number.POSITIVE_INFINITY;
+    };
+
+    return [...plans].sort((a, b) => getSortPrice(a) - getSortPrice(b));
   }, [plans]);
 
   const handleGetStarted = (priceId: string) => {

@@ -1,21 +1,46 @@
 import React from "react";
-import { Row, Col, Card, Typography, Progress, Space } from "antd";
+import { Row, Col, Card, Typography, Progress, Space, Empty } from "antd";
 import {
   RiseOutlined,
   FallOutlined,
-  PictureOutlined,
-  VideoCameraOutlined,
 } from "@ant-design/icons";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
-export default function CreditStatic() {
+type CreditStaticProps = {
+  balance?: number;
+  totalAllowance?: number;
+  totalSpent?: number;
+  couponUsageCount?: number;
+  couponTopUpTotal?: number;
+};
+
+const formatMetric = (value?: number) => {
+  if (typeof value !== "number") {
+    return "-";
+  }
+
+  return value.toLocaleString();
+};
+
+export default function CreditStatic({
+  balance,
+  totalAllowance,
+  totalSpent,
+  couponUsageCount,
+  couponTopUpTotal,
+}: CreditStaticProps) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
-  const { isMobile, isTablet } = useResponsive();
+  const { isMobile } = useResponsive();
+  const hasAllowance = typeof totalAllowance === "number" && totalAllowance > 0;
+  const hasBalance = typeof balance === "number";
+  const hasSpent = typeof totalSpent === "number";
+  const balancePercent =
+    hasAllowance && hasBalance ? (balance / totalAllowance) * 100 : 0;
 
   const cardStyle: React.CSSProperties = {
     borderRadius: 18,
@@ -66,12 +91,12 @@ export default function CreditStatic() {
                 color: semantic.colorPrimary ,
               }}
             >
-              5,090
+              {formatMetric(balance)}
             </Text>
 
             <div>
               <Progress
-                percent={170}
+                percent={balancePercent}
                 success={{ percent: 0 }}
                 showInfo={false}
                 strokeColor={semantic.colorPrimary}
@@ -87,7 +112,9 @@ export default function CreditStatic() {
                   color: semantic.colorTextSecondary,
                 }}
               >
-                170% of 3,000 total
+                {hasAllowance
+                  ? `${Math.round(balancePercent)}% of ${formatMetric(totalAllowance)} total`
+                  : "No plan allowance data"}
               </Text>
             </div>
           </Space>
@@ -127,7 +154,7 @@ export default function CreditStatic() {
                 color: semantic.colorSuccess,
               }}
             >
-              3,000
+              {formatMetric(totalAllowance)}
             </Text>
 
             <Space size={6}>
@@ -143,7 +170,9 @@ export default function CreditStatic() {
                   fontSize: 13,
                 }}
               >
-                +4 transactions
+                {typeof couponTopUpTotal === "number" && couponTopUpTotal > 0
+                  ? `+${formatMetric(couponTopUpTotal)} coupon credits`
+                  : "Current cycle allocation"}
               </Text>
             </Space>
           </Space>
@@ -183,7 +212,7 @@ export default function CreditStatic() {
                 color: semantic.colorTextBase,
               }}
             >
-              635
+              {formatMetric(totalSpent)}
             </Text>
 
             <Space size={6}>
@@ -199,7 +228,9 @@ export default function CreditStatic() {
                   fontSize: 13,
                 }}
               >
-                13 generations
+                {hasSpent
+                  ? `${couponUsageCount || 0} coupon transactions`
+                  : "No usage data"}
               </Text>
             </Space>
           </Space>
@@ -236,67 +267,10 @@ export default function CreditStatic() {
               size={4}
               style={{ width: "100%" }}
             >
-              {[
-                {
-                  icon: "🖼️",
-                  label: "Image",
-                  value: "5 cr",
-                },
-                {
-                  icon: "🎬",
-                  label: "Video",
-                  value: "40 cr",
-                },
-                {
-                  icon: "🧑‍🎤",
-                  label: "OmniHuman",
-                  value: "120 cr",
-                },
-                {
-                  icon: "🎭",
-                  label: "DreamActor",
-                  value: "150 cr",
-                },
-              ].map((item) => (
-                <Row
-                  key={item.label}
-                  justify="space-between"
-                  align="middle"
-                >
-                  <Space size={8}>
-                    <span
-                      style={{
-                        color: semantic.colorTextSecondary,
-                        fontSize: 14,
-                        width: 16,
-                        display: "inline-flex",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {item.icon}
-                    </span>
-
-                    <Text
-                      style={{
-                        color: semantic.colorTextSecondary,
-                        fontSize: 13,
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                  </Space>
-
-                  <Text
-                    style={{
-                      color:semantic.colorPrimary,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {item.value}
-                  </Text>
-                </Row>
-              ))}
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No cost data"
+              />
             </Space>
           </Space>
         </Card>
