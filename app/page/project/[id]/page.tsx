@@ -34,6 +34,8 @@ import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
+import { Edit2, Image, Paintbrush } from "lucide-react";
+import EditorSpace from "./components/chat-components/editor-space";
 
 type GenerateTabKey =
   | "image"
@@ -41,7 +43,8 @@ type GenerateTabKey =
   | "omnihumen"
   | "dreamactor"
   | "library"
-  | "activity";
+  | "activity"
+  | "editor";
 
 const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
@@ -163,13 +166,7 @@ const GenerateImagePage: FC = () => {
   };
 
   const onChangeTab = (
-    key:
-      | "image"
-      | "video"
-      | "omnihumen"
-      | "dreamactor"
-      | "library"
-      | "activity",
+    key: GenerateTabKey,
   ) => {
     setActiveKey(key);
 
@@ -261,6 +258,7 @@ const GenerateImagePage: FC = () => {
     dreamactor: semantic.colorWarning || "#faad14",
     library: "#1890ff",
     activity: semantic.colorTextSecondary || "#8c8c8c",
+    editor: semantic.colorInfo || "#1890ff",
   };
 
   const renderTabLabel = (
@@ -521,6 +519,17 @@ const GenerateImagePage: FC = () => {
                   key={`activity-${activeKey}`}
                 />
               ),
+            },
+            {
+              disabled: disableTab,
+              forceRender: true,
+              key: "editor",
+              label: renderTabLabel(
+                "editor",
+                "Editor",
+                <Paintbrush size={16} />,
+              ),
+              children: <div className="h-full w-full"><EditorSpace /></div>,
             },
           ]}
         />

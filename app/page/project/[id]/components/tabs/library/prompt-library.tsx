@@ -385,14 +385,14 @@ const PromptLibrary: FC<props> = ({
                       style={{ padding: 8 }}
                     >
                       {/* Edit (image only) */}
-                      {!item.typeGenerate.toLowerCase().includes("video") && (
+                      {/* {!item.typeGenerate.toLowerCase().includes("video") && (
                         <Button
                           icon={<Paintbrush size={16} />}
                           onClick={() => openImageEditor(item.id)}
                           style={actionButtonStyle}
                           disabled={!item.imageUrl}
                         />
-                      )}
+                      )} */}
                       <Button
                         icon={<Download size={16} />}
                         onClick={(e) => {
