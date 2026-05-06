@@ -84,6 +84,18 @@ const CouponService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    findUsageManyByOrganizationId: async (
+      organizationId: string,
+      params?: any,
+    ): Promise<{ data: ICouponCodeUsage[]; total: number }> => {
+      return await axiosInstance
+        .get(`${baseUrl}/usage/organization/${organizationId}`, { params })
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return { data: [], total: 0 };
+        });
+    },
     update: async (
       id: string,
       data: Partial<ICouponCode>,

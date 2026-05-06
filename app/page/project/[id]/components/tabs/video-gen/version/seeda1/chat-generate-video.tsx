@@ -2,20 +2,14 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useMemo,
   useCallback,
   type FC,
 } from "react";
-import { PermissionGuard } from "../../../../../../components/PermissionGuard";
-import { projectPermissions } from "../../../../../../utils/permissions";
 import {
-  Button,
-  Card,
   Flex,
   Form,
   message,
   type UploadFile,
-  Typography,
   notification,
   UploadProps,
 } from "antd";
@@ -28,43 +22,19 @@ import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
 import LogsServices from "@/app/services/logs.service";
 import GenerateServices from "@/app/services/generate.service";
-import VideoItem from "./video-player";
-import VideoSmartReference from "./video-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import ChatVideoInput from "./chat-video-input";
-import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import VideoMessageItem from "./result-item";
 import VideoResultItem from "./result-item";
 import ResultHeader from "./result-header";
 import { RcFile } from "antd/es/upload";
-
-interface VideoChatProps {
-  teamView: boolean;
-  projectId: string;
-  userId?: string;
-  activeKey:
-    | "image"
-    | "video"
-    | "omnihumen"
-    | "dreamactor"
-    | "library"
-    | "activity";
-  projectRole?: string | null;
-  promptGuideOpenStatus: boolean;
-  username?: string; // Added username
-  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
-  setDisableTab: (disable: boolean) => void;
-  onSetPromptTextRef?: React.MutableRefObject<
-    ((id: number) => Promise<void>) | null
-  >;
-}
+import GenerateTwoPaneLayout from "../../../../tab-layout/generate-two-pane-layout";
+import { VideoFormManagerProps } from "../../video-form-renderer";
 
 interface UserMessage {
   id?: number;
@@ -127,7 +97,7 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateVideo: FC<VideoChatProps> = ({
+const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
   teamView,
   projectId,
   userId,
@@ -1020,52 +990,37 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
         });
 
         const results = await Promise.all(uploadPromises);
-        if (selectedAIModel?.description === "seeda2") {
-          const successfulResults = await Promise.all(results.filter((res: any) => res !== null).map((res: any) => res.result));
 
-          setRefImage(successfulResults);
+        const successfulResults = results.filter(
+          (res): res is { result: any; index: number } =>
+            res !== null && res.result !== null,
+        );
 
-          const newFiles = successfulResults.map((res: any, index: number) => ({
-            uid: res.uid || `rc-upload-${Date.now()}-${index}`,
-            name: res.name,
+        const firstImage = successfulResults.find((r) => r.index === 0);
+        const lastImage = successfulResults.find((r) => r.index === 1);
+
+        if (firstImage) {
+          setRefImageFrist([firstImage.result]);
+          const newFile = {
+            uid: firstImage.result.uid || `rc-upload-${Date.now()}-0`,
+            name: firstImage.result.name,
             status: "done" as const,
-            url: res.url,
-            response: res, // Keep consistency with response mapping
-          }));
+            url: firstImage.result.url,
+            response: firstImage.result,
+          };
+          setFilesFirst([newFile]);
+        }
 
-          setFiles(newFiles);
-        } else {
-          const successfulResults = results.filter(
-            (res): res is { result: any; index: number } =>
-              res !== null && res.result !== null,
-          );
-
-          const firstImage = successfulResults.find((r) => r.index === 0);
-          const lastImage = successfulResults.find((r) => r.index === 1);
-
-          if (firstImage) {
-            setRefImageFrist([firstImage.result]);
-            const newFile = {
-              uid: firstImage.result.uid || `rc-upload-${Date.now()}-0`,
-              name: firstImage.result.name,
-              status: "done" as const,
-              url: firstImage.result.url,
-              response: firstImage.result,
-            };
-            setFilesFirst([newFile]);
-          }
-
-          if (lastImage) {
-            setRefImageLast([lastImage.result]);
-            const newFile = {
-              uid: lastImage.result.uid || `rc-upload-${Date.now()}-1`,
-              name: lastImage.result.name,
-              status: "done" as const,
-              url: lastImage.result.url,
-              response: lastImage.result,
-            };
-            setFilesLast([newFile]);
-          }
+        if (lastImage) {
+          setRefImageLast([lastImage.result]);
+          const newFile = {
+            uid: lastImage.result.uid || `rc-upload-${Date.now()}-1`,
+            name: lastImage.result.name,
+            status: "done" as const,
+            url: lastImage.result.url,
+            response: lastImage.result,
+          };
+          setFilesLast([newFile]);
         }
       } catch (error) {
         console.error("Error in handleUsePromptGuide:", error);
@@ -1081,29 +1036,13 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
     const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
     const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
     const tempTask = `temp-${Date.now()}`;
-    // const image =
-    //   selectedAIModel.description === "seeda2"
-    //     ? refImage.map((image) => image.imagePath)
-    //     : [
-    //         firstImage?.imagePath ? firstImage.imagePath : null,
-    //         lastImage?.imagePath ? lastImage.imagePath : null,
-    //       ];
     const files = await Promise.all(
       refImage.map(async (image) => ({
         type: await getTypeFile(image.imagePath),
         url: image.imagePath,
       })),
     );
-    // const image = firstImage
-    //   ? [
-    //       firstImage?.imagePath
-    //         ? { type: "image", url: firstImage.imagePath }
-    //         : null,
-    //       lastImage?.imagePath
-    //         ? { type: "image", url: lastImage.imagePath }
-    //         : null,
-    //     ]
-    //   : [];
+
     const image = firstImage
       ? [firstImage.imagePath, lastImage?.imagePath]
       : [];
@@ -1111,8 +1050,8 @@ const ChatGenerateVideo: FC<VideoChatProps> = ({
       taskId: tempTask,
       model: selectedAIModel.modelType,
       prompt: values.prompt,
-      image: selectedAIModel.description !== "seeda2" ? image : [],
-      files: selectedAIModel.description === "seeda2" ? files : [],
+      image: image,
+      files: [],
       sequentialImageGeneration: "auto",
       size: selectedResolution,
       maxImages: 0,

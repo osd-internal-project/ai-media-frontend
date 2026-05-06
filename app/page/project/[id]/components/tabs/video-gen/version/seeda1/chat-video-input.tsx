@@ -38,10 +38,10 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "./upload-section";
 import PromptSection from "./prompt-section";
-import PromptTemplateSection from "../../tab-layout/generate-section/prompt-template-section";
-import SettingSection from "../../tab-layout/generate-section/setting-section";
-import BrandKitSection from "../../tab-layout/generate-section/brand-kit-section";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
+import SettingSection from "../../../../tab-layout/generate-section/setting-section";
+import BrandKitSection from "../../../../tab-layout/generate-section/brand-kit-section";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -371,19 +371,46 @@ export default function ChatVideoInput(props: Props) {
     </Upload>
   );
 
-  const mentionOptions = (selectedModel?.description === "seeda2" ? files : [...filesFirst, ...filesLast])
+  const mentionOptions = [...filesFirst, ...filesLast]
     .filter((f) => f && f.name)
     .map((f) => {
-      const isVideo = f.type?.startsWith("video/") || f.name.startsWith("video");
-      const isAudio = f.type?.startsWith("audio/") || f.name.startsWith("audio");
-      const source = f.thumbUrl || f.url || (typeof f.preview === "string" ? f.preview : "") || (f.originFileObj ? URL.createObjectURL(f.originFileObj) : "");
+      const isVideo =
+        f.type?.startsWith("video/") || f.name.startsWith("video");
+      const isAudio =
+        f.type?.startsWith("audio/") || f.name.startsWith("audio");
+      const source =
+        f.thumbUrl ||
+        f.url ||
+        (typeof f.preview === "string" ? f.preview : "") ||
+        (f.originFileObj ? URL.createObjectURL(f.originFileObj) : "");
 
       const icon = isAudio ? (
         <AudioLines size={14} style={{ color: semantic.colorTextSecondary }} />
       ) : isVideo ? (
-        source ? <video src={source} style={{ width: 14, height: 14, objectFit: "cover", borderRadius: 2 }} /> : <Video size={14} style={{ color: semantic.colorTextSecondary }} />
+        source ? (
+          <video
+            src={source}
+            style={{
+              width: 14,
+              height: 14,
+              objectFit: "cover",
+              borderRadius: 2,
+            }}
+          />
+        ) : (
+          <Video size={14} style={{ color: semantic.colorTextSecondary }} />
+        )
+      ) : source ? (
+        <img
+          src={source}
+          alt={f.name}
+          style={{ width: 14, height: 14, objectFit: "cover", borderRadius: 2 }}
+        />
       ) : (
-        source ? <img src={source} alt={f.name} style={{ width: 14, height: 14, objectFit: "cover", borderRadius: 2 }} /> : <ImageIconLucide size={14} style={{ color: semantic.colorTextSecondary }} />
+        <ImageIconLucide
+          size={14}
+          style={{ color: semantic.colorTextSecondary }}
+        />
       );
 
       return {
@@ -422,49 +449,17 @@ export default function ChatVideoInput(props: Props) {
             paddingBlock: 12,
           }}
         >
-          {selectedModel?.description === "seeda1" && (
-            <UploadSection
-              semantic={semantic}
-              sectionTitle="Uploads"
-              renderContent={<Flex vertical gap={8}>
-                <Typography.Text
-                  style={{ fontSize: 12, color: semantic.colorTextSecondary }}
-                >
-                  Upload Frames *
-                </Typography.Text>
-                <Flex gap={8} style={{ width: "100%" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {renderUploadTile(
-                      "First Frame",
-                      0,
-                      filesFirst[0],
-                      "image/*"
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {renderUploadTile(
-                      "Last Frame",
-                      1,
-                      filesLast[0],
-                      "image/*"
-                    )}
-                  </div>
-                </Flex>
-              </Flex>} onRemoveFile={onRemoveFileMuti}            />
-          )}
-          {selectedModel?.description === "seeda2" && (
-            <UploadSection
-              semantic={semantic}
-              files={files}
-              isLoadingUpload={isLoadingUpload}
-              handleUploadChange={handleUploadChangeMuti}
-              beforeUpload={beforeUploadMuti}
-              onRemoveFile={onRemoveFileMuti}
-              maxUploadFiles={8}
-              description="Upload Reference (optional, image, video, audio, max 8)"
-              accept="image/*,video/*,audio/*"
-            />
-          )}
+          <UploadSection
+            semantic={semantic}
+            files={files}
+            isLoadingUpload={isLoadingUpload}
+            handleUploadChange={handleUploadChangeMuti}
+            beforeUpload={beforeUploadMuti}
+            onRemoveFile={onRemoveFileMuti}
+            maxUploadFiles={8}
+            description="Upload Reference (optional, image, video, audio, max 8)"
+            accept="image/*,video/*,audio/*"
+          />
           <PromptSection
             semantic={semantic}
             placeholder="Describe what you want to video... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
@@ -510,7 +505,7 @@ export default function ChatVideoInput(props: Props) {
                   </Flex>
                   <Slider
                     min={4}
-                    max={selectedModel?.description === "seeda2" ? 15 : 12}
+                    max={12}
                     value={selectedDuration}
                     onChange={(value) => {
                       if (typeof value === "number") {

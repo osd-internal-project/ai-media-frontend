@@ -2,18 +2,15 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useMemo,
   useCallback,
   type FC,
 } from "react";
 import {
-  Card,
   Flex,
   Form,
   message,
   type UploadFile,
   notification,
-  Typography,
 } from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
@@ -22,12 +19,9 @@ import {
 } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import GalleryServices from "@/app/services/gellory.service";
-import VideoItem from "../video-gen/video-player";
-import OmnihumenSmartReference from "./omnihumen-smart-reference";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import GenerateServices from "@/app/services/generate.service";
 import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";

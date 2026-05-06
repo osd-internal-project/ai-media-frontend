@@ -25,7 +25,6 @@ import PromptLibrary from "./components/tabs/library/prompt-library";
 import PromptActivity from "./components/tabs/all-activity/prompt-activity";
 import AIModelServices from "@/app/services/ai-model.service";
 import ChatGenerateImage from "./components/tabs/image-gen/chat-generate-image";
-import ChatGenerateVideo from "./components/tabs/video-gen/chat-generate-video";
 import ChatGenerateOmnihumen from "./components/tabs/omni-human/chat-generate-omnihumen";
 import ChatGenerateDreamactor from "./components/tabs/dream-actor/chat-generate-dreamactor";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -34,6 +33,7 @@ import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
+import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
 
 type GenerateTabKey =
   | "image"
@@ -415,7 +415,7 @@ const GenerateImagePage: FC = () => {
                       <VideoCameraOutlined />,
                     ),
                     children: activeKey === "video" && (
-                      <ChatGenerateVideo
+                      <VideoFormRenderer
                         teamView={teamView}
                         key={"video"}
                         activeKey={activeKey}

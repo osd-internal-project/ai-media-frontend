@@ -92,7 +92,7 @@ const VideoActionBar: React.FC<VideoActionBarProps> = ({
         />
 
         {/* DELETE */}
-        <Button
+        {/* <Button
           size="middle"
           danger
           className="action-bar-btn delete-btn"
@@ -105,7 +105,7 @@ const VideoActionBar: React.FC<VideoActionBarProps> = ({
             background: "rgba(40,40,40,0.85)",
             border: "none",
           }}
-        />
+        /> */}
       </Space>
     </div>
   );
