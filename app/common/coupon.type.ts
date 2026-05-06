@@ -35,6 +35,7 @@ export interface ICouponCodeUsage {
   updatedAt: string | Date;
   couponCodeId: string;
   couponCode?: ICouponCode;
+  remainCredit: number;
 }
 
 export interface IUseCouponCodeDto {

@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useMemo, useState, type FC } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FC,
+} from "react";
 import { useForm } from "antd/es/form/Form";
 import {
   Avatar,
@@ -58,6 +64,8 @@ import DashboardCustomTab from "./components/customtab";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import RedeemCouponModal from "./components/redeem-coupon-modal";
 import CouponService from "@/app/services/coupon.service";
+import CreditBalanceServices from "@/app/services/credit-balance.service";
+import { ICouponCodeUsage } from "@/app/common/coupon.type";
 
 type QuotaOverride = {
   limitCredit: number;
@@ -70,9 +78,12 @@ const DashboardPage: FC = () => {
   const { token } = theme.useToken();
   const organizationId = session?.user?.organizationId;
   const dashboardServices = useMemo(() => DashboardServices(axiosReport), []);
-    const couponService = useMemo(() => CouponService(axiosUser), []);
+  const couponService = useMemo(() => CouponService(axiosUser), []);
+  const creditBalanceServices = useMemo(
+    () => CreditBalanceServices(axiosUser),
+    [],
+  );
 
-  
   const projectServices = useMemo(() => ProjectService(axiosCore), []);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -90,7 +101,7 @@ const DashboardPage: FC = () => {
     projectId: string;
     createdAt: Date | string;
   }>({ projectId: "", createdAt: dayjs().format("YYYY-MM") });
-    const [modal, contextHolder] = Modal.useModal();
+  const [modal, contextHolder] = Modal.useModal();
 
   const [activeTab, setActiveTab] = useState("overview");
   const [userSearch, setUserSearch] = useState("");
@@ -123,10 +134,15 @@ const DashboardPage: FC = () => {
   const [generatedByType, setGeneratedCreditByType] =
     useState<IDashboardGeneratedPerMonthAndType>();
 
-  
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [redeemCouponForm] = Form.useForm();
   const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
+  const [onTopCreditBalance, setOnTopCreditBalance] = useState<number>(0);
+  const [couponCodeUsage, setCouponCodeUsage] = useState<{
+    data: ICouponCodeUsage[];
+    total: number;
+  }>({ data: [], total: 0 });
+
   useEffect(() => {
     if (!organizationId || !session?.user?.id) return;
 
@@ -215,6 +231,48 @@ const DashboardPage: FC = () => {
       setGeneratedCreditByType(generatedThisMonth);
     }
   };
+
+  const fetchRedeemCoupon = async () => {
+    if (!organizationId || !session?.user?.id) return;
+
+    const creditBalance = await creditBalanceServices.findByOrganizationId(
+      organizationId || "",
+    );
+    const couponCodeUsage = await couponService.findUsageManyByOrganizationId(
+      organizationId || "",
+    );
+    setOnTopCreditBalance(creditBalance?.onTopBalance || 0);
+    setCouponCodeUsage(couponCodeUsage || { data: [], total: 0 });
+  };
+
+  useEffect(() => {
+    if (!organizationId || !session?.user?.id) return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const resProjects = await projectServices.findByOrganizationId(
+          organizationId,
+          session.user.id,
+          {},
+        );
+        setProjects(resProjects || []);
+        await fetchOverview();
+        await fetchAnalytics();
+        await fetchRedeemCoupon();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [
+    dashboardServices,
+    organizationId,
+    params,
+    projectServices,
+    session?.user?.id,
+  ]);
   const userRows = useMemo<DashboardUserRow[]>(() => {
     const memberMap = new Map<string, DashboardUserRow>();
     projects.forEach((project) => {
@@ -669,11 +727,12 @@ const DashboardPage: FC = () => {
       </div>
     );
   }
-  const showRedeemCouponModal = () => {
+  const showRedeemCouponModal = async () => {
+    await fetchRedeemCoupon();
     setRedeemCouponOpen(true);
   };
 
-   const handleRedeemCouponSubmit = async (values: { couponCode: string }) => {
+  const handleRedeemCouponSubmit = async (values: { couponCode: string }) => {
     const organizationId = session?.user?.organizationId;
     const userId = session?.user?.userId;
 
@@ -697,10 +756,11 @@ const DashboardPage: FC = () => {
         title: "Success",
         content: "Coupon applied successfully!",
       });
+      await fetchRedeemCoupon();
 
       redeemCouponForm.resetFields();
       setRedeemCouponOpen(false);
-      // window.location.reload();
+      window.location.reload();
     } catch (error: any) {
       const errorMessage = Array.isArray(error?.response?.data?.message)
         ? error.response.data.message.join(", ")
@@ -714,7 +774,7 @@ const DashboardPage: FC = () => {
       setConfirmLoading(false);
     }
   };
-    
+
   const handleRedeemCouponOk = () => {
     redeemCouponForm.submit();
   };
@@ -938,6 +998,9 @@ const DashboardPage: FC = () => {
         )}
       </Modal>
       <RedeemCouponModal
+        onTopCreditBalance={onTopCreditBalance}
+        couponCodeUsage={couponCodeUsage}
+        
         open={redeemCouponOpen}
         form={redeemCouponForm}
         handleOk={handleRedeemCouponOk}

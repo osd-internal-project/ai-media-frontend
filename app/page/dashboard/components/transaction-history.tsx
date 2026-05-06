@@ -11,9 +11,7 @@ import {
   List,
   Skeleton,
 } from "antd";
-import {
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -30,6 +28,8 @@ import {
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ICouponCodeUsage } from "@/app/common/coupon.type";
+import { formatNumber } from "@/app/utils/format";
 
 const { Text, Title } = Typography;
 
@@ -58,9 +58,13 @@ type CreditTransaction = {
 
 type TransactionHistoryProps = {
   size?: "default" | "compact";
+  couponCodeUsage: { data: ICouponCodeUsage[]; total: number };
 };
 
-export default function TransactionHistory({ size = "default" }: TransactionHistoryProps) {
+export default function TransactionHistory({
+  size = "default",
+  couponCodeUsage,
+}: TransactionHistoryProps) {
   const { mode } = useThemeMode();
   const { isMobile } = useResponsive();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -69,6 +73,7 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
   const pageSize = isCompact ? 4 : 8;
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoadingExport, setIsLoadingExport] = useState(false);
 
   const now = new Date("2026-04-01");
   const colorPrimary = semantic.colorPrimary ?? aiCaveColors.primary;
@@ -82,55 +87,71 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
     return date.toISOString();
   }
 
-  const mockCreditTransactions: CreditTransaction[] = [
-    { id: "tx1", type: "topup_coupon", amount: 500, balanceAfter: 3250, description: "Coupon: TRIAL2026", timestamp: daysAgo(30), couponCode: "TRIAL2026" },
-    { id: "tx2", type: "topup_purchase", amount: 2000, balanceAfter: 5250, description: "Purchase - Pro Plan (Mar)", timestamp: daysAgo(29) },
-    { id: "tx3", type: "generation_image", amount: -5, balanceAfter: 5245, description: "Image gen x 1 - ATOM PROJECT", timestamp: daysAgo(28), projectName: "ATOM PROJECT", generationType: "image" },
-    { id: "tx4", type: "generation_image", amount: -25, balanceAfter: 5220, description: "Image gen x 5 - OSD DEMO", timestamp: daysAgo(27), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx5", type: "generation_video", amount: -80, balanceAfter: 5140, description: "Video gen x 2 - Demo_KTC", timestamp: daysAgo(25), projectName: "Demo_KTC", generationType: "video" },
-    { id: "tx6", type: "generation_omnihuman", amount: -120, balanceAfter: 5020, description: "OmniHuman - ATOM PROJECT", timestamp: daysAgo(22), projectName: "ATOM PROJECT", generationType: "omnihuman" },
-    { id: "tx7", type: "generation_image", amount: -30, balanceAfter: 4990, description: "Image gen x 6 - OSD DEMO", timestamp: daysAgo(20), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx8", type: "admin_grant", amount: 200, balanceAfter: 5190, description: "Admin grant - Q1 bonus", timestamp: daysAgo(18) },
-    { id: "tx9", type: "generation_dreamactor", amount: -150, balanceAfter: 5040, description: "DreamActor - Demo_KTC", timestamp: daysAgo(15), projectName: "Demo_KTC", generationType: "dreamactor" },
-    { id: "tx10", type: "generation_image", amount: -15, balanceAfter: 5025, description: "Image gen x 3 - ATOM PROJECT", timestamp: daysAgo(12), projectName: "ATOM PROJECT", generationType: "image" },
-    { id: "tx11", type: "topup_coupon", amount: 300, balanceAfter: 5325, description: "Coupon: PROMO500", timestamp: daysAgo(10), couponCode: "PROMO500" },
-    { id: "tx12", type: "generation_video", amount: -40, balanceAfter: 5285, description: "Video gen x 1 - ATOM PROJECT", timestamp: daysAgo(8), projectName: "ATOM PROJECT", generationType: "video" },
-    { id: "tx13", type: "generation_image", amount: -20, balanceAfter: 5265, description: "Image gen x 4 - OSD DEMO", timestamp: daysAgo(6), projectName: "OSD DEMO Test", generationType: "image" },
-    { id: "tx14", type: "generation_omnihuman", amount: -120, balanceAfter: 5145, description: "OmniHuman - ATOM PROJECT", timestamp: daysAgo(4), projectName: "ATOM PROJECT", generationType: "omnihuman" },
-    { id: "tx15", type: "generation_image", amount: -10, balanceAfter: 5135, description: "Image gen x 2 - Demo_KTC", timestamp: daysAgo(2), projectName: "Demo_KTC", generationType: "image" },
-    { id: "tx16", type: "generation_video", amount: -40, balanceAfter: 5095, description: "Video gen x 1 - OSD DEMO", timestamp: daysAgo(1), projectName: "OSD DEMO Test", generationType: "video" },
-    { id: "tx17", type: "generation_image", amount: -5, balanceAfter: 5090, description: "Image gen x 1 - ATOM PROJECT", timestamp: daysAgo(0), projectName: "ATOM PROJECT", generationType: "image" },
-  ];
-
   const TYPE_CONFIG: Record<
     TransactionType,
     { label: string; icon: React.ReactNode; color: string }
   > = {
-    generation_image: { label: "Image", icon: <ImageIcon size={14} />, color: colorPrimary },
-    generation_video: { label: "Video", icon: <Video size={14} />, color: aiCaveColors.secondary },
-    generation_omnihuman: { label: "OmniHuman", icon: <Mic2 size={14} />, color: aiCaveColors.warning },
-    generation_dreamactor: { label: "DreamActor", icon: <Film size={14} />, color: aiCaveColors.dreamActor },
-    topup_coupon: { label: "Coupon", icon: <Ticket size={14} />, color: colorSuccess },
-    topup_purchase: { label: "Purchase", icon: <CreditCard size={14} />, color: colorInfo },
-    admin_grant: { label: "Admin Grant", icon: <Zap size={14} />, color: aiCaveColors.warning },
-    refund: { label: "Refund", icon: <TrendingUp size={14} />, color: colorSuccess },
-    expiry: { label: "Expiry", icon: <AlertTriangle size={14} />, color: colorError },
+    generation_image: {
+      label: "Image",
+      icon: <ImageIcon size={14} />,
+      color: colorPrimary,
+    },
+    generation_video: {
+      label: "Video",
+      icon: <Video size={14} />,
+      color: aiCaveColors.secondary,
+    },
+    generation_omnihuman: {
+      label: "OmniHuman",
+      icon: <Mic2 size={14} />,
+      color: aiCaveColors.warning,
+    },
+    generation_dreamactor: {
+      label: "DreamActor",
+      icon: <Film size={14} />,
+      color: aiCaveColors.dreamActor,
+    },
+    topup_coupon: {
+      label: "Coupon",
+      icon: <Ticket size={14} />,
+      color: colorSuccess,
+    },
+    topup_purchase: {
+      label: "Purchase",
+      icon: <CreditCard size={14} />,
+      color: colorInfo,
+    },
+    admin_grant: {
+      label: "Admin Grant",
+      icon: <Zap size={14} />,
+      color: aiCaveColors.warning,
+    },
+    refund: {
+      label: "Refund",
+      icon: <TrendingUp size={14} />,
+      color: colorSuccess,
+    },
+    expiry: {
+      label: "Expiry",
+      icon: <AlertTriangle size={14} />,
+      color: colorError,
+    },
   };
 
-  const filteredData = useMemo(() => {
-    if (filterType === "allType") return mockCreditTransactions;
-    if (filterType === "generations") {
-      return mockCreditTransactions.filter((item) => item.type.startsWith("generation_"));
-    }
-    if (filterType === "topUps") {
-      return mockCreditTransactions.filter(
-        (item) => item.type === "topup_coupon" || item.type === "topup_purchase",
-      );
-    }
-    return mockCreditTransactions.filter((item) => item.type === "admin_grant");
-  }, [filterType]);
+  // const filteredData = useMemo(() => {
+  //   if (filterType === "allType") return mockCreditTransactions;
+  //   if (filterType === "generations") {
+  //     return mockCreditTransactions.filter((item) => item.type.startsWith("generation_"));
+  //   }
+  //   if (filterType === "topUps") {
+  //     return mockCreditTransactions.filter(
+  //       (item) => item.type === "topup_coupon" || item.type === "topup_purchase",
+  //     );
+  //   }
+  //   return mockCreditTransactions.filter((item) => item.type === "admin_grant");
+  // }, [filterType]);
 
-  const visibleData = filteredData.slice(0, visibleCount);
+  // const visibleData = filteredData.slice(0, visibleCount);
 
   const handleChange = (value: string) => {
     setFilterType(value);
@@ -138,10 +159,12 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
   };
 
   const loadMoreData = () => {
-    if (isLoadingMore || visibleCount >= filteredData.length) return;
+    if (isLoadingMore || visibleCount >= couponCodeUsage.data.length) return;
     setIsLoadingMore(true);
     setTimeout(() => {
-      setVisibleCount((prev) => Math.min(prev + pageSize, filteredData.length));
+      setVisibleCount((prev) =>
+        Math.min(prev + pageSize, couponCodeUsage.data.length),
+      );
       setIsLoadingMore(false);
     }, 250);
   };
@@ -157,7 +180,41 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
     }
   };
 
-  const formatDate = (value: string) =>
+  const exportToExcel = () => {
+    try {
+      setIsLoadingExport(true);
+      const headers = ["Code", "Date", "Increase Credit", "Credit Balance"];
+      const rows = couponCodeUsage.data.map((item) => [
+        item.couponCode?.code ?? "",
+        item.usedAt ? new Date(item.usedAt).toLocaleString("en-GB") : "",
+        item.onTopCredit ?? 0,
+        item.remainCredit ?? 0,
+      ]);
+
+      const csvContent = [headers, ...rows]
+        .map((row) =>
+          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+        )
+        .join("\n");
+
+      // UTF-8 BOM so Excel recognises encoding correctly
+      const blob = new Blob(["\uFEFF" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `coupon-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setIsLoadingExport(false);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      setIsLoadingExport(false);
+    }
+  };
+
+  const formatDate = (value: string | Date) =>
     new Date(value).toLocaleString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -173,11 +230,12 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
         <Space direction="horizontal" size={8}>
           <History size={18} />
           Transaction History
-          <Tag>{filteredData.length}</Tag>
-          </Space>}
+          <Tag>{couponCodeUsage.total}</Tag>
+        </Space>
+      }
       extra={
         <Space>
-          <Select
+          {/* <Select
             defaultValue="allType"
             style={{ width: isCompact ? 124 : 150 }}
             onChange={handleChange}
@@ -187,15 +245,22 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
               { value: "topUps", label: "Top-ups" },
               { value: "adminGrant", label: "Admin Grant" },
             ]}
+          /> */}
+          <Button
+            type="text"
+            shape="circle"
+            icon={<DownloadOutlined />}
+            disabled={couponCodeUsage.total === 0}
+            onClick={exportToExcel}
+            loading={isLoadingExport}
           />
-          <Button type="text" shape="circle" icon={<DownloadOutlined />} />
         </Space>
       }
       style={{
         borderRadius: 22,
         border: `1px solid ${semantic.colorBorder}`,
         background: semantic.colorBgContainer,
-        height: isCompact ? (isMobile ? 380 : 430) : (isMobile ? 480 : 560),
+        height: isCompact ? (isMobile ? 380 : 430) : isMobile ? 480 : 560,
         overflow: "hidden",
         boxShadow:
           mode === "dark"
@@ -204,7 +269,7 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
       }}
       styles={{
         body: {
-          padding: isCompact ? (isMobile ? 14 : 16) : (isMobile ? 18 : 24),
+          padding: isCompact ? (isMobile ? 14 : 16) : isMobile ? 18 : 24,
           display: "flex",
           flexDirection: "column",
         },
@@ -213,7 +278,7 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
       <div
         id="credit-transaction-scroll"
         style={{
-          height: isCompact ? (isMobile ? 255 : 285) : (isMobile ? 340 : 410),
+          height: isCompact ? (isMobile ? 255 : 285) : isMobile ? 340 : 410,
           overflowY: "auto",
           overflowX: "hidden",
         }}
@@ -221,13 +286,14 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
       >
         <List
           itemLayout="horizontal"
-          dataSource={visibleData}
+          dataSource={couponCodeUsage.data || []}
           renderItem={(item) => {
-            const typeConfig = TYPE_CONFIG[item.type];
-            const amountColor = item.amount > 0 ? colorSuccess : colorError;
-            const title = item.projectName
-              ? `${typeConfig.label} - ${item.projectName}`
-              : typeConfig.label;
+            // const typeConfig = TYPE_CONFIG[item.type];
+            const amountColor =
+              item.onTopCredit > 0 ? colorSuccess : colorError;
+            // const title = item.projectName
+            //   ? `${typeConfig.label} - ${item.projectName}`
+            //   : typeConfig.label;
 
             return (
               <List.Item style={{ width: "100%", alignItems: "flex-start" }}>
@@ -235,14 +301,14 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
                   style={{ minWidth: 0, flex: 1, marginRight: 12 }}
                   avatar={
                     <Avatar
-                      size={36}
+                      size={25}
                       style={{
-                        background: `${typeConfig.color}22`,
-                        color: typeConfig.color,
-                        border: `1px solid ${typeConfig.color}55`,
+                        background: colorSuccess,
+                        color: colorInfo,
+                        border: `1px solid `,
                       }}
                     >
-                      {typeConfig.icon}
+                      <Ticket size={20} />
                     </Avatar>
                   }
                   title={
@@ -254,23 +320,42 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
                         fontSize: isCompact ? 11 : 12,
                         lineHeight: 1.3,
                       }}
-                      ellipsis={{ tooltip: title }}
+                      ellipsis={{ tooltip: item.couponCode?.code || "" }}
                     >
-                      {title}
+                      {item.couponCode?.code || ""}
                     </Text>
                   }
                   description={
-                    <Text style={{ fontSize: isCompact ? 9 : 10,}} type="secondary" ellipsis={{ tooltip: `${formatDate(item.timestamp)} | ${item.description}` }}>
-                      {formatDate(item.timestamp)} | {item.description}
+                    <Text
+                      style={{ fontSize: isCompact ? 9 : 10 }}
+                      type="secondary"
+                      ellipsis={{
+                        tooltip: `${formatDate(item.usedAt || "")}`,
+                      }}
+                    >
+                      {formatDate(item.usedAt || "")}
                     </Text>
                   }
                 />
-                <div style={{ flexShrink: 0, paddingRight: 8}}>
+                <div style={{ flexShrink: 0, paddingRight: 8 }}>
                   <Space direction="vertical" align="end" size={2}>
-                    <Text style={{ color: amountColor, fontSize: isCompact ? 11 : 12,  }}>
-                      {item.amount > 0 ? `+${item.amount}` : item.amount} cr
+                    <Text
+                      style={{
+                        color: amountColor,
+                        fontSize: isCompact ? 11 : 12,
+                      }}
+                    >
+                      {item.onTopCredit > 0
+                        ? `+${formatNumber(item.onTopCredit)}`
+                        : "-"}{" "}
+                      cr
                     </Text>
-                    <Text style={{fontSize: isCompact ? 9 : 10,}} type="secondary">{item.balanceAfter} bal</Text>
+                    <Text
+                      style={{ fontSize: isCompact ? 9 : 10 }}
+                      type="secondary"
+                    >
+                      {formatNumber(item.remainCredit)} bal
+                    </Text>
                   </Space>
                 </div>
               </List.Item>
@@ -278,9 +363,9 @@ export default function TransactionHistory({ size = "default" }: TransactionHist
           }}
         />
         {isLoadingMore && <Skeleton avatar paragraph={{ rows: 1 }} active />}
-        {!isLoadingMore && visibleData.length >= filteredData.length && (
+        {/* {!isLoadingMore && visibleData.length >= filteredData.length && (
           <Divider plain>No more transactions</Divider>
-        )}
+        )} */}
       </div>
     </Card>
   );
