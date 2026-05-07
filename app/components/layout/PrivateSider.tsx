@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Layout, Menu, Image as AntdImage, Button } from "antd";
 import { MenuFoldOutlined } from "@ant-design/icons";
 import { MenuSider, renderMenuItems } from "@/app/config/menu";
@@ -16,6 +16,7 @@ interface PrivateSiderProps {
   mappedPath: string;
   currentPathSub: string;
   organizationRole: string;
+  systemRole?: string;
   onClose?: () => void;
 }
 
@@ -24,16 +25,48 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   mappedPath,
   currentPathSub,
   organizationRole,
+  systemRole,
   onClose,
 }) => {
-
-  const selectedKeys = useMemo(() => {
-    return [`${mappedPath}/${currentPathSub}`];
-  }, [mappedPath, currentPathSub]);
-
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile, isTablet } = useResponsive();
+  const isSuperAdmin = systemRole === "SUPER_ADMIN";
+  const adminHref = "/page/admin-management";
+  const adminMenuItems = [
+    {
+      key: "admin-management",
+      style: { height: "auto", padding: 0 },
+      label: (
+        <Link
+          href={adminHref}
+          onClick={onClose}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            lineHeight: "normal",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "24px",
+              marginBottom: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            className="menu-icon-container"
+          >
+            <ShieldCheck />
+          </div>
+          <div className="text-center menu-text-label text-[12px]">Admin</div>
+        </Link>
+      ),
+    },
+  ];
 
   return (
     <Sider
@@ -82,7 +115,14 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
-            paddingBottom: isMobile && onClose ? 72 : 0,
+            paddingBottom:
+              isMobile || isTablet
+                ? isSuperAdmin && onClose
+                  ? 132
+                  : isSuperAdmin || onClose
+                    ? 72
+                    : 0
+                : 0,
           }}
         >
           <Menu
@@ -94,39 +134,10 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             items={renderMenuItems(MenuSider, organizationRole)}
             className="osd-menu-padding"
           /> 
-          {/* {organizationRole === "SUPER_ADMIN" && ( */}
-            {/* <Link
-              href={`/page/admin-management`}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                lineHeight: "normal",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "24px",
-                  marginBottom: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                className="menu-icon-container"
-              >
-                <ShieldCheck />
-              </div>
-              <div className="text-center menu-text-label text-[10px]">
-                Admin
-              </div>
-            </Link> */}
-          {/* )} */}
         </div>
       )}
 
-      {(isMobile || isTablet) && onClose ? (
+      {isSuperAdmin || ((isMobile || isTablet) && onClose) ? (
         <div
           style={{
             position: "absolute",
@@ -134,30 +145,44 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             right: 0,
             bottom: 0,
             width: "100%",
-            padding: "12px 0 16px",
+            padding: isSuperAdmin && (isMobile || isTablet) && onClose ? "12px 0 16px" : "8px",
             display: "flex",
-            justifyContent: "center",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 12,
             background: semantic.colorBgContainer,
+            borderTop: `1px solid ${semantic.colorBorder}`,
           }}
         >
-          <Button
-            className="private-sider-close-btn"
-            type="text"
-            onClick={onClose}
-            icon={
-              <MenuFoldOutlined style={{ color: semantic.colorTextBase }} />
-            }
-            style={{
-              width: 36,
-              height: 36,
-              padding: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: `1px solid ${semantic.colorBorder}`,
-              borderRadius: 8,
-            }}
-          />
+          {isSuperAdmin ? (
+            <Menu
+              selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
+              items={adminMenuItems}
+              className="osd-menu-padding"
+              style={{ width: "100%" }}
+            />
+          ) : null}
+
+          {(isMobile || isTablet) && onClose ? (
+            <Button
+              className="private-sider-close-btn"
+              type="text"
+              onClick={onClose}
+              icon={
+                <MenuFoldOutlined style={{ color: semantic.colorTextBase }} />
+              }
+              style={{
+                width: 36,
+                height: 36,
+                padding: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: `1px solid ${semantic.colorBorder}`,
+                borderRadius: 8,
+              }}
+            />
+          ) : null}
         </div>
       ) : null}
     </Sider>

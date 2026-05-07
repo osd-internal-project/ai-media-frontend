@@ -480,6 +480,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             mappedPath={mappedPath}
             currentPathSub={currentPathSub}
             organizationRole={organizationRole}
+            systemRole={session?.user?.systemRole ?? undefined}
           />
         ) : null}
 
@@ -523,6 +524,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 mappedPath={mappedPath}
                 currentPathSub={currentPathSub}
                 organizationRole={organizationRole}
+                systemRole={session?.user?.systemRole ?? undefined}
                 onClose={() => setMobileSiderOpen(false)}
               />
             </div>
