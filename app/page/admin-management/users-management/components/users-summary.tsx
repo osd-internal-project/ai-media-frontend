@@ -8,7 +8,7 @@ export interface props {
 
 export const UsersSummaryPage: FC<props> = ({ getSummary }): ReactElement => {
   return (
-    <div className="grid grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Card styles={{body:{padding: "8px 16px"}}}>
         <div className="grid grid-cols-2 justify-between">
           <div className="col col-span-1 text-[16px] text-[#9B9C9E]">{`Total Users`}</div>

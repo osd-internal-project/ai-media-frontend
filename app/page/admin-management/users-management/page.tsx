@@ -8,6 +8,7 @@ import {
   Button,
   Form,
   message,
+  Pagination,
   Popconfirm,
   Space,
   Spin,
@@ -40,6 +41,8 @@ const AdminUsersManagementPage = () => {
   });
   const [getdata, setData] = useState<TUser[]>([]);
   const [getGroups, setGroups] = useState<TGroup[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const [open, setOpen] = useState<{ status: boolean; type: string }>({
     status: false,
     type: "create",
@@ -82,6 +85,7 @@ const AdminUsersManagementPage = () => {
 
   const onSearch = (value: string) => {
     setSearchText(value);
+    setCurrentPage(1);
     setLoading(true);
   };
 
@@ -146,6 +150,41 @@ const AdminUsersManagementPage = () => {
     setLoading(true);
   };
 
+  const renderRoleTag = (role?: string) => {
+    if (!role) {
+      return "-";
+    }
+
+    if (role === "SUPER_ADMIN") {
+      return (
+        <Tag className="rounded-full px-3" color="orange">
+          Super Admin
+        </Tag>
+      );
+    }
+
+    if (role === "USER") {
+      return (
+        <Tag className="rounded-full px-3" color="blue">
+          User
+        </Tag>
+      );
+    }
+
+    return role;
+  };
+
+  const openEditUser = (record: TUser) => {
+    handleManage("edit");
+    const groups = record.groups?.map((g: any) => g.group.groupId) || [];
+    formmanage.setFieldsValue({ ...record, groups });
+  };
+
+  const paginatedData = getdata.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
   const columns: ColumnsType<TUser> = [
     {
       title: "Username/ID",
@@ -181,23 +220,7 @@ const AdminUsersManagementPage = () => {
       title: "Role",
       dataIndex: ["role"],
       key: "role",
-      render: (role: string) => {
-        if (!role) {
-          return "-";
-        } else if (role === "SUPER_ADMIN") {
-          return (
-            <Tag className={`rounded-full px-3  `} color="orange">
-              Super Admin
-            </Tag>
-          );
-        } else if (role === "USER") {
-          return (
-            <Tag className={`rounded-full px-3  `} color="blue">
-              User
-            </Tag>
-          );
-        }
-      },
+      render: (role: string) => renderRoleTag(role),
     },
 
     {
@@ -228,16 +251,11 @@ const AdminUsersManagementPage = () => {
       key: "id",
       render: (_, record) => {
         return (
-          <Space>
+          <Space wrap>
             <Button
               type="link"
               className="text-indigo-400 hover:text-indigo-300"
-              onClick={() => {
-                handleManage("edit");
-                const groups =
-                  record.groups?.map((g: any) => g.group.groupId) || [];
-                formmanage.setFieldsValue({ ...record, groups });
-              }}
+              onClick={() => openEditUser(record)}
             >
               Edit
             </Button>
@@ -273,17 +291,103 @@ const AdminUsersManagementPage = () => {
           groups={getGroups}
           search={searchText}
         />
-        <Table
-          columns={columns}
-          dataSource={getdata}
-          rowKey="userId"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-          }}
-          scroll={{ x: "max-content" }}
-          size="small"
-        />
+        <div className="hidden md:block">
+          <Table
+            columns={columns}
+            dataSource={getdata}
+            rowKey="userId"
+            pagination={{
+              current: currentPage,
+              pageSize,
+              total: getdata.length,
+              showSizeChanger: false,
+              onChange: (page) => setCurrentPage(page),
+            }}
+            scroll={{ x: "max-content" }}
+            size="small"
+          />
+        </div>
+        <div className="space-y-3 md:hidden">
+          {paginatedData.map((user) => (
+            <div
+              key={user.userId}
+              className="rounded-xl border border-white/10 bg-white/5 p-4"
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${aiCaveColors.primary} 0%, ${aiCaveColors.primary} 50%, ${aiCaveColors.secondary} 100%)`,
+                  }}
+                >
+                  <span className="text-sm font-bold text-white">
+                    {user.username.substring(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-medium text-white">
+                    {user.username}
+                  </div>
+                  <div className="truncate text-sm text-gray-400">
+                    {user.fullname || "-"}
+                  </div>
+                </div>
+                <Tag
+                  color={user.status === "active" ? "green" : "red"}
+                  className="rounded-full px-3"
+                >
+                  {user.status === "active" ? "Enabled" : "Unabled"}
+                </Tag>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <div className="text-gray-400">Role</div>
+                  <div className="mt-1">{renderRoleTag(user.role)}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400">Created</div>
+                  <div className="mt-1 text-white">{user.createdAt || "-"}</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <div className="text-gray-400">Description</div>
+                  <div className="mt-1 break-words text-white">
+                    {user.description || "-"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button type="link" className="px-0 text-indigo-400" onClick={() => openEditUser(user)}>
+                  Edit
+                </Button>
+                <Popconfirm
+                  title="Delete Role"
+                  description="Are you sure you want to delete this role?"
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={() => handleDelete(user.userId)}
+                >
+                  <Button danger type="link" className="px-0">
+                    Delete
+                  </Button>
+                </Popconfirm>
+              </div>
+            </div>
+          ))}
+          {getdata.length > pageSize ? (
+            <div className="flex justify-center pt-2">
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={getdata.length}
+                showSizeChanger={false}
+                size="small"
+                onChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          ) : null}
+        </div>
       </Spin>
     </div>
   );

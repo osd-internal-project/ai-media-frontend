@@ -32,6 +32,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile, isTablet } = useResponsive();
   const isSuperAdmin = systemRole === "SUPER_ADMIN";
+  const showMobileCloseButton = (isMobile || isTablet) && !!onClose;
   const adminHref = "/page/admin-management";
   const adminMenuItems = [
     {
@@ -117,9 +118,9 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             overflowX: "hidden",
             paddingBottom:
               isMobile || isTablet
-                ? isSuperAdmin && onClose
+                ? isSuperAdmin && showMobileCloseButton
                   ? 132
-                  : isSuperAdmin || onClose
+                  : isSuperAdmin || showMobileCloseButton
                     ? 72
                     : 0
                 : 0,
@@ -137,7 +138,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
         </div>
       )}
 
-      {isSuperAdmin || ((isMobile || isTablet) && onClose) ? (
+      {isSuperAdmin ? (
         <div
           style={{
             position: "absolute",
@@ -145,7 +146,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             right: 0,
             bottom: 0,
             width: "100%",
-            padding: isSuperAdmin && (isMobile || isTablet) && onClose ? "12px 0 16px" : "8px",
+            padding: showMobileCloseButton ? "12px 0 16px" : "8px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -154,16 +155,14 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             borderTop: `1px solid ${semantic.colorBorder}`,
           }}
         >
-          {isSuperAdmin ? (
-            <Menu
-              selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
-              items={adminMenuItems}
-              className="osd-menu-padding"
-              style={{ width: "100%" }}
-            />
-          ) : null}
+          <Menu
+            selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
+            items={adminMenuItems}
+            className="osd-menu-padding"
+            style={{ width: "100%" }}
+          />
 
-          {(isMobile || isTablet) && onClose ? (
+          {showMobileCloseButton ? (
             <Button
               className="private-sider-close-btn"
               type="text"
@@ -183,6 +182,39 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
               }}
             />
           ) : null}
+        </div>
+      ) : null}
+
+      {!isSuperAdmin && showMobileCloseButton ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "center",
+            background: semantic.colorBgContainer,
+          }}
+        >
+          <Button
+            className="private-sider-close-btn"
+            type="text"
+            onClick={onClose}
+            icon={<MenuFoldOutlined style={{ color: semantic.colorTextBase }} />}
+            style={{
+              width: 36,
+              height: 36,
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `1px solid ${semantic.colorBorder}`,
+              borderRadius: 8,
+            }}
+          />
         </div>
       ) : null}
     </Sider>

@@ -46,20 +46,19 @@ const UserFiltersPage: FC<props> = ({
   search,
 }): ReactElement => {
   return (
-    <div className=" p-4 rounded-lg mb-4">
-      <div className="flex items-center justify-between gap-2">
+    <div className="mb-4 rounded-lg p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Input
           placeholder="Search"
           prefix={<SearchOutlined className="text-gray-500" />}
-          className="w-10  text-white "
+          className="w-full text-white lg:max-w-sm"
           style={{
-       
             color: "white",
           }}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />
-        <Space>
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             icon={<ReloadOutlined />}
             className="!border-gray-700 !hover:bg-gray-700"
@@ -77,10 +76,11 @@ const UserFiltersPage: FC<props> = ({
             type="primary"
             icon={<PlusOutlined />}
             onClick={() => handleManage("create")}
+            className="w-full sm:w-auto"
           >
             Create New User
           </Button>
-        </Space>
+        </div>
       </div>
       {open.status === true ? (
         <Modal
@@ -89,6 +89,12 @@ const UserFiltersPage: FC<props> = ({
           onCancel={() => handleManage("close")}
           footer={false}
           width={1000}
+          styles={{
+            body: {
+              maxHeight: "calc(100vh - 180px)",
+              overflowY: "auto",
+            },
+          }}
           okText={open.type === "create" ? "Create" : "Update"}
         >
           <Form
