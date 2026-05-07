@@ -6,18 +6,18 @@ import CouponService from "@/app/services/coupon.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 
 interface Props {
-    visible: boolean;
+    open: boolean;
     onCancel: () => void;
     coupon: ICouponCode | null;
 }
 
-const UsageTableModal: React.FC<Props> = ({ visible, onCancel, coupon }) => {
+const UsageTableModal: React.FC<Props> = ({ open, onCancel, coupon }) => {
     const couponService = CouponService(axiosUser);
     const [usageData, setUsageData] = useState<ICouponCodeUsage[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (visible && coupon?.id) {
+        if (open && coupon?.id) {
             setLoading(true);
             couponService.findUsageByCouponCodeId(coupon.id)
                 .then((res) => {
@@ -25,7 +25,7 @@ const UsageTableModal: React.FC<Props> = ({ visible, onCancel, coupon }) => {
                 })
                 .finally(() => setLoading(false));
         }
-    }, [visible, coupon]);
+    }, [open, coupon]);
 
     const columns = [
         {
@@ -67,7 +67,7 @@ const UsageTableModal: React.FC<Props> = ({ visible, onCancel, coupon }) => {
     return (
         <Modal
             title={`Usage History - ${coupon?.code || ""}`}
-            visible={visible}
+            open={open}
             onCancel={onCancel}
             footer={null}
             width={800}

@@ -173,7 +173,7 @@ export default function CouponManagementPage() {
         />
 
         <CouponFormModal
-          visible={isModalOpen}
+          open={isModalOpen}
           onCancel={() => setIsModalOpen(false)}
           onConfirm={handleModalConfirm}
           initialValues={selectedCoupon || undefined}
@@ -181,13 +181,13 @@ export default function CouponManagementPage() {
           isEdit={isEdit}
         />
         <CouponGroupFormModal
-          visible={isGroupModalOpen}
+          open={isGroupModalOpen}
           onCancel={() => setIsGroupModalOpen(false)}
           onConfirm={handleGroupModalConfirm}
           loading={modalLoading}
         />
         <UsageTableModal
-          visible={isUsageModalOpen}
+          open={isUsageModalOpen}
           onCancel={() => setIsUsageModalOpen(false)}
           coupon={selectedCoupon}
         />

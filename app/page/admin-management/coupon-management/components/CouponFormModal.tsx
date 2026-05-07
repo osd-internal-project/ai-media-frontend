@@ -15,7 +15,7 @@ import dayjs from "dayjs";
 import { Dices } from "lucide-react";
 
 interface Props {
-  visible: boolean;
+  open: boolean;
   onCancel: () => void;
   onConfirm: (values: any) => void;
   initialValues?: ICouponCode;
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const CouponFormModal: React.FC<Props> = ({
-  visible,
+  open,
   onCancel,
   onConfirm,
   initialValues,
@@ -34,7 +34,7 @@ const CouponFormModal: React.FC<Props> = ({
   const [form] = Form.useForm();
 
   useEffect(() => {
-    if (visible) {
+    if (open) {
       if (initialValues) {
         form.setFieldsValue({
           ...initialValues,
@@ -46,7 +46,7 @@ const CouponFormModal: React.FC<Props> = ({
         form.resetFields();
       }
     }
-  }, [visible, initialValues, form]);
+  }, [open, initialValues, form]);
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -57,7 +57,7 @@ const CouponFormModal: React.FC<Props> = ({
   return (
     <Modal
       title={isEdit ? "Edit Coupon" : "Create Coupon"}
-      visible={visible}
+      open={open}
       onCancel={onCancel}
       onOk={handleSubmit}
       confirmLoading={loading}

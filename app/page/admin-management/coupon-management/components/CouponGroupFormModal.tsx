@@ -15,14 +15,14 @@ import dayjs from "dayjs";
 import { Dices } from "lucide-react";
 
 interface Props {
-  visible: boolean;
+  open: boolean;
   onCancel: () => void;
   onConfirm: (values: any) => void;
   loading: boolean;
 }
 
 const CouponGroupFormModal: React.FC<Props> = ({
-  visible,
+  open,
   onCancel,
   onConfirm,
   loading,
@@ -38,7 +38,7 @@ const CouponGroupFormModal: React.FC<Props> = ({
   return (
     <Modal
       title={"Create Coupon Group"}
-      visible={visible}
+      open={open}
       onCancel={onCancel}
       onOk={handleSubmit}
       confirmLoading={loading}
