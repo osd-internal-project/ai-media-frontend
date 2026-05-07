@@ -95,7 +95,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             className="osd-menu-padding"
           /> 
           {/* {organizationRole === "SUPER_ADMIN" && ( */}
-            <Link
+            {/* <Link
               href={`/page/admin-management`}
               style={{
                 display: "flex",
@@ -121,7 +121,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
               <div className="text-center menu-text-label text-[10px]">
                 Admin
               </div>
-            </Link>
+            </Link> */}
           {/* )} */}
         </div>
       )}

@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import * as fabric from "fabric";
-import { Button, Select, Tooltip, Divider } from "antd";
+import { Button, Select, Tooltip, Divider, Upload as AntdUpload } from "antd";
 import {
   Type,
   Download,
@@ -265,59 +265,56 @@ const EditorSpace = () => {
     }
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !fc.current) return;
+  const handleImport = (file: File) => {
+    if (!fc.current) return false;
 
-    Array.from(files).forEach((file) => {
-      const url = URL.createObjectURL(file);
-      const customId = Math.random().toString(36).substr(2, 9);
-      const newImage: ImportedImage = {
-        id: customId,
-        name: file.name,
-        url,
-      };
+    const url = URL.createObjectURL(file);
+    const customId = Math.random().toString(36).substr(2, 9);
+    const newImage: ImportedImage = {
+      id: customId,
+      name: file.name,
+      url,
+    };
 
-      setImages((prev) => [...prev, newImage]);
+    setImages((prev) => [...prev, newImage]);
 
-      const imgEl = new Image();
-      imgEl.onload = () => {
-        const canvas = fc.current!;
-        const logicalW = canvas.width! / canvas.getZoom();
-        const logicalH = canvas.height! / canvas.getZoom();
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const canvas = fc.current!;
+      const logicalW = canvas.width! / canvas.getZoom();
+      const logicalH = canvas.height! / canvas.getZoom();
 
-        const scale = Math.min(
-          1,
-          (logicalW * 0.8) / imgEl.width,
-          (logicalH * 0.8) / imgEl.height,
-        );
+      const scale = Math.min(
+        1,
+        (logicalW * 0.8) / imgEl.width,
+        (logicalH * 0.8) / imgEl.height,
+      );
 
-        const imgObj = new fabric.Image(imgEl, {
-          left: logicalW / 2,
-          top: logicalH / 2,
-          originX: "center",
-          originY: "center",
-          scaleX: scale,
-          scaleY: scale,
-          selectable: true,
-          evented: true,
-        });
-        (imgObj as any).set("customId", customId);
+      const imgObj = new fabric.Image(imgEl, {
+        left: logicalW / 2,
+        top: logicalH / 2,
+        originX: "center",
+        originY: "center",
+        scaleX: scale,
+        scaleY: scale,
+        selectable: true,
+        evented: true,
+      });
+      (imgObj as any).set("customId", customId);
 
-        canvas.add(imgObj);
-        canvas.setActiveObject(imgObj);
-        canvas.renderAll();
+      canvas.add(imgObj);
+      canvas.setActiveObject(imgObj);
+      canvas.renderAll();
 
-        setImages((prev) =>
-          prev.map((img) =>
-            img.id === customId ? { ...img, fabricObj: imgObj } : img,
-          ),
-        );
-      };
-      imgEl.src = url;
-    });
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === customId ? { ...img, fabricObj: imgObj } : img,
+        ),
+      );
+    };
+    imgEl.src = url;
 
-    e.target.value = "";
+    return false;
   };
 
   const deleteImageFromList = (id: string) => {
@@ -897,17 +894,17 @@ const EditorSpace = () => {
 
         <div className="flex-1" />
 
-        <label className="flex items-center justify-center gap-1 bg-white/5 hover:bg-white/10 text-slate-300 py-1.5 px-3 rounded-md cursor-pointer transition-colors border border-[#3c444d] text-sm mr-2">
-          <Upload size={14} />
-          Import
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            className="hidden"
-            onChange={handleImport}
-          />
-        </label>
+        <AntdUpload
+          multiple
+          accept="image/*"
+          showUploadList={false}
+          beforeUpload={handleImport}
+        >
+          <div className="flex items-center justify-center gap-1 bg-white/5 hover:bg-white/10 text-slate-300 py-1.5 px-3 rounded-md cursor-pointer transition-colors border border-[#3c444d] text-sm mr-2">
+            <Upload size={14} />
+            Import
+          </div>
+        </AntdUpload>
 
         <Button
           type="primary"
