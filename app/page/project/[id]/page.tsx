@@ -102,6 +102,8 @@ const GenerateImagePage: FC = () => {
     !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("omni"));
   const canAccessDream =
     !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("dream"));
+  const canAccessEditor =
+    !hasAccessControl || normalizedAccessCodes.some((c) => c.includes("editor"));
 
   useEffect(() => {
     const fetchProjectRole = async () => {
@@ -165,9 +167,7 @@ const GenerateImagePage: FC = () => {
     setAIModels(models || []);
   };
 
-  const onChangeTab = (
-    key: GenerateTabKey,
-  ) => {
+  const onChangeTab = (key: GenerateTabKey) => {
     setActiveKey(key);
 
     if (aiModels.length > 0) {
@@ -520,17 +520,25 @@ const GenerateImagePage: FC = () => {
                 />
               ),
             },
-            {
-              disabled: disableTab,
-              forceRender: true,
-              key: "editor",
-              label: renderTabLabel(
-                "editor",
-                "Editor",
-                <Paintbrush size={16} />,
-              ),
-              children: <div className="h-full w-full"><EditorSpace /></div>,
-            },
+            ...(canAccessEditor
+              ? [
+                  {
+                    disabled: disableTab,
+                    forceRender: true,
+                    key: "editor",
+                    label: renderTabLabel(
+                      "editor",
+                      "Editor",
+                      <Paintbrush size={16} />,
+                    ),
+                    children: (
+                      <div className="h-full w-full">
+                        <EditorSpace />
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
