@@ -7,7 +7,6 @@ import {
   PaletteIcon,
   BookTemplate,
   MessageSquare,
-  Zap,
 } from "lucide-react";
 
 export const MenuSider = [

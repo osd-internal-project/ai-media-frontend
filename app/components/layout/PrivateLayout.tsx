@@ -72,7 +72,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const organizationMemberService = OrganizationMembersServices(axiosUser);
   const creditฺBalanceService = CreditBalanceServices(axiosUser);
   const couponService = CouponService(axiosUser);
-  const projectService = ProjectService(axiosCore);
   const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<
     IOrganization | undefined

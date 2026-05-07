@@ -6,6 +6,8 @@ import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import "./LayoutStyle.css";
+import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 const { Sider } = Layout;
 
@@ -24,13 +26,14 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   organizationRole,
   onClose,
 }) => {
+
   const selectedKeys = useMemo(() => {
     return [`${mappedPath}/${currentPathSub}`];
   }, [mappedPath, currentPathSub]);
 
-    const { mode } = useThemeMode();
-    const semantic = getThemeConfig(mode).token ?? {};
-    const { isMobile, isTablet } = useResponsive();
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
+  const { isMobile, isTablet } = useResponsive();
 
   return (
     <Sider
@@ -50,7 +53,17 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
       }}
     >
       {/* Logo */}
-      <div className="private-sider-logo" style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "16px 0", flexShrink: 0 }}>
+      <div
+        className="private-sider-logo"
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "16px 0",
+          flexShrink: 0,
+        }}
+      >
         <AntdImage
           src="/images/logo-1.png"
           alt="OSD Logo"
@@ -73,17 +86,43 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           }}
         >
           <Menu
-            selectedKeys={[
-              mappedPath,
-              `${mappedPath}/${currentPathSub}`,
-            ]}
+            selectedKeys={[mappedPath, `${mappedPath}/${currentPathSub}`]}
             defaultSelectedKeys={[
               mappedPath,
               `${mappedPath}/${currentPathSub}`,
             ]}
             items={renderMenuItems(MenuSider, organizationRole)}
             className="osd-menu-padding"
-          />
+          /> 
+          {organizationRole === "SUPER_ADMIN" && (
+            <Link
+              href={`/page/admin-management`}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                lineHeight: "normal",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "24px",
+                  marginBottom: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                className="menu-icon-container"
+              >
+                <ShieldCheck />
+              </div>
+              <div className="text-center menu-text-label text-[10px]">
+                Admin
+              </div>
+            </Link>
+          )}
         </div>
       )}
 
@@ -105,7 +144,9 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             className="private-sider-close-btn"
             type="text"
             onClick={onClose}
-            icon={<MenuFoldOutlined style={{ color: semantic.colorTextBase }} />}
+            icon={
+              <MenuFoldOutlined style={{ color: semantic.colorTextBase }} />
+            }
             style={{
               width: 36,
               height: 36,
@@ -119,8 +160,6 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           />
         </div>
       ) : null}
-
-      
     </Sider>
   );
 };

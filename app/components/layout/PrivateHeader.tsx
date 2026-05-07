@@ -113,22 +113,22 @@ export function PrivateHeader({
       label: "Profile",
       onClick: () => router.push("/page/profile"),
     },
-    {
-      key: "coupon",
-      icon: <CreditCardOutlined />,
-      label: "Use Coupon",
-      onClick: handleOpenCouponModal,
-    },
-    ...(systemRole === "SUPER_ADMIN"
-      ? [
-          {
-            key: "admin",
-            icon: <SettingOutlined />,
-            label: "Admin Management",
-            onClick: () => router.push("/page/admin-management"),
-          },
-        ]
-      : []),
+    // {
+    //   key: "coupon",
+    //   icon: <CreditCardOutlined />,
+    //   label: "Use Coupon",
+    //   onClick: handleOpenCouponModal,
+    // },
+    // ...(systemRole === "SUPER_ADMIN"
+    //   ? [
+    //       {
+    //         key: "admin",
+    //         icon: <SettingOutlined />,
+    //         label: "Admin Management",
+    //         onClick: () => router.push("/page/admin-management"),
+    //       },
+    //     ]
+    //   : []),
     { type: "divider" as const },
     {
       key: "logout",
