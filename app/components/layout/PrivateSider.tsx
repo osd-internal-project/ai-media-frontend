@@ -94,7 +94,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             items={renderMenuItems(MenuSider, organizationRole)}
             className="osd-menu-padding"
           /> 
-          {organizationRole === "SUPER_ADMIN" && (
+          {/* {organizationRole === "SUPER_ADMIN" && ( */}
             <Link
               href={`/page/admin-management`}
               style={{
@@ -122,7 +122,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
                 Admin
               </div>
             </Link>
-          )}
+          {/* )} */}
         </div>
       )}
 
