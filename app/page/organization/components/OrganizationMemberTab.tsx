@@ -23,6 +23,7 @@ import CreditBalanceServices from "@/app/services/credit-balance.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { canManageMembers } from "@/app/utils/permissions";
 import { useOrganization } from "@/app/context/OrganizationContext";
+import SectionEmptyState from "./SectionEmptyState";
 
 interface OrganizationMemberTabProps {
   organizationId: string;
@@ -211,11 +212,14 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
     },
   ];
 
+  const getUserById = (userId: string) =>
+    availableUsers.find((user) => user.userId === userId);
+
   return (
     <div className="space-y-4">
       {contextHolder}
       {canManage && (
-        <div className="flex justify-end space-x-2 mb-4">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:gap-0">
           {/* <Button
             type="primary"
             icon={<PlusCircleOutlined className="text-orange-500" />}
@@ -223,19 +227,113 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
           >
             Add Extra
           </Button> */}
-          <Button type="primary" onClick={handleInvite}>
+          <Button type="primary" onClick={handleInvite} className="w-full sm:w-auto">
             Invite User
           </Button>
         </div>
       )}
 
-      <Table
-        dataSource={members}
-        columns={columns}
-        rowKey="id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
+      <div className="hidden md:block">
+        <Table
+          dataSource={members}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: "max-content" }}
+          locale={{
+            emptyText: (
+              <SectionEmptyState
+                title="No members found"
+                description="Invite users to start collaborating in this organization."
+                className="border-0 bg-transparent px-0 py-6"
+              />
+            ),
+          }}
+        />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {members.length === 0 ? (
+          <SectionEmptyState
+            title="No members found"
+            description="Invite users to start collaborating in this organization."
+          />
+        ) : (
+          members.map((member) => {
+            const user = getUserById(member.userId);
+
+            return (
+              <div
+                key={member.id}
+                className="rounded-xl border border-white/10 bg-white/5 p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="shrink-0">{user?.fullname?.[0] || "U"}</Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-white">
+                      {user?.fullname || member.userId}
+                    </div>
+                    <div className="truncate text-sm text-gray-400">
+                      {member?.users?.email || "-"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <div className="text-gray-400">Status</div>
+                    <div className="mt-1">
+                      <Tag
+                        color={member?.users?.status === "active" ? "green" : "red"}
+                        className="rounded-full px-3"
+                      >
+                        {member?.users?.status === "active" ? "Enabled" : "Disabled"}
+                      </Tag>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400">Role</div>
+                    <div className="mt-1">
+                      <Tag color={member.role === "OWNER" ? "gold" : "blue"}>
+                        {member.role}
+                      </Tag>
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-gray-400">Joined At</div>
+                    <div className="mt-1 text-white">
+                      {member.joinedAt
+                        ? new Date(member.joinedAt).toLocaleDateString()
+                        : "-"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {canManage ? (
+                    <>
+                      <Button type="link" className="px-0" onClick={() => handleEditMember(member)}>
+                        Edit
+                      </Button>
+                      <Popconfirm
+                        title="Remove Member?"
+                        onConfirm={() => handleRemoveMember(member.id)}
+                      >
+                        <Button type="link" danger className="px-0">
+                          Remove
+                        </Button>
+                      </Popconfirm>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-400">View only</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       {/* Edit Member Modal */}
       <Modal
@@ -243,6 +341,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         open={isEditMemberModalOpen}
         onCancel={() => setIsEditMemberModalOpen(false)}
         onOk={() => editMemberForm.submit()}
+        width={600}
       >
         <Form form={editMemberForm} onFinish={onEditMemberFinish} layout="vertical">
           <Form.Item name="role" label="Role" rules={[{ required: true }]}>
@@ -266,10 +365,16 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         onCancel={() => setIsInviteModalOpen(false)}
         footer={null}
         width={600}
+        styles={{
+          body: {
+            maxHeight: "calc(100vh - 180px)",
+            overflowY: "auto",
+          },
+        }}
       >
         <div className="pt-4">
           <Form form={inviteForm} onFinish={onInviteFinish} layout="vertical">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Form.Item
                 name="email"
                 label="Email"
@@ -293,7 +398,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                 </Select>
               </Form.Item>
             </div>
-            <div className="flex justify-end space-x-2 pt-4 border-t">
+            <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end sm:space-x-2 sm:gap-0">
               <Button onClick={() => setIsInviteModalOpen(false)}>Cancel</Button>
               <Button type="primary" htmlType="submit">
                 Confirm
@@ -309,6 +414,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         open={isExtraCoinModalOpen}
         onCancel={() => setIsExtraCoinModalOpen(false)}
         onOk={() => extraCoinForm.submit()}
+        width={600}
       >
         <Form form={extraCoinForm} onFinish={onExtraCoinFinish} layout="vertical" className="pt-4">
           <Form.Item name="onTopBalance" label="On Top Balance">

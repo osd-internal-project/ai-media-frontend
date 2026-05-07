@@ -24,6 +24,8 @@ import { canEditOrganization } from "@/app/utils/permissions";
 import { useSession } from "next-auth/react";
 import OrganizationMemberTab from "./components/OrganizationMemberTab";
 import OrganizationPackageTab from "./components/OrganizationPackageTab";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 
 export default function OrganizationDetailPage() {
   const { data: session } = useSession();
@@ -34,6 +36,8 @@ export default function OrganizationDetailPage() {
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
 
   // Forms
   const [editForm] = Form.useForm();
@@ -131,14 +135,26 @@ export default function OrganizationDetailPage() {
     },
   ];
 
+  const summaryCardStyle = {
+    borderRadius: 16,
+    overflow: "hidden" as const,
+  };
+
+  const summaryCardStyles = {
+    body: {
+      backgroundColor: semantic.colorBgContainer,
+      borderRadius: 16,
+    },
+  };
+
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-3 sm:p-4">
       {contextHolder}
       <div>
         <Card>
-          <div className="flex justify-between">
-            <div className="flex space-x-2">
-              <div className="font-bold text-xl">{organization?.name}</div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="break-words text-xl font-bold">{organization?.name}</div>
               <div>
                 {organization?.type === "team" ? (
                   <Tag color="orange">TEAM</Tag>
@@ -148,52 +164,52 @@ export default function OrganizationDetailPage() {
               </div>
             </div>
             {canEditOrganization(organizationRole) && (
-              <Button type="link" onClick={handleEdit}>
+              <Button type="link" onClick={handleEdit} className="self-start px-0 sm:px-4">
                 Edit
               </Button>
             )}
           </div>
-          <div>Created At: {organization?.createdAt}</div>
-          <div className="text-sm text-gray-500 min-h-4">
+          <div className="break-words text-sm sm:text-base">Created At: {organization?.createdAt}</div>
+          <div className="min-h-4 break-words text-sm text-gray-500">
             {organization?.description}
           </div>
         </Card>
       </div>
 
-      <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">Used Total Credit :</div>
-          <div className="flex">
-            <div className="text-xl">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card size="small" style={summaryCardStyle} styles={summaryCardStyles} className="h-full">
+          <div style={{ color: semantic.colorTextBase }} className="text-sm sm:text-base">Used Total Credit :</div>
+          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-2">
+            <div className="break-all text-lg sm:text-xl">
               {formatNumber(
                 (organization?.subscription?.creditAllowance || 0) -
                   (organization?.creditBalance?.currentCycleBalance || 0),
               )}
               / {formatNumber(organization?.subscription?.creditAllowance || 0)}
             </div>
-            <div className="text-xl text-green-500 ml-2">
+            <div className="text-base text-green-500 sm:ml-2 sm:text-xl">
               + {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
             </div>
           </div>
         </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">Used Total Image :</div>
-          <div className="flex">
-            <div className="text-xl">
+        <Card size="small" style={summaryCardStyle} styles={summaryCardStyles} className="h-full">
+          <div style={{ color: semantic.colorTextBase }} className="text-sm sm:text-base">Used Total Image :</div>
+          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-2">
+            <div className="break-all text-lg sm:text-xl">
               {formatNumber(
                 (organization?.subscription?.imageAllowance || 0) -
                   (organization?.creditBalance?.currentCycleImage || 0),
               )}
               / {formatNumber(organization?.subscription?.imageAllowance || 0)}
             </div>
-            <div className="text-xl text-purple-500 ml-2">
+            <div className="text-base text-purple-500 sm:ml-2 sm:text-xl">
               + {formatNumber(organization?.creditBalance?.onTopImage || 0)}
             </div>
           </div>
         </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">Total Users :</div>
-          <div className="text-xl">
+        <Card size="small" style={summaryCardStyle} styles={summaryCardStyles} className="h-full">
+          <div style={{ color: semantic.colorTextBase }} className="text-sm sm:text-base">Total Users :</div>
+          <div className="break-all text-lg sm:text-xl">
             {members.length || 0}/{organization?.maxUserAccess || 0}
           </div>
         </Card>
