@@ -544,7 +544,7 @@ export default function ChatVideoInput(props: Props) {
                     Enable Audio
                   </Button>
 
-                  <Button
+                  {/* <Button
                     onClick={() => setDraftMode(!draftMode)}
                     icon={draftMode ? <Check size={14} /> : undefined}
                     style={{
@@ -561,7 +561,7 @@ export default function ChatVideoInput(props: Props) {
                     }}
                   >
                     Draft mode
-                  </Button>
+                  </Button> */}
                 </Flex>
               </>
             }

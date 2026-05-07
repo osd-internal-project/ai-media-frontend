@@ -408,7 +408,7 @@ const PromptActivity: FC<props> = ({
             }}
           >
             {/* Edit (image only) */}
-            {!isVideo && (
+            {/* {!isVideo && (
               <Button
                 icon={<Paintbrush size={16} style={{color:' #ffff'}}  
                 // className=" text-yellow-500 drop-shadow-[0_0_5px_#f59e0b] animate-pulse"
@@ -420,7 +420,7 @@ const PromptActivity: FC<props> = ({
                 className="activity-star-button"
                 disabled={!record.imageUrl}
               />
-            )}
+            )} */}
             {/* Like/Unlike */}
             <Button
               icon={

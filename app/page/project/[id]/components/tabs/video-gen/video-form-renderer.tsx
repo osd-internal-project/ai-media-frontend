@@ -21,7 +21,7 @@ export interface VideoFormManagerProps {
   >;
 }
 import Seeda1 from "./version/seeda1/chat-generate-video";
-import Seeda2 from "./version/seeda1/chat-generate-video";
+import Seeda2 from "./version/seeda2/chat-generate-video";
 
 const VideoFormRenderer: FC<VideoFormManagerProps> = (props) => {
   const { selectedAIModel } = props;

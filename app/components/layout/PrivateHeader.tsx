@@ -113,12 +113,12 @@ export function PrivateHeader({
       label: "Profile",
       onClick: () => router.push("/page/profile"),
     },
-    {
-      key: "coupon",
-      icon: <CreditCardOutlined />,
-      label: "Use Coupon",
-      onClick: handleOpenCouponModal,
-    },
+    // {
+    //   key: "coupon",
+    //   icon: <CreditCardOutlined />,
+    //   label: "Use Coupon",
+    //   onClick: handleOpenCouponModal,
+    // },
     ...(systemRole === "SUPER_ADMIN"
       ? [
           {
