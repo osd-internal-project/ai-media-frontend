@@ -28,6 +28,19 @@ const nextConfig = {
   },
   reactStrictMode: false,
   output: "standalone",
+  // async headers() {
+  //   return [
+  //     {
+  //       source: "/(.*)",
+  //       headers: [
+  //         {
+  //           key: "Content-Security-Policy",
+  //           value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; img-src 'self' data: blob: https:;",
+  //         },
+  //       ],
+  //     },
+  //   ];
+  // },
 };
 
 module.exports = nextConfig;
