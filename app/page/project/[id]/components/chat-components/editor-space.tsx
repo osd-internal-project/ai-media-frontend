@@ -268,52 +268,58 @@ const EditorSpace = () => {
   const handleImport = (file: File) => {
     if (!fc.current) return false;
 
-    const url = URL.createObjectURL(file);
-    const customId = Math.random().toString(36).substr(2, 9);
-    const newImage: ImportedImage = {
-      id: customId,
-      name: file.name,
-      url,
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const url = event.target?.result as string;
+      if (!url) return;
+
+      const customId = Math.random().toString(36).substr(2, 9);
+      const newImage: ImportedImage = {
+        id: customId,
+        name: file.name,
+        url,
+      };
+
+      setImages((prev) => [...prev, newImage]);
+
+      const imgEl = new Image();
+      imgEl.crossOrigin = "anonymous"; // Fix CORS and Canvas CSP issues for HTTPS URLs
+      imgEl.onload = () => {
+        const canvas = fc.current!;
+        const logicalW = canvas.width! / canvas.getZoom();
+        const logicalH = canvas.height! / canvas.getZoom();
+
+        const scale = Math.min(
+          1,
+          (logicalW * 0.8) / imgEl.width,
+          (logicalH * 0.8) / imgEl.height,
+        );
+
+        const imgObj = new fabric.Image(imgEl, {
+          left: logicalW / 2,
+          top: logicalH / 2,
+          originX: "center",
+          originY: "center",
+          scaleX: scale,
+          scaleY: scale,
+          selectable: true,
+          evented: true,
+        });
+        (imgObj as any).set("customId", customId);
+
+        canvas.add(imgObj);
+        canvas.setActiveObject(imgObj);
+        canvas.renderAll();
+
+        setImages((prev) =>
+          prev.map((img) =>
+            img.id === customId ? { ...img, fabricObj: imgObj } : img,
+          ),
+        );
+      };
+      imgEl.src = url;
     };
-
-    setImages((prev) => [...prev, newImage]);
-
-    const imgEl = new Image();
-    imgEl.crossOrigin = "anonymous"; // Fix CORS and Canvas CSP issues for HTTPS URLs
-    imgEl.onload = () => {
-      const canvas = fc.current!;
-      const logicalW = canvas.width! / canvas.getZoom();
-      const logicalH = canvas.height! / canvas.getZoom();
-
-      const scale = Math.min(
-        1,
-        (logicalW * 0.8) / imgEl.width,
-        (logicalH * 0.8) / imgEl.height,
-      );
-
-      const imgObj = new fabric.Image(imgEl, {
-        left: logicalW / 2,
-        top: logicalH / 2,
-        originX: "center",
-        originY: "center",
-        scaleX: scale,
-        scaleY: scale,
-        selectable: true,
-        evented: true,
-      });
-      (imgObj as any).set("customId", customId);
-
-      canvas.add(imgObj);
-      canvas.setActiveObject(imgObj);
-      canvas.renderAll();
-
-      setImages((prev) =>
-        prev.map((img) =>
-          img.id === customId ? { ...img, fabricObj: imgObj } : img,
-        ),
-      );
-    };
-    imgEl.src = url;
+    reader.readAsDataURL(file);
 
     return false;
   };
