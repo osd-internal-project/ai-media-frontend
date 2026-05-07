@@ -279,6 +279,7 @@ const EditorSpace = () => {
     setImages((prev) => [...prev, newImage]);
 
     const imgEl = new Image();
+    imgEl.crossOrigin = "anonymous"; // Fix CORS and Canvas CSP issues for HTTPS URLs
     imgEl.onload = () => {
       const canvas = fc.current!;
       const logicalW = canvas.width! / canvas.getZoom();
