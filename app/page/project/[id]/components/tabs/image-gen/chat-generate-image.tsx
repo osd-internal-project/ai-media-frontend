@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, type FC } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback, type FC } from "react";
 
 import {
   Avatar,
@@ -43,6 +43,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
+import useResponsive from "@/app/hooks/useResponsive";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import ActionBar from "./action-bar";
@@ -60,7 +61,8 @@ export interface ImageChatProps {
     | "omnihumen"
     | "dreamactor"
     | "library"
-    | "activity";
+    | "activity"
+    | "editor";
   projectRole?: string | null;
   promptGuideOpenStatus?: boolean;
   username?: string;
@@ -160,12 +162,13 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 }) => {
   const { data: session } = useSession();
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const { isMobile } = useResponsive();
+  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
   const [api, contextHolderNoti] = notification.useNotification();
-  const galleryService = GalleryServices(axiosCore);
-  const logsService = LogsServices(axiosCore);
-  const generateServices = GenerateServices(axiosCore);
-  const promptGuideService=PromptGuideTypeServices(axiosCore);
+  const galleryService = useMemo(() => GalleryServices(axiosCore), []);
+  const logsService = useMemo(() => LogsServices(axiosCore), []);
+  const generateServices = useMemo(() => GenerateServices(axiosCore), []);
+  const promptGuideService = useMemo(() => PromptGuideTypeServices(axiosCore), []);
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -188,7 +191,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   // const [page, setPage] = useState<number>(0);
   // const [currentId, setCurrentId] = useState<string | undefined>("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [groupMode, setGroupMode] = useState<string | undefined>(undefined);
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
@@ -222,18 +224,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
-
   //fetch messages when load tab
   useEffect(() => {
     setMessages([]);
@@ -889,11 +879,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     currentStatus: boolean,
   ) => {
     try {
-      const nextStatus = currentStatus ? false : true;
-      const success = await GalleryServices(axiosCore).updateStatus(
-        id,
-        nextStatus,
-      );
+      const nextStatus = !currentStatus;
+      const success = await galleryService.updateStatus(id, nextStatus);
       if (success.id) {
         message.success("Share status updated");
         setMessages((prev) =>
@@ -1000,10 +987,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
 
   async function onSetPromptText(id: number): Promise<void> {
     const prompt = await promptGuideService.findById(String(id));
-    const text = form.getFieldValue("text");
+    const current = form.getFieldValue("prompt");
     form.setFieldValue(
-      "text",
-      text ? text + "\n\n" + prompt.textPrompt : prompt.textPrompt,
+      "prompt",
+      current ? current + "\n\n" + prompt.textPrompt : prompt.textPrompt,
     );
   }
 

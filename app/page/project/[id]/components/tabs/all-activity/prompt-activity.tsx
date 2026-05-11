@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useMemo,
   useState,
   useRef,
   type FC,
@@ -57,9 +58,9 @@ const PromptActivity: FC<props> = ({
   const params = useParams();
   const { data: session } = useSession();
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
   const organizationId = session?.user?.organizationId || "";
-  const galleryservices = GalleryServices(axiosCore);
+  const galleryservices = useMemo(() => GalleryServices(axiosCore), []);
 
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);

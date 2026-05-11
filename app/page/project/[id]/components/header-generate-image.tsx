@@ -9,7 +9,7 @@ import {
   Switch,
 } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
-import React, { CSSProperties, useState, type FC } from "react";
+import React, { CSSProperties, useMemo, useState, type FC } from "react";
 import type { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -45,7 +45,7 @@ const HeaderGenerateImagePage: FC<props> = ({
   const [promptBuilderOpen, setPromptBuilderOpen] = useState(false);
   const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -63,7 +63,7 @@ const HeaderGenerateImagePage: FC<props> = ({
   //   setPromptBuilderOpen(false);
   // };
 
-  const TitleSection = () => (
+  const titleSection = useMemo(() => (
     <div className="flex flex-col gap-0">
       <Space size={8} align="center" wrap>
         <Typography.Title
@@ -103,7 +103,7 @@ const HeaderGenerateImagePage: FC<props> = ({
         Shake up your creativity with image generation
       </Typography.Text>
     </div>
-  );
+  ), [isMobile, isTablet, semantic, getProject?.name, getProject?.status]);
 
   return (
     <div
@@ -117,7 +117,7 @@ const HeaderGenerateImagePage: FC<props> = ({
       {/* Mobile: Title at top */}
       {isMobile && (
         <div className="mb-0">
-          <TitleSection />
+          {titleSection}
         </div>
       )}
 
@@ -134,7 +134,7 @@ const HeaderGenerateImagePage: FC<props> = ({
         {/* Desktop/Tablet: Title on left */}
         {!isMobile && (
           <div className="shrink-0">
-            <TitleSection />
+            {titleSection}
           </div>
         )}
 

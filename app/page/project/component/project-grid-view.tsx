@@ -42,11 +42,9 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
         width: "100%",
       }}
     >
-      {projects.map((project) => {
+      {projects.map((project, index) => {
         const creditUsed = project.members.reduce((acc, member) => acc + member.usedCreditAllowance, 0);
         const creditTotal = project.limitCreditAllowance ?? 0;
-        // const tokenUsed = (project.accessTokenAmount ?? 0) - (project.remainTokenAmount ?? 0);
-        // const tokenTotal = project.accessTokenAmount ?? 0;
         return (
           <Col xs={24} sm={12} md={12} lg={8} xl={6} key={project.id}>
                 <Card
@@ -59,7 +57,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                 position: 'relative',
                 transform: hoveredCardId === project.id ? 'translateY(-2px)' : 'translateY(0)',
                 transition: 'all 180ms ease',
-                animation: `projectCardIn 320ms ease ${Math.min((projects.findIndex((p) => p.id === project.id) * 35), 220)}ms both`,
+                animation: `projectCardIn 320ms ease ${Math.min(index * 35, 220)}ms both`,
               }}
               onMouseEnter={() => setHoveredCardId(project.id)}
               onMouseLeave={() => setHoveredCardId(null)}
@@ -102,28 +100,13 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Space align="start" direction="vertical" size={2}>
-                    {project.name && project.name.length > 15 ? (
-                      <Tooltip title={project.name} placement="top" mouseEnterDelay={0.5}>
-                        <Typography.Title
-                          level={isMobile ? 5 : 5}
-                          style={{
-                            color: semantic.colorTextBase,
-                            fontWeight: 700,
-                            marginBottom: 0,
-                            fontSize: isMobile ? 15 : 18,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: '100%',
-                          }}
-                        >
-                          {project.name}
-                        </Typography.Title>
-                      </Tooltip>
-                                ) : (
-                                       
+                    <Tooltip
+                      title={project.name && project.name.length > 15 ? project.name : ""}
+                      placement="top"
+                      mouseEnterDelay={0.5}
+                    >
                       <Typography.Title
-                        level={isMobile ? 5 : 5}
+                        level={5}
                         style={{
                           color: semantic.colorTextBase,
                           fontWeight: 700,
@@ -137,7 +120,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                       >
                         {project.name}
                       </Typography.Title>
-                    )}
+                    </Tooltip>
                    
                   <Typography.Text style={{ color: project.status === 'deleted' ? semantic.colorError : semantic.colorSuccess, fontWeight: 600, fontSize: isMobile ? 11 : 12, lineHeight: 1.15 }}> <Badge color={project.status === 'deleted' ? semantic.colorError : semantic.colorSuccess} style={{ marginLeft: 8 }} />{project.status === 'deleted' ? 'Deleted' : 'Active'}</Typography.Text>
                </Space> </div>

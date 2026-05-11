@@ -37,8 +37,6 @@ type ProjectMember = {
   limitCreditAllowance?: number;
 };
 
-type SearchTexts = { [key: number]: string };
-
 interface ProjectFormProps {
   open: boolean;
   title: string;
@@ -48,8 +46,6 @@ interface ProjectFormProps {
   selectedProject?: IProject | undefined;
   projectMembers: ProjectMember[];
   setProjectMembers: React.Dispatch<React.SetStateAction<ProjectMember[]>>;
-  searchTexts: SearchTexts;
-  setSearchTexts: React.Dispatch<React.SetStateAction<SearchTexts>>;
   organizationMembers: any[];
   loading: boolean;
   onFinish: (values: any) => void;
@@ -70,8 +66,6 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   selectedProject,
   projectMembers,
   setProjectMembers,
-  searchTexts,
-  setSearchTexts,
   organizationMembers,
   loading,
   onFinish,

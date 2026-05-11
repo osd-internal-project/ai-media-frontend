@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useMemo,
   useState,
   useRef,
   type FC,
@@ -56,10 +57,10 @@ const PromptLibrary: FC<props> = ({
   const params = useParams();
   const { data: session } = useSession();
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
 
   const organizationId = session?.user?.organizationId || "";
-  const galleryservices = GalleryServices(axiosCore);
+  const galleryservices = useMemo(() => GalleryServices(axiosCore), []);
 
   const [selected, setSelected] = useState<any>(null);
   const [previewItem, setPreviewItem] = useState<any>(null);

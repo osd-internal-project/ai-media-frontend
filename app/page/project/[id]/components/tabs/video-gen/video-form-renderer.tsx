@@ -10,7 +10,8 @@ export interface VideoFormManagerProps {
     | "omnihumen"
     | "dreamactor"
     | "library"
-    | "activity";
+    | "activity"
+    | "editor";
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
   username?: string; // Added username
