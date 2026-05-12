@@ -48,7 +48,7 @@ interface ClientLayoutProps {
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
-  const { isMobile,isTablet } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { data: session, update: updateSession } = useSession();
@@ -230,8 +230,16 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         });
       })
       .finally(() => {
-        setReload(false);
         window.location.href = "/page/project";
+
+        // setReload(false);
+      })
+      .catch(() => {
+        setReload(false);
+        modal.error({
+          title: "Error",
+          content: "Failed to switch organization. Please try again.",
+        });
       });
   }
 
@@ -285,7 +293,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   //     // </ConfigProvider>
   //   );
   // }
-  
+
   if (isAdminRoute && session?.user?.systemRole !== "SUPER_ADMIN") {
     notFound();
   }
@@ -484,7 +492,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           />
         ) : null}
 
-        {(isMobile || isTablet) ? (
+        {isMobile || isTablet ? (
           <>
             {mobileSiderOpen ? (
               <div
@@ -577,7 +585,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           </div>
         </Layout>
       </Layout>
-      
     </Spin>
     //   <style>{`
     //     /* Dark Select Styling */

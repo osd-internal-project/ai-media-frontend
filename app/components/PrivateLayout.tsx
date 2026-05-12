@@ -156,7 +156,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           organizationId: organizationId,
         },
       });
-      window.location.href = "/page/project";
+      router.push("/page/project");
     } catch {
       modal.error({
         title: "Change Organize fail",
