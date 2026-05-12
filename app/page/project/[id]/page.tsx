@@ -36,9 +36,8 @@ import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
-import { Paintbrush } from "lucide-react";
-import EditorSpace from "./components/chat-components/editor-space";
-import AssistantModal from "./components/assistant/assistant-modal";
+import { Edit2, Image, Paintbrush } from "lucide-react";
+import EditorSpace from "./components/tabs/editor/editor-space";
 
 type GenerateTabKey =
   | "image"
