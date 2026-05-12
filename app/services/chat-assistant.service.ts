@@ -7,6 +7,7 @@ import type {
   ImagePromptResponse,
   Message,
   SendChatPayload,
+  SetConversationPayload,
   TokenUsageSummary,
 } from "./chat-assistant.types";
 
@@ -16,7 +17,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
   return {
     /** POST /conversations */
     createConversation: async (
-      payload: CreateConversationPayload
+      payload: CreateConversationPayload,
     ): Promise<Conversation | undefined> => {
       return axiosInstance
         .post(base, { title: "New Chat", ...payload })
@@ -27,10 +28,20 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         });
     },
 
+    setConversation: async (
+      payload: SetConversationPayload,
+    ): Promise<Conversation | undefined> => {
+      return axiosInstance
+        .post(`${base}/set`, { ...payload })
+        .then((res) => res.data)
+        .catch((err) => {
+          console.error("[ChatAssistant] setConversation:", err);
+          return undefined;
+        });
+    },
+
     /** GET /conversations?userId=xxx */
-    listConversations: async (
-      userId: string
-    ): Promise<Conversation[]> => {
+    listConversations: async (userId: string): Promise<Conversation[]> => {
       return axiosInstance
         .get(base, { params: { userId } })
         .then((res) => res.data ?? [])
@@ -43,7 +54,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
     /** GET /conversations/:id/messages?limit=50 */
     getMessages: async (
       conversationId: string,
-      limit = 50
+      limit = 50,
     ): Promise<Message[]> => {
       return axiosInstance
         .get(`${base}/${conversationId}/messages`, { params: { limit } })
@@ -56,7 +67,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
 
     /** POST /chat  (non-streaming) */
     sendChat: async (
-      payload: SendChatPayload
+      payload: SendChatPayload,
     ): Promise<ChatResponse | undefined> => {
       return axiosInstance
         .post("/chat", { ...payload, stream: false })
@@ -70,7 +81,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
     /** PATCH /conversations/:id */
     updateConversation: async (
       id: string,
-      title: string
+      title: string,
     ): Promise<Conversation | undefined> => {
       return axiosInstance
         .patch(`${base}/${id}`, { title })
@@ -94,7 +105,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
 
     /** GET /conversations/:id/token-usage */
     getTokenUsage: async (
-      conversationId: string
+      conversationId: string,
     ): Promise<TokenUsageSummary | undefined> => {
       return axiosInstance
         .get(`${base}/${conversationId}/token-usage`)
@@ -108,7 +119,7 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
     /** POST /prompt/from-image */
     generatePromptFromImage: async (
       file: File,
-      options?: GeneratePromptFromImageOptions
+      options?: GeneratePromptFromImageOptions,
     ): Promise<ImagePromptResponse> => {
       const formData = new FormData();
       formData.append("file", file);
@@ -131,7 +142,10 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         .then((res) => res.data)
         .catch((err) => {
           console.error("[ChatAssistant] generatePromptFromImage:", err);
-          throw new Error(err.response?.data?.message ?? "Failed to generate prompt from image");
+          throw new Error(
+            err.response?.data?.message ??
+              "Failed to generate prompt from image",
+          );
         });
     },
   };

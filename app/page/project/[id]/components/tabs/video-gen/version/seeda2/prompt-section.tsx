@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Mentions, Typography } from "antd";
+import AssistantModal from "../../../../assistant/assistant-modal";
 
 type Props = {
   semantic: Record<string, any>;
@@ -19,6 +20,7 @@ type Props = {
   regenerateLabel?: string;
   required?: boolean;
   mentionOptions?: any[];
+  projectId: string;
 };
 
 export default function PromptSection({
@@ -38,29 +40,16 @@ export default function PromptSection({
   regenerateLabel = "Regenerate with AI",
   required = true,
   mentionOptions = [],
+  projectId,
 }: Props) {
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
   const [internalLoading, setInternalLoading] = useState(false);
+  const [openAssistant, setOpenAssistant] = useState<boolean>(false);
   const loading = isAiAssisting ?? internalLoading;
 
   const handleAiAssistClick = async () => {
-    if (!onAiAssist) return;
-
-    if (isAiAssisting === undefined) {
-      setInternalLoading(true);
-    }
-
-    try {
-      const result = await onAiAssist(promptText);
-      if (typeof result === "string") {
-        form.setFieldValue(fieldName, result);
-      }
-    } finally {
-      if (isAiAssisting === undefined) {
-        setInternalLoading(false);
-      }
-    }
+    setOpenAssistant(true);
   };
 
   return (
@@ -77,7 +66,7 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {/* {showAiAssist && (
+        {showAiAssist && (
           <Button
             size="small"
             type="text"
@@ -104,7 +93,7 @@ export default function PromptSection({
           >
             {loading ? aiAssistThinkingLabel : aiAssistLabel}
           </Button>
-        )} */}
+        )}
       </Flex>
 
       <Form.Item
@@ -142,23 +131,17 @@ export default function PromptSection({
         </Typography.Text>
       </Flex>
 
-      {/* {showRegenerateButton && promptText.trim() && (
-        <Button
-          block
-          type="text"
-          onClick={handleAiAssistClick}
-          disabled={loading || !onAiAssist}
-          icon={<RefreshCw size={12} />}
-          style={{
-            height: 30,
-            fontSize: 12,
-            color: semantic.colorTextSecondary,
-            borderRadius: 8,
+      {openAssistant && (
+        <AssistantModal
+          openAssistant={openAssistant}
+          setOpenAssistant={setOpenAssistant}
+          projectId={projectId}
+          onUsePrompt={(text) => {
+            form.setFieldValue(fieldName, text);
+            setOpenAssistant(false);
           }}
-        >
-          {regenerateLabel}
-        </Button>
-      )} */}
+        />
+      )}
     </Flex>
   );
 }

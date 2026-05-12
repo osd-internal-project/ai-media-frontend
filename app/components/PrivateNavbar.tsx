@@ -191,7 +191,7 @@ const NavbarUser: React.FC<Props> = ({
         )}
 
         <span className="text-sm font-medium text-gray-600 whitespace-nowrap hidden sm:block">
-          ORGANIZATION:
+          ORGANIZATION :
         </span>
         <div
           className={`flex items-center ${

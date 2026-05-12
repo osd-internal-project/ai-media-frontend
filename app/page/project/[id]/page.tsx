@@ -38,6 +38,7 @@ import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
 import { Paintbrush } from "lucide-react";
 import EditorSpace from "./components/chat-components/editor-space";
+import AssistantModal from "./components/assistant/assistant-modal";
 
 type GenerateTabKey =
   | "image"
@@ -107,7 +108,7 @@ const GenerateImagePage: FC = () => {
     (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const [projectRole, setProjectRole] = useState<string | null>(null);
-
+ 
   const onSetPromptTextRef = React.useRef<
     ((id: number) => Promise<void>) | null
   >(null);
@@ -121,28 +122,38 @@ const GenerateImagePage: FC = () => {
     () => accessCode.map((c) => c.toLowerCase().trim()),
     [accessCode],
   );
-  const { canAccessImage, canAccessVideo, canAccessOmni, canAccessDream, canAccessEditor } =
-    useMemo(() => {
-      const has = normalizedAccessCodes.length > 0;
-      return {
-        canAccessImage: !has || normalizedAccessCodes.some((c) => c.includes("image")),
-        canAccessVideo: !has || normalizedAccessCodes.some((c) => c.includes("video")),
-        canAccessOmni:  !has || normalizedAccessCodes.some((c) => c.includes("omni")),
-        canAccessDream: !has || normalizedAccessCodes.some((c) => c.includes("dream")),
-        canAccessEditor:!has || normalizedAccessCodes.some((c) => c.includes("editor")),
-      };
-    }, [normalizedAccessCodes]);
+  const {
+    canAccessImage,
+    canAccessVideo,
+    canAccessOmni,
+    canAccessDream,
+    canAccessEditor,
+  } = useMemo(() => {
+    const has = normalizedAccessCodes.length > 0;
+    return {
+      canAccessImage:
+        !has || normalizedAccessCodes.some((c) => c.includes("image")),
+      canAccessVideo:
+        !has || normalizedAccessCodes.some((c) => c.includes("video")),
+      canAccessOmni:
+        !has || normalizedAccessCodes.some((c) => c.includes("omni")),
+      canAccessDream:
+        !has || normalizedAccessCodes.some((c) => c.includes("dream")),
+      canAccessEditor:
+        !has || normalizedAccessCodes.some((c) => c.includes("editor")),
+    };
+  }, [normalizedAccessCodes]);
 
   // Memoized tab icon colours — only changes with theme
   const tabIconColorByType = useMemo<Record<GenerateTabKey, string>>(
     () => ({
-      image:     "#1890ff",
-      video:     semantic.colorPrimary    || "#1677ff",
-      omnihumen: semantic.colorSuccess    || "#52c41a",
-      dreamactor:semantic.colorWarning    || "#faad14",
-      library:   "#1890ff",
-      activity:  semantic.colorTextSecondary || "#8c8c8c",
-      editor:    semantic.colorInfo       || "#1890ff",
+      image: "#1890ff",
+      video: semantic.colorPrimary || "#1677ff",
+      omnihumen: semantic.colorSuccess || "#52c41a",
+      dreamactor: semantic.colorWarning || "#faad14",
+      library: "#1890ff",
+      activity: semantic.colorTextSecondary || "#8c8c8c",
+      editor: semantic.colorInfo || "#1890ff",
     }),
     [semantic],
   );
@@ -152,7 +163,10 @@ const GenerateImagePage: FC = () => {
   // Fetch project data and all AI models in parallel
   const fetchInitialData = useCallback(async () => {
     const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
-    if (!projectId) { setLoadingData(false); return; }
+    if (!projectId) {
+      setLoadingData(false);
+      return;
+    }
     try {
       const [project, models] = await Promise.all([
         projectService.findById(projectId),
@@ -197,11 +211,11 @@ const GenerateImagePage: FC = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);// eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchRoleAndAccess();
-  }, [session?.user?.id, id, organizationId]);// eslint-disable-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, id, organizationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync filteredAIModels and selectedAIModel whenever aiModels or tab changes
   useEffect(() => {
@@ -216,20 +230,20 @@ const GenerateImagePage: FC = () => {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const onChangeTab = useCallback(
-    (key: GenerateTabKey) => {
-      setActiveKey(key);
-      setSelectedAIModel(undefined); // let the effect above pick the right model
-    },
-    [],
-  );
+  const onChangeTab = useCallback((key: GenerateTabKey) => {
+    setActiveKey(key);
+    setSelectedAIModel(undefined); // let the effect above pick the right model
+  }, []);
 
   const onAIModelChange = useCallback(
     (value: string) => {
       const model = filteredAIModels.find((m) => m.id === parseInt(value));
       if (model) {
         setSelectedAIModel(model);
-        localStorage.setItem(`selectedAIModel_${activeKey}_${id}`, model.id.toString());
+        localStorage.setItem(
+          `selectedAIModel_${activeKey}_${id}`,
+          model.id.toString(),
+        );
       }
     },
     [filteredAIModels, activeKey, id],
@@ -343,7 +357,11 @@ const GenerateImagePage: FC = () => {
                   {
                     disabled: disableTab,
                     key: "image",
-                    label: renderTabLabel("image", "Image Gen", <PictureOutlined />),
+                    label: renderTabLabel(
+                      "image",
+                      "Image Gen",
+                      <PictureOutlined />,
+                    ),
                     children: (
                       <ChatGenerateImage
                         teamView={teamView}
@@ -366,7 +384,11 @@ const GenerateImagePage: FC = () => {
                   {
                     disabled: disableTab,
                     key: "video",
-                    label: renderTabLabel("video", "Video Gen", <VideoCameraOutlined />),
+                    label: renderTabLabel(
+                      "video",
+                      "Video Gen",
+                      <VideoCameraOutlined />,
+                    ),
                     children: (
                       <VideoFormRenderer
                         teamView={teamView}
@@ -389,7 +411,11 @@ const GenerateImagePage: FC = () => {
                   {
                     disabled: disableTab,
                     key: "omnihumen",
-                    label: renderTabLabel("omnihumen", "OmniHuman", <MessageOutlined />),
+                    label: renderTabLabel(
+                      "omnihumen",
+                      "OmniHuman",
+                      <MessageOutlined />,
+                    ),
                     children: (
                       <ChatGenerateOmnihumen
                         teamView={teamView}
@@ -412,7 +438,11 @@ const GenerateImagePage: FC = () => {
                   {
                     disabled: disableTab,
                     key: "dreamactor",
-                    label: renderTabLabel("dreamactor", "DreamActor", <PlaySquareOutlined />),
+                    label: renderTabLabel(
+                      "dreamactor",
+                      "DreamActor",
+                      <PlaySquareOutlined />,
+                    ),
                     children: (
                       <ChatGenerateDreamactor
                         teamView={teamView}
@@ -445,10 +475,12 @@ const GenerateImagePage: FC = () => {
               disabled: disableTab,
               key: "activity",
               destroyOnHidden: true,
-              label: renderTabLabel("activity", "All Activity", <FolderOpenOutlined />),
-              children: (
-                <PromptActivity activeKey={activeKey} />
+              label: renderTabLabel(
+                "activity",
+                "All Activity",
+                <FolderOpenOutlined />,
               ),
+              children: <PromptActivity activeKey={activeKey} />,
             },
             ...(canAccessEditor
               ? [
@@ -456,7 +488,11 @@ const GenerateImagePage: FC = () => {
                     disabled: disableTab,
                     forceRender: true,
                     key: "editor",
-                    label: renderTabLabel("editor", "Editor", <Paintbrush size={16} />),
+                    label: renderTabLabel(
+                      "editor",
+                      "Editor",
+                      <Paintbrush size={16} />,
+                    ),
                     children: (
                       <div className="h-full w-full">
                         <EditorSpace />
@@ -468,6 +504,7 @@ const GenerateImagePage: FC = () => {
           ]}
         />
       </div>
+     
     </div>
   );
 };

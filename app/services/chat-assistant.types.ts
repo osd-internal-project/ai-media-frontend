@@ -66,6 +66,12 @@ export interface CreateConversationPayload {
   title?: string;
   organizationId?: string;
 }
+export interface SetConversationPayload {
+  userId: string;
+  title?: string;
+  projectId: string;
+  organizationId?: string;
+}
 
 export interface SendChatPayload {
   userId: string;
@@ -107,4 +113,3 @@ export interface GeneratePromptFromImageOptions {
   style?: string;
   model?: string;
 }
-

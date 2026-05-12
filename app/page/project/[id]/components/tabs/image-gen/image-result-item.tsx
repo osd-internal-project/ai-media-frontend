@@ -44,6 +44,7 @@ const ResultItem: FC<Props> = ({
   const [showFullPrompt, setShowFullPrompt] = useState(false);
   // ปุ่ม more/ย่อ จะโชว์เมื่อ overflow เท่านั้น
    const [isOverflow, setIsOverflow] = useState(false);
+   
   const promptRef = useRef<HTMLSpanElement>(null);
 
   // เมื่อข้อความล้น ให้จำสถานะ overflow ไว้จนกว่า message.prompt เปลี่ยน

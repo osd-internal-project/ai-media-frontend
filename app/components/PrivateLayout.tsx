@@ -4,16 +4,9 @@ import {
   Layout,
   Menu,
   Image,
-  Button,
-  Form,
   Modal,
-  Input,
-  Select,
   theme,
   Spin,
-  InputNumber,
-  Row,
-  Col,
 } from "antd";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,21 +14,29 @@ import { renderMenuItems, MenuSider } from "../config/menu";
 import Sider from "antd/es/layout/Sider";
 import PrivateNavigation from "./PrivateNavigation";
 import PrivateContent from "./PrivateContent";
-import { signOut, useSession } from "next-auth/react";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { useSession } from "next-auth/react";
 import UserServices from "../services/users.service";
-import ProjectService from "../services/project.service";
-import { axiosCore, axiosUser } from "../lib/axios/axios";
+import { axiosUser } from "../lib/axios/axios";
 import type { TUser } from "../common/user.type";
-import type { IProject, ProjectMemberInput } from "../common/project.type";
 import OrganizationService from "../services/organization.service";
 import { ICreditBalance, IOrganization } from "../common/organization.type";
 import { OrganizationProvider } from "../context/OrganizationContext";
 import OrganizationMembersServices from "../services/organization-members.service";
 import CreditBalanceServices from "../services/credit-balance.service";
+
 interface ClientLayoutProps {
   children: React.ReactNode;
 }
+
+const darkThemeToken = {
+  algorithm: theme.darkAlgorithm,
+  token: {
+    colorBgBase: "#000000",
+    colorBgContainer: "#000000",
+    colorBgElevated: "#1a1a1a",
+    colorTextBase: "#f0f0f0",
+  },
+};
 
 export default function PrivateLayout({ children }: ClientLayoutProps) {
   const router = useRouter();
@@ -44,42 +45,23 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [reload, setReload] = useState<boolean>(false);
 
   const pathname = usePathname();
-  const currentPath = pathname.split("/")[2];
-  const mappedPath = currentPath === "project" ? "project" : currentPath;
-  const currentPathSub = pathname.split("/")[3];
-  const [open, setOpen] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [editForm] = Form.useForm();
-  const [form] = Form.useForm();
+  const [, , currentPath, currentPathSub] = pathname.split("/");
+
   const [modal, contextHolder] = Modal.useModal();
 
   const userServices = UserServices(axiosUser);
-
   const organizationService = OrganizationService(axiosUser);
-  const creditฺBalanceService = CreditBalanceServices(axiosUser);
-
+  const creditBalanceService = CreditBalanceServices(axiosUser);
   const organizationMemberService = OrganizationMembersServices(axiosUser);
-  const projectService = ProjectService(axiosCore);
-  const [organizationMember, setOrganizationMember] = useState<TUser[]>([]);
+
   const [currentOrganization, setCurrentOrganization] = useState<
     IOrganization | undefined
   >();
   const [creditBalance, setCreditBalance] = useState<
     ICreditBalance | undefined
   >(undefined);
-  const [getProject, setProject] = useState<IProject[]>([]);
-  const [projectMembers, setProjectMembers] = useState<ProjectMemberInput[]>(
-    [],
-  );
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<
-    "OWNER" | "ADMIN" | "USER" | "VIEWER"
-  >("USER");
-  const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
-
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
   );
@@ -94,15 +76,17 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   useEffect(() => {
     if (loading) {
-      fecthdata();
+      fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
-  const fecthdata = async () => {
-    await fetchdataUser();
 
+  const fetchData = async () => {
+    await fetchDataUser();
     setLoading(false);
   };
-  async function fecthdataByOrganization(organizationId: string) {
+
+  async function fetchDataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
     const organizationDetail =
       await organizationMemberService.findUserMemberByOrganization(
@@ -116,134 +100,88 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         : "";
     setOrganizationRole(role);
 
-    const members =
-      await userServices.findOrganizationUserDetails(organizationId);
-    setOrganizationMember(members);
+    await userServices.findOrganizationUserDetails(organizationId);
     setLoading(false);
   }
 
-  const fetchdataUser = async () => {
+  const fetchDataUser = async () => {
     const userDetail = await userServices.findDetailByToken(
       session?.user?.id as string,
     );
     setUserProfile(userDetail);
 
-    const personalOrganizations = await organizationService.findManyByUserId(
-      userDetail?.userId || "",
-      { type: "personal" },
-    );
-    setPersonalOrganizations(personalOrganizations || []);
+    const [personalOrgs, teamOrgs] = await Promise.all([
+      organizationService.findManyByUserId(userDetail?.userId || "", {
+        type: "personal",
+      }),
+      organizationService.findManyByUserId(userDetail?.userId || "", {
+        type: "team",
+      }),
+    ]);
+    setPersonalOrganizations(personalOrgs || []);
+    setTeamOrganizations(teamOrgs || []);
 
-    const teamOrganizations = await organizationService.findManyByUserId(
-      userDetail?.userId || "",
-      { type: "team" },
-    );
-    setTeamOrganizations(teamOrganizations || []);
-
-    // const userRoles = user?.roles?.map((r: any) => r.role.name) || [];
-
-    // setRoles(userRoles || []);
-
-    // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
       const organization = [
-        ...personalOrganizations,
-        ...teamOrganizations,
+        ...(personalOrgs || []),
+        ...(teamOrgs || []),
       ].find((org) => org.organizationId === userDetail?.recentOrganizationId);
       if (organization) {
-        const creditBalance = await creditฺBalanceService.findByOrganizationId(
+        const creditBalance = await creditBalanceService.findByOrganizationId(
           organization.organizationId,
         );
         setCurrentOrganization(organization);
         setCreditBalance(creditBalance);
       }
-      fecthdataByOrganization(userDetail?.recentOrganizationId);
+      fetchDataByOrganization(userDetail?.recentOrganizationId);
     }
   };
 
-  /* Create Organization Modal */
-  const [openCreateOrg, setOpenCreateOrg] = useState(false);
-  const [createOrgForm] = Form.useForm();
-
-  const onFinishCreateOrg = async (values: any) => {
-    const payload = {
-      ...values,
-      remainTokenAmount: values.packageTokenAmount,
-      remainImageAmount: values.packageImageAmount,
-      type: "team",
-      createdById: userProfile?.userId || "",
-      slug: values.name.toLowerCase().replace(/ /g, "-"),
-    };
-    const response = await organizationService.createOwner(payload);
-    if (response) {
-      setOpenCreateOrg(false);
-      createOrgForm.resetFields();
-      setLoading(true); // Trigger data refresh
-    }
-  };
   function handleManageOrg(): void {
     router.push(`/page/organization`);
   }
+
   async function handleOrganizationChange(
     organizationId: string,
   ): Promise<void> {
-    // console.log("organizationId", organizationId);
     setReload(true);
-
-    await userServices
-      .updateDetailByToken(session?.user?.id as string, {
+    try {
+      await userServices.updateDetailByToken(session?.user?.id as string, {
         recentOrganizationId: organizationId,
-      })
-      .then(async () => {
-        await updateSession({
-          ...session,
-          user: {
-            ...session?.user,
-            organizationId: organizationId,
-          },
-        });
-      })
-      .finally(() => {
-        setReload(false);
-        window.location.href = "/page/project";
       });
+      await updateSession({
+        ...session,
+        user: {
+          ...session?.user,
+          organizationId: organizationId,
+        },
+      });
+      window.location.href = "/page/project";
+    } catch {
+      modal.error({
+        title: "Change Organize fail",
+        content: "Please Try again",
+      });
+    } finally {
+      setReload(false);
+    }
   }
 
   if (!session?.user.id) {
     return (
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorBgBase: "#000000",
-            colorBgContainer: "#000000",
-            colorBgElevated: "#1a1a1a",
-            colorTextBase: "#f0f0f0",
-          },
-        }}
-      >
+      <ConfigProvider theme={darkThemeToken}>
         <Layout className="h-screen overflow-hidden">
           <Spin spinning={true}></Spin>
         </Layout>
       </ConfigProvider>
     );
   }
-  //Admin Pages
+
   const isAdminRoute = pathname.startsWith("/page/admin-management");
 
   if (isAdminRoute) {
     return (
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorBgBase: "#000000",
-            colorBgContainer: "#000000",
-            colorBgElevated: "#1a1a1a",
-            colorTextBase: "#f0f0f0",
-          },
-        }}
-      >
+      <ConfigProvider theme={darkThemeToken}>
         <Spin spinning={loading || reload}>
           <OrganizationProvider
             value={{
@@ -257,18 +195,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
   }
 
-  //User Pages
-
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorBgBase: "#000000",
-          colorBgContainer: "#000000",
-          colorBgElevated: "#1a1a1a",
-          colorTextBase: "#f0f0f0",
-        },
+        ...darkThemeToken,
         components: {
           Button: {
             boxShadow: "none",
@@ -282,7 +212,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             itemHoverColor: "white",
             itemSelectedBg: "transparent",
             itemSelectedColor: "white",
-            itemDisabledColor: "#white",
+            itemDisabledColor: "#999",
           },
           Layout: {
             siderBg: "#0f0f0f",
@@ -295,7 +225,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             colorBorder: "#333",
             colorBgElevated: "#1e1e1e",
             optionActiveBg: "#333",
-            optionSelectedBg: "#gg",
+            optionSelectedBg: "#333",
           },
         },
       }}
@@ -314,29 +244,25 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             <div className="bg-black rounded-2xl h-full flex flex-col">
               <div className="w-full flex justify-center items-center py-5 flex-shrink-0">
                 <Image
-                  // width={"120px"}
                   src="/images/logo-1.png"
                   alt="OSD Logo"
                   preview={false}
                   className="mb-2"
                 />
               </div>
-              {/* Admin Management Button */}
               <div className="w-full text-[#F0F0F073] line-height-[16px] text-[12px] px-2"></div>
               {organizationId && (
                 <div className="flex-1 overflow-y-auto hide-scrollbar overflow-x-hidden">
                   <Menu
-                    // mode="inline"
                     selectedKeys={[
-                      mappedPath,
-                      `${mappedPath}/${currentPathSub}`,
+                      currentPath,
+                      `${currentPath}/${currentPathSub}`,
                     ]}
                     defaultSelectedKeys={[
-                      mappedPath,
-                      `${mappedPath}/${currentPathSub}`,
+                      currentPath,
+                      `${currentPath}/${currentPathSub}`,
                     ]}
                     items={renderMenuItems(MenuSider, organizationRole)}
-                    // inlineCollapsed={true}
                   />
                 </div>
               )}
@@ -360,7 +286,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               systemRole={userProfile?.role && userProfile.role}
             />
             <div className="w-full h-full flex flex-col overflow-hidden">
-              <PrivateContent user={userProfile ? userProfile : undefined}>
+              <PrivateContent user={userProfile ?? undefined}>
                 <OrganizationProvider
                   value={{
                     organizationRole,
@@ -404,8 +330,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
         /* Custom Sidebar Menu Styling */
         .ant-menu-item-selected .menu-icon-container {
-          background-color: #1677ff; 
-          border-radius: 8px; 
+          background-color: #1677ff;
+          border-radius: 8px;
           padding: 8px;
           min-width: 40px;
           height: 40px;
@@ -418,9 +344,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         }
         .ant-menu-item-selected .menu-text-label {
           font-weight: bold !important;
-          color: white !important; 
+          color: white !important;
         }
-  
+
         /* Remove ALL sidebar borders and lines */
         .ant-layout-sider,
         .ant-layout-sider *,
@@ -432,12 +358,12 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           outline: none !important;
           box-shadow: none !important;
         }
-        
+
         /* Force transparent borders on layout */
         .ant-layout {
           border: none !important;
         }
-        
+
         /* Ensure icon container is centered and has spacing */
         .menu-icon-container {
           padding: 8px;
@@ -448,8 +374,6 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           align-items: center;
           justify-content: center;
         }
-        
-     
 
       `}</style>
     </ConfigProvider>

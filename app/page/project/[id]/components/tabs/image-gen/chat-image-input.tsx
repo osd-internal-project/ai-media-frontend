@@ -7,14 +7,7 @@ import {
   Zap,
   ZapIcon,
 } from "lucide-react";
-import {
-  Button,
-  Card,
-  Flex,
-  Form,
-  FormInstance,
-  type UploadFile,
-} from "antd";
+import { Button, Card, Flex, Form, FormInstance, type UploadFile } from "antd";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import {
   TPromptGuide,
@@ -65,6 +58,7 @@ type Props = {
   fetchCerrentUsedCredit: () => void;
   organizationId?: string;
   selectedModel?: string;
+  projectId: string;
 };
 
 export default function ChatImageInput({
@@ -92,6 +86,8 @@ export default function ChatImageInput({
   fetchCerrentUsedCredit,
   organizationId,
   selectedModel,
+  projectId
+
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -189,7 +185,7 @@ export default function ChatImageInput({
         width: newWidth,
         height: newHeight,
       });
-     }
+    }
   };
 
   // State to get CI prompt and active from BrandKitSection
@@ -253,6 +249,7 @@ export default function ChatImageInput({
             semantic={semantic}
             placeholder="Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."
             required={true}
+            projectId={projectId}
           />
 
           <PromptTemplateSection
@@ -275,11 +272,11 @@ export default function ChatImageInput({
             setSelectedMaximumImage={setSelectedMaximumImage}
             ratioSizeMap={RATIO_SIZE_MAP}
           />
-            <BrandKitSection
-              semantic={semantic}
-              onCiPromptChange={setCiPrompt}
-              onActiveChange={setCiActive}
-            />
+          <BrandKitSection
+            semantic={semantic}
+            onCiPromptChange={setCiPrompt}
+            onActiveChange={setCiActive}
+          />
         </Flex>
 
         <Flex
@@ -309,8 +306,7 @@ export default function ChatImageInput({
               creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               cerrentUsedCredit={cerrentUsedCredit}
-              size="small" 
-              
+              size="small"
             />
           </Card>
           <Button
@@ -324,9 +320,9 @@ export default function ChatImageInput({
               height: 40,
               borderRadius: 10,
               fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`
+              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
             }}
-            icon={<Sparkles size={16}  />}
+            icon={<Sparkles size={16} />}
             loading={submitting}
           >
             Generate x {selectedMaximumImage}

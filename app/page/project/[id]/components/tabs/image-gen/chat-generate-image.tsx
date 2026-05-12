@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback, type FC } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  type FC,
+} from "react";
 
 import {
   Avatar,
@@ -20,7 +27,16 @@ import {
   Typography,
   Divider,
 } from "antd";
-import { LoadingOutlined, LikeFilled, PictureOutlined, CopyOutlined, DownloadOutlined, DeleteOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
+import {
+  LoadingOutlined,
+  LikeFilled,
+  PictureOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+  DeleteOutlined,
+  StarFilled,
+  StarOutlined,
+} from "@ant-design/icons";
 
 // import Image from "next/image";
 import { Download, ImageOff, StarIcon } from "lucide-react";
@@ -50,6 +66,7 @@ import ActionBar from "./action-bar";
 import ResultHeader from "./result-header";
 import ResultItem from "./image-result-item";
 import { TPromptGuide } from "@/app/common/prompt-guide.type";
+import AssistantModal from "../../assistant/assistant-modal";
 
 export interface ImageChatProps {
   teamView: boolean;
@@ -168,7 +185,10 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const galleryService = useMemo(() => GalleryServices(axiosCore), []);
   const logsService = useMemo(() => LogsServices(axiosCore), []);
   const generateServices = useMemo(() => GenerateServices(axiosCore), []);
-  const promptGuideService = useMemo(() => PromptGuideTypeServices(axiosCore), []);
+  const promptGuideService = useMemo(
+    () => PromptGuideTypeServices(axiosCore),
+    [],
+  );
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -542,7 +562,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     const isAtBottom =
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
-    isAtBottomRef.current = isAtBottom; 
+    isAtBottomRef.current = isAtBottom;
     if (
       target.scrollTop === 0 &&
       !loading &&
@@ -558,7 +578,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       fetchOldMessages();
     }
   };
-
 
   useEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
@@ -797,7 +816,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         const result = await uploadsServices.upload(formData);
         console.log("Upload result:", result);
         setRefImage((prev) => [...prev, result]);
-        
+
         // Update the file in the list with result URL for preview
         setFiles((prev) =>
           prev.map((f) =>
@@ -1014,7 +1033,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   async function handleUsePromptGuide(prompt: TPromptGuide) {
-    
     form.setFieldValue("prompt", prompt.textPrompt);
     setFiles([]);
     setRefImage([]);
@@ -1039,8 +1057,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             );
             // formData.append("file", file);
 
-            const result =
-              await uploadsServices.uploadFromPrompt(formData);
+            const result = await uploadsServices.uploadFromPrompt(formData);
             return result;
           } catch (err) {
             console.error("Failed to process image:", img.name, err);
@@ -1148,6 +1165,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             fetchCerrentUsedCredit={fetchCerrentUsedCredit}
             organizationId={session?.user?.organizationId || undefined}
             selectedModel={selectedAIModel?.modelType || undefined}
+            projectId={projectId}
           />
         }
         loading={loading}
@@ -1161,26 +1179,21 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         rightContent={
           <>
             {/* Chat Header  */}
-            <ResultHeader
-             messages={messages}
-             onClear={() => setMessages([])}
-            />
+            <ResultHeader messages={messages} onClear={() => setMessages([])} />
             {/* item */}
-           {messages.map((message: Message, index) => (
-
-       
-  <ResultItem
-  key={message.id}
-  message={message}
-  index={index}
-  semantic={semantic}
-  aiCaveColors={aiCaveColors}
-  onShareImage={onShareImage}
-  onDownloadImage={onDownloadImage}
-  setMessages={setMessages}
-  messageApi={messageApi}
-/>
-))}
+            {messages.map((message: Message, index) => (
+              <ResultItem
+                key={message.id}
+                message={message}
+                index={index}
+                semantic={semantic}
+                aiCaveColors={aiCaveColors}
+                onShareImage={onShareImage}
+                onDownloadImage={onDownloadImage}
+                setMessages={setMessages}
+                messageApi={messageApi}
+              />
+            ))}
           </>
         }
       />

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Input, Typography } from "antd";
+import AssistantModal from "../../assistant/assistant-modal";
 
 const { TextArea } = Input;
 
 type Props = {
   semantic: Record<string, any>;
-  onAiAssist?: (prompt: string) => Promise<string | void> | string | void;
   isAiAssisting?: boolean;
   fieldName?: string;
   title?: string;
@@ -20,11 +20,11 @@ type Props = {
   aiAssistThinkingLabel?: string;
   regenerateLabel?: string;
   required?: boolean;
+  projectId: string;
 };
 
 export default function PromptSection({
   semantic,
-  onAiAssist,
   isAiAssisting,
   fieldName = "prompt",
   title = "Prompt",
@@ -33,36 +33,24 @@ export default function PromptSection({
   maxLength = 2000,
   rows = 6,
   showAiAssist = true,
-  showRegenerateButton = true,
   aiAssistLabel = "AI Assist",
   aiAssistThinkingLabel = "Thinking...",
-  regenerateLabel = "Regenerate with AI",
   required = true,
+  projectId,
 }: Props) {
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
   const [internalLoading, setInternalLoading] = useState(false);
+  const [openAssistant, setOpenAssistant] = useState<boolean>(false);
   const loading = isAiAssisting ?? internalLoading;
 
   const handleAiAssistClick = async () => {
-    if (!onAiAssist) return;
-
-    if (isAiAssisting === undefined) {
-      setInternalLoading(true);
-    }
-
-    try {
-      const result = await onAiAssist(promptText);
-      if (typeof result === "string") {
-        form.setFieldValue(fieldName, result);
-      }
-    } finally {
-      if (isAiAssisting === undefined) {
-        setInternalLoading(false);
-      }
-    }
+    console.log(
+      "PromptSection: handleAiAssistClick called with promptText:",
+      promptText,
+    );
+    setOpenAssistant(true);
   };
-
   return (
     <Flex vertical gap={8}>
       <Flex align="center" justify="space-between">
@@ -77,12 +65,12 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {/* {showAiAssist && (
+        {showAiAssist && (
           <Button
             size="small"
             type="text"
             onClick={handleAiAssistClick}
-            disabled={loading || !onAiAssist}
+            // disabled={loading || !onAiAssist}
             icon={
               loading ? (
                 <Loader2
@@ -104,7 +92,7 @@ export default function PromptSection({
           >
             {loading ? aiAssistThinkingLabel : aiAssistLabel}
           </Button>
-        )} */}
+        )}
       </Flex>
 
       <Form.Item
@@ -159,6 +147,17 @@ export default function PromptSection({
           {regenerateLabel}
         </Button>
       )} */}
+      {openAssistant && (
+        <AssistantModal
+          openAssistant={openAssistant}
+          setOpenAssistant={setOpenAssistant}
+          projectId={projectId}
+          onUsePrompt={(text) => {
+            form.setFieldValue(fieldName, text);
+            setOpenAssistant(false);
+          }}
+        />
+      )}
     </Flex>
   );
 }
