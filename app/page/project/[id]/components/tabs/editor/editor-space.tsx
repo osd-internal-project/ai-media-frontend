@@ -19,6 +19,8 @@ import EditorToolbar from "./toolbar";
 import StatusBar from "./status";
 import CanvasArea from "./canvas-area";
 import ImageList from "./image-list";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 
 const FONTS = [
   "Arial",
@@ -81,7 +83,7 @@ const Btn = ({
   <Tooltip title={label}>
     <button
       onClick={onClick}
-      className={`flex items-center justify-center w-9 h-9 rounded-md border-none cursor-pointer transition-all duration-150 relative overflow-hidden
+      className={`relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-md border-none cursor-pointer transition-all duration-150 sm:h-9 sm:w-9
         ${
           active
             ? "bg-gradient-to-br from-[#7c3aed] to-[#a855f7] text-white"
@@ -112,7 +114,7 @@ const EditorSpace = () => {
   const [canUndo, setCanUndo] = useState(false);
   const [sel, setSel] = useState<fabric.Object | null>(null);
   const [activeFilter, setActiveFilter] = useState("none");
-  const [canvasPreset, setCanvasPreset] = useState("fit");
+  const [canvasPreset, setCanvasPreset] = useState("1:1");
   const [bgColor, setBgColor] = useState("#ffffff");
   const [isTransparentBg, setIsTransparentBg] = useState(false);
   const [opacity, setOpacity] = useState(1);
@@ -128,6 +130,9 @@ const EditorSpace = () => {
   const redoRef = useRef<string[]>([]);
   const [canRedo, setCanRedo] = useState(false);
   const isRestoringRef = useRef(false);
+
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
 
   const saveHistory = useCallback(() => {
     if (!fc.current) return;
@@ -168,6 +173,8 @@ const EditorSpace = () => {
   const applyCanvasSize = () => {
       if (!fc.current || !areaRef.current) return;
       const canvas = fc.current;
+      const previousWidth = canvas.getWidth();
+      const previousHeight = canvas.getHeight();
       const containerW = areaRef.current.clientWidth * 0.95;
       const containerH = areaRef.current.clientHeight * 0.9;
       
@@ -192,12 +199,12 @@ const EditorSpace = () => {
 
       canvas.setDimensions({ width: logicalW * scale, height: logicalH * scale });
       canvas.setZoom(1);
+      repositionObjectsInCanvas(previousWidth, previousHeight);
       canvas.renderAll();
     };
   
   useEffect(() => {
     applyCanvasSize();
-    repositionObjectsInCanvas();
     window.addEventListener("resize", applyCanvasSize);
     return () => window.removeEventListener("resize", applyCanvasSize);
   }, [canvasPreset, isReady]);
@@ -295,18 +302,22 @@ const handleImport = (file: File) => {
     imgEl.crossOrigin = "anonymous";
     imgEl.onload = () => {
       const canvas = fc.current!;
-      const logicalW = canvas.width! / canvas.getZoom();
-      const logicalH = canvas.height! / canvas.getZoom();
+      applyCanvasSize();
 
-      const scale = Math.min(
-        1,
-        (logicalW * 0.8) / imgEl.width,
-        (logicalH * 0.8) / imgEl.height,
+      const canvasWidth = canvas.getWidth() || areaRef.current?.clientWidth || imgEl.width;
+      const canvasHeight = canvas.getHeight() || areaRef.current?.clientHeight || imgEl.height;
+
+      const fittedScale = Math.min(
+        (canvasWidth * 0.8) / imgEl.width,
+        (canvasHeight * 0.8) / imgEl.height,
       );
+      const scale = Number.isFinite(fittedScale) && fittedScale > 0
+        ? Math.min(1, fittedScale)
+        : 1;
 
       const imgObj = new fabric.Image(imgEl, {
-        left: logicalW / 2,
-        top: logicalH / 2,
+        left: canvasWidth / 2,
+        top: canvasHeight / 2,
         originX: "center",
         originY: "center",
         scaleX: scale,
@@ -318,6 +329,7 @@ const handleImport = (file: File) => {
 
       canvas.add(imgObj);
       canvas.setActiveObject(imgObj);
+      repositionObjectsInCanvas();
       canvas.renderAll();
 
       setImages((prev) =>
@@ -560,10 +572,10 @@ const handleImport = (file: File) => {
       originX: "left",
       originY: "top",
       fill: "rgba(0,0,0,0.1)",
-      stroke: "#00d4ff",
+      stroke: semantic.colorPrimary,
       strokeWidth: 2 ,
       strokeDashArray: [6, 3],
-      cornerColor: "#00d4ff",
+      cornerColor: semantic.colorPrimary,
       cornerSize: 16 ,
       transparentCorners: false,
       hasRotatingPoint: false,
@@ -682,26 +694,70 @@ const handleImport = (file: File) => {
   const showTxtCtrl = tool === "text" || isText;
   const isCropping = tool === "crop";
 
-  const repositionObjectsInCanvas = () => {
+  const repositionObjectsInCanvas = (previousWidth?: number, previousHeight?: number) => {
   const canvas = fc.current;
   if (!canvas) return;
   const width = canvas.getWidth();
   const height = canvas.getHeight();
 
   canvas.getObjects().forEach(obj => {
-    if (obj.type === "image") {
-      // scale down if image is bigger than canvas
-      if (obj.width * obj.scaleX > width) {
-        obj.scaleX = width / obj.width;
+    if (obj === cropRef.current) return;
+
+    const scaledWidth = obj.getScaledWidth();
+    const scaledHeight = obj.getScaledHeight();
+
+    if (previousWidth && previousHeight) {
+      const currentCenterX = obj.originX === "center"
+        ? (obj.left ?? scaledWidth / 2)
+        : (obj.left ?? 0) + scaledWidth / 2;
+      const currentCenterY = obj.originY === "center"
+        ? (obj.top ?? scaledHeight / 2)
+        : (obj.top ?? 0) + scaledHeight / 2;
+
+      const nextCenterX = (currentCenterX / previousWidth) * width;
+      const nextCenterY = (currentCenterY / previousHeight) * height;
+
+      if (obj.originX === "center") {
+        obj.left = nextCenterX;
+      } else {
+        obj.left = nextCenterX - scaledWidth / 2;
       }
-      if (obj.height * obj.scaleY > height) {
-        obj.scaleY = height / obj.height;
+
+      if (obj.originY === "center") {
+        obj.top = nextCenterY;
+      } else {
+        obj.top = nextCenterY - scaledHeight / 2;
       }
-      // clamp position
-      obj.left = Math.max(0, Math.min(obj.left, width - obj.width * obj.scaleX));
-      obj.top = Math.max(0, Math.min(obj.top, height - obj.height * obj.scaleY));
-      obj.setCoords();
     }
+
+    // scale down if image is bigger than canvas
+    if (scaledWidth > width && obj.width) {
+      const nextScale = width / obj.width;
+      obj.scaleX = nextScale;
+      obj.scaleY = nextScale;
+    }
+    if (obj.getScaledHeight() > height && obj.height) {
+      const nextScale = height / obj.height;
+      obj.scaleX = nextScale;
+      obj.scaleY = nextScale;
+    }
+
+    const halfWidth = obj.getScaledWidth() / 2;
+    const halfHeight = obj.getScaledHeight() / 2;
+
+    if (obj.originX === "center") {
+      obj.left = Math.max(halfWidth, Math.min(obj.left ?? halfWidth, width - halfWidth));
+    } else {
+      obj.left = Math.max(0, Math.min(obj.left ?? 0, width - obj.getScaledWidth()));
+    }
+
+    if (obj.originY === "center") {
+      obj.top = Math.max(halfHeight, Math.min(obj.top ?? halfHeight, height - halfHeight));
+    } else {
+      obj.top = Math.max(0, Math.min(obj.top ?? 0, height - obj.getScaledHeight()));
+    }
+
+    obj.setCoords();
   });
   canvas.renderAll();
 };
@@ -709,7 +765,7 @@ const handleImport = (file: File) => {
   return (
     <div
       ref={wrapRef}
-      className="flex flex-col bg-[#21262b] rounded-xl overflow-hidden h-full w-full min-h-[500px]"
+      className="flex flex-col  rounded-xl overflow-hidden h-full w-full min-h-[500px]"
     >
 
 {/* ── TOOLBAR ── */}

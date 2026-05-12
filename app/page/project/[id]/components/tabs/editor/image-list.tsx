@@ -1,6 +1,8 @@
 import React from "react";
 import { Button } from "antd";
 import { X, Image as ImageIcon, Eye, EyeOff } from "lucide-react";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 
 export interface ImportedImage {
   id: string;
@@ -20,8 +22,18 @@ const ImageList: React.FC<ImageListProps> = ({
   showImageList,
   setShowImageList,
   deleteImageFromList,
-}) => (
-  <div className="bg-[#2a3036] border-t border-[#3c444d] px-4 py-2 transition-all">
+}) =>
+{
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
+  return (
+  <div
+  className="px-4 py-2 transition-all"
+  style={{
+    backgroundColor: semantic.colorBgContainer,
+    borderTop: `1px solid ${semantic.colorBorder}`,
+  }}
+>
          <div className="flex justify-between items-center mb-2">
            <span className="text-sm text-slate-300 font-semibold flex items-center gap-2">
              <ImageIcon size={16} /> Imported Images
@@ -37,12 +49,21 @@ const ImageList: React.FC<ImageListProps> = ({
            </Button>
          </div>
          {showImageList && (
-           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#3c444d]">
+        <div
+      className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin"
+      style={{
+        scrollbarColor: `${semantic.colorBorder} transparent`,
+      }}
+    >
              {images.map((img) => (
-               <div
-                 key={img.id}
-                 className="relative group w-20 h-20 bg-[#1a1f24] rounded-lg border border-[#3c444d] flex items-center justify-center overflow-hidden shrink-0"
-               >
+              <div
+          key={img.id}
+          className="relative group w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden shrink-0"
+          style={{
+            backgroundColor: semantic.colorBgElevated,
+            border: `1px solid ${semantic.colorBorder}`,
+          }}
+        >
                  <img
                    src={img.url}
                    alt={img.name}
@@ -65,5 +86,5 @@ const ImageList: React.FC<ImageListProps> = ({
            </div>
          )}
        </div>
-);
+);}
 export default ImageList;
