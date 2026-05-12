@@ -214,7 +214,6 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
   }, [messages]);
 
   useEffect(() => {
-
     if (shouldAutoScrollRef.current && messages.length > 0) {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1181,6 +1180,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
             cerrentUsedCredit={cerrentUsedCredit}
             selectedModel={selectedAIModel?.modelType || undefined}
             organizationId={session?.user?.organizationId || undefined}
+            projectId={projectId}
           />
         }
         loading={loading}
@@ -1207,7 +1207,9 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
                 onDelete={onDelete}
                 onDeleteMessage={(messageId) =>
                   setMessages((prev) =>
-                    prev.filter((m) => m.id !== messageId && m.taskId !== messageId),
+                    prev.filter(
+                      (m) => m.id !== messageId && m.taskId !== messageId,
+                    ),
                   )
                 }
                 semantic={semantic}

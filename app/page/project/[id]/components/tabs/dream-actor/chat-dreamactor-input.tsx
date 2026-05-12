@@ -77,6 +77,7 @@ type Props = {
   cerrentUsedCredit: number;
   selectedModel?: string;
   organizationId?: string;
+  projectId: string;
 };
 
 export default function ChatDreamactorInput({
@@ -98,6 +99,7 @@ export default function ChatDreamactorInput({
   cerrentUsedCredit,
   selectedModel,
   organizationId,
+  projectId,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -365,6 +367,7 @@ export default function ChatDreamactorInput({
             rows={5}
             maxLength={2000}
             required={false}
+            projectId={projectId}
           />
 
           <PromptTemplateSection
@@ -420,49 +423,48 @@ export default function ChatDreamactorInput({
               </>
             }
           />
-            <BrandKitSection
-                        semantic={semantic}
-                        onCiPromptChange={setCiPrompt}
-                        onActiveChange={setCiActive}
-                      />
+          <BrandKitSection
+            semantic={semantic}
+            onCiPromptChange={setCiPrompt}
+            onActiveChange={setCiActive}
+          />
         </Flex>
 
-        
-          <Card
+        <Card
+          size="small"
+          style={{
+            borderRadius: 12,
+            borderColor: semantic.colorBorder,
+            background: semantic.colorBgElevated,
+          }}
+          styles={{ body: { padding: "8px 12px" } }}
+        >
+          <Quata
+            title="Quota"
+            creditUsed={usedCredit.used || 0}
+            creditTotal={usedCredit.total || 0}
             size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
-            <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
-              creditTotal={usedCredit.total || 0}
-              size="small"
-              cerrentUsedCredit={cerrentUsedCredit}
-            />
-          </Card>
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            disabled={submitting}
-            style={{
-              color: "white",
-              border: "none",
-              height: 40,
-              borderRadius: 10,
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
-            }}
-            icon={<Sparkles size={16} />}
-            loading={submitting}
-          >
-            Generate
-          </Button>
+            cerrentUsedCredit={cerrentUsedCredit}
+          />
+        </Card>
+        <Button
+          block
+          type="primary"
+          htmlType="submit"
+          disabled={submitting}
+          style={{
+            color: "white",
+            border: "none",
+            height: 40,
+            borderRadius: 10,
+            fontWeight: 600,
+            background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
+          }}
+          icon={<Sparkles size={16} />}
+          loading={submitting}
+        >
+          Generate
+        </Button>
       </Form>
 
       <Modal

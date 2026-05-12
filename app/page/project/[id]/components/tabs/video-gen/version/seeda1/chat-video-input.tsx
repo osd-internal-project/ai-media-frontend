@@ -85,6 +85,7 @@ type Props = {
   handleUploadChangeMuti: (info: UploadChangeParam) => void;
   beforeUploadMuti: (file: RcFile) => boolean;
   onRemoveFileMuti: (file: UploadFile) => Promise<void>;
+  projectId: string;
 };
 
 export default function ChatVideoInput(props: Props) {
@@ -118,6 +119,7 @@ export default function ChatVideoInput(props: Props) {
     handleUploadChangeMuti,
     beforeUploadMuti,
     onRemoveFileMuti,
+    projectId,
   } = props;
 
   // Helper to join CI prompt and main prompt with connector
@@ -467,6 +469,7 @@ export default function ChatVideoInput(props: Props) {
             maxLength={8000}
             required={true}
             mentionOptions={mentionOptions}
+            projectId={projectId}
           />
 
           <PromptTemplateSection

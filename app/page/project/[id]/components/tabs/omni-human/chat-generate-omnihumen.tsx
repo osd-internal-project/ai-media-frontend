@@ -5,13 +5,7 @@ import React, {
   useCallback,
   type FC,
 } from "react";
-import {
-  Flex,
-  Form,
-  message,
-  type UploadFile,
-  notification,
-} from "antd";
+import { Flex, Form, message, type UploadFile, notification } from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
   TPromptGuide,
@@ -1164,6 +1158,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             cerrentUsedCredit={cerrentUsedCredit}
             selectedModel={selectedAIModel?.modelType || undefined}
             organizationId={session?.user?.organizationId || undefined}
+            projectId={projectId}
           />
         }
         loading={loading}

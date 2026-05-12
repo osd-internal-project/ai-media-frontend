@@ -1371,11 +1371,11 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
             selectedModel={selectedAIModel}
             organizationId={session?.user?.organizationId || undefined}
             //Fix Muti
-
             files={files}
             handleUploadChangeMuti={handleUploadChangeMuti}
             beforeUploadMuti={beforeUploadMuti}
             onRemoveFileMuti={onRemoveFileMuti}
+            projectId={projectId}
           />
         }
         loading={loading}

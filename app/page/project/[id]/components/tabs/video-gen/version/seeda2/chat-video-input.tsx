@@ -85,6 +85,7 @@ type Props = {
   handleUploadChangeMuti: (info: UploadChangeParam) => void;
   beforeUploadMuti: (file: RcFile) => boolean;
   onRemoveFileMuti: (file: UploadFile) => Promise<void>;
+  projectId: string;
 };
 
 export default function ChatVideoInput(props: Props) {
@@ -118,6 +119,7 @@ export default function ChatVideoInput(props: Props) {
     handleUploadChangeMuti,
     beforeUploadMuti,
     onRemoveFileMuti,
+    projectId,
   } = props;
 
   // Helper to join CI prompt and main prompt with connector
@@ -449,18 +451,17 @@ export default function ChatVideoInput(props: Props) {
             paddingBlock: 12,
           }}
         >
-        
-            <UploadSection
-              semantic={semantic}
-              files={files}
-              isLoadingUpload={isLoadingUpload}
-              handleUploadChange={handleUploadChangeMuti}
-              beforeUpload={beforeUploadMuti}
-              onRemoveFile={onRemoveFileMuti}
-              maxUploadFiles={8}
-              description="Upload Reference (optional, image, video, audio, max 8)"
-              accept="image/*,video/*,audio/*"
-            />
+          <UploadSection
+            semantic={semantic}
+            files={files}
+            isLoadingUpload={isLoadingUpload}
+            handleUploadChange={handleUploadChangeMuti}
+            beforeUpload={beforeUploadMuti}
+            onRemoveFile={onRemoveFileMuti}
+            maxUploadFiles={8}
+            description="Upload Reference (optional, image, video, audio, max 8)"
+            accept="image/*,video/*,audio/*"
+          />
           <PromptSection
             semantic={semantic}
             placeholder="Describe what you want to video... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
@@ -468,6 +469,7 @@ export default function ChatVideoInput(props: Props) {
             maxLength={8000}
             required={true}
             mentionOptions={mentionOptions}
+            projectId={projectId}
           />
 
           <PromptTemplateSection

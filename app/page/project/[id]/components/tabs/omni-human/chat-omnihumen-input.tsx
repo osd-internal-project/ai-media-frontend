@@ -78,6 +78,7 @@ type Props = {
   cerrentUsedCredit: number;
   selectedModel?: string;
   organizationId?: string;
+  projectId: string;
 };
 
 export default function ChatOmnihumenInput({
@@ -99,6 +100,7 @@ export default function ChatOmnihumenInput({
   cerrentUsedCredit,
   selectedModel,
   organizationId,
+  projectId,
 }: Props) {
   // Helper to join CI prompt and main prompt with connector
   function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
@@ -316,19 +318,18 @@ export default function ChatOmnihumenInput({
 
   return (
     <Flex vertical style={{ height: "100%", minHeight: 0 }}>
-
-        <Form
-          name="omnihumen-gen"
-          form={form}
-          onFinish={handleSendMessageWithCi}
-          autoComplete="off"
-          style={{
-            height: "100%",
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+      <Form
+        name="omnihumen-gen"
+        form={form}
+        onFinish={handleSendMessageWithCi}
+        autoComplete="off"
+        style={{
+          height: "100%",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Flex
           vertical
           gap={12}
@@ -368,6 +369,7 @@ export default function ChatOmnihumenInput({
             rows={5}
             maxLength={2000}
             required={false}
+            projectId={projectId}
           />
 
           <PromptTemplateSection
@@ -430,43 +432,41 @@ export default function ChatOmnihumenInput({
           />
         </Flex>
 
-        
-          <Card
+        <Card
+          size="small"
+          style={{
+            borderRadius: 12,
+            borderColor: semantic.colorBorder,
+            background: semantic.colorBgElevated,
+          }}
+          styles={{ body: { padding: "8px 12px" } }}
+        >
+          <Quata
+            title="Quota"
+            creditUsed={usedCredit.used || 0}
+            creditTotal={usedCredit.total || 0}
             size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
-            <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
-              creditTotal={usedCredit.total || 0}
-              size="small"
-              cerrentUsedCredit={cerrentUsedCredit}
-            />
-          </Card>
-          <Button
-            block
-            type="primary"
-            htmlType="submit"
-            disabled={submitting}
-            style={{
-              color: "white",
-              border: "none",
-              height: 40,
-              borderRadius: 10,
-              fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
-            }}
-            icon={<Sparkles size={16} />}
-            loading={submitting}
-          >
-            Generate
-          </Button>
-       
+            cerrentUsedCredit={cerrentUsedCredit}
+          />
+        </Card>
+        <Button
+          block
+          type="primary"
+          htmlType="submit"
+          disabled={submitting}
+          style={{
+            color: "white",
+            border: "none",
+            height: 40,
+            borderRadius: 10,
+            fontWeight: 600,
+            background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
+          }}
+          icon={<Sparkles size={16} />}
+          loading={submitting}
+        >
+          Generate
+        </Button>
       </Form>
 
       <Modal
