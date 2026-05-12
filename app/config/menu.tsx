@@ -77,14 +77,14 @@ export const MenuSider = [
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Dashboard</span>
         ),
       },
-      {
-        key: `assistant`,
-        // role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
-        icon: <MessageSquare size={22} />,
-        label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>Assistant</span>
-        ),
-      },
+      // {
+      //   key: `assistant`,
+      //   // role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
+      //   icon: <MessageSquare size={22} />,
+      //   label: (
+      //     <span style={{ fontSize: 12, fontWeight: "normal" }}>Assistant</span>
+      //   ),
+      // },
     ],
   },
   // {
