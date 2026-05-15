@@ -92,12 +92,12 @@ export function PrivateHeader({
       ),
     })),
     { type: "divider" as const },
-    {
-      key: "add",
-      icon: <PlusOutlined />,
-      label: "Add Organization",
-      onClick: handleOpenCreateOrg,
-    },
+    // {
+    //   key: "add",
+    //   icon: <PlusOutlined />,
+    //   label: "Add Organization",
+    //   onClick: handleOpenCreateOrg,
+    // },
     {
       key: "settings",
       icon: <SettingOutlined />,
@@ -119,16 +119,16 @@ export function PrivateHeader({
     //   label: "Use Coupon",
     //   onClick: handleOpenCouponModal,
     // },
-    ...(systemRole === "SUPER_ADMIN"
-      ? [
-          {
-            key: "admin",
-            icon: <SettingOutlined />,
-            label: "Admin Management",
-            onClick: () => router.push("/page/admin-management"),
-          },
-        ]
-      : []),
+    // ...(systemRole === "SUPER_ADMIN"
+    //   ? [
+    //       {
+    //         key: "admin",
+    //         icon: <SettingOutlined />,
+    //         label: "Admin Management",
+    //         onClick: () => router.push("/page/admin-management"),
+    //       },
+    //     ]
+    //   : []),
     { type: "divider" as const },
     {
       key: "logout",
