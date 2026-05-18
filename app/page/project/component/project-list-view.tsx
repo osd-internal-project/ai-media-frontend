@@ -211,10 +211,9 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
             key: "quota",
             align: "center",
             render: (_: any, record: IProject) => {
-              const imageUsed =
-                (record.accessImageAmount ?? 0) -
-                (record.remainImageAmount ?? 0);
-              const imageTotal = record.accessImageAmount ?? 0;
+              const creditUsed = record.usedCreditAllowance ?? 0;
+              console.log("creditUsed", creditUsed);
+              const creditTotal = record.limitCreditAllowance ?? 0;
               return (
                 <div
                   style={{
@@ -225,8 +224,8 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                   }}
                 >
                   <Quata
-                    creditUsed={imageUsed}
-                    creditTotal={imageTotal}
+                    creditUsed={creditUsed}
+                    creditTotal={creditTotal}
                     semantic={semantic}
                     size={"small"}
                     cerrentUsedCredit={0}
