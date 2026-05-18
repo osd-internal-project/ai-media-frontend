@@ -16,21 +16,22 @@ export const checkRole = (
 };
 
 export const organizationPermissions = {
-  createOrganization: ["OWNER", "SUPER_ADMIN"] as OrganizationRole[],
-  createProjects: ["OWNER", "ADMIN"] as OrganizationRole[],
-  manageMembers: ["OWNER", "ADMIN"] as OrganizationRole[],
-  editOrganization: ["OWNER"] as OrganizationRole[],
-  viewOrganization: ["OWNER", "ADMIN"] as OrganizationRole[],
-  viewProjects: ["OWNER", "ADMIN", "MEMBER", "VIEWER"] as OrganizationRole[],
+   createOrganization: [] as OrganizationRole[],
+  // createOrganization: ["OWNER", "SUPER_ADMIN"] as OrganizationRole[],
+  createProjects: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
+  manageMembers: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
+  editOrganization: ["OWNER","SUPER_ADMIN"] as OrganizationRole[],
+  viewOrganization: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
+  viewProjects: ["OWNER", "ADMIN", "MEMBER", "VIEWER","SUPER_ADMIN"] as OrganizationRole[],
   viewDashboard: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
   viewTemplates: ["OWNER", "ADMIN", "MEMBER", "SUPER_ADMIN"] as OrganizationRole[],
-  manageTemplates: ["OWNER", "ADMIN"] as OrganizationRole[],
+  manageTemplates: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
 };
 
 export const projectPermissions = {
   manageProject: ["OWNER", "ADMIN"] as ProjectRole[],
-  useChat: ["OWNER", "ADMIN", "USER"] as ProjectRole[],
-  editContent: ["OWNER", "ADMIN", "USER"] as ProjectRole[],
+  useChat: ["OWNER", "ADMIN", "USER","SUPER_ADMIN"] as ProjectRole[],
+  editContent: ["OWNER", "ADMIN", "USER","SUPER_ADMIN"] as ProjectRole[],
   viewOnly: ["VIEWER", "SUPER_ADMIN"] as ProjectRole[],
   viewAll: ["OWNER", "ADMIN", "USER", "VIEWER", "SUPER_ADMIN"] as ProjectRole[],
 };

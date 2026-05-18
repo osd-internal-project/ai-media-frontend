@@ -119,16 +119,7 @@ export function PrivateHeader({
     //   label: "Use Coupon",
     //   onClick: handleOpenCouponModal,
     // },
-    // ...(systemRole === "SUPER_ADMIN"
-    //   ? [
-    //       {
-    //         key: "admin",
-    //         icon: <SettingOutlined />,
-    //         label: "Admin Management",
-    //         onClick: () => router.push("/page/admin-management"),
-    //       },
-    //     ]
-    //   : []),
+   
     { type: "divider" as const },
     {
       key: "logout",
