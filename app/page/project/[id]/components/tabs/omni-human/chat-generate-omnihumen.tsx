@@ -279,7 +279,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         lastImage?.imagePath ? lastImage.imagePath : null,
       ],
       sequentialImageGeneration: "auto",
-      size: selectedResolution,
+      resolution: selectedResolution,
       maxImages: 0,
       watermark: false,
       ratio: selectedRatio,

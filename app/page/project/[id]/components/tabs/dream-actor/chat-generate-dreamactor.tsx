@@ -291,7 +291,7 @@ const ChatGenerateDreamactor: FC<DreamactorChatProps> = ({
         lastImage?.imagePath ? lastImage.imagePath : null,
       ],
       sequentialImageGeneration: "auto",
-      size: selectedResolution,
+      resolution: selectedResolution,
       maxImages: 0,
       watermark: false,
       ratio: selectedRatio,

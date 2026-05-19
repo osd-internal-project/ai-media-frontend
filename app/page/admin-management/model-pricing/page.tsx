@@ -305,13 +305,82 @@ const ModelPricingManagementPage = () => {
             </Form.Item>
 
             {(calculationType === "FORMULA" || calculationType === "USE_TOKEN" || calculationType === "NOT_USE_TOKEN") && (
-              <div className="mt-4 p-4 border border-blue-900 bg-[#16213e] rounded">
-                <p className="text-sm text-blue-300 mb-4">
-                  Type Javascript variables provided by `body` and `token` object.<br/>
-                  <b>Examples:</b> <br/>
-                  - <code>body.duration * 42</code><br/>
-                  - <code>(token * (body.generateAudio ? 2 : 1)) / 1024 / 720</code><br/>
-                </p>
+              <div className="mt-4 p-4 border border-blue-900 bg-[#16213e] rounded text-sm text-blue-200 space-y-3">
+
+                {/* Variables reference */}
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">Available variables</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs">
+                    <li><code>token</code> — execution token count (from API response)</li>
+                    <li><code>body.duration</code> — duration in seconds</li>
+                    <li><code>body.width</code>, <code>body.height</code> — resolution</li>
+                    <li><code>body.images</code> — number of images</li>
+                    <li><code>body.generateAudio</code> — boolean or <code>&apos;Yes&apos;</code></li>
+                    <li><code>body.quality</code>, <code>body.size</code>, <code>body.model</code> — any field from the request</li>
+                  </ul>
+                </div>
+
+                {/* Math helpers */}
+                <div>
+                  <p className="font-semibold text-blue-300 mb-1">Math helpers</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs">
+                    <li><code>pow(base, exp)</code> — e.g. <code>pow(body.width, 2)</code></li>
+                    <li><code>abs(x)</code>, <code>min(a,b)</code>, <code>max(a,b)</code></li>
+                    <li><code>round(x)</code>, <code>ceil(x)</code>, <code>floor(x)</code></li>
+                    <li>Ternary: <code>condition ? valueIfTrue : valueIfFalse</code></li>
+                  </ul>
+                </div>
+
+                {/* Examples per calculationType */}
+                {calculationType === "NOT_USE_TOKEN" && (
+                  <div>
+                    <p className="font-semibold text-blue-300 mb-1">NOT_USE_TOKEN — Credit formula examples (no token used)</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs">
+                      <li><code>body.duration * 42</code></li>
+                      <li><code>body.images * 10</code></li>
+                      <li><code>ternary(body.resolution === &apos;2k&apos;, 20, 22.5)</code></li>
+                      <li><code>ternary(body.resolution === &apos;2k&apos;, 20, ternary(body.resolution === &apos;4k&apos;, 30, 15))</code></li>
+                      <li><code>ternary(body.generateAudio === true, body.duration * 25, body.duration * 15)</code></li>
+                      <li><code>round(body.duration * 42)</code></li>
+                    </ul>
+                  </div>
+                )}
+
+                {calculationType === "USE_TOKEN" && (
+                  <div>
+                    <p className="font-semibold text-blue-300 mb-1">USE_TOKEN examples</p>
+                    <p className="text-blue-400 text-xs mb-1">Token formula (used when token = 0 from API):</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs mb-2">
+                      <li><code>body.duration * 49846.15</code></li>
+                      <li><code>body.duration * 20769.23</code></li>
+                    </ul>
+                    <p className="text-blue-400 text-xs mb-1">Credit formula (receives resolved <code>token</code>):</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs">
+                      <li><code>round(token / 1186.813)</code></li>
+                      <li><code>ternary(token &gt; 0, round(token / 1000), body.duration * 30)</code></li>
+                      <li><code>ternary(body.generateAudio === &apos;Yes&apos;, round(token / 800), round(token / 1186.813))</code></li>
+                    </ul>
+                  </div>
+                )}
+
+                {calculationType === "FORMULA" && (
+                  <div>
+                    <p className="font-semibold text-blue-300 mb-1">FORMULA — Token + Credit formula examples</p>
+                    <p className="text-blue-400 text-xs mb-1">Token formula:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs mb-2">
+                      <li><code>body.duration * 49846.15</code></li>
+                      <li><code>token</code> — pass through raw token</li>
+                    </ul>
+                    <p className="text-blue-400 text-xs mb-1">Legacy formula base (credit):</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-blue-400 font-mono text-xs">
+                      <li><code>body.duration * 42</code></li>
+                      <li><code>ternary(body.resolution === &apos;2k&apos;, 20, 22.5)</code></li>
+                      <li><code>ternary(body.resolution === &apos;2k&apos;, 20, ternary(body.resolution === &apos;4k&apos;, 30, 15))</code></li>
+                      <li><code>ternary(body.quality === &apos;hd&apos;, body.duration * 60, body.duration * 30)</code></li>
+                      <li><code>round(pow(body.duration, 1.2) * 5)</code></li>
+                    </ul>
+                  </div>
+                )}
 
                 {(calculationType === "USE_TOKEN" || calculationType === "FORMULA") && (
                   <Form.Item
@@ -329,7 +398,7 @@ const ModelPricingManagementPage = () => {
                     label={<span className="text-gray-300">Credit Usage Formula</span>}
                     rules={[{ required: true, message: "Required" }]}
                   >
-                    <Input placeholder="e.g., token > 0 ? (token * body.duration) : (body.duration * 20)" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                  <Input placeholder="e.g., ternary(body.resolution === '2k', 20, ternary(body.resolution === '4k', 30, 15))" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
                   </Form.Item>
                 )}
 
@@ -339,7 +408,7 @@ const ModelPricingManagementPage = () => {
                    label={<span className="text-gray-300">Legacy Formula Base</span>}
                    rules={[{ required: true, message: "Required" }]}
                  >
-                   <Input placeholder="e.g., body.duration * 42" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                   <Input placeholder="e.g., ternary(body.resolution === '2k', 20, 22.5)" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
                  </Form.Item>
                 )}
               </div>
