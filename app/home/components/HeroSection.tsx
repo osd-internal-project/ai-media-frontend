@@ -405,7 +405,8 @@ export default function HeroSection() {
               transition: "opacity 0.9s ease 0.45s, transform 0.9s ease 0.45s",
             }}
           >
-            <button
+            {/* Hide Book a Demo Button */}
+            {/* <button
               onMouseEnter={() => setHoveredBtn(1)}
               onMouseLeave={() => setHoveredBtn(null)}
               style={{
@@ -427,7 +428,7 @@ export default function HeroSection() {
               }}
             >
               Book a Demo
-            </button>
+            </button> */}
             <a
               href="/contact-sale"
               onMouseEnter={() => setHoveredBtn(2)}

@@ -309,6 +309,20 @@ const Page: FC = () => {
                   Sign Up
                 </Link>
               </div>
+              <div className="mt-2 text-center text-xs text-gray-500">
+                {/* {"Back to Home"} */}
+                <Link
+                  href="/home"
+                  // className="text-[#5BC0EB] hover:text-[#3B82F6] font-semibold transition-colors"
+                >
+                  <Button
+                    type="link"
+                    className="text-[#5BC0EB] hover:text-[#3B82F6] text-xs font-medium"
+                  >
+                    Back to Home
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 

@@ -116,7 +116,7 @@ export default function Plan() {
             pointerEvents: "none",
           }}
         />
-        <div className="z-10 w-full overflow-hidden pb-10 pt-8 sm:pb-16 sm:pt-14 md:pt-20">
+        <div className="z-10 w-full overflow-hidden pb-10 pt-8 sm:pb-16 sm:pt-14 ">
           <div className="mx-auto w-full max-w-7xl px-0 sm:px-2 md:px-4">
             <div className="mb-8 text-left text-white sm:mb-12 md:mb-16">
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
