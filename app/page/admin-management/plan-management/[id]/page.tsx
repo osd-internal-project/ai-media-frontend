@@ -15,6 +15,7 @@ import {
   Spin,
   Breadcrumb,
   Select,
+  Checkbox,
 } from "antd";
 import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
 import PlanServices from "@/app/services/plan.service";
@@ -35,7 +36,13 @@ export default function PlanDetailPage() {
   const [features, setFeatures] = useState<TPlanFeature[]>([]);
   const [prices, setPrices] = useState<TPlanPrice[]>([]);
   const planService = PlanServices(axiosCore);
-
+  const ACCESS_CODE: { label: string; value: string; className: string }[] = [
+    { label: "Image", value: "image", className: "label-1" },
+    { label: "Video", value: "video", className: "label-2" },
+    { label: "Omnihuman", value: "omni", className: "label-3" },
+    { label: "Dream Actor", value: "dream", className: "label-4" },
+    { label: "Editor", value: "editor", className: "label-5" },
+  ];
   useEffect(() => {
     if (id && id !== "create") {
       fetchPlan();
@@ -160,10 +167,7 @@ export default function PlanDetailPage() {
         className="max-w-6xl space-y-2"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
-          <Card
-            title="Basic Information"
-            className=""
-          >
+          <Card title="Basic Information" className="">
             <Form.Item
               name="name"
               label="Plan Name"
@@ -269,6 +273,9 @@ export default function PlanDetailPage() {
                 labelCol={{ span: 10 }}
               >
                 <InputNumber className="w-full" min={0} />
+              </Form.Item>
+              <Form.Item name="accessCodes" label="Access">
+                <Checkbox.Group options={ACCESS_CODE} />
               </Form.Item>
             </div>
           </Card>

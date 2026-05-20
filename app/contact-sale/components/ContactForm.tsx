@@ -24,7 +24,7 @@ export default function ContactForm({ messageApi }: props) {
       setLoading(true);
       await contactSaleLogService.create(values);
       messageApi.success("Success! We have received your contact details.");
-      form.resetFields();
+      // form.resetFields();
     } catch (error) {
       // console.error(error);
       messageApi.error("Failed to submit contact form.");
