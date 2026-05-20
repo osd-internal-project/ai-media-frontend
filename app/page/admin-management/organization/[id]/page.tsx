@@ -22,6 +22,7 @@ import { formatNumber } from "@/app/utils/format";
 import { useParams } from "next/navigation";
 import OrganizationMemberTab from "./components/OrganizationMemberTab";
 import OrganizationPackageTab from "./components/OrganizationPackageTab";
+import OrganizationInvitationTab from "./components/OrganizationInvitationTab";
 
 export default function OrganizationDetailPage() {
   const [, contextHolder] = message.useMessage();
@@ -129,6 +130,13 @@ export default function OrganizationDetailPage() {
       label: "Package",
       children: <OrganizationPackageTab organizationId={organizationId} />,
     },
+    {
+      key: "invitations",
+      label: "Invitations",
+      children: (
+        <OrganizationInvitationTab organizationId={organizationId} canManage />
+      ),
+    },
   ];
 
   return (
@@ -169,23 +177,13 @@ export default function OrganizationDetailPage() {
               )}
               / {formatNumber(organization?.subscription?.creditAllowance || 0)}
             </div>
-            <div className="text-xl text-green-500 ml-2">
-              + {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
-            </div>
           </div>
         </Card>
         <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">Used Total Image :</div>
+          <div className="text-[#99a1af]">On Top Credit :</div>
           <div className="flex">
             <div className="text-xl">
-              {formatNumber(
-                (organization?.subscription?.imageAllowance || 0) -
-                  (organization?.creditBalance?.currentCycleImage || 0),
-              )}
-              / {formatNumber(organization?.subscription?.imageAllowance || 0)}
-            </div>
-            <div className="text-xl text-purple-500 ml-2">
-              + {formatNumber(organization?.creditBalance?.onTopImage || 0)}
+              + {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
             </div>
           </div>
         </Card>

@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { IOrganization } from "../common/organization.type";
+import { IOrganization, IOrganizationInvitation } from "../common/organization.type";
 
 const OrganizationServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/organization";
@@ -141,6 +141,23 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
         .then((res) => {
           return res.data;
         })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    findInvitationsByOrganization: async (organizationId: string): Promise<IOrganizationInvitation[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/invitation/organization/${organizationId}`)
+        .then((res) => res.data)
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
+    cancelInvitation: async (id: string): Promise<void> => {
+      return await axiosInstance
+        .delete(`${baseUrl}/invitation/${id}`)
+        .then((res) => res.data)
         .catch((err) => {
           throw err;
         });

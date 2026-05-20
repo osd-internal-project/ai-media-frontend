@@ -47,6 +47,17 @@ export interface ICreditBalance {
   updatedAt: string | Date;
 }
 
+export interface IOrganizationInvitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string;
+  status: "pending" | "accepted" | "expired" | "cancelled";
+  token: string;
+  createdAt: string;
+  expiredAt: string;
+}
+
 export interface IOrganization {
   id: number;
   organizationId: string;
