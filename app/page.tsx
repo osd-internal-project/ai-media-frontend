@@ -4,10 +4,13 @@ import { signIn } from "next-auth/react";
 import { authOptions } from "./api/auth/[...nextauth]/options";
 
 export default async function Page() {
-  const session = await getServerSession(authOptions as any);
+  const session: any = await getServerSession(authOptions as any);
 
   if (!session) {
     redirect("/home");
   }
-  redirect("/page/project");
+  if (session && session.user?.organizationId) {
+    redirect("/page/project");
+  }
+   redirect("/page/");
 }

@@ -95,9 +95,9 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
   );
-  const [personalOrganizations, setPersonalOrganizations] = useState<
-    IOrganization[]
-  >([]);
+  // const [personalOrganizations, setPersonalOrganizations] = useState<
+  //   IOrganization[]
+  // >([]);
   const [userProfile, setUserProfile] = useState<TUser | null>(null);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState<boolean>(false);
   const [couponLoading, setCouponLoading] = useState<boolean>(false);
@@ -148,15 +148,15 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     );
     setUserProfile(userDetail);
 
-    const personalOrganizations = await organizationService.findManyByUserId(
-      userDetail?.userId || "",
-      { type: "personal" },
-    );
-    setPersonalOrganizations(personalOrganizations || []);
+    // const personalOrganizations = await organizationService.findManyByUserId(
+    //   userDetail?.userId || "",
+    //   { type: "personal" },
+    // );
+    // setPersonalOrganizations(personalOrganizations || []);
 
     const teamOrganizations = await organizationService.findManyByUserId(
       userDetail?.userId || "",
-      { type: "team" },
+      {},
     );
     setTeamOrganizations(teamOrganizations || []);
 
@@ -166,18 +166,17 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
     // setGroupName(userDetail.name);
     if (userDetail?.recentOrganizationId) {
-      const organization = [
-        ...personalOrganizations,
-        ...teamOrganizations,
-      ].find((org) => org.organizationId === userDetail?.recentOrganizationId);
+      const organization = teamOrganizations.find(
+        (org) => org.organizationId === userDetail?.recentOrganizationId,
+      );
       if (organization) {
         setCurrentOrganization(organization);
         const credit = await creditฺBalanceService.findByOrganizationId(
           userDetail?.recentOrganizationId,
         );
         setCreditBalance(credit);
+        fecthdataByOrganization(userDetail?.recentOrganizationId);
       }
-      fecthdataByOrganization(userDetail?.recentOrganizationId);
     }
   };
 
@@ -562,7 +561,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               userProfile ? { fullname: userProfile.fullname ?? "" } : undefined
             }
             organizationId={organizationId}
-            personalOrganizations={personalOrganizations}
+            // personalOrganizations={personalOrganizations}
             teamOrganizations={teamOrganizations}
             handleOrganizationChange={handleOrganizationChange}
             handleOpenCreateOrg={handleOpenCreateOrg}

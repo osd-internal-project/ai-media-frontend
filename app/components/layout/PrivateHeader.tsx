@@ -33,6 +33,7 @@ import { formatCompactNumber } from "@/app/utils/format";
 import ThemeToggleButton from "../ThemeToggleButton";
 import { useThemeMode } from "../ThemeProvider";
 import "./LayoutStyle.css";
+import { User ,Users} from "lucide-react";
 
 const { Text } = Typography;
 const { Header } = Layout;
@@ -40,7 +41,7 @@ const { Header } = Layout;
 interface HeaderProps {
   user?: { fullname: string };
   organizationId?: string;
-  personalOrganizations: IOrganization[];
+  // personalOrganizations: IOrganization[];
   teamOrganizations: IOrganization[];
   handleOrganizationChange: (value: string) => void;
   handleOpenCreateOrg: () => void;
@@ -56,7 +57,7 @@ interface HeaderProps {
 export function PrivateHeader({
   user,
   organizationId,
-  personalOrganizations,
+  // personalOrganizations,
   teamOrganizations,
   handleOrganizationChange,
   handleOpenCreateOrg,
@@ -75,11 +76,11 @@ export function PrivateHeader({
   const [orgOpen, setOrgOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
-  const allOrganizations = [
-    ...(personalOrganizations || []),
-    ...(teamOrganizations || []),
-  ];
-  const activeOrg = allOrganizations.find(
+  // const allOrganizations = [
+  //   // ...(personalOrganizations || []),
+  //   ...(teamOrganizations || []),
+  // ];
+  const activeOrg = teamOrganizations.find(
     (o) => o.organizationId === organizationId,
   );
 
@@ -87,7 +88,7 @@ export function PrivateHeader({
   const tokenLimit = currentOrganization?.packageTokenAmount ?? 0;
   const tokenPercentage = tokenLimit > 0 ? (tokenUsage / tokenLimit) * 100 : 0;
 
-  const orgListItems: MenuProps["items"] = allOrganizations.map((org) => ({
+  const orgListItems: MenuProps["items"] = teamOrganizations.map((org) => ({
     key: org.organizationId,
     onClick: () => {
       handleOrganizationChange(org.organizationId);
@@ -96,6 +97,11 @@ export function PrivateHeader({
     label: (
       <Space style={{ width: "100%", justifyContent: "space-between" }}>
         <Text strong={org.organizationId === organizationId}>{org.name}</Text>
+        {org.type === "personal" ? (
+          <User size={12} color="#7775e6" strokeWidth={2} />
+        ) : (
+          <Users size={12} color="#75e691" strokeWidth={2}/>
+        )}
       </Space>
     ),
   }));
@@ -112,7 +118,7 @@ export function PrivateHeader({
     },
   ];
 
-    const userMenuItems = [
+  const userMenuItems = [
     {
       key: "profile",
       icon: <UserOutlined />,
@@ -125,7 +131,7 @@ export function PrivateHeader({
     //   label: "Use Coupon",
     //   onClick: handleOpenCouponModal,
     // },
-   
+
     { type: "divider" as const },
     {
       key: "logout",
@@ -138,7 +144,8 @@ export function PrivateHeader({
   const dropdownPanelStyle: CSSProperties = {
     background: semantic.colorBgElevated ?? semantic.colorBgContainer,
     borderRadius: 8,
-    boxShadow: "0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)",
+    boxShadow:
+      "0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)",
     maxHeight: 500,
     display: "flex",
     flexDirection: "column",
@@ -165,7 +172,7 @@ export function PrivateHeader({
       }}
     >
       <Space size={isMobile ? 6 : isTablet ? 8 : 10} align="center">
-        {(isMobile || isTablet) ? (
+        {isMobile || isTablet ? (
           <Button
             className="private-header-icon-btn"
             type="text"
@@ -189,17 +196,39 @@ export function PrivateHeader({
           trigger={["click"]}
           dropdownRender={() => (
             <div style={dropdownPanelStyle}>
-              <div className="private-header-dropdown-scroll" style={{ overflowY: "auto", flex: 1 }}>
-                <Menu selectable={false} items={orgListItems} style={dropdownMenuStyle} />
+              <div
+                className="private-header-dropdown-scroll"
+                style={{ overflowY: "auto", flex: 1 }}
+              >
+                <Menu
+                  selectable={false}
+                  items={orgListItems}
+                  style={dropdownMenuStyle}
+                />
               </div>
               <Divider style={{ margin: 0 }} />
               <div style={{ flexShrink: 0 }}>
-                <Menu selectable={false} items={orgActionItems} style={dropdownMenuStyle} />
+                <Menu
+                  selectable={false}
+                  items={orgActionItems}
+                  style={dropdownMenuStyle}
+                />
               </div>
             </div>
           )}
         >
-          <Button type="text" className="private-header-org-btn" style={{ padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px", minWidth: isMobile ? 40 : undefined, height: isMobile ? 40 : isTablet ? 44 : 50, display: "flex", alignItems: "center", borderRadius: 10 }}>
+          <Button
+            type="text"
+            className="private-header-org-btn"
+            style={{
+              padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px",
+              minWidth: isMobile ? 40 : undefined,
+              height: isMobile ? 40 : isTablet ? 44 : 50,
+              display: "flex",
+              alignItems: "center",
+              borderRadius: 10,
+            }}
+          >
             <Space size={isMobile ? 6 : isTablet ? 8 : 12} align="center">
               <Avatar
                 size={isMobile ? 28 : 32}
@@ -211,15 +240,34 @@ export function PrivateHeader({
               />
               {!isMobile ? (
                 <>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.2, maxWidth: 220 }}>
-                    <Typography.Text type="secondary" style={{ fontSize: 12, color: semantic.colorTextSecondary }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      lineHeight: 1.2,
+                      maxWidth: 220,
+                    }}
+                  >
+                    <Typography.Text
+                      type="secondary"
+                      style={{
+                        fontSize: 12,
+                        color: semantic.colorTextSecondary,
+                      }}
+                    >
                       ORGANIZATION
                     </Typography.Text>
-                    <Typography.Text strong style={{ color: semantic.colorTextBase }}>
+                    <Typography.Text
+                      strong
+                      style={{ color: semantic.colorTextBase }}
+                    >
                       {activeOrg?.name}
                     </Typography.Text>
                   </div>
-                  <DownOutlined style={{ fontSize: 14, color: semantic.colorTextSecondary }} />
+                  <DownOutlined
+                    style={{ fontSize: 14, color: semantic.colorTextSecondary }}
+                  />
                 </>
               ) : null}
             </Space>
@@ -250,13 +298,21 @@ export function PrivateHeader({
         >
           <Space align="center" size={isMobile ? 4 : 6}>
             <CreditCardOutlined style={{ color: semantic.colorTextBase }} />
-            <Text style={{ color: semantic.colorTextBase, fontSize: isMobile ? 11 : 13 }}>
+            <Text
+              style={{
+                color: semantic.colorTextBase,
+                fontSize: isMobile ? 11 : 13,
+              }}
+            >
               {formatCompactNumber(creditBalance?.currentCycleBalance)}+{" "}
               {formatCompactNumber(creditBalance?.onTopBalance)}
             </Text>
             {!isMobile && !isTablet ? (
               <>
-                <Divider type="vertical" style={{ height: 24, borderColor: semantic.colorBorder }} />
+                <Divider
+                  type="vertical"
+                  style={{ height: 24, borderColor: semantic.colorBorder }}
+                />
                 <Progress
                   percent={tokenPercentage}
                   showInfo={false}
@@ -275,9 +331,20 @@ export function PrivateHeader({
         </div>
 
         <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-          <Button type="text" className="private-header-user-btn" style={{ padding: isMobile ? "0 2px" : undefined, borderRadius: 10, height: isMobile ? 40 : 44 }}>
+          <Button
+            type="text"
+            className="private-header-user-btn"
+            style={{
+              padding: isMobile ? "0 2px" : undefined,
+              borderRadius: 10,
+              height: isMobile ? 40 : 44,
+            }}
+          >
             <Space size={isMobile ? 6 : 8}>
-              <Avatar size={isMobile ? 30 : 32} style={{ backgroundColor: semantic.colorPrimary }}>
+              <Avatar
+                size={isMobile ? 30 : 32}
+                style={{ backgroundColor: semantic.colorPrimary }}
+              >
                 {user?.fullname
                   ? user.fullname
                       .split(" ")
@@ -290,8 +357,6 @@ export function PrivateHeader({
           </Button>
         </Dropdown>
       </Space>
-
-      
     </Header>
   );
 }

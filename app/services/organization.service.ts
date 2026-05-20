@@ -18,7 +18,7 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
     },
     findManyByUserId: async (
       userId: string,
-      search: { type: string },
+      search: { type?: string },
     ): Promise<IOrganization[]> => {
       return await axiosInstance
         .get(`${baseUrl}/user/${userId}`, { params: search })
