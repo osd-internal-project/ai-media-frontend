@@ -55,7 +55,6 @@ export default function PlanDetailPage() {
     try {
       const data = await planService.findById(id as string);
       if (data) {
-        console.log(data);
         form.setFieldsValue({
           ...data,
         });

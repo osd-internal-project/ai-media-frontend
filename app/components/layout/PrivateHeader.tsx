@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import type { CSSProperties } from "react";
 import {
   Avatar,
   Button,
@@ -7,17 +9,18 @@ import {
   Divider,
   Dropdown,
   Layout,
+  Menu,
   Progress,
   Space,
   Typography,
 } from "antd";
+import type { MenuProps } from "antd";
 import {
   CreditCardOutlined,
   DownOutlined,
   HomeOutlined,
   LogoutOutlined,
   MenuOutlined,
-  PlusOutlined,
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -69,6 +72,9 @@ export function PrivateHeader({
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile, isTablet } = useResponsive();
 
+  const [orgOpen, setOrgOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+
   const allOrganizations = [
     ...(personalOrganizations || []),
     ...(teamOrganizations || []),
@@ -81,32 +87,32 @@ export function PrivateHeader({
   const tokenLimit = currentOrganization?.packageTokenAmount ?? 0;
   const tokenPercentage = tokenLimit > 0 ? (tokenUsage / tokenLimit) * 100 : 0;
 
-  const orgMenuItems = [
-    ...allOrganizations.map((org) => ({
-      key: org.organizationId,
-      onClick: () => handleOrganizationChange(org.organizationId),
-      label: (
-        <Space style={{ width: "100%", justifyContent: "space-between" }}>
-          <Text strong={org.organizationId === organizationId}>{org.name}</Text>
-        </Space>
-      ),
-    })),
-    { type: "divider" as const },
-    // {
-    //   key: "add",
-    //   icon: <PlusOutlined />,
-    //   label: "Add Organization",
-    //   onClick: handleOpenCreateOrg,
-    // },
+  const orgListItems: MenuProps["items"] = allOrganizations.map((org) => ({
+    key: org.organizationId,
+    onClick: () => {
+      handleOrganizationChange(org.organizationId);
+      setOrgOpen(false);
+    },
+    label: (
+      <Space style={{ width: "100%", justifyContent: "space-between" }}>
+        <Text strong={org.organizationId === organizationId}>{org.name}</Text>
+      </Space>
+    ),
+  }));
+
+  const orgActionItems: MenuProps["items"] = [
     {
       key: "settings",
       icon: <SettingOutlined />,
       label: "Organization Settings",
-      onClick: handleManageOrg,
+      onClick: () => {
+        handleManageOrg();
+        setOrgOpen(false);
+      },
     },
   ];
 
-  const userMenuItems = [
+    const userMenuItems = [
     {
       key: "profile",
       icon: <UserOutlined />,
@@ -128,6 +134,23 @@ export function PrivateHeader({
       onClick: () => signOut({ callbackUrl: "/login" }),
     },
   ];
+
+  const dropdownPanelStyle: CSSProperties = {
+    background: semantic.colorBgElevated ?? semantic.colorBgContainer,
+    borderRadius: 8,
+    boxShadow: "0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)",
+    maxHeight: 500,
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    minWidth: 200,
+  };
+
+  const dropdownMenuStyle: CSSProperties = {
+    boxShadow: "none",
+    border: "none",
+    backgroundColor: "transparent",
+  };
 
   return (
     <Header
@@ -160,7 +183,22 @@ export function PrivateHeader({
           />
         ) : null}
 
-        <Dropdown menu={{ items: orgMenuItems }} trigger={["click"]}>
+        <Dropdown
+          open={orgOpen}
+          onOpenChange={setOrgOpen}
+          trigger={["click"]}
+          dropdownRender={() => (
+            <div style={dropdownPanelStyle}>
+              <div className="private-header-dropdown-scroll" style={{ overflowY: "auto", flex: 1 }}>
+                <Menu selectable={false} items={orgListItems} style={dropdownMenuStyle} />
+              </div>
+              <Divider style={{ margin: 0 }} />
+              <div style={{ flexShrink: 0 }}>
+                <Menu selectable={false} items={orgActionItems} style={dropdownMenuStyle} />
+              </div>
+            </div>
+          )}
+        >
           <Button type="text" className="private-header-org-btn" style={{ padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px", minWidth: isMobile ? 40 : undefined, height: isMobile ? 40 : isTablet ? 44 : 50, display: "flex", alignItems: "center", borderRadius: 10 }}>
             <Space size={isMobile ? 6 : isTablet ? 8 : 12} align="center">
               <Avatar
