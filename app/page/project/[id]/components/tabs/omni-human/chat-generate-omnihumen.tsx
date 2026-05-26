@@ -5,7 +5,14 @@ import React, {
   useCallback,
   type FC,
 } from "react";
-import { Flex, Form, message, type UploadFile, notification } from "antd";
+import {
+  Flex,
+  Form,
+  message,
+  type UploadFile,
+  type FormInstance,
+  notification,
+} from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
   TPromptGuide,
@@ -19,16 +26,16 @@ import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import GenerateServices from "@/app/services/generate.service";
 import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
-import ChatOmnihumenInput from "./chat-omnihumen-input";
+import type { OmniModelConfig, OmniFormState } from "../../tab-layout/types/generator-config.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import OmniResultItem from "./omni-result";
-import OmnihumenResultHeader from "./header";
+import OmniResultItem from "./shared/omni-result";
+import OmnihumenResultHeader from "./shared/header";
 import { getSecondsFileDuration } from "@/app/utils/fileUtil";
 
-interface OmniHumanChatProps {
+export interface OmniHumanChatProps {
   projectId: string;
   teamView: boolean;
   userId?: string;
@@ -48,6 +55,43 @@ interface OmniHumanChatProps {
   onSetPromptTextRef?: React.MutableRefObject<
     ((id: number) => Promise<void>) | null
   >;
+}
+
+/** Props received by every versioned omni-human form component */
+export interface OmniInputProps {
+  setSelectedRatio: (ratio: string) => void;
+  selectedRatio: string;
+  setSelectedResolution: (resolution: string) => void;
+  selectedResolution: string;
+  form: FormInstance;
+  filesFirst: UploadFile[];
+  filesLast: UploadFile[];
+  handleUploadChange: (args: {
+    index: number;
+    file: UploadFile;
+    fileList: UploadFile[];
+    status: "upload" | "remove";
+  }) => void;
+  handleSendMessage: (values: Record<string, unknown>) => void;
+  isLoadingUpload: boolean;
+  submitting: boolean;
+  setSelectedDuration: (duration: number) => void;
+  selectedDuration: number;
+  setDraftMode: (draftMode: boolean) => void;
+  draftMode: boolean;
+  setFastMode: (fastMode: boolean) => void;
+  fastMode: boolean;
+  onRemoveFile: (file: UploadFile) => void;
+  setSelectedWidth: (width: number) => void;
+  setSelectedHeight: (height: number) => void;
+  promptGuideTemplates: TPromptGuideTemplate[];
+  fetchVideoPromptGuides: () => Promise<void>;
+  handleUsePromptGuide: (template: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
+  selectedModel?: string;
+  organizationId?: string;
+  projectId: string;
 }
 
 interface UserMessage {
@@ -107,17 +151,24 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
+const ChatGenerateOmnihumen: FC<
+  OmniHumanChatProps & {
+    modelConfig: OmniModelConfig;
+    FormComponent: FC<OmniInputProps>;
+  }
+> = ({
   teamView,
   projectId,
   userId,
   activeKey,
   projectRole,
-  promptGuideOpenStatus,
+  promptGuideOpenStatus: _promptGuideOpenStatus,
   username,
   selectedAIModel,
   setDisableTab,
-  onSetPromptTextRef,
+  onSetPromptTextRef: _onSetPromptTextRef,
+  modelConfig,
+  FormComponent,
 }) => {
   const [form] = Form.useForm();
   const { data: session } = useSession();
@@ -1054,22 +1105,20 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     if (!lastImage)
       return openNotificationWithIcon("error", "Please upload audio");
     const tempTask = `temp-${Date.now()}`;
-    const message = {
-      taskId: tempTask,
-      model: selectedAIModel.modelType,
-      prompt: values.prompt,
-      image: [
-        firstImage?.imagePath ? firstImage.imagePath : null,
-        lastImage?.imagePath ? lastImage.imagePath : null,
-      ],
-      fastMode: fastMode,
-      seed: values.seed,
-      resolution: selectedResolution,
-      projectId: projectId,
-      userId: userId,
-      duration: selectedDuration,
-      organizationId: session?.user?.organizationId,
+    const state: OmniFormState = {
+      selectedAIModel,
+      refImageFirst: refImageFrist,
+      refImageLast: refImageLast,
+      selectedResolution,
+      selectedRatio,
+      selectedDuration,
+      fastMode,
+      projectId,
+      userId: userId || "",
+      organizationId: session?.user?.organizationId ?? undefined,
+      username: username || "",
     };
+    const message = modelConfig.buildSubmitPayload(values, state, tempTask);
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
@@ -1130,7 +1179,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         tabKey="omnihumen"
         form={form}
         leftPanel={
-          <ChatOmnihumenInput
+          <FormComponent
             setSelectedRatio={setSelectedRatio}
             selectedRatio={selectedRatio}
             setSelectedResolution={setSelectedResolution}
@@ -1157,7 +1206,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
             selectedModel={selectedAIModel?.modelType || undefined}
-            organizationId={session?.user?.organizationId || undefined}
+            organizationId={session?.user?.organizationId ?? undefined}
             projectId={projectId}
           />
         }

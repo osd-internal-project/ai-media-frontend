@@ -26,9 +26,9 @@ import {
 } from "@ant-design/icons";
 import PromptLibrary from "./components/tabs/library/prompt-library";
 import PromptActivity from "./components/tabs/all-activity/prompt-activity";
-import ChatGenerateImage from "./components/tabs/image-gen/chat-generate-image";
-import ChatGenerateOmnihumen from "./components/tabs/omni-human/chat-generate-omnihumen";
-import ChatGenerateDreamactor from "./components/tabs/dream-actor/chat-generate-dreamactor";
+import ImageFormRenderer from "./components/tabs/image-gen/image-form-renderer";
+import OmnihumenFormRenderer from "./components/tabs/omni-human/omnihumen-form-renderer";
+import DreamactorFormRenderer from "./components/tabs/dream-actor/dreamactor-form-renderer";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -362,7 +362,7 @@ const GenerateImagePage: FC = () => {
                       <PictureOutlined />,
                     ),
                     children: (
-                      <ChatGenerateImage
+                      <ImageFormRenderer
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
                         activeKey={activeKey}
@@ -416,7 +416,7 @@ const GenerateImagePage: FC = () => {
                       <MessageOutlined />,
                     ),
                     children: (
-                      <ChatGenerateOmnihumen
+                      <OmnihumenFormRenderer
                         teamView={teamView}
                         activeKey={activeKey}
                         projectId={id}
@@ -443,7 +443,7 @@ const GenerateImagePage: FC = () => {
                       <PlaySquareOutlined />,
                     ),
                     children: (
-                      <ChatGenerateDreamactor
+                      <DreamactorFormRenderer
                         teamView={teamView}
                         activeKey={activeKey}
                         projectId={id}

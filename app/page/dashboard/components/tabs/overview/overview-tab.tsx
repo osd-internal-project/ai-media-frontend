@@ -10,6 +10,7 @@ import ResourceAlert from "./resource-alert";
 import PendingApprovalCard from "./pending-approval";
 import dayjs from "dayjs";
 import { formatNumber } from "@/app/utils/format";
+import RecentGenerations from "./recent-generations";
 
 export default function OverviewTab({
   loading,
@@ -210,6 +211,12 @@ export default function OverviewTab({
               ))}
             </Space>
           </Card>
+        </Col>
+        <Col xs={24} lg={24} className="flex"> 
+          <RecentGenerations
+            alertUsers={alertUsers}
+            openQuotaModal={openQuotaModal}
+          />
         </Col>
       </Row>
       {/* Hide Tabs */}

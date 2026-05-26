@@ -164,10 +164,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
     return allModel
       .filter((item: TMasterModelType) => item.type === selectedGenerateType)
       .map((item: TMasterModelType) => ({
-        label: item.modelType,
+        label: item.name || item.modelType,
         value: item.modelType,
       }));
-  }, [selectedType?.generateType,selectedGenerateType]);
+  }, [selectedType?.generateType, selectedGenerateType]);
 
   const categoryOptions = useMemo(() => {
     return promptGuideTypes.map((type) => ({

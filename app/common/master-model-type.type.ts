@@ -8,4 +8,7 @@ export interface TMasterModelType {
   modelDetails: any | null;
   createdAt: string;
   updatedAt: string;
+  sendConfig?: {
+    type: string;
+  };
 }

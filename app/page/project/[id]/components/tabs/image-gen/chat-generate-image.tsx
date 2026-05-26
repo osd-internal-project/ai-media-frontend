@@ -16,6 +16,7 @@ import {
   message,
   type UploadFile,
   type UploadProps,
+  type FormInstance,
   notification,
   Row,
   Col,
@@ -48,11 +49,11 @@ import GenerateServices from "@/app/services/generate.service";
 import Avatars from "@/public/images/Avatar.jpg";
 import LogsServices from "@/app/services/logs.service";
 
-import ImageConfigurationCard from "./image-smart-reference";
+import ImageConfigurationCard from "./shared/image-smart-reference";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PreviewImage from "../../chat-components/preview-image";
 import PromptStart from "../../chat-components/prompt-start";
-import ChatImageInput from "./chat-image-input";
+import type { ImageModelConfig, ImageFormState } from "../../tab-layout/types/generator-config.type";
 import UploadsServices from "@/app/services/uploads.service";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
@@ -62,9 +63,9 @@ import { getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import ActionBar from "./action-bar";
-import ResultHeader from "./result-header";
-import ResultItem from "./image-result-item";
+import ActionBar from "./shared/action-bar";
+import ResultHeader from "./shared/result-header";
+import ResultItem from "./shared/image-result-item";
 import { TPromptGuide } from "@/app/common/prompt-guide.type";
 import AssistantModal from "../../assistant/assistant-modal";
 
@@ -99,6 +100,35 @@ export interface GenerateConfig {
   modelName: string;
   imageCount: number;
   resolution: string;
+}
+
+/** Props received by every versioned image form component */
+export interface ImageInputProps {
+  setGroupMode: (groupMode: string | undefined) => void;
+  groupMode: string;
+  setSelectedRatio: (ratio: string) => void;
+  selectedRatio: string;
+  setSelectedResolution: (resolution: string) => void;
+  selectedResolution: string;
+  setSelectedMaximumImage: (n: number) => void;
+  selectedMaximumImage: number;
+  form: FormInstance;
+  files: UploadFile[];
+  handleUploadChange: NonNullable<UploadProps["onChange"]>;
+  beforeUpload: (file: RcFile) => boolean;
+  onRemoveFile: (file: UploadFile) => void;
+  submitting: boolean;
+  handleSendMessage: (values: Record<string, unknown>) => void;
+  isLoadingUpload: boolean;
+  setSelectedWidth: (w: number) => void;
+  setSelectedHeight: (h: number) => void;
+  handleUsePromptGuide: (prompt: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
+  fetchCerrentUsedCredit: () => void;
+  organizationId?: string;
+  selectedModel?: string;
+  projectId: string;
 }
 
 const conicColors: ProgressProps["strokeColor"] = {
@@ -165,7 +195,12 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateImage: FC<ImageChatProps> = ({
+const ChatGenerateImage: FC<
+  ImageChatProps & {
+    modelConfig: ImageModelConfig;
+    FormComponent: FC<ImageInputProps>;
+  }
+> = ({
   teamView,
   projectId,
   userId,
@@ -176,6 +211,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   selectedAIModel,
   setDisableTab,
   onSetPromptTextRef,
+  modelConfig,
+  FormComponent,
 }) => {
   const { data: session } = useSession();
   const { mode } = useThemeMode();
@@ -929,27 +966,23 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const handleFormSubmit = async (values: any) => {
-    // สร้าง temporary message สำหรับแสดงใน UI ทันที
-    if (!selectedAIModel) return "Plese select model";
+    if (!selectedAIModel) return "Please select model";
     const currentTaskId = `temp-${Date.now()}`;
-    const message = {
-      taskId: currentTaskId,
-      model: selectedAIModel.modelType,
-      prompt: values.prompt,
-      image: refImage.map((image) => image.imagePath),
-      sequentialImageGeneration: "auto",
-      resolution: selectedResolution,
-      maxImages: selectedMaximumImage,
-      watermark: false,
-      ratio: selectedRatio,
-      projectId: projectId,
-      userId: userId,
-      width: selectedWidth,
-      height: selectedHeight,
-      imageGenerateType: groupMode,
-      typeGenerate: "image",
-      organizationId: session?.user?.organizationId,
+    const state: ImageFormState = {
+      selectedAIModel,
+      refImages: refImage,
+      selectedResolution,
+      selectedRatio,
+      selectedWidth,
+      selectedHeight,
+      selectedMaximumImage,
+      groupMode: groupMode || "",
+      projectId,
+      userId: userId || "",
+      organizationId: session?.user?.organizationId ?? undefined,
+      username: username || "",
     };
+    const message = modelConfig.buildSubmitPayload(values, state, currentTaskId);
     const tempMessage = {
       id: currentTaskId,
       taskId: currentTaskId,
@@ -1140,7 +1173,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         tabKey="image"
         form={form}
         leftPanel={
-          <ChatImageInput
+          <FormComponent
             setGroupMode={setGroupMode}
             groupMode={groupMode || ""}
             setSelectedRatio={setSelectedRatio}
@@ -1163,7 +1196,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
             fetchCerrentUsedCredit={fetchCerrentUsedCredit}
-            organizationId={session?.user?.organizationId || undefined}
+            organizationId={session?.user?.organizationId ?? undefined}
             selectedModel={selectedAIModel?.modelType || undefined}
             projectId={projectId}
           />
