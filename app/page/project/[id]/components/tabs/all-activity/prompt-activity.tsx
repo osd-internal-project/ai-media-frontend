@@ -45,6 +45,8 @@ import {
 import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
+import ShareModal from "./ShareModal";
+import type { SocialShareItem } from "./useSocialShare";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -76,6 +78,7 @@ const PromptActivity: FC<props> = ({
   const [previewItem, setPreviewItem] = useState<any>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [imageEditorUrl, setImageEditorUrl] = useState<string | null>(null);
+  const [shareItem, setShareItem] = useState<SocialShareItem | null>(null);
   useEffect(() => {
     if (activeKey === "activity" && loading) {
       fectData();
@@ -548,11 +551,13 @@ const PromptActivity: FC<props> = ({
               icon={<Share2 size={16} />}
               type="text"
               shape="circle"
-              onClick={() => {
-                // Share logic: copy link to clipboard
-                const url = window.location.origin + record.imageUrl;
-                navigator.clipboard.writeText(url);
-                api.success({ message: "Link copied" });
+              onClick={(e) => {
+                e.stopPropagation();
+                setShareItem({
+                  imageUrl: record.imageUrl,
+                  typeGenerate: record.typeGenerate,
+                  prompt: record.prompt,
+                });
               }}
             />
           </div>
@@ -660,6 +665,12 @@ const PromptActivity: FC<props> = ({
             />
           </div>
         ))}
+      {/* Share Modal */}
+      <ShareModal
+        open={!!shareItem}
+        item={shareItem}
+        onClose={() => setShareItem(null)}
+      />
       {/* ImageEditorModal */}
       {imageEditorUrl && (
         <Modal
