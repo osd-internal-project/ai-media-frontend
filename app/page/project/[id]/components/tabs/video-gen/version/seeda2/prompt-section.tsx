@@ -71,17 +71,7 @@ export default function PromptSection({
             size="small"
             type="text"
             onClick={handleAiAssistClick}
-            disabled={loading || !onAiAssist}
-            icon={
-              loading ? (
-                <Loader2
-                  size={12}
-                  style={{ animation: "spin 1s linear infinite" }}
-                />
-              ) : (
-                <Wand2 size={12} />
-              )
-            }
+            icon={<Wand2 size={12} />}
             style={{
               height: 24,
               paddingInline: 8,
@@ -91,7 +81,7 @@ export default function PromptSection({
               background: `${semantic.colorPrimary}1A`,
             }}
           >
-            {loading ? aiAssistThinkingLabel : aiAssistLabel}
+            {"AI Assist"}
           </Button>
         )}
       </Flex>

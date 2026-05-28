@@ -433,6 +433,11 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
         setFristRowSeq(minSeq);
       }
       generateMessage(data, "loadmore");
+    } else {
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
     }
   };
   const fetchNewMessage = async () => {

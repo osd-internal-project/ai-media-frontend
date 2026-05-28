@@ -558,7 +558,9 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   }, [socket, projectId, activeKey]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+   
     const target = e.currentTarget;
+
     const isAtBottom =
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
@@ -575,6 +577,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       // const nextPage = page + 1;
       // setPage(nextPage);
       // loadMoreMessages(nextPage, true);
+      // target.scrollTop = 50; // set ก่อน เพื่อดัน scroll ออกจาก 0
+
       fetchOldMessages();
     }
   };
@@ -660,6 +664,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         setFristRowSeq(minSeq);
       }
       generateMessage(data, "loadmore");
+    } else {
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
     }
   };
   const fetchNewMessage = async () => {

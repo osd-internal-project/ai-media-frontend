@@ -441,6 +441,11 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
         setFristRowSeq(minSeq);
       }
       generateMessage(data, "loadmore");
+    } else {
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
     }
   };
   const fetchNewMessage = async () => {
@@ -1364,7 +1369,9 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
             files={files}
             handleUploadChangeMuti={handleUploadChangeMuti}
             beforeUploadMuti={beforeUploadMuti}
-            onRemoveFileMuti={onRemoveFileMuti} projectId={projectId}          />
+            onRemoveFileMuti={onRemoveFileMuti}
+            projectId={projectId}
+          />
         }
         loading={loading}
         isFetchingHistory={isFetchingHistory}

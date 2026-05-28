@@ -438,6 +438,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         setFristRowSeq(minSeq);
       }
       generateMessage(data, "loadmore");
+    } else {
+      isFirstLoad.current = false;
+      setLoading(false);
+      setIsFetchingHistory(false);
+      isFetchingRef.current = false;
     }
   };
 
