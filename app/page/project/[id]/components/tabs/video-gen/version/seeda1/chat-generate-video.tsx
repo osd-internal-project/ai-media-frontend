@@ -1038,24 +1038,21 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
   const handleFormSubmit = async (values: any) => {
     if (!selectedAIModel)
       return openNotificationWithIcon("error", "Please select an AI model");
-    const firstImage = refImageFrist.length > 0 ? refImageFrist[0] : null;
-    const lastImage = refImageLast.length > 0 ? refImageLast[0] : null;
+    // const firstImage = refImage.length > 0 ? refImageFrist[0] : null;
+    // const lastImage = refImage.length > 1 ? refImageLast[1] : null;
     const tempTask = `temp-${Date.now()}`;
     const files = await Promise.all(
-      refImage.map(async (image) => ({
-        type: await getTypeFile(image.imagePath),
-        url: image.imagePath,
-      })),
+      refImage.map(async (image) => image.imagePath),
     );
-
-    const image = firstImage
-      ? [firstImage.imagePath, lastImage?.imagePath]
-      : [];
+    // console.log("Files for generation:", files);
+    //     const image = firstImage
+    //       ? [firstImage.imagePath, lastImage?.imagePath]
+    //       : [];
     const message = {
       taskId: tempTask,
       model: selectedAIModel.modelType,
       prompt: values.prompt,
-      image: image,
+      image: files,
       files: [],
       sequentialImageGeneration: "auto",
       resolution: selectedResolution,
@@ -1073,7 +1070,7 @@ const ChatGenerateVideo: FC<VideoFormManagerProps> = ({
       draft: draftMode,
       organizationId: session?.user?.organizationId,
     };
-    // console.log(message);
+    console.log(message);
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
