@@ -37,6 +37,7 @@ import Quata from "@/app/page/project/component/quata";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../shared/upload-section";
+import DrawToImage from "../../../image-gen/shared/draw-to-image";
 import PromptSection from "./prompt-section";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
@@ -461,6 +462,14 @@ export default function ChatVideoInput(props: Props) {
             maxUploadFiles={8}
             description="Upload Reference (optional, image, video, audio, max 8)"
             accept="image/*,video/*,audio/*"
+            extraActions={
+              <DrawToImage
+                files={files}
+                handleUploadChange={handleUploadChangeMuti}
+                semantic={semantic}
+                disabled={isLoadingUpload || files.length >= 8}
+              />
+            }
           />
           <PromptSection
             semantic={semantic}

@@ -218,7 +218,10 @@ const ChatGenerateVideo: FC<Props> = ({
 
   const fetchCerrentUsedCredit = async () => {
     const values = form.getFieldsValue();
-    if (!selectedAIModel) { setCerrentUsedCredit(0); return; }
+    if (!selectedAIModel) {
+      setCerrentUsedCredit(0);
+      return;
+    }
     const tempTask = `temp-${Date.now()}`;
     const computedFiles = await Promise.all(
       refImage.map(async (img) => ({
@@ -254,8 +257,13 @@ const ChatGenerateVideo: FC<Props> = ({
       if (type === "loadmore") {
         setMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
-          const newItems = itemsToProcess.filter((m: Message) => !existingIds.has(m.id));
-          if (newItems.length === 0) { setHasMore(false); return prev; }
+          const newItems = itemsToProcess.filter(
+            (m: Message) => !existingIds.has(m.id),
+          );
+          if (newItems.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
           return [...newItems, ...prev];
         });
         isFirstLoad.current = false;
@@ -265,8 +273,13 @@ const ChatGenerateVideo: FC<Props> = ({
       } else if (type === "newmore") {
         setMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.taskId));
-          const newItems = itemsToProcess.filter((m: Message) => !existingIds.has(m.taskId));
-          if (newItems.length === 0) { setHasMore(false); return prev; }
+          const newItems = itemsToProcess.filter(
+            (m: Message) => !existingIds.has(m.taskId),
+          );
+          if (newItems.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
           return [...prev, ...newItems];
         });
         isFirstLoad.current = false;
@@ -276,10 +289,16 @@ const ChatGenerateVideo: FC<Props> = ({
       } else {
         setMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.taskId));
-          return itemsToProcess.filter((m: Message) => !existingIds.has(m.taskId));
+          return itemsToProcess.filter(
+            (m: Message) => !existingIds.has(m.taskId),
+          );
         });
         const isFirstLoadNow = isFirstLoad.current;
-        if (isFirstLoadNow || isAtBottomRef.current || shouldAutoScrollRef.current) {
+        if (
+          isFirstLoadNow ||
+          isAtBottomRef.current ||
+          shouldAutoScrollRef.current
+        ) {
           setTimeout(() => {
             bottomRef.current?.scrollIntoView({
               behavior: isFirstLoadNow ? "instant" : "smooth",
@@ -323,7 +342,7 @@ const ChatGenerateVideo: FC<Props> = ({
         projectId,
         organizationId: session?.user?.organizationId,
         userId: userId,
-        type: "image",
+        type: "video",
       });
     }
   };
@@ -367,29 +386,45 @@ const ChatGenerateVideo: FC<Props> = ({
   useEffect(() => {
     if (!socket || activeKey !== "video") return;
 
-    const handleTaskCreated = (data: { taskId: string; message: string; timestamp: string; data: Message }) => {
+    const handleTaskCreated = (data: {
+      taskId: string;
+      message: string;
+      timestamp: string;
+      data: Message;
+    }) => {
       setSubmitting(false);
     };
 
-    const handleTaskStarted = (data: { status: number; data: Message; oldTaskId: string }) => {
+    const handleTaskStarted = (data: {
+      status: number;
+      data: Message;
+      oldTaskId: string;
+    }) => {
       if (data.status === 200) {
         setMessages((prev) => {
           const index = prev.findIndex(
-            (msg) => msg.taskId === data.oldTaskId || msg.taskId === data.data.taskId,
+            (msg) =>
+              msg.taskId === data.oldTaskId || msg.taskId === data.data.taskId,
           );
           if (index !== -1) {
-            return prev.map((msg, i) => (i === index ? { ...msg, ...data.data } : msg));
+            return prev.map((msg, i) =>
+              i === index ? { ...msg, ...data.data } : msg,
+            );
           }
           return [...prev, data.data];
         });
       } else {
-        setMessages((prev) => prev.filter((msg) => msg.taskId !== data.oldTaskId));
+        setMessages((prev) =>
+          prev.filter((msg) => msg.taskId !== data.oldTaskId),
+        );
       }
       shouldAutoScrollRef.current = true;
     };
 
     const workerTaskStarted = (data: { taskId: string; timestamp: string }) => {
-      const found = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const found = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (found) {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -404,8 +439,14 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
-    const workerUrlSuccess = (data: { taskId: string; videoUrl: string; timestamp: string }) => {
-      const found = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+    const workerUrlSuccess = (data: {
+      taskId: string;
+      videoUrl: string;
+      timestamp: string;
+    }) => {
+      const found = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (found) {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -413,7 +454,13 @@ const ChatGenerateVideo: FC<Props> = ({
               ? {
                   ...msg,
                   genneratedStatus: "SUCCESS",
-                  imageUrls: [{ imageUrl: data.videoUrl, thumbnailUrl: "https://placehold.co/600x400/000000/FFFFFF/png" }],
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl:
+                        "https://placehold.co/600x400/000000/FFFFFF/png",
+                    },
+                  ],
                 }
               : msg,
           ),
@@ -424,8 +471,15 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
-    const workerUploadSuccess = (data: { taskId: string; videoUrl: string; thumbnailUrl: string; timestamp: string }) => {
-      const found = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+    const workerUploadSuccess = (data: {
+      taskId: string;
+      videoUrl: string;
+      thumbnailUrl: string;
+      timestamp: string;
+    }) => {
+      const found = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (found) {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -433,7 +487,12 @@ const ChatGenerateVideo: FC<Props> = ({
               ? {
                   ...msg,
                   genneratedStatus: "SUCCESS",
-                  imageUrls: [{ imageUrl: data.videoUrl, thumbnailUrl: data.thumbnailUrl }],
+                  imageUrls: [
+                    {
+                      imageUrl: data.videoUrl,
+                      thumbnailUrl: data.thumbnailUrl,
+                    },
+                  ],
                 }
               : msg,
           ),
@@ -444,12 +503,20 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
-    const workerComplete = (data: { taskId: string; success: boolean; timestamp: string }) => {
-      const found = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+    const workerComplete = (data: {
+      taskId: string;
+      success: boolean;
+      timestamp: string;
+    }) => {
+      const found = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (found) {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.taskId === data.taskId ? { ...msg, genneratedStatus: "SUCCESS" } : msg,
+            msg.taskId === data.taskId
+              ? { ...msg, genneratedStatus: "SUCCESS" }
+              : msg,
           ),
         );
       } else {
@@ -459,11 +526,15 @@ const ChatGenerateVideo: FC<Props> = ({
     };
 
     const handleProgress = (data: { taskId: string; timestamp: string }) => {
-      const found = messagesRef.current.find((msg) => msg.taskId === data.taskId);
+      const found = messagesRef.current.find(
+        (msg) => msg.taskId === data.taskId,
+      );
       if (found) {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.taskId === data.taskId ? { ...msg, genneratedStatus: "PROCESSING" } : msg,
+            msg.taskId === data.taskId
+              ? { ...msg, genneratedStatus: "PROCESSING" }
+              : msg,
           ),
         );
       } else {
@@ -472,14 +543,24 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
-    const handleError = (error: { taskId?: string; message: string; details?: unknown }) => {
+    const handleError = (error: {
+      taskId?: string;
+      message: string;
+      details?: unknown;
+    }) => {
       openNotificationWithIcon("error", error.message || "Generation failed");
       setSubmitting(false);
       if (error.taskId) {
-        const found = messagesRef.current.find((m) => m.taskId === error.taskId);
+        const found = messagesRef.current.find(
+          (m) => m.taskId === error.taskId,
+        );
         if (found) {
           setMessages((prev) =>
-            prev.map((m) => m.taskId === error.taskId ? { ...m, genneratedStatus: "FAIL" } : m),
+            prev.map((m) =>
+              m.taskId === error.taskId
+                ? { ...m, genneratedStatus: "FAIL" }
+                : m,
+            ),
           );
         } else {
           fetchNewMessage();
@@ -487,15 +568,23 @@ const ChatGenerateVideo: FC<Props> = ({
       }
     };
 
-    const handleCreditChange = (res: { success: boolean; data: { usedCredit: number; totalCredit?: number } }) => {
+    const handleCreditChange = (res: {
+      success: boolean;
+      data: { usedCredit: number; totalCredit?: number };
+    }) => {
+      console.log("Credit change received:", res);
       if (res.success) {
-        setUsedCredit({ used: res.data.usedCredit, total: res?.data?.totalCredit });
+        setUsedCredit({
+          used: res.data.usedCredit,
+          total: res?.data?.totalCredit,
+        });
       }
     };
 
     socket.on("video-task:created", handleTaskCreated);
     socket.on("task-video:started", handleTaskStarted);
-    socket.on("video-generate:error", handleError);
+    // socket.on("video-generate:error", handleError);
+    socket.on("worker:video-error", handleError);
     socket.on("worker:video-started", workerTaskStarted);
     socket.on("worker:video-url-success", workerUrlSuccess);
     socket.on("worker:video-upload-success", workerUploadSuccess);
@@ -506,7 +595,8 @@ const ChatGenerateVideo: FC<Props> = ({
     return () => {
       socket.off("video-task:created", handleTaskCreated);
       socket.off("task-video:started", handleTaskStarted);
-      socket.off("video-generate:error", handleError);
+      // socket.off("video-generate:error", handleError);
+      socket.off("worker:video-error", handleError);
       socket.off("worker:video-url-success", workerUrlSuccess);
       socket.off("worker:video-upload-success", workerUploadSuccess);
       socket.off("worker:video-complete", workerComplete);
@@ -532,9 +622,15 @@ const ChatGenerateVideo: FC<Props> = ({
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const isAtBottom =
-      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 50;
+      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
+      50;
     isAtBottomRef.current = isAtBottom;
-    if (target.scrollTop === 0 && !loading && !isFirstLoad.current && !isFetchingRef.current) {
+    if (
+      target.scrollTop === 0 &&
+      !loading &&
+      !isFirstLoad.current &&
+      !isFetchingRef.current
+    ) {
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
       scrollHeightRef.current = target.scrollHeight;
@@ -598,10 +694,17 @@ const ChatGenerateVideo: FC<Props> = ({
     }
   };
 
-  const onShareVideo = async (taskId: string, id: string, currentStatus: boolean) => {
+  const onShareVideo = async (
+    taskId: string,
+    id: string,
+    currentStatus: boolean,
+  ) => {
     try {
       const nextStatus = currentStatus === true ? false : true;
-      const success = await GalleryServices(axiosCore).updateStatus(id, nextStatus);
+      const success = await GalleryServices(axiosCore).updateStatus(
+        id,
+        nextStatus,
+      );
       if (success) {
         message.success("Share status updated");
         setMessages((prev) =>
@@ -649,10 +752,16 @@ const ChatGenerateVideo: FC<Props> = ({
             img.onload = () => {
               const minSide = Math.min(img.width, img.height);
               URL.revokeObjectURL(img.src);
-              if (minSide < 300) reject("Image size is too small, minimum side length must not be less than 300 px");
+              if (minSide < 300)
+                reject(
+                  "Image size is too small, minimum side length must not be less than 300 px",
+                );
               else resolve();
             };
-            img.onerror = () => { URL.revokeObjectURL(img.src); resolve(); };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));
@@ -674,22 +783,41 @@ const ChatGenerateVideo: FC<Props> = ({
         if (result) {
           const updateFile = (prev: UploadFile[]) =>
             prev.map((f) =>
-              f.uid === file.uid ? { ...f, status: "done" as const, url: result.url, response: result } : f,
+              f.uid === file.uid
+                ? {
+                    ...f,
+                    status: "done" as const,
+                    url: result.url,
+                    response: result,
+                  }
+                : f,
             );
-          if (index === 0) { setFilesFirst(updateFile); setRefImageFrist([result]); }
-          else { setFilesLast(updateFile); setRefImageLast([result]); }
+          if (index === 0) {
+            setFilesFirst(updateFile);
+            setRefImageFrist([result]);
+          } else {
+            setFilesLast(updateFile);
+            setRefImageLast([result]);
+          }
         }
       } catch {
         const markError = (prev: UploadFile[]) =>
-          prev.map((f) => (f.uid === file.uid ? { ...f, status: "error" as const } : f));
+          prev.map((f) =>
+            f.uid === file.uid ? { ...f, status: "error" as const } : f,
+          );
         if (index === 0) setFilesFirst(markError);
         else setFilesLast(markError);
       }
     } else if (status === "remove") {
       setIsLoadingUpload(true);
       try {
-        if (index === 0) { setRefImageFrist([]); setFilesFirst([]); }
-        else { setRefImageLast([]); setFilesLast([]); }
+        if (index === 0) {
+          setRefImageFrist([]);
+          setFilesFirst([]);
+        } else {
+          setRefImageLast([]);
+          setFilesLast([]);
+        }
         await UploadsServices(axiosWorker).remove(file.uid);
       } catch {
         // ignore
@@ -699,14 +827,22 @@ const ChatGenerateVideo: FC<Props> = ({
   };
 
   /** multi-file upload handler (used by seeda2-style form) */
-  const handleUploadChangeMuti: UploadProps["onChange"] = async ({ file, fileList: newFileList }) => {
+  const handleUploadChangeMuti: UploadProps["onChange"] = async ({
+    file,
+    fileList: newFileList,
+  }) => {
     if (newFileList.length >= 1 && file.status !== "removed") {
-      let imageCount = 1, videoCount = 1, audioCount = 1;
+      let imageCount = 1,
+        videoCount = 1,
+        audioCount = 1;
       const renamedFileList = newFileList.map((f) => {
         const t = f.type || "";
-        const isImg = t.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name);
-        const isVid = t.startsWith("video/") || /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name);
-        const isAud = t.startsWith("audio/") || /\.(mp3|wav|aac|ogg)$/i.test(f.name);
+        const isImg =
+          t.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name);
+        const isVid =
+          t.startsWith("video/") || /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name);
+        const isAud =
+          t.startsWith("audio/") || /\.(mp3|wav|aac|ogg)$/i.test(f.name);
         const fClone = { ...f };
         if (isImg) fClone.name = `image${imageCount++}`;
         else if (isVid) fClone.name = `video${videoCount++}`;
@@ -715,9 +851,13 @@ const ChatGenerateVideo: FC<Props> = ({
       });
       setFiles(renamedFileList);
 
-      const renamedFile = renamedFileList.find((f) => f.uid === file.uid) || file;
+      const renamedFile =
+        renamedFileList.find((f) => f.uid === file.uid) || file;
       const fileToUpload = renamedFile.originFileObj || renamedFile;
-      if (fileToUpload instanceof Blob && fileToUpload.type.startsWith("image/")) {
+      if (
+        fileToUpload instanceof Blob &&
+        fileToUpload.type.startsWith("image/")
+      ) {
         setIsLoadingUpload(true);
         try {
           await new Promise<void>((resolve, reject) => {
@@ -726,10 +866,16 @@ const ChatGenerateVideo: FC<Props> = ({
             img.onload = () => {
               const minSide = Math.min(img.width, img.height);
               URL.revokeObjectURL(img.src);
-              if (minSide < 300) reject("Image size is too small, minimum side length must not be less than 300 px");
+              if (minSide < 300)
+                reject(
+                  "Image size is too small, minimum side length must not be less than 300 px",
+                );
               else resolve();
             };
-            img.onerror = () => { URL.revokeObjectURL(img.src); resolve(); };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));
@@ -752,12 +898,21 @@ const ChatGenerateVideo: FC<Props> = ({
         setRefImage((prev) => [...prev, result]);
         setFiles((prev) =>
           prev.map((f) =>
-            f.uid === file.uid ? { ...f, status: "done" as const, url: result.url, response: result } : f,
+            f.uid === file.uid
+              ? {
+                  ...f,
+                  status: "done" as const,
+                  url: result.url,
+                  response: result,
+                }
+              : f,
           ),
         );
       } catch {
         setFiles((prev) =>
-          prev.map((f) => (f.uid === file.uid ? { ...f, status: "error" as const } : f)),
+          prev.map((f) =>
+            f.uid === file.uid ? { ...f, status: "error" as const } : f,
+          ),
         );
       } finally {
         setIsLoadingUpload(false);
@@ -775,13 +930,24 @@ const ChatGenerateVideo: FC<Props> = ({
     setRefImage((prev) => prev.filter((f) => f.uid !== file.uid));
     setFiles((prev) => {
       const filtered = prev.filter((f) => f.uid !== file.uid);
-      let imageCount = 1, videoCount = 1, audioCount = 1;
+      let imageCount = 1,
+        videoCount = 1,
+        audioCount = 1;
       const nameMap = new Map<string, string>();
       const renamedList = filtered.map((f) => {
         const t = f.type || "";
-        const isImg = t.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name) || f.name.startsWith("image");
-        const isVid = t.startsWith("video/") || /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name) || f.name.startsWith("video");
-        const isAud = t.startsWith("audio/") || /\.(mp3|wav|aac|ogg)$/i.test(f.name) || f.name.startsWith("audio");
+        const isImg =
+          t.startsWith("image/") ||
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(f.name) ||
+          f.name.startsWith("image");
+        const isVid =
+          t.startsWith("video/") ||
+          /\.(mp4|mov|avi|mkv|webm)$/i.test(f.name) ||
+          f.name.startsWith("video");
+        const isAud =
+          t.startsWith("audio/") ||
+          /\.(mp3|wav|aac|ogg)$/i.test(f.name) ||
+          f.name.startsWith("audio");
         let newName = f.name;
         if (isImg) newName = `image${imageCount++}`;
         else if (isVid) newName = `video${videoCount++}`;
@@ -792,11 +958,19 @@ const ChatGenerateVideo: FC<Props> = ({
       const currentPrompt = form.getFieldValue("prompt") || "";
       if (typeof currentPrompt === "string") {
         let newPrompt = currentPrompt;
-        if (file.name) newPrompt = newPrompt.replace(new RegExp(`@${file.name}\\b`, "g"), "");
+        if (file.name)
+          newPrompt = newPrompt.replace(
+            new RegExp(`@${file.name}\\b`, "g"),
+            "",
+          );
         nameMap.forEach((newN, oldN) => {
-          newPrompt = newPrompt.replace(new RegExp(`@${oldN}\\b`, "g"), `@${newN}`);
+          newPrompt = newPrompt.replace(
+            new RegExp(`@${oldN}\\b`, "g"),
+            `@${newN}`,
+          );
         });
-        if (currentPrompt !== newPrompt) setTimeout(() => form.setFieldValue("prompt", newPrompt), 0);
+        if (currentPrompt !== newPrompt)
+          setTimeout(() => form.setFieldValue("prompt", newPrompt), 0);
       }
       return renamedList;
     });
@@ -844,10 +1018,21 @@ const ChatGenerateVideo: FC<Props> = ({
       username: username ?? "",
     }),
     [
-      selectedAIModel, refImageFrist, refImageLast, refImage,
-      selectedResolution, selectedRatio, selectedWidth, selectedHeight,
-      selectedDuration, selectedAudio, draftMode, projectId, userId,
-      session?.user?.organizationId, username,
+      selectedAIModel,
+      refImageFrist,
+      refImageLast,
+      refImage,
+      selectedResolution,
+      selectedRatio,
+      selectedWidth,
+      selectedHeight,
+      selectedDuration,
+      selectedAudio,
+      draftMode,
+      projectId,
+      userId,
+      session?.user?.organizationId,
+      username,
     ],
   );
 
@@ -871,9 +1056,13 @@ const ChatGenerateVideo: FC<Props> = ({
           formData.append("refUid", img.uid);
           formData.append("uid", `rc-upload-${Date.now()}-${newIndex}`);
           formData.append("file", img.url);
-          formData.append("organizationId", session?.user?.organizationId || "");
+          formData.append(
+            "organizationId",
+            session?.user?.organizationId || "",
+          );
           try {
-            const result = await UploadsServices(axiosWorker).uploadFromPrompt(formData);
+            const result =
+              await UploadsServices(axiosWorker).uploadFromPrompt(formData);
             return { result, index: newIndex };
           } catch {
             return null;
@@ -884,22 +1073,41 @@ const ChatGenerateVideo: FC<Props> = ({
 
         if (modelConfig.features?.uploadMode === "first-last") {
           const valid = results.filter(
-            (r): r is { result: RefImage; index: number } => r !== null && r.result !== null,
+            (r): r is { result: RefImage; index: number } =>
+              r !== null && r.result !== null,
           );
           const first = valid.find((r) => r.index === 0);
           const last = valid.find((r) => r.index === 1);
           if (first) {
             setRefImageFrist([first.result]);
-            setFilesFirst([{ uid: first.result.uid || `rc-upload-${Date.now()}-0`, name: first.result.name, status: "done", url: first.result.url, response: first.result }]);
+            setFilesFirst([
+              {
+                uid: first.result.uid || `rc-upload-${Date.now()}-0`,
+                name: first.result.name,
+                status: "done",
+                url: first.result.url,
+                response: first.result,
+              },
+            ]);
           }
           if (last) {
             setRefImageLast([last.result]);
-            setFilesLast([{ uid: last.result.uid || `rc-upload-${Date.now()}-1`, name: last.result.name, status: "done", url: last.result.url, response: last.result }]);
+            setFilesLast([
+              {
+                uid: last.result.uid || `rc-upload-${Date.now()}-1`,
+                name: last.result.name,
+                status: "done",
+                url: last.result.url,
+                response: last.result,
+              },
+            ]);
           }
         } else {
           const validResults = await Promise.all(
             results
-              .filter((r): r is { result: RefImage; index: number } => r !== null)
+              .filter(
+                (r): r is { result: RefImage; index: number } => r !== null,
+              )
               .map((r) => r.result),
           );
           setRefImage(validResults);
@@ -979,7 +1187,9 @@ const ChatGenerateVideo: FC<Props> = ({
 
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;
-    setTimeout(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, 100);
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
 
     if (!socket || !isConnected) {
       messageApi.error("WebSocket is not connected. Please refresh the page.");
@@ -989,7 +1199,10 @@ const ChatGenerateVideo: FC<Props> = ({
   };
 
   return (
-    <Flex vertical style={{ height: "100%", minHeight: 0, background: semantic.colorBgBase }}>
+    <Flex
+      vertical
+      style={{ height: "100%", minHeight: 0, background: semantic.colorBgBase }}
+    >
       {contextHolder}
       {contextHolderNoti}
       <GenerateTwoPaneLayout

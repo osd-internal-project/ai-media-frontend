@@ -927,7 +927,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                           id: t.id,
                           name: t.name,
                           weight: (detail && isTypographyDetail(detail) && detail.weight) ? Number(detail.weight) : 400,
-                          type: detail && isTypographyDetail(detail) && detail.type ? detail.type.toLowerCase() : "body",
+                          type: detail && isTypographyDetail(detail) && detail.type ? detail.type : "body",
                           preview: detail && isTypographyDetail(detail) && detail.preview ? detail.preview : "Creativity is intelligence having fun.",
                         };
                       })}

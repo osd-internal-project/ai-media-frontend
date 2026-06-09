@@ -42,7 +42,7 @@ const videoModelRegistry: Record<
 };
 
 const VideoFormRenderer: FC<VideoFormManagerProps> = (props) => {
-  const type = props.selectedAIModel?.sendConfig?.type.toLowerCase() || "";
+  const type = props.selectedAIModel?.sendConfig?.type|| "";
   const entry = videoModelRegistry[type || ""];
 
   if (!entry) return <></>;

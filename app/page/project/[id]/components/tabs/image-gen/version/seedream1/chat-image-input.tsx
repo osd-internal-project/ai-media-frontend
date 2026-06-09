@@ -16,6 +16,7 @@ import {
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../../../tab-layout/generate-section/upload-section";
+import DrawToImage from "../../shared/draw-to-image";
 import PromptSection from "../../../../tab-layout/generate-section/prompt-section";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
@@ -243,6 +244,14 @@ export default function ChatImageInput({
             onRemoveFile={onRemoveFile}
             maxUploadFiles={8}
             description="Reference Images (optional, max 8)"
+            extraActions={
+              <DrawToImage
+                files={files}
+                handleUploadChange={handleUploadChange}
+                semantic={semantic}
+                disabled={isLoadingUpload || files.length >= 8}
+              />
+            }
           />
 
           <PromptSection

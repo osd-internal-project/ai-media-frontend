@@ -27,6 +27,8 @@ type Props = {
   uploadTooltipText?: string;
   renderContent?: React.ReactNode;
   accept?: string;
+  /** Extra action nodes rendered after the upload (+) button in the file row. */
+  extraActions?: React.ReactNode;
 };
 
 export default function UploadSection({
@@ -42,6 +44,7 @@ export default function UploadSection({
   uploadTooltipText,
   renderContent,
   accept,
+  extraActions,
 }: Props) {
   const displayDescription =
     description ?? `Reference Images (optional, max ${maxUploadFiles})`;
@@ -324,6 +327,7 @@ export default function UploadSection({
                   </Tooltip>
                 </Upload>
               )}
+              {extraActions}
             </Flex>
           </Flex>
         )}

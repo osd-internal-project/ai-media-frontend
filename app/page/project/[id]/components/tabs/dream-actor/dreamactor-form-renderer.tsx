@@ -20,7 +20,7 @@ const dreamactorModelRegistry: Record<
 };
 
 const DreamactorFormRenderer: FC<DreamactorChatProps> = (props) => {
-  const type = props.selectedAIModel?.sendConfig?.type.toLowerCase() || "";
+  const type = props.selectedAIModel?.sendConfig?.type || "";
   const entry = dreamactorModelRegistry[type];
   if (!entry) return <></>;
   return (

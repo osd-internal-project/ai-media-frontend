@@ -31,7 +31,10 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import GenerateServices from "@/app/services/generate.service";
 import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
-import type { DreamactorModelConfig, DreamactorFormState } from "../../tab-layout/types/generator-config.type";
+import type {
+  DreamactorModelConfig,
+  DreamactorFormState,
+} from "../../tab-layout/types/generator-config.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
@@ -471,7 +474,7 @@ const ChatGenerateDreamactor: FC<
         projectId,
         organizationId: session?.user?.organizationId,
         userId: userId,
-        type: "image",
+        type: "dreamactor",
       });
     }
   };

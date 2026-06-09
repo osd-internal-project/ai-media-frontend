@@ -200,11 +200,11 @@ const HeaderGenerateImagePage: FC<props> = ({
                     } as CSSProperties
                   }
                   className="dark-select"
-                  dropdownStyle={{
-                    backgroundColor: semantic.colorBgElevated,
-                    color: semantic.colorTextBase,
-                    fontSize: 12,
-                  }}
+                  // dropdownStyle={{
+                  //   backgroundColor: semantic.colorBgElevated,
+                  //   color: semantic.colorTextBase,
+                  //   fontSize: 12,
+                  // }}
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id?.toString()}
                   onChange={onAIModelChange}

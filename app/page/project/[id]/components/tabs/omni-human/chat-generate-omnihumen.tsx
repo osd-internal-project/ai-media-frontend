@@ -466,7 +466,7 @@ const ChatGenerateOmnihumen: FC<
         projectId,
         organizationId: session?.user?.organizationId,
         userId: userId,
-        type: "image",
+        type: "omnihumen",
       });
     }
   };
@@ -743,7 +743,7 @@ const ChatGenerateOmnihumen: FC<
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
-    socket.off("worker:omnihumen-error", handleError);
+    socket.on("worker:omnihumen-error", handleError);
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:used-credit", handleCreditChange);
 

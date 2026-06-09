@@ -20,7 +20,7 @@ const omniModelRegistry: Record<
 };
 
 const OmnihumenFormRenderer: FC<OmniHumanChatProps> = (props) => {
-  const type = props.selectedAIModel?.sendConfig?.type.toLowerCase() || "";
+  const type = props.selectedAIModel?.sendConfig?.type || "";
   const entry = omniModelRegistry[type];
   if (!entry) return <></>;
   return (

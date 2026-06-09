@@ -460,6 +460,32 @@ const ResultItem: FC<Props> = ({
                       }}
                     />
 
+                    {/* File size label */}
+                    {message.generateConfig?.width && message.generateConfig?.height && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 6,
+                          left: 6,
+                          background: "rgba(0,0,0,0.55)",
+                          borderRadius: 4,
+                          padding: "1px 6px",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <Typography.Text
+                          style={{
+                            color: "#fff",
+                            fontSize: isMobile ? 10 : 11,
+                            fontWeight: 500,
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {message.generateConfig.width}×{message.generateConfig.height}
+                        </Typography.Text>
+                      </div>
+                    )}
+
                     <ActionBar
                       item={imgUrl}
                       message={message}

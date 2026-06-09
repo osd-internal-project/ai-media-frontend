@@ -194,7 +194,7 @@ export function PrivateHeader({
           open={orgOpen}
           onOpenChange={setOrgOpen}
           trigger={["click"]}
-          dropdownRender={() => (
+          popupRender={() => (
             <div style={dropdownPanelStyle}>
               <div
                 className="private-header-dropdown-scroll"

@@ -20,7 +20,7 @@ const imageModelRegistry: Record<
 };
 
 const ImageFormRenderer: FC<ImageChatProps> = (props) => {
-  const type = props.selectedAIModel?.sendConfig?.type.toLowerCase() || "";
+  const type = props.selectedAIModel?.sendConfig?.type|| "";
   const entry = imageModelRegistry[type || ""];
 
   if (!entry) return <></>;

@@ -53,7 +53,10 @@ import ImageConfigurationCard from "./shared/image-smart-reference";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PreviewImage from "../../chat-components/preview-image";
 import PromptStart from "../../chat-components/prompt-start";
-import type { ImageModelConfig, ImageFormState } from "../../tab-layout/types/generator-config.type";
+import type {
+  ImageModelConfig,
+  ImageFormState,
+} from "../../tab-layout/types/generator-config.type";
 import UploadsServices from "@/app/services/uploads.service";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
@@ -573,8 +576,8 @@ const ChatGenerateImage: FC<
     socket.on("worker:started", workerStarted);
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
-    socket.on("worker:error", handleError);
-    socket.on("worker:complete", handleTaskComplete);
+    socket.on("worker:image-error", handleError);
+    socket.on("worker:image-complete", handleTaskComplete);
     socket.on("generate:error", handleError);
     // socket.on("chat:history", handleHistory);
     socket.on("chat:used-credit", handleCreditChange);
@@ -585,8 +588,8 @@ const ChatGenerateImage: FC<
       socket.off("worker:started", workerStarted);
       socket.off("worker:progress", handleProgress);
       socket.off("worker:image-complete", handleImageComplete);
-      socket.off("worker:error", handleError);
-      socket.off("worker:complete", handleTaskComplete);
+      socket.off("worker:image-error", handleError);
+      socket.off("worker:image-complete", handleTaskComplete);
       socket.off("generate:error", handleError);
       // socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
@@ -670,6 +673,8 @@ const ChatGenerateImage: FC<
 
   const fetchCredit = async () => {
     if (socket) {
+      console.log("Fetching used credit...");
+
       socket.emit("chat:get-used-credit", {
         projectId,
         organizationId: session?.user?.organizationId,
@@ -982,7 +987,11 @@ const ChatGenerateImage: FC<
       organizationId: session?.user?.organizationId ?? undefined,
       username: username || "",
     };
-    const message = modelConfig.buildSubmitPayload(values, state, currentTaskId);
+    const message = modelConfig.buildSubmitPayload(
+      values,
+      state,
+      currentTaskId,
+    );
     const tempMessage = {
       id: currentTaskId,
       taskId: currentTaskId,
