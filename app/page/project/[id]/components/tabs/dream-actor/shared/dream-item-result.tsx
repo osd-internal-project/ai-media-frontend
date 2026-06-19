@@ -251,7 +251,7 @@ const DreamactorResultItem: FC<Props> = ({
 
       {/* ERROR */}
       {(message.genneratedStatus === "FAILED" ||
-        message.genneratedStatus === "FAIL") && (
+        message.genneratedStatus === "FAILED") && (
         <Card size="small">
           <Typography.Text type="danger">Generate failed</Typography.Text>
         </Card>

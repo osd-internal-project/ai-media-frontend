@@ -558,7 +558,7 @@ const ChatGenerateVideo: FC<Props> = ({
           setMessages((prev) =>
             prev.map((m) =>
               m.taskId === error.taskId
-                ? { ...m, genneratedStatus: "FAIL" }
+                ? { ...m, genneratedStatus: "FAILED" }
                 : m,
             ),
           );

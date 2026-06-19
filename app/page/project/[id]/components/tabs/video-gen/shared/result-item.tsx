@@ -39,7 +39,7 @@ const VideoResultItem: FC<Props> = ({
     message.genneratedStatus === "PROCESSING";
 
   const isError =
-    message.genneratedStatus === "FAIL" ||
+    message.genneratedStatus === "FAILED" ||
     (message.genneratedStatus === "SUCCESS" &&
       (!message.imageUrls || message.imageUrls.length === 0));
 

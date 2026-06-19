@@ -45,7 +45,7 @@ import {
 import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
-import ShareModal from "./ShareModal";
+import ShareModal from "./share-modal";
 import type { SocialShareItem } from "./useSocialShare";
 
 export interface props {
@@ -557,6 +557,7 @@ const PromptActivity: FC<props> = ({
                   imageUrl: record.imageUrl,
                   typeGenerate: record.typeGenerate,
                   prompt: record.prompt,
+                  url: record.imageUrl, // <-- แนบ link ปัจจุบัน
                 });
               }}
             />

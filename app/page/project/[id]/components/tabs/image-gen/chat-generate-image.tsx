@@ -497,6 +497,11 @@ const ChatGenerateImage: FC<
       };
     }) => {
       console.log("✅ Task complete:", data);
+      // event "worker:image-complete" ถูกยิงทั้งแบบรายรูป (ไม่มี data.data) และแบบจบงาน (มี data.data)
+      // handler นี้สนใจเฉพาะ event จบงานจริง — ถ้าไม่มี data.data.imageUrl ให้ข้าม กัน crash
+      if (!data?.data || !Array.isArray(data.data.imageUrl)) {
+        return;
+      }
       const processMessage = messagesRef.current.find(
         (msg) => msg.taskId === data.taskId,
       );
@@ -544,7 +549,7 @@ const ChatGenerateImage: FC<
             if (msg.taskId === error.taskId) {
               return {
                 ...msg,
-                genneratedStatus: "FAIL",
+                genneratedStatus: "FAILED",
               };
             }
             return msg;

@@ -36,7 +36,8 @@ import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
-import { Edit2, Image, Paintbrush } from "lucide-react";
+import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
+import { Edit2, Image, Paintbrush, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
 
 type GenerateTabKey =
@@ -44,6 +45,7 @@ type GenerateTabKey =
   | "video"
   | "omnihumen"
   | "dreamactor"
+  | "workflow"
   | "library"
   | "activity"
   | "editor";
@@ -150,6 +152,7 @@ const GenerateImagePage: FC = () => {
       video: semantic.colorPrimary || "#1677ff",
       omnihumen: semantic.colorSuccess || "#52c41a",
       dreamactor: semantic.colorWarning || "#faad14",
+      workflow: semantic.colorPrimary || "#7c3aed",
       library: "#1890ff",
       activity: semantic.colorTextSecondary || "#8c8c8c",
       editor: semantic.colorInfo || "#1890ff",
@@ -315,7 +318,7 @@ const GenerateImagePage: FC = () => {
         teamView={teamView}
         setTeamView={setTeamView}
         getProject={getProject}
-        activeKey={activeKey}
+        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
         selectedAIModel={selectedAIModel}
         filteredAIModels={filteredAIModels}
         onAIModelChange={onAIModelChange}
@@ -337,7 +340,7 @@ const GenerateImagePage: FC = () => {
             overflow: "hidden",
           }}
           className="ant-tabs-full generate-tabs"
-          activeKey={activeKey}
+          activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
           size={isMobile ? "small" : "large"}
           tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
           tabBarStyle={{
@@ -365,7 +368,7 @@ const GenerateImagePage: FC = () => {
                       <ImageFormRenderer
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
-                        activeKey={activeKey}
+                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -391,7 +394,7 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <VideoFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -418,7 +421,7 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <OmnihumenFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -445,7 +448,7 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <DreamactorFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -461,12 +464,24 @@ const GenerateImagePage: FC = () => {
               : []),
             {
               disabled: disableTab,
+              key: "workflow",
+              label: renderTabLabel(
+                "workflow",
+                "Workflow",
+                <Workflow size={16} />,
+              ),
+              children: (
+                <WorkflowFormRenderer activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} projectId={id} />
+              ),
+            },
+            {
+              disabled: disableTab,
               key: "library",
               destroyOnHidden: true,
               label: renderTabLabel("library", "Library", <StarOutlined />),
               children: (
                 <div className="h-full">
-                  <PromptLibrary activeKey={activeKey} />
+                  <PromptLibrary activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} />
                 </div>
               ),
             },
@@ -479,7 +494,7 @@ const GenerateImagePage: FC = () => {
                 "All Activity",
                 <FolderOpenOutlined />,
               ),
-              children: <PromptActivity activeKey={activeKey} />,
+              children: <PromptActivity activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} />,
             },
             ...(canAccessEditor
               ? [

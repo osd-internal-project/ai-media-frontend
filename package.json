@@ -1,6 +1,6 @@
 {
   "name": "ai-media-fe",
-  "version": "v1.0.82",
+  "version": "v1.0.83",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -17,6 +17,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@types/axios": "^0.14.4",
+    "@xyflow/react": "^12.11.0",
     "antd": "^5.27.4",
     "axios": "^1.13.2",
     "crypto-js": "^4.2.0",

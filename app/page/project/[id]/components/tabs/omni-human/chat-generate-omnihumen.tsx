@@ -708,7 +708,7 @@ const ChatGenerateOmnihumen: FC<
               m.taskId === error.taskId
                 ? {
                     ...m,
-                    genneratedStatus: "FAIL",
+                    genneratedStatus: "FAILED",
                   }
                 : m,
             ),

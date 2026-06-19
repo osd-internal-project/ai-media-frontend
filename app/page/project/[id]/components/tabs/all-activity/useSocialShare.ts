@@ -4,7 +4,14 @@ import { useCallback } from "react";
 
 export interface SocialShareItem {
   imageUrl: string;
-  typeGenerate: "image" | "video" | "dreamactor" | "omnihumen" | "omnihuman" | string;
+  url: string; // <-- แนบ link (บาง platform ใช้ field นี้)
+  typeGenerate:
+    | "image"
+    | "video"
+    | "dreamactor"
+    | "omnihumen"
+    | "omnihuman"
+    | string;
   prompt?: string;
 }
 
@@ -44,11 +51,14 @@ export function useSocialShare() {
    * Facebook — opens the Facebook share dialog with the media URL.
    * Facebook requires the URL to be publicly accessible for og:image preview.
    */
+  // const shareToFacebook = useCallback((item: SocialShareItem) => {
+  //   const shareUrl = encodeURIComponent(item.imageUrl);
+  //   openPopup(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
+  // }, []);
   const shareToFacebook = useCallback((item: SocialShareItem) => {
-    const shareUrl = encodeURIComponent(item.imageUrl);
-    openPopup(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`);
+    // ต้องส่ง URL ของ page ที่มี og:image ไม่ใช่ URL รูปตรงๆ
+    openPopup(`https://www.facebook.com/sharer/sharer.php?u=${item.imageUrl}`);
   }, []);
-
   /**
    * TikTok — TikTok does not support share-by-URL from external sites.
    * Strategy:
@@ -72,7 +82,10 @@ export function useSocialShare() {
       if (blob) {
         const file = new File([blob], filename, { type: mimeType });
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: item.prompt ?? "AI CAVE" });
+          await navigator.share({
+            files: [file],
+            title: item.prompt ?? "AI CAVE",
+          });
           return;
         }
       }
@@ -81,7 +94,11 @@ export function useSocialShare() {
     // Desktop fallback: download file + open TikTok upload
     const blob = await fetchBlob(item.imageUrl);
     if (blob) downloadBlob(blob, filename);
-    window.open("https://www.tiktok.com/upload", "_blank", "noopener,noreferrer");
+    window.open(
+      "https://www.tiktok.com/upload",
+      "_blank",
+      "noopener,noreferrer",
+    );
   }, []);
 
   /**
@@ -107,7 +124,10 @@ export function useSocialShare() {
       if (blob) {
         const file = new File([blob], filename, { type: mimeType });
         if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], title: item.prompt ?? "AI CAVE" });
+          await navigator.share({
+            files: [file],
+            title: item.prompt ?? "AI CAVE",
+          });
           return;
         }
       }
@@ -116,7 +136,11 @@ export function useSocialShare() {
     // Desktop fallback: download file + open Instagram create page
     const blob = await fetchBlob(item.imageUrl);
     if (blob) downloadBlob(blob, filename);
-    window.open("https://www.instagram.com/create/select/", "_blank", "noopener,noreferrer");
+    window.open(
+      "https://www.instagram.com/create/select/",
+      "_blank",
+      "noopener,noreferrer",
+    );
   }, []);
 
   /** Copy the raw media URL to the clipboard. */
