@@ -8,12 +8,15 @@ interface PricingCardsProps {
   plans: TPlan[];
   // billingPeriod: "monthly" | "annually";
   onGetStarted: (plan: TPlan) => void;
+  /** When provided, renders a Buy button per price (payment-first flow). */
+  onBuy?: (plan: TPlan, priceId: string) => void;
 }
 
 const PricingCards: React.FC<PricingCardsProps> = ({
-  plans, 
+  plans,
   // billingPeriod,
   onGetStarted,
+  onBuy,
 }) => {
   const getBorderClass = (borderColor: string | undefined) => {
     const classMap: Record<string, string> = {
@@ -68,25 +71,28 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                 return (
                   <div
                     key={price.id}
-                    className="mb-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 flex justify-between"
+                    className="mb-4 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 flex justify-between items-center"
                   >
                     <div className="">
                       <span className="text-gray-400 font-medium text-sm">
                         {price.interval}
                       </span>
                       <div className="text-right">
-                        {/* <span className="text-white text-2xl font-bold">
-                          ฿ {Number(price.price).toLocaleString()}
-                        </span> */}
                         <span className="text-white text-sm font-bold ">
                           ฿ {Number(price.price).toLocaleString()}
                         </span>
-                        {/* <span className="text-gray-500 text-xs block">
-                          {price.interval}
-                        </span> */}
                       </div>
                     </div>
-                    
+
+                    {onBuy && price.id && (
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => onBuy(plan, price.id as string)}
+                      >
+                        Buy
+                      </Button>
+                    )}
                   </div>
                 );
               })}

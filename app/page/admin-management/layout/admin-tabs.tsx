@@ -3,7 +3,17 @@
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { Button } from "antd";
-import { Box, Building2, Cpu, PersonStanding, Ticket, User2 } from "lucide-react";
+import {
+    Box,
+    Building2,
+    Cpu,
+    FileText,
+    PersonStanding,
+    ReceiptText,
+    Ticket,
+    User2,
+    Users,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FC, useState, useTransition, type CSSProperties } from "react";
 
@@ -50,6 +60,27 @@ const adminTabs: AdminTabItem[] = [
         href: "/page/admin-management/coupon-management",
         matchers: ["/coupon-management"],
         icon: <Ticket size={16} />,
+    },
+    {
+        key: "invoices",
+        label: "Invoices",
+        href: "/page/admin-management/invoices",
+        matchers: ["/invoices"],
+        icon: <FileText size={16} />,
+    },
+    {
+        key: "wht-requests",
+        label: "WHT",
+        href: "/page/admin-management/wht-requests",
+        matchers: ["/wht-requests"],
+        icon: <ReceiptText size={16} />,
+    },
+    {
+        key: "customers",
+        label: "Customers",
+        href: "/page/admin-management/customers",
+        matchers: ["/customers"],
+        icon: <Users size={16} />,
     },
 ];
 

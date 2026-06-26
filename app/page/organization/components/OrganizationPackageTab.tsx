@@ -1,11 +1,25 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Table, Card, Descriptions, Tag, Typography, Spin } from "antd";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import {
+  Table,
+  Card,
+  Descriptions,
+  Tag,
+  Typography,
+  Spin,
+  Button,
+  Modal,
+  Radio,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { axiosUser } from "@/app/lib/axios/axios";
+import { useRouter } from "next/navigation";
+import { ShoppingCart } from "lucide-react";
+import { axiosUser, axiosCore } from "@/app/lib/axios/axios";
 import PackageTransactionServices from "@/app/services/package-transaction.service";
 import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
+import PlanServices from "@/app/services/plan.service";
 import { formatNumber } from "@/app/utils/format";
 import { IPackageTransaction } from "@/app/common/organization.type";
+import { TPlan } from "@/app/common/plan.type";
 import SectionEmptyState from "./SectionEmptyState";
 
 const { Text } = Typography;
@@ -17,12 +31,32 @@ interface OrganizationPackageTabProps {
 const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
   organizationId,
 }) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
 
+  // Package purchase modal (entry point into the checkout flow)
+  const [buyOpen, setBuyOpen] = useState(false);
+  const [plans, setPlans] = useState<TPlan[]>([]);
+  const [selectedPriceId, setSelectedPriceId] = useState<string>();
+
   const transactionService = PackageTransactionServices(axiosUser);
   const subscriptionService = OrganizationSubscriptionServices(axiosUser);
+  const planService = useMemo(() => PlanServices(axiosCore), []);
+
+  const openBuy = useCallback(async () => {
+    setBuyOpen(true);
+    if (plans.length === 0) {
+      const data = await planService.findAllFormatted();
+      setPlans(data);
+    }
+  }, [planService, plans.length]);
+
+  const handleProceedToCheckout = () => {
+    if (!selectedPriceId) return;
+    router.push(`/page/payment/checkout?priceId=${selectedPriceId}`);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -102,7 +136,19 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
         </div>
       ) : (
         <>
-          <Card title="Current Subscription" size="small">
+          <Card
+            title="Current Subscription"
+            size="small"
+            extra={
+              <Button
+                type="primary"
+                icon={<ShoppingCart size={16} />}
+                onClick={openBuy}
+              >
+                Buy / Upgrade Package
+              </Button>
+            }
+          >
             {subscription ? (
               <Descriptions bordered column={{ xs: 1, sm: 2 }} size="small">
                 <Descriptions.Item label="Plan Name">
@@ -203,6 +249,38 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
           </Card>
         </>
       )}
+
+      <Modal
+        title="Select a Package"
+        open={buyOpen}
+        onCancel={() => setBuyOpen(false)}
+        onOk={handleProceedToCheckout}
+        okText="Continue to Checkout"
+        okButtonProps={{ disabled: !selectedPriceId }}
+        width={640}
+      >
+        <Radio.Group
+          value={selectedPriceId}
+          onChange={(e) => setSelectedPriceId(e.target.value)}
+          className="flex flex-col gap-3 w-full"
+        >
+          {plans.map((plan) =>
+            (plan.prices || []).map((price) => (
+              <Radio key={price.id} value={price.id} className="!flex">
+                <span className="text-white">
+                  {plan.name} — {price.interval} ·{" "}
+                  {price.currency} {formatNumber(Number(price.price))}
+                </span>
+              </Radio>
+            )),
+          )}
+        </Radio.Group>
+        {plans.length === 0 && (
+          <div className="flex justify-center py-6">
+            <Spin />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -22,6 +22,15 @@ const Page: FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [form] = Form.useForm();
+  // Where to go after a successful login. Preserves the purchase flow (and any
+  // other deep link) via ?callbackUrl=, falling back to the default landing.
+  // Read from window.location to avoid a Suspense boundary for useSearchParams.
+  const [callbackUrl, setCallbackUrl] = useState("/page/project");
+
+  useEffect(() => {
+    const cb = new URLSearchParams(window.location.search).get("callbackUrl");
+    if (cb) setCallbackUrl(cb);
+  }, []);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -39,8 +48,7 @@ const Page: FC = () => {
         messageApi.error("Login failed! Please check your User or Password.");
       } else {
         messageApi.success("Login successful!");
-        // window.location.href = "/page/project";
-        router.push("/page/project");
+        router.push(callbackUrl);
       }
     } catch (error) {
       console.error("Login error:", error);
