@@ -55,7 +55,7 @@ const OmniActionBar: FC<OmniActionBarProps> = ({
         />
 
         {/* COPY PROMPT */}
-        <Button
+        {/* <Button
           size="middle"
           className="action-bar-btn default-btn"
           icon={<CopyOutlined style={{ color: "#fff", fontSize: 18 }} />}
@@ -68,7 +68,7 @@ const OmniActionBar: FC<OmniActionBarProps> = ({
             background: "rgba(40,40,40,0.85)",
             border: "none",
           }}
-        />
+        /> */}
 
         {/* DOWNLOAD */}
         <Button

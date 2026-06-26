@@ -96,7 +96,7 @@ const DreamactorResultItem: FC<Props> = ({
                   style={{ fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4, color: semantic.colorPrimary }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                  {showFullPrompt ? "Show less" : "...Show more"}
                 </Button>
               )}
             </div>
@@ -231,7 +231,7 @@ const DreamactorResultItem: FC<Props> = ({
                   style={{ fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4, color: semantic.colorPrimary }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                  {showFullPrompt ? "Show less" : "...Show more"}
                 </Button>
               )}
             </Col>

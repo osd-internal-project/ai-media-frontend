@@ -43,6 +43,7 @@ export default function ImageSmartReference({ referenceImages }: Props) {
               referenceImages.slice(0, 3).map((imageUrl, index) => (
                 <Tooltip
                   key={index}
+                  trigger={"click"}
                   title={
                     <div className="p-2">
                       <Image

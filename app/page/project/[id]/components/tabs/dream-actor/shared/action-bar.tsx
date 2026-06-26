@@ -50,7 +50,7 @@ const DreamActionBar: FC<DreamActionBarProps> = ({
         />
 
         {/* COPY */}
-        <Button
+        {/* <Button
           size="middle"
           icon={<CopyOutlined style={{ color: "#fff", fontSize: 18 }} />}
           onClick={(e) => {
@@ -62,7 +62,7 @@ const DreamActionBar: FC<DreamActionBarProps> = ({
             background: "rgba(40,40,40,0.85)",
             border: "none",
           }}
-        />
+        /> */}
 
         {/* DOWNLOAD */}
         <Button

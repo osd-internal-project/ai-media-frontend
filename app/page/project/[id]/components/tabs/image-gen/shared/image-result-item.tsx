@@ -10,6 +10,7 @@ import {
   Col,
   Image,
 } from "antd";
+import { CopyOutlined } from "@ant-design/icons";
 import { ImageOff, Trash2, User } from "lucide-react";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import ActionBar from "./action-bar";
@@ -62,7 +63,14 @@ const ResultItem: FC<Props> = ({
     }
     // eslint-disable-next-line
   }, [message.prompt, isMobile, isTablet]);
-
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.prompt);
+      messageApi.success("Copied Prompt");
+    } catch (err: any) {
+      messageApi.error("Copied Prompt Failed");
+    }
+  };
   return (
     <Card
       size="small"
@@ -185,7 +193,7 @@ const ResultItem: FC<Props> = ({
                   }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                  {showFullPrompt ? "Show less" : "...Show more"}
                 </Button>
               )}
             </div>
@@ -288,9 +296,10 @@ const ResultItem: FC<Props> = ({
                   />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
-                <ImageSmartReference referenceImages={message.referenceImages} />
+                <ImageSmartReference
+                  referenceImages={message.referenceImages}
+                />
               </Typography.Text>
-            
             </Col>
             <Col
               flex="auto"
@@ -357,21 +366,41 @@ const ResultItem: FC<Props> = ({
               >
                 {`"${message.prompt}"`}
               </Typography.Text>
-              {isOverflow && (
+              <Space>
+                {isOverflow && (
+                  <Button
+                    type="link"
+                    size="small"
+                    style={{
+                      color: semantic.colorPrimary,
+                      fontSize: isMobile ? 12 : 13,
+                      padding: 0,
+                      marginLeft: 4,
+                    }}
+                    onClick={() => setShowFullPrompt((v) => !v)}
+                  >
+                    {showFullPrompt ? "Show less" : "...Show more"}
+                  </Button>
+                )}
+                {/* ปุ่ม Copy เพิ่มเติมเข้ามาตรงนี้ */}
                 <Button
-                  type="link"
+                  type="text"
                   size="small"
+                  icon={
+                    <CopyOutlined
+                      style={{ color:'#888'}}
+                    />
+                  }
                   style={{
-                    color: semantic.colorPrimary,
+                    color: semantic.colorTextDescription,
                     fontSize: isMobile ? 12 : 13,
-                    padding: 0,
-                    marginLeft: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                  onClick={() => setShowFullPrompt((v) => !v)}
-                >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
-                </Button>
-              )}
+                  onClick={handleCopy}
+                />
+              </Space>
             </Col>
           </Row>
         </>
@@ -461,30 +490,32 @@ const ResultItem: FC<Props> = ({
                     />
 
                     {/* File size label */}
-                    {message.generateConfig?.width && message.generateConfig?.height && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: 6,
-                          left: 6,
-                          background: "rgba(0,0,0,0.55)",
-                          borderRadius: 4,
-                          padding: "1px 6px",
-                          pointerEvents: "none",
-                        }}
-                      >
-                        <Typography.Text
+                    {message.generateConfig?.width &&
+                      message.generateConfig?.height && (
+                        <div
                           style={{
-                            color: "#fff",
-                            fontSize: isMobile ? 10 : 11,
-                            fontWeight: 500,
-                            lineHeight: 1.4,
+                            position: "absolute",
+                            bottom: 6,
+                            left: 6,
+                            background: "rgba(0,0,0,0.55)",
+                            borderRadius: 4,
+                            padding: "1px 6px",
+                            pointerEvents: "none",
                           }}
                         >
-                          {message.generateConfig.width}×{message.generateConfig.height}
-                        </Typography.Text>
-                      </div>
-                    )}
+                          <Typography.Text
+                            style={{
+                              color: "#fff",
+                              fontSize: isMobile ? 10 : 11,
+                              fontWeight: 500,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {message.generateConfig.width}×
+                            {message.generateConfig.height}
+                          </Typography.Text>
+                        </div>
+                      )}
 
                     <ActionBar
                       item={imgUrl}

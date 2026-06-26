@@ -61,7 +61,7 @@ const VideoActionBar: React.FC<VideoActionBarProps> = ({
         />
 
         {/* COPY PROMPT */}
-        <Button
+        {/* <Button
           size="middle"
           className="action-bar-btn default-btn"
           icon={<CopyOutlined style={{ color: "#fff", fontSize: 18 }} />}
@@ -74,7 +74,7 @@ const VideoActionBar: React.FC<VideoActionBarProps> = ({
             background: "rgba(40,40,40,0.85)",
             border: "none",
           }}
-        />
+        /> */}
 
         {/* DOWNLOAD */}
         <Button

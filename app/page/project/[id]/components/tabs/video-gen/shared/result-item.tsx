@@ -118,7 +118,7 @@ const VideoResultItem: FC<Props> = ({
                   style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                  {showFullPrompt ? "Show less" : "...Show more"}
                 </Button>
               )}
             </div>
@@ -292,7 +292,7 @@ const VideoResultItem: FC<Props> = ({
                   style={{ color: semantic.colorPrimary, fontSize: isMobile ? 12 : 13, padding: 0, marginLeft: 4 }}
                   onClick={() => setShowFullPrompt((v) => !v)}
                 >
-                  {showFullPrompt ? "ย่อ" : "...ดูเพิ่มเติม"}
+                  {showFullPrompt ? "Show less" : "...Show more"}
                 </Button>
               )}
             </Col>
