@@ -187,7 +187,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                   })()}
 
                   <div className="mt-6">
-                    {generateManualPrice &&
+                    {generateManualPrice ? (
                       plan.prices
                         .filter((p) => p.interval === planInterval)
                         .map((price) => (
@@ -200,7 +200,26 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                               Admin Get Started
                             </Button>
                           </div>
-                        ))}
+                        ))
+                    ) : (
+                      // Public CTA: select this plan's price for the current
+                      // interval and proceed to payment. Falls back to an empty
+                      // id (free/enterprise plans) so the parent can redirect.
+                      <Button
+                        block
+                        size="large"
+                        type="primary"
+                        onClick={() =>
+                          onGetStarted(
+                            plan.prices.find(
+                              (p) => p.interval === planInterval,
+                            )?.id || "",
+                          )
+                        }
+                      >
+                        Get Started
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

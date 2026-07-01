@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PricingCards from "@/app/components/package/PricingCards";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import PlanServices from "@/app/services/plan.service";
 import { TPlan, TPlanInterval } from "@/app/common/plan.type";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -45,6 +46,7 @@ function PlanSkeleton() {
 
 export default function Plan() {
   const router = useRouter();
+  const { status } = useSession();
   const [plans, setPlans] = useState<TPlan[]>([]);
   const [interval, setInterval] = useState<TPlanInterval>("MONTH");
   const [loading, setLoading] = useState(true);
@@ -59,8 +61,26 @@ export default function Plan() {
     });
   }, [plans]);
 
+  /**
+   * Proceed to payment for the selected plan price. Logged-in users go straight
+   * to checkout; anonymous users are sent to login with a callbackUrl so the
+   * purchase resumes at checkout after authenticating. Plans without a price for
+   * the current interval (free/enterprise) fall back to login/sign-up.
+   *
+   * @param priceId selected plan-price id, or "" when the plan has no payable price
+   */
   const handleGetStarted = (priceId: string) => {
-    router.push(`/login`);
+    if (!priceId) {
+      router.push(`/login`);
+      return;
+    }
+
+    const checkoutUrl = `/page/payment/checkout?priceId=${priceId}`;
+    router.push(
+      status === "authenticated"
+        ? checkoutUrl
+        : `/login?callbackUrl=${encodeURIComponent(checkoutUrl)}`,
+    );
   };
 
   const fetchPlans = React.useCallback(async () => {

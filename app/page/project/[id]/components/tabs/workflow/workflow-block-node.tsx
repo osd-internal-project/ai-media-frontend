@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Button, Dropdown, Progress, Tag, Tooltip } from "antd";
+import { Button, Progress, Tag, Tooltip } from "antd";
 import {
   GripVertical,
   X,
@@ -10,12 +10,24 @@ import {
   AlertTriangle,
   RotateCw,
   Plus,
+  Maximize2,
+  Play,
 } from "lucide-react";
 import type {
   WorkflowBlock,
   WorkflowBlockStatus,
   WorkflowBlockType,
 } from "@/app/services/workflow.service";
+import WorkflowMediaPreview, {
+  type PreviewMedia,
+} from "./workflow-media-preview";
+import { MediaSkeleton, SmartImage, SmartVideo } from "../../shared/smart-media";
+
+/** reference (input) หนึ่งรายการ = output ของ parent block */
+export interface ParentRef {
+  url: string;
+  type: WorkflowBlockType;
+}
 
 /** ข้อมูล + callbacks ที่ canvas ส่งให้ node ผ่าน data ของ React Flow */
 export interface WorkflowNodeData {
@@ -23,11 +35,11 @@ export interface WorkflowNodeData {
   progress?: number;
   selected: boolean;
   editing: boolean;
-  parentThumbs: string[];
+  parentRefs: ParentRef[];
   onConfigure: (blockId: string) => void;
   onDelete: (blockId: string) => void;
   onRetry: (blockId: string) => void;
-  onAddChild: (blockId: string, childType: WorkflowBlockType) => void;
+  onAddChild: (blockId: string) => void;
   onToggleSelect: (blockId: string) => void;
   renderEditForm: (block: WorkflowBlock) => React.ReactNode;
   [key: string]: unknown;
@@ -60,16 +72,13 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
   const d = data as WorkflowNodeData;
   const { block, progress = 0, selected, editing } = d;
   const isSuccess = block.status === "success";
+  const isImage = block.type === "image";
 
-  // เมนูเลือกชนิดบล็อกลูกตอนกด "+" — output วิดีโอใส่ได้เฉพาะบล็อกชนิดวิดีโอ
-  // (รูปใส่ได้ทั้ง image และ video)
-  const childTypeItems =
-    block.type === "video"
-      ? [{ key: "video", label: "Video block" }]
-      : [
-          { key: "image", label: "Image block" },
-          { key: "video", label: "Video block" },
-        ];
+  // สื่อที่กำลังเปิดดูแบบเต็มจอ (null = ปิด)
+  const [preview, setPreview] = useState<PreviewMedia | null>(null);
+  // result โหลดเสร็จหรือยัง (ใช้ทำ skeleton + fade-in); รีเซ็ตเมื่อ output เปลี่ยน
+  const [resultLoaded, setResultLoaded] = useState(false);
+  useEffect(() => setResultLoaded(false), [block.outputUrl]);
 
   return (
     <div
@@ -80,21 +89,28 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
         minWidth: 280,
         maxWidth: 460,
         // Height auto-fits children (no fixed height).
-        borderRadius: 12,
-        background: "var(--wf-card-bg, #18181b)",
+        borderRadius: 14,
+        background: "var(--wf-card-bg, #21262B)",
         border: selected
-          ? "2px solid #8b5cf6"
-          : "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
-        color: "#e4e4e7",
+          ? "2px solid var(--wf-primary, #6F6ADE)"
+          : "1px solid var(--wf-border, #3A434F)",
+        boxShadow: selected
+          ? "0 6px 20px rgba(111,106,222,0.28)"
+          : "0 4px 16px rgba(0,0,0,0.28)",
+        color: "var(--wf-text, #F2F4F5)",
         overflow: "hidden",
+        transition: "border-color .15s ease, box-shadow .15s ease",
       }}
     >
-      {/* target handle (ซ้าย) เพื่อให้ลากเส้นเข้ามาได้ */}
+      {/* target handle (ซ้าย) กึ่งกลางแนวตั้ง เพื่อให้ลากเส้นเข้ามาได้สมูท */}
       <Handle
         type="target"
         position={Position.Left}
-        style={{ top: 92, width: 10, height: 10, background: "#52525b" }}
+        style={{
+          width: 10,
+          height: 10,
+          background: "var(--wf-border, #52525b)",
+        }}
       />
       {/* 1. Header / drag handle */}
       <div
@@ -105,27 +121,36 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
           gap: 6,
           padding: "8px 10px",
           background: "rgba(255,255,255,0.03)",
+          borderBottom: "1px solid var(--wf-hairline, rgba(255,255,255,0.06))",
           cursor: "grab",
         }}
       >
-        <GripVertical size={14} className="opacity-60" />
-        <Button
-          size="small"
-          disabled={!isSuccess}
-          type={selected ? "primary" : "default"}
-          style={
-            selected
-              ? { background: "#8b5cf6", borderColor: "#8b5cf6" }
+        <GripVertical size={14} className="opacity-50" />
+        {/* Combine รองรับเฉพาะบล็อกรูปภาพที่สำเร็จแล้ว */}
+        <Tooltip
+          title={
+            isSuccess && !isImage
+              ? "Combine รองรับเฉพาะบล็อกรูปภาพ"
               : undefined
           }
-          onClick={() => d.onToggleSelect(block.id)}
         >
-          {selected ? (
-            "Selected"
-          ) : (
-              "Select"
-          )}
-        </Button>
+          <Button
+            size="small"
+            disabled={!isSuccess || !isImage}
+            type={selected ? "primary" : "default"}
+            style={
+              selected
+                ? {
+                    background: "var(--wf-primary, #6F6ADE)",
+                    borderColor: "var(--wf-primary, #6F6ADE)",
+                  }
+                : undefined
+            }
+            onClick={() => d.onToggleSelect(block.id)}
+          >
+            {selected ? "Selected" : "Select"}
+          </Button>
+        </Tooltip>
         {/* <span style={{ fontFamily: "monospace", fontSize: 11, opacity: 0.7 }}>
           {block.id.slice(0, 8)}
         </span> */}
@@ -146,7 +171,7 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
           onClick={() => d.onDelete(block.id)}
           aria-label="delete block"
         >
-          <X size={14} />
+          <X size={14} color="var(--wf-text-dim, #a1a1aa)" />
         </button>
       </div>
 
@@ -186,27 +211,59 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
               size="small"
               status="active"
             />
-            <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--wf-text-dim, #8C99A9)",
+                marginTop: 6,
+              }}
+            >
               {Math.round(progress * 100)}% · generating {block.type}
             </div>
           </div>
         ) : block.status === "success" ? (
           <>
             {block.outputUrl ? (
-              block.type === "video" ? (
-                <video
-                  src={block.outputUrl}
-                  controls
-                  style={{ maxHeight: 320, maxWidth: "100%", borderRadius: 8 }}
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={block.outputUrl}
-                  alt={block.prompt}
-                  style={{ maxHeight: 320, maxWidth: "100%", borderRadius: 8 }}
-                />
-              )
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  minHeight: 176,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {!resultLoaded && <MediaSkeleton rounded={8} />}
+                {block.type === "video" ? (
+                  <video
+                    src={block.outputUrl}
+                    controls
+                    onLoadedData={() => setResultLoaded(true)}
+                    style={{
+                      maxHeight: 320,
+                      maxWidth: "100%",
+                      borderRadius: 8,
+                      opacity: resultLoaded ? 1 : 0,
+                      transition: "opacity 0.35s ease",
+                    }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={block.outputUrl}
+                    alt={block.prompt}
+                    onLoad={() => setResultLoaded(true)}
+                    style={{
+                      maxHeight: 320,
+                      maxWidth: "100%",
+                      borderRadius: 8,
+                      opacity: resultLoaded ? 1 : 0,
+                      transition: "opacity 0.35s ease",
+                    }}
+                  />
+                )}
+              </div>
             ) : (
               <div
                 style={{
@@ -218,23 +275,59 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
               />
             )}
             {block.outputUrl && (
-              <Tooltip title="Download">
-                <a
-                  href={block.outputUrl}
-                  download
-                  style={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    background: "rgba(0,0,0,0.5)",
-                    borderRadius: 6,
-                    padding: 4,
-                    color: "#fff",
-                  }}
-                >
-                  <Download size={14} />
-                </a>
-              </Tooltip>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  display: "flex",
+                  gap: 6,
+                }}
+              >
+                <Tooltip title="ดูแบบเต็มจอ">
+                  <button
+                    onClick={() =>
+                      setPreview({ url: block.outputUrl!, type: block.type })
+                    }
+                    aria-label="expand preview"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 28,
+                      height: 28,
+                      background: "rgba(0,0,0,0.55)",
+                      backdropFilter: "blur(4px)",
+                      borderRadius: 8,
+                      color: "#fff",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </Tooltip>
+                <Tooltip title="Download">
+                  <a
+                    href={block.outputUrl}
+                    download
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 28,
+                      height: 28,
+                      background: "rgba(0,0,0,0.55)",
+                      backdropFilter: "blur(4px)",
+                      borderRadius: 8,
+                      color: "#fff",
+                    }}
+                  >
+                    <Download size={14} />
+                  </a>
+                </Tooltip>
+              </div>
             )}
             {typeof block.duration === "number" && (
               <span
@@ -270,31 +363,73 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
         )}
       </div>
 
-      {/* 3. Input thumbnails strip */}
-      {block.parentBlockIds.length > 0 && (
-        <div style={{ display: "flex", gap: 4, padding: "0 10px 6px" }}>
-          {d.parentThumbs.map((thumb, i) => (
-            <div
-              key={i}
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 4,
-                background: thumb
-                  ? `center/cover url(${thumb})`
-                  : "linear-gradient(135deg,#7c3aed,#2563eb)",
-              }}
-            />
-          ))}
+      {/* 3. Reference (input) thumbnails — รูป/วิดีโอ คลิกเพื่อดูเต็มจอ */}
+      {d.parentRefs.length > 0 && (
+        <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", flexWrap: "wrap" }}>
+          {d.parentRefs.map((ref, i) => {
+            const base: React.CSSProperties = {
+              position: "relative",
+              width: 44,
+              height: 44,
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "1px solid var(--wf-border, #3A434F)",
+              flexShrink: 0,
+            };
+            if (!ref.url) {
+              return (
+                <div
+                  key={i}
+                  style={{
+                    ...base,
+                    background: "linear-gradient(135deg,#7c3aed,#2563eb)",
+                  }}
+                />
+              );
+            }
+            return (
+              <button
+                key={i}
+                title="ดู reference แบบเต็มจอ"
+                onClick={() => setPreview({ url: ref.url, type: ref.type })}
+                className="transition-transform duration-150 hover:scale-105"
+                style={{ ...base, cursor: "pointer", padding: 0 }}
+              >
+                {ref.type === "video" ? (
+                  <>
+                    <SmartVideo src={ref.url} muted preload="metadata" />
+                    {/* ป้าย play บอกว่าเป็นวิดีโอ */}
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(0,0,0,0.25)",
+                        color: "#fff",
+                      }}
+                    >
+                      <Play size={14} fill="#fff" />
+                    </span>
+                  </>
+                ) : (
+                  <SmartImage src={ref.url} alt={`reference ${i + 1}`} />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
       {/* 4. Prompt excerpt (2 บรรทัด) */}
       <div
         style={{
-          padding: "0 10px",
+          padding: "2px 12px",
           fontSize: 12,
-          opacity: 0.85,
+          lineHeight: 1.45,
+          color: "var(--wf-text, #F2F4F5)",
+          opacity: 0.9,
           display: "-webkit-box",
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
@@ -309,14 +444,16 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 6,
-          padding: "6px 10px",
+          gap: 8,
+          padding: "8px 12px",
           fontSize: 11,
-          opacity: 0.7,
+          color: "var(--wf-text-dim, #8C99A9)",
         }}
       >
-        <Tag style={{ margin: 0 }}>{block.model}</Tag>
-        <span>{block.resolution}</span>
+        {block.model && (
+          <Tag style={{ margin: 0 }}>{block.model}</Tag>
+        )}
+        {block.resolution && <span>{block.resolution}</span>}
         <span style={{ marginInlineStart: "auto" }}>
           {timeAgo(block.createdAt)}
         </span>
@@ -325,54 +462,58 @@ const WorkflowBlockNode: React.FC<NodeProps> = ({ data }) => {
       {/* Green connector dot + ปุ่ม "+" สำหรับเพิ่มบล็อกลูก — แสดงเฉพาะบล็อกที่สำเร็จ */}
       {isSuccess && (
         <>
-          {/* source handle ไว้ให้เส้นเชื่อม anchor (อยู่ใต้ปุ่ม +) */}
+          {/* source handle: anchor เส้นที่กึ่งกลางแนวตั้งขอบขวา (อยู่ใต้ปุ่ม +) */}
+          {/* source handle = anchor เส้น (โปร่งใส) กึ่งกลางขอบขวา ให้เส้นเริ่มตรงปุ่ม + */}
           <Handle
             type="source"
             position={Position.Right}
             style={{
-              top: 92,
               right: -8,
               width: 16,
               height: 16,
-              borderRadius: "50%",
-              background: "#22c55e",
-              border: "2px solid #052e16",
+              minWidth: 0,
+              minHeight: 0,
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
             }}
           />
-          {/* ปุ่ม "+" ที่จุดเชื่อม → เลือกชนิดบล็อกลูกก่อนสร้าง */}
-          <Dropdown
-            trigger={["click"]}
-            menu={{
-              items: childTypeItems,
-              onClick: ({ key }) =>
-                d.onAddChild(block.id, key as WorkflowBlockType),
+          {/* ปุ่ม "+" คลิกครั้งเดียวสร้างบล็อกลูก (เลือก/สลับชนิดในฟอร์ม)
+              วงกลมสะอาด วางใจกลางตรงกับ handle เพื่อให้เส้นเริ่มจากปุ่มพอดี */}
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              right: -13,
+              transform: "translateY(-50%)",
+              zIndex: 10,
             }}
           >
             <button
               title="Add child"
+              onClick={() => d.onAddChild(block.id)}
+              className="flex items-center justify-center transition-transform duration-150 hover:scale-110 active:scale-95"
               style={{
-                position: "absolute",
-                top: 88,
-                right: -12,
-                width: 24,
-                height: 24,
+                width: 26,
+                height: 26,
                 borderRadius: "50%",
-                background: "#22c55e",
-                border: "2px solid #052e16",
-                color: "#052e16",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                background: "var(--wf-success, #22C55E)",
+                // ring สีพื้นการ์ด ตัดปุ่มออกจากเส้นอย่างสะอาด
+                border: "2px solid var(--wf-card-bg, #21262B)",
+                color: "#fff",
                 cursor: "pointer",
                 padding: 0,
-                zIndex: 10,
+                boxShadow: "0 2px 8px rgba(34,197,94,0.35)",
               }}
             >
-              <Plus size={14} />
+              <Plus size={15} strokeWidth={2.5} />
             </button>
-          </Dropdown>
+          </div>
         </>
       )}
+
+      {/* Lightbox เต็มจอ (เรนเดอร์ผ่าน portal ไป body กัน transform ของแคนวาส) */}
+      <WorkflowMediaPreview media={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };

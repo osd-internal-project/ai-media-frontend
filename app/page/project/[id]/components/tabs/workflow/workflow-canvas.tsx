@@ -21,7 +21,11 @@ import {
   type OnNodeDrag,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Button, Dropdown, Tag, Typography, message } from "antd";
+import { Button, Dropdown, message } from "antd";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Layers, Plus, Coins } from "lucide-react";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { axiosCore } from "@/app/lib/axios/axios";
 import WorkflowServices, {
   type WorkflowBlock,
@@ -70,10 +74,54 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   userId,
   organizationId,
 }) => {
+  const router = useRouter();
+  const { mode } = useThemeMode();
+  const { socket } = useWebSocket();
+
   const workflowService = useMemo(() => WorkflowServices(axiosCore), []);
   const modelService = useMemo(() => MasterModelTypeServices(axiosCore), []);
   const generateService = useMemo(() => GenerateServices(axiosCore), []);
-  const { socket } = useWebSocket();
+
+  /**
+   * Workflow palette derived from the AI CAVE design tokens, exposed as CSS
+   * variables on the canvas wrapper so block nodes inherit the theme without
+   * threading context through every React Flow node.
+   */
+  const palette = useMemo(() => {
+    const t = getThemeConfig(mode).token ?? {};
+    const isDark = mode === "dark";
+    return {
+      cardBg: isDark ? "#21262B" : "#FFFFFF",
+      headerBg: t.colorBgContainer ?? (isDark ? "#21262B" : "#FFFFFF"),
+      border: t.colorBorder ?? (isDark ? "#3A434F" : "#D3DAE3"),
+      hairline: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+      primary: t.colorPrimary ?? "#6F6ADE",
+      text: t.colorTextBase ?? (isDark ? "#F2F4F5" : "#191C20"),
+      textDim: t.colorTextSecondary ?? "#8C99A9",
+      success: "#22C55E",
+      warning: "#FF8F00",
+      error: "#FF3C38",
+      canvasBg: isDark ? "#191C20" : "#F2F4F5",
+      dot: isDark ? "#3A434F" : "#D3DAE3",
+    };
+  }, [mode]);
+
+  /** CSS custom properties consumed by block-node inline styles. */
+  const paletteVars = useMemo(
+    () =>
+      ({
+        "--wf-card-bg": palette.cardBg,
+        "--wf-border": palette.border,
+        "--wf-hairline": palette.hairline,
+        "--wf-primary": palette.primary,
+        "--wf-text": palette.text,
+        "--wf-text-dim": palette.textDim,
+        "--wf-success": palette.success,
+        "--wf-warning": palette.warning,
+        "--wf-error": palette.error,
+      }) as React.CSSProperties,
+    [palette],
+  );
 
   const [blocks, setBlocks] = useState<CanvasBlock[]>([]);
   const [models, setModels] = useState<TMasterModelType[]>([]);
@@ -255,13 +303,17 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     [conversationId],
   );
 
-  /** + Add child: เลือกชนิดบล็อกลูกก่อน แล้วสร้าง placeholder ผูกกับ parent */
+  /**
+   * + Add child: คลิกครั้งเดียวสร้าง placeholder ผูกกับ parent แล้วเปิดฟอร์ม
+   * ชนิดเริ่มต้น: parent รูป → image (สลับเป็น video ได้ใน Segmented ของฟอร์ม),
+   * parent วิดีโอ → ล็อกเป็น video (output วิดีโอใส่ได้เฉพาะบล็อกวิดีโอ)
+   */
   const handleAddChild = useCallback(
-    (parentId: string, childType: WorkflowBlockType) => {
+    (parentId: string) => {
       const parent = blocksRef.current.find((b) => b.id === parentId);
       if (!parent) return;
-      // กฎ: output วิดีโอใส่ได้เฉพาะบล็อกวิดีโอ (รูปใส่ได้ทั้ง image/video)
-      const type = parent.type === "video" ? "video" : childType;
+      const type: WorkflowBlockType =
+        parent.type === "video" ? "video" : "image";
       addPlaceholder(type, parent.positionX + 380, parent.positionY, [
         parentId,
       ]);
@@ -269,8 +321,11 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     [addPlaceholder],
   );
 
-  /** toggle เลือกบล็อก (เฉพาะ success) สำหรับ Combine */
+  /** toggle เลือกบล็อก (เฉพาะ success + เป็นรูปภาพ) สำหรับ Combine */
   const handleToggleSelect = useCallback((blockId: string) => {
+    const block = blocksRef.current.find((b) => b.id === blockId);
+    // Combine รองรับเฉพาะบล็อกรูปภาพที่ generate สำเร็จแล้วเท่านั้น
+    if (!block || block.status !== "success" || block.type !== "image") return;
     setSelectedIds((prev) =>
       prev.includes(blockId)
         ? prev.filter((id) => id !== blockId)
@@ -278,16 +333,53 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     );
   }, []);
 
-  /** Combine N blocks → placeholder ที่ผูกทุกบล็อกที่เลือกเป็น parent */
+  /** Combine N blocks → placeholder ที่ผูกทุกบล็อกที่เลือก (รูปภาพ) เป็น parent */
   const handleCombine = useCallback(() => {
     if (selectedIds.length === 0) return;
-    const parents = blocksRef.current.filter((b) => selectedIds.includes(b.id));
+    // กรองให้เหลือเฉพาะบล็อกรูปภาพ (กันกรณี selection หลุด rule)
+    const parents = blocksRef.current.filter(
+      (b) => selectedIds.includes(b.id) && b.type === "image",
+    );
+    if (parents.length === 0) {
+      message.info("Combine รองรับเฉพาะบล็อกรูปภาพ");
+      return;
+    }
     const avgX =
       parents.reduce((s, b) => s + b.positionX, 0) / parents.length + 380;
     const avgY = parents.reduce((s, b) => s + b.positionY, 0) / parents.length;
-    addPlaceholder(parents[0].type, avgX, avgY, [...selectedIds]);
+    // parents เป็นรูปภาพทั้งหมด → บล็อกใหม่เริ่มเป็น image และสลับเป็น video ได้
+    addPlaceholder("image", avgX, avgY, parents.map((b) => b.id));
     setSelectedIds([]);
   }, [addPlaceholder, selectedIds]);
+
+  /**
+   * สลับชนิดบล็อก (image⇄video) ก่อน generate เท่านั้น (เฉพาะ placeholder/local)
+   * รีเซ็ต model เพราะรายการโมเดลผูกกับชนิด
+   */
+  const handleChangeBlockType = useCallback(
+    (blockId: string, type: WorkflowBlockType) => {
+      setBlocks((prev) =>
+        prev.map((b) =>
+          b.id === blockId && b._local ? { ...b, type, model: "" } : b,
+        ),
+      );
+    },
+    [],
+  );
+
+  /**
+   * บล็อกสลับชนิดได้เมื่อไม่มี parent หรือ parent ทุกตัวเป็นรูปภาพ
+   * (output วิดีโอใส่ได้เฉพาะบล็อกวิดีโอ → ถ้า ref ไม่ใช่รูปจะล็อกเป็น video)
+   */
+  const canSwitchType = useCallback(
+    (block: CanvasBlock) =>
+      block.parentBlockIds.length === 0 ||
+      block.parentBlockIds.every(
+        (pid) =>
+          blocksRef.current.find((b) => b.id === pid)?.type === "image",
+      ),
+    [],
+  );
 
   /** กด Generate ในฟอร์ม → สร้างบล็อกจริง + enqueue ผ่าน backend */
   const handleGenerate = useCallback(
@@ -400,7 +492,11 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const renderEditForm = useCallback(
     (block: WorkflowBlock) => (
       <WorkflowEditForm
+        // remount on type change so model/resolution/uploads reset cleanly
+        key={block.type}
         type={block.type}
+        canSwitchType={canSwitchType(block as CanvasBlock)}
+        onChangeType={(t) => handleChangeBlockType(block.id, t)}
         projectId={projectId}
         userId={userId}
         organizationId={organizationId}
@@ -414,6 +510,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       />
     ),
     [
+      canSwitchType,
+      handleChangeBlockType,
       handleGenerate,
       modelsByType,
       organizationId,
@@ -424,8 +522,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   );
 
   useEffect(() => {
-    // map id → outputUrl เพื่อทำ thumbnail ของ parent
-    const outputById = new Map(blocks.map((b) => [b.id, b.outputUrl ?? ""]));
+    // map id → บล็อก เพื่อดึง output + ชนิด (รูป/วิดีโอ) ของ parent มาทำ thumbnail
+    const blockById = new Map(blocks.map((b) => [b.id, b]));
 
     setNodes((prevNodes) => {
       const prevPos = new Map(prevNodes.map((n) => [n.id, n.position]));
@@ -435,9 +533,13 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           progress: block._progress ?? (block.status === "success" ? 1 : 0),
           selected: selectedIds.includes(block.id),
           editing: editingBlockId === block.id,
-          parentThumbs: block.parentBlockIds.map(
-            (pid) => outputById.get(pid) ?? "",
-          ),
+          parentRefs: block.parentBlockIds.map((pid) => {
+            const parent = blockById.get(pid);
+            return {
+              url: parent?.outputUrl ?? "",
+              type: parent?.type ?? "image",
+            };
+          }),
           onConfigure: handleConfigure,
           onDelete: handleDelete,
           onRetry: handleRetry,
@@ -466,9 +568,9 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           const childProcessing = child.status === "processing";
           const stroke = parentSuccess
             ? childProcessing
-              ? "#f59e0b"
-              : "#22c55e"
-            : "#52525b";
+              ? palette.warning
+              : palette.success
+            : palette.textDim;
           return {
             id: `${parentId}->${child.id}`,
             source: parentId,
@@ -477,6 +579,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
             style: {
               stroke,
               strokeWidth: 2,
+              strokeLinecap: "round",
               strokeDasharray:
                 parentSuccess && !childProcessing ? undefined : "6 4",
             },
@@ -497,6 +600,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     renderEditForm,
     setNodes,
     setEdges,
+    palette,
   ]);
 
   // สรุปจำนวนตามสถานะ
@@ -512,28 +616,114 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     [blocks, creditByBlockId],
   );
 
+  // ชิปสรุปสถานะ (จาง count ที่เป็น 0 เพื่อลดสัญญาณรบกวน)
+  const statusItems: { label: string; count: number; color: string }[] = [
+    { label: "Pending", count: counts.pending, color: palette.textDim },
+    { label: "Processing", count: counts.processing, color: palette.warning },
+    { label: "Success", count: counts.success, color: palette.success },
+    { label: "Failed", count: counts.failed, color: palette.error },
+  ];
+
   return (
-    <div className="h-full w-full flex flex-col">
-      {/* Header bar */}
+    <div
+      className="h-full w-full flex flex-col"
+      style={{ ...paletteVars, background: palette.canvasBg }}
+    >
+      {/* Unified toolbar */}
       <div
-        className="flex items-center gap-3 px-4 py-2 border-b"
-        style={{ borderColor: "rgba(0,0,0,0.08)" }}
+        className="flex items-center gap-3 px-4 py-2.5"
+        style={{
+          background: palette.headerBg,
+          borderBottom: `1px solid ${palette.border}`,
+        }}
       >
-        <Typography.Text strong>{conversationName}</Typography.Text>
-        <div className="flex items-center gap-2 ml-2">
-          <Tag>Pending {counts.pending}</Tag>
-          <Tag color="gold">Processing {counts.processing}</Tag>
-          <Tag color="green">Success {counts.success}</Tag>
-          <Tag color="red">Failed {counts.failed}</Tag>
-          <Tag color="purple">Est. credit {totalEstimate}</Tag>
+        <Button
+          type="text"
+          size="small"
+          icon={<ArrowLeft size={16} />}
+          onClick={() => router.push(`/page/project/${projectId}`)}
+          style={{ color: palette.textDim, flexShrink: 0 }}
+        >
+          Back
+        </Button>
+
+        <div
+          style={{ width: 1, height: 20, background: palette.border, flexShrink: 0 }}
+        />
+
+        <span
+          className="truncate"
+          style={{
+            fontWeight: 600,
+            color: palette.text,
+            maxWidth: 220,
+            flexShrink: 0,
+          }}
+          title={conversationName}
+        >
+          {conversationName || "Untitled workflow"}
+        </span>
+
+        {/* Status cluster */}
+        <div
+          className="flex items-center gap-1 ml-1 px-2 py-1 rounded-lg"
+          style={{ background: palette.canvasBg, border: `1px solid ${palette.border}` }}
+        >
+          {statusItems.map((s) => (
+            <span
+              key={s.label}
+              className="flex items-center gap-1.5 px-1.5"
+              style={{
+                fontSize: 12,
+                color: palette.text,
+                opacity: s.count === 0 ? 0.4 : 1,
+              }}
+              title={`${s.label} ${s.count}`}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: s.color,
+                  display: "inline-block",
+                }}
+              />
+              {s.count}
+            </span>
+          ))}
         </div>
+
+        {/* Est. credit */}
+        <span
+          className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
+          style={{
+            fontSize: 12,
+            color: palette.primary,
+            background: palette.canvasBg,
+            border: `1px solid ${palette.border}`,
+          }}
+          title="Estimated credit for this workflow"
+        >
+          <Coins size={13} />
+          {totalEstimate}
+        </span>
+
+        {/* Actions */}
         <div className="ml-auto flex items-center gap-2">
           {selectedIds.length > 0 && (
-            <Button type="dashed" onClick={handleCombine}>
-              Combine {selectedIds.length} blocks
+            <Button
+              type="dashed"
+              icon={<Layers size={15} />}
+              onClick={handleCombine}
+            >
+              Combine {selectedIds.length}{" "}
+              {selectedIds.length === 1 ? "block" : "blocks"}
             </Button>
           )}
-          <Button onClick={handleRunAll}>Run all</Button>
+          {/* <Button icon={<Play size={15} />} onClick={handleRunAll}>
+            Run all
+          </Button> */}
           <Dropdown
             menu={{
               items: [
@@ -543,7 +733,9 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
               onClick: ({ key }) => handleNewBlock(key as WorkflowBlockType),
             }}
           >
-            <Button type="primary">New block</Button>
+            <Button type="primary" icon={<Plus size={15} />}>
+              New block
+            </Button>
           </Dropdown>
         </div>
       </div>
@@ -559,8 +751,14 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           onConnect={onConnect}
           fitView
           proOptions={{ hideAttribution: true }}
+          style={{ background: palette.canvasBg }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1}
+            color={palette.dot}
+          />
           <Controls />
         </ReactFlow>
       </div>

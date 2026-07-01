@@ -33,7 +33,8 @@ export default function OrganizationDetailPage() {
     { label: "Video", value: "video", className: "label-2" },
     { label: "Omnihuman", value: "omni", className: "label-3" },
     { label: "Dream Actor", value: "dream", className: "label-4" },
-    { label: "Editor", value: "editor", className: "label-5" },
+     { label: "Workflow", value: "workflow", className: "label-5" },
+    { label: "Editor", value: "editor", className: "label-6" },
   ];
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);

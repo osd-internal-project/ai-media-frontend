@@ -16,6 +16,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import ActionBar from "./action-bar";
 import { Message } from "../chat-generate-image";
 import ImageSmartReference from "./image-smart-reference";
+import { MediaSkeleton } from "../../../shared/smart-media";
 
 interface Props {
   message: Message;
@@ -481,6 +482,7 @@ const ResultItem: FC<Props> = ({
                       alt={`Generated ${i + 1}`}
                       width="100%"
                       height="100%"
+                      placeholder={<MediaSkeleton rounded={isMobile ? 6 : 8} />}
                       style={{
                         width: "100%",
                         height: "100%",

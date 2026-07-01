@@ -7,15 +7,17 @@ import {
   Form,
   InputNumber,
   Popover,
+  Segmented,
   Select,
   Space,
   Switch,
   Tag,
+  Tooltip,
   Typography,
   type UploadFile,
 } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
-import { SlidersHorizontal } from "lucide-react";
+import { Image as ImageIcon, SlidersHorizontal, Video } from "lucide-react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
@@ -94,6 +96,10 @@ const MIN_IMAGE_SIDE = 300;
 
 interface WorkflowEditFormProps {
   type: WorkflowBlockType;
+  /** Whether the block may switch its generate type (image⇄video) before generating. */
+  canSwitchType?: boolean;
+  /** Switch the block's generate type. When omitted, the switch is hidden. */
+  onChangeType?: (type: WorkflowBlockType) => void;
   projectId: string;
   userId: string;
   organizationId?: string;
@@ -118,6 +124,8 @@ interface WorkflowEditFormProps {
  */
 const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   type,
+  canSwitchType = false,
+  onChangeType,
   projectId,
   userId,
   organizationId,
@@ -523,6 +531,39 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   return (
     <Form form={form} layout="vertical" className="workflow-edit-form">
       <div>
+        {/* สลับชนิด generate (image/video) ก่อน generate — ล็อกเมื่อ ref ไม่ใช่รูปภาพ */}
+        {onChangeType && (
+          <Form.Item label="Generate type" style={{ marginBottom: 8 }}>
+            <Tooltip
+              title={
+                canSwitchType
+                  ? undefined
+                  : "บล็อกอ้างอิงไม่ใช่รูปภาพ จึงสลับชนิดไม่ได้ — ล็อกเป็นวิดีโอ"
+              }
+            >
+              <Segmented
+                size="small"
+                block
+                value={type}
+                disabled={!canSwitchType}
+                onChange={(value) => onChangeType(value as WorkflowBlockType)}
+                options={[
+                  {
+                    label: "Image",
+                    value: "image",
+                    icon: <ImageIcon size={13} />,
+                  },
+                  {
+                    label: "Video",
+                    value: "video",
+                    icon: <Video size={13} />,
+                  },
+                ]}
+              />
+            </Tooltip>
+          </Form.Item>
+        )}
+
         <Form.Item label="Model" required style={{ marginBottom: 8 }}>
           <Select
             size="small"

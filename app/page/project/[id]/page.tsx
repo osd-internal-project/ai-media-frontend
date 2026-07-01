@@ -109,7 +109,7 @@ const GenerateImagePage: FC = () => {
     (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const [projectRole, setProjectRole] = useState<string | null>(null);
- 
+
   const onSetPromptTextRef = React.useRef<
     ((id: number) => Promise<void>) | null
   >(null);
@@ -129,6 +129,7 @@ const GenerateImagePage: FC = () => {
     canAccessOmni,
     canAccessDream,
     canAccessEditor,
+    canAccessWorkflow,
   } = useMemo(() => {
     const has = normalizedAccessCodes.length > 0;
     return {
@@ -140,6 +141,8 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("omni")),
       canAccessDream:
         !has || normalizedAccessCodes.some((c) => c.includes("dream")),
+      canAccessWorkflow:
+        !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
         !has || normalizedAccessCodes.some((c) => c.includes("editor")),
     };
@@ -368,7 +371,9 @@ const GenerateImagePage: FC = () => {
                       <ImageFormRenderer
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
-                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -394,7 +399,9 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <VideoFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -421,7 +428,9 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <OmnihumenFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -448,7 +457,9 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <DreamactorFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -462,18 +473,28 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
-            {
-              disabled: disableTab,
-              key: "workflow",
-              label: renderTabLabel(
-                "workflow",
-                "Workflow",
-                <Workflow size={16} />,
-              ),
-              children: (
-                <WorkflowFormRenderer activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} projectId={id} />
-              ),
-            },
+            ...(canAccessWorkflow
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "workflow",
+                    label: renderTabLabel(
+                      "workflow",
+                      "Workflow",
+                      <Workflow size={16} />,
+                    ),
+                    children: (
+                      <WorkflowFormRenderer
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow">
+                        }
+                        projectId={id}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+
             {
               disabled: disableTab,
               key: "library",
@@ -481,7 +502,9 @@ const GenerateImagePage: FC = () => {
               label: renderTabLabel("library", "Library", <StarOutlined />),
               children: (
                 <div className="h-full">
-                  <PromptLibrary activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} />
+                  <PromptLibrary
+                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                  />
                 </div>
               ),
             },
@@ -494,7 +517,11 @@ const GenerateImagePage: FC = () => {
                 "All Activity",
                 <FolderOpenOutlined />,
               ),
-              children: <PromptActivity activeKey={activeKey as Exclude<GenerateTabKey, "workflow">} />,
+              children: (
+                <PromptActivity
+                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                />
+              ),
             },
             ...(canAccessEditor
               ? [
@@ -518,7 +545,6 @@ const GenerateImagePage: FC = () => {
           ]}
         />
       </div>
-     
     </div>
   );
 };

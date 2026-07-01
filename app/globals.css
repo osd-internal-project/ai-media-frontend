@@ -150,6 +150,22 @@ html {
   animation: fadeIn 0.2s ease-in-out;
 }
 
+/* Media loading skeleton — shimmer ใช้ได้ทั้งธีม dark/light */
+@keyframes skeletonShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(140, 153, 169, 0.12) 25%,
+    rgba(140, 153, 169, 0.24) 37%,
+    rgba(140, 153, 169, 0.12) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
 /* Payment page animations */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }

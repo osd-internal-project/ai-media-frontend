@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Spin } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
-import { useParams, useRouter } from "next/navigation";
+import { Spin } from "antd";
+import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import WorkflowServices from "@/app/services/workflow.service";
@@ -15,7 +14,6 @@ import WorkflowCanvas from "../../components/tabs/workflow/workflow-canvas";
  */
 const WorkflowCanvasPage: React.FC = () => {
   const params = useParams();
-  const router = useRouter();
   const { data: session } = useSession();
 
   const projectId = String(params?.id ?? "");
@@ -50,15 +48,6 @@ const WorkflowCanvasPage: React.FC = () => {
 
   return (
     <div className="h-screen w-full flex flex-col">
-      <div className="flex items-center gap-2 px-4 py-2 border-b">
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => router.push(`/page/project/${projectId}`)}
-        >
-          Back
-        </Button>
-      </div>
       <div className="flex-1 min-h-0">
         {loading ? (
           <div className="h-full w-full flex items-center justify-center">

@@ -25,6 +25,7 @@ const VideoItem = memo(
     const [videoLoaded, setVideoLoaded] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [thumbLoaded, setThumbLoaded] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -78,9 +79,16 @@ const VideoItem = memo(
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => setIsFullScreen(true)}
         >
+          {/* skeleton คลุมจนกว่า thumbnail จะโหลดเสร็จ (กัน progressive reveal) */}
+          {!thumbLoaded && (
+            <div className="skeleton-shimmer absolute inset-0 z-1" />
+          )}
+
           {/* ✅ THUMBNAIL (always visible) */}
           <img
             src={thumbnail}
+            alt=""
+            onLoad={() => setThumbLoaded(true)}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
               isHovered && videoLoaded ? "opacity-0" : "opacity-100"
             }`}
