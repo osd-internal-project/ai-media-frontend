@@ -34,7 +34,8 @@ export interface IReceipt {
 export interface IInvoice {
   id: string;
   invoiceNo: string;
-  organizationId: string;
+  // null for a PENDING new-org invoice; set once the org is created at confirm
+  organizationId: string | null;
   userId: string;
   billingProfileId: string;
   customerId?: string | null;
@@ -55,12 +56,44 @@ export interface IInvoice {
   receipt?: IReceipt | null;
 }
 
+export type OrgType = "team" | "personal";
+
+/**
+ * Billing details sent inline when buying a package for a brand-new org.
+ * Mirrors the backend `NewOrgBillingDto` (billing profile fields minus
+ * userId/organizationId, which are derived server-side).
+ */
+export interface INewOrgBilling {
+  type: "INDIVIDUAL" | "JURISTIC";
+  address: string;
+  fullName?: string;
+  nationalId?: string;
+  companyName?: string;
+  taxId?: string;
+  branchCode?: string;
+  branchName?: string;
+  contactName?: string;
+  phone?: string;
+  email?: string;
+}
+
 export interface ICreateInvoice {
-  organizationId: string;
   userId: string;
-  billingProfileId: string;
   planPriceId: string;
   paymentMethod: PaymentMethod;
+
+  /** true → create a brand-new org after payment; org/billing profile omitted. */
+  createNewOrganization?: boolean;
+
+  // Existing-org purchase (required when createNewOrganization is falsy)
+  organizationId?: string;
+  billingProfileId?: string;
+
+  // New-org purchase (required when createNewOrganization is true)
+  orgName?: string;
+  orgType?: OrgType;
+  orgDescription?: string;
+  billing?: INewOrgBilling;
 }
 
 export interface IPaySourceResult {

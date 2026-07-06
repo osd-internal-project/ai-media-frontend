@@ -75,7 +75,8 @@ export default function Plan() {
       return;
     }
 
-    const checkoutUrl = `/page/payment/checkout?priceId=${priceId}`;
+    // newOrg=1 → checkout collects org details and creates a brand-new org after payment
+    const checkoutUrl = `/page/payment/checkout?priceId=${priceId}&newOrg=1`;
     router.push(
       status === "authenticated"
         ? checkoutUrl

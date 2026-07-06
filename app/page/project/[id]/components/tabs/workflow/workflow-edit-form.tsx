@@ -243,12 +243,12 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
       if (!blob) return null;
 
       // Image min-size validation (non-images load-error → allowed through).
-      // Use a `data:` URL (not `blob:`) so the probe image isn't CSP-blocked,
+      // Probe via a `data:` URL (not `blob:`) so the image isn't CSP-blocked,
       // which would otherwise force `onerror` and silently skip the check.
-      const previewSrc = await fileToDataUrl(blob);
+      const probeSrc = await fileToDataUrl(blob);
       const valid = await new Promise<boolean>((resolve) => {
         const img = new window.Image();
-        img.src = previewSrc;
+        img.src = probeSrc;
         img.onload = () => {
           const minSide = Math.min(img.width, img.height);
           resolve(minSide >= MIN_IMAGE_SIDE);
@@ -288,11 +288,12 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
         const nextList = single ? [file] : fileList;
         setLocalFiles(nextList);
 
-        // Show an instant, CSP-safe local preview: encode the file as a `data:`
-        // URL and store it as `thumbUrl` (the tile prefers `thumbUrl`). Avoids
-        // the blocked `blob:` object URL until the server `https:` URL arrives.
+        // Show an instant, CSP-safe local preview: encode image files as a `data:`
+        // URL and store it as `thumbUrl` (the tile prefers `thumbUrl`), avoiding the
+        // blocked `blob:` object URL. Skip non-images — a video/audio `data:` URL is
+        // huge and can't render as an image, so those keep the placeholder icon.
         const previewBlob = file.originFileObj as Blob | undefined;
-        if (previewBlob) {
+        if (previewBlob && previewBlob.type.startsWith("image/")) {
           const thumbUrl = await fileToDataUrl(previewBlob);
           setLocalFiles((prev) =>
             prev.map((f) => (f.uid === file.uid ? { ...f, thumbUrl } : f)),

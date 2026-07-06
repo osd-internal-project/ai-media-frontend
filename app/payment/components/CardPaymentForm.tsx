@@ -10,6 +10,7 @@ interface CardPaymentFormProps {
   onSubmit: (cardData: CardData) => Promise<void>;
   loading: boolean;
   errorMessage: string | null;
+  setCurrent: (step: number) => void;
 }
 
 const inputStyle = {
@@ -31,10 +32,13 @@ export default function CardPaymentForm({
   onSubmit,
   loading,
   errorMessage,
+  setCurrent,
 }: CardPaymentFormProps) {
   const [form] = Form.useForm();
   const [cardNumber, setCardNumber] = useState("");
-  const [brand, setBrand] = useState<"visa" | "mastercard" | "jcb" | null>(null);
+  const [brand, setBrand] = useState<"visa" | "mastercard" | "jcb" | null>(
+    null,
+  );
   const [shaking, setShaking] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +65,9 @@ export default function CardPaymentForm({
     expiry: string;
     cvv: string;
   }) => {
-    const [month = "", year = ""] = (values.expiry ?? "").split("/").map((s) => s.trim());
+    const [month = "", year = ""] = (values.expiry ?? "")
+      .split("/")
+      .map((s) => s.trim());
     await onSubmit({
       name: values.cardName,
       number: values.cardNumber,
@@ -72,10 +78,19 @@ export default function CardPaymentForm({
   };
 
   return (
-    <div style={{ padding: "48px 40px", display: "flex", flexDirection: "column", gap: 28 }}>
+    <div
+      style={{
+        padding: "48px 40px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 28,
+      }}
+    >
       {/* Header */}
       <div>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#F2F4F5" }}>
+        <h2
+          style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#F2F4F5" }}
+        >
           Card Details
         </h2>
         <p style={{ margin: "4px 0 0", color: "#8C99A9", fontSize: 14 }}>
@@ -114,7 +129,9 @@ export default function CardPaymentForm({
         <Form.Item
           name="cardName"
           label={<span style={labelStyle}>Cardholder Name</span>}
-          rules={[{ required: true, message: "Please enter the cardholder name." }]}
+          rules={[
+            { required: true, message: "Please enter the cardholder name." },
+          ]}
           style={{ marginBottom: 16 }}
         >
           <Input
@@ -175,7 +192,9 @@ export default function CardPaymentForm({
         </Form.Item>
 
         {/* Expiry + CVV row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item
             name="expiry"
             label={<span style={labelStyle}>Expiry Date</span>}
@@ -228,6 +247,8 @@ export default function CardPaymentForm({
 
         {/* Submit */}
         <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+          <Button onClick={() => setCurrent(1)}>Back</Button>
+
           <Button
             type="primary"
             htmlType="submit"
@@ -252,8 +273,15 @@ export default function CardPaymentForm({
       </Form>
 
       {/* Fine print */}
-      <p style={{ margin: 0, color: "#3A434F", fontSize: 12, textAlign: "center" }}>
-        By clicking "Pay ฿990" you agree to our Terms of Service and authorize this charge.
+      <p
+        style={{
+          margin: 0,
+          color: "#3A434F",
+          fontSize: 12,
+          textAlign: "center",
+        }}
+      >
+    
       </p>
     </div>
   );

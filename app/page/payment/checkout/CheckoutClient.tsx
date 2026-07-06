@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Alert,
   Button,
   Card,
+  Form,
   Image,
+  Input,
   Radio,
   Result,
   Select,
@@ -21,14 +29,22 @@ import BillingProfileServices from "@/app/services/billing-profile.service";
 import InvoiceServices from "@/app/services/invoice.service";
 import PlanServices from "@/app/services/plan.service";
 import CardPaymentForm from "@/app/payment/components/CardPaymentForm";
-import { useOmiseToken, type CardData } from "@/app/payment/hooks/useOmiseToken";
-import { IBillingProfile } from "@/app/common/billing-profile.type";
+import {
+  useOmiseToken,
+  type CardData,
+} from "@/app/payment/hooks/useOmiseToken";
+import {
+  BillingProfileType,
+  IBillingProfile,
+} from "@/app/common/billing-profile.type";
 import {
   IInvoice,
   InternetBank,
   PaymentMethod,
 } from "@/app/common/invoice.type";
 import { TPlanPrice } from "@/app/common/plan.type";
+import { OrgBillingFormValues } from "./components/OrgBillingForm";
+import TaxInvoiceFields from "./components/TaxInvoiceFields";
 
 const BANKS: { label: string; value: InternetBank }[] = [
   { label: "Bank of Ayudhya (BAY)", value: "bay" },
@@ -48,18 +64,24 @@ const formatTHB = (value: number | string) =>
 export default function CheckoutClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const { tokenize } = useOmiseToken();
   const [messageApi, contextHolder] = message.useMessage();
+  const [orgForm] = Form.useForm();
 
   const priceId = searchParams.get("priceId") ?? "";
   const resumeInvoiceId = searchParams.get("invoiceId");
+  // newOrg mode: collect org details and create a brand-new org after payment
+  const newOrg = searchParams.get("newOrg") === "1";
 
   const billingService = useMemo(() => BillingProfileServices(axiosUser), []);
   const invoiceService = useMemo(() => InvoiceServices(axiosUser), []);
   const planService = useMemo(() => PlanServices(axiosCore), []);
 
   const userId = session?.user?.id;
+  // The real users.userId (session.user.id is the Keycloak `sub`). Required for
+  // the new-org flow because OrganizationMember.userId FKs to users.userId.
+  const purchaserUserId = session?.user?.userId ?? undefined;
   const organizationId = session?.user?.organizationId;
 
   const [current, setCurrent] = useState(0);
@@ -74,9 +96,18 @@ export default function CheckoutClient() {
   const [paying, setPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [qrUri, setQrUri] = useState<string | null>(null);
+  // New-org mode: captured org + billing form values, and the billing type toggle
+  const [billingType, setBillingType] =
+    useState<BillingProfileType>("INDIVIDUAL");
+  const [orgValues, setOrgValues] = useState<OrgBillingFormValues | null>(null);
+  // New-org mode: reuse a saved billing profile or enter fresh tax info
+  const [billingSource, setBillingSource] = useState<"saved" | "new">("new");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initial load: billing profiles + plan price. Redirect if no profile.
+  // Initial load: plan price + the user's billing profiles. New-org mode fetches
+  // them too (the buyer may already have a default profile to reuse), but never
+  // redirects to /billing when none exist — a brand-new customer just fills the
+  // tax form. Profiles are keyed by the token id (session.user.id), as elsewhere.
   useEffect(() => {
     const init = async () => {
       if (!userId) return;
@@ -84,11 +115,13 @@ export default function CheckoutClient() {
       try {
         const [profileList, price] = await Promise.all([
           billingService.findByUserId(userId),
-          priceId ? planService.findPlanWithPrice(priceId) : Promise.resolve(null),
+          priceId
+            ? planService.findPlanWithPrice(priceId)
+            : Promise.resolve(null),
         ]);
         setProfiles(profileList);
         setPlanPrice(price);
-        if (profileList.length === 0 && !resumeInvoiceId) {
+        if (!newOrg && profileList.length === 0 && !resumeInvoiceId) {
           messageApi.warning(
             "Please add a billing profile before purchasing a package.",
           );
@@ -97,6 +130,8 @@ export default function CheckoutClient() {
         }
         const def = profileList.find((p) => p.isDefault) ?? profileList[0];
         setSelectedProfileId(def?.id);
+        // New-org: default to reusing a saved profile when one exists.
+        setBillingSource(newOrg && profileList.length > 0 ? "saved" : "new");
       } finally {
         setLoading(false);
       }
@@ -153,21 +188,113 @@ export default function CheckoutClient() {
     };
   }, []);
 
+  // New-org: once payment is done (step 3), switch the user's active org to the
+  // freshly created org (backend already persisted recentOrganizationId) so the
+  // project page loads the new workspace. Runs once.
+  const switchedRef = useRef(false);
+  useEffect(() => {
+    if (
+      newOrg &&
+      current === 3 &&
+      invoice?.organizationId &&
+      !switchedRef.current
+    ) {
+      switchedRef.current = true;
+      update({ user: { organizationId: invoice.organizationId } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newOrg, current, invoice?.organizationId]);
+
+  // Step 0 (new-org): capture the org + tax info, advance to payment-method
+  // selection. Invoice is created later, in handleCreateInvoice. Tax info comes
+  // from a chosen saved profile OR the freshly-entered fields.
+  const handleOrgFormFinish = (values: OrgBillingFormValues) => {
+    if (billingSource === "saved") {
+      const p = profiles.find((x) => x.id === selectedProfileId);
+      if (!p) {
+        messageApi.error("Please select a billing profile");
+        return;
+      }
+      setBillingType(p.type);
+      setOrgValues({
+        orgName: values.orgName,
+        orgDescription: values.orgDescription,
+        address: p.address,
+        fullName: p.fullName ?? undefined,
+        nationalId: p.nationalId ?? undefined,
+        companyName: p.companyName ?? undefined,
+        taxId: p.taxId ?? undefined,
+        branchCode: p.branchCode ?? undefined,
+        branchName: p.branchName ?? undefined,
+        contactName: p.contactName ?? undefined,
+        phone: p.phone ?? undefined,
+        email: p.email ?? undefined,
+      });
+    } else {
+      // New tax info: values already carries the tax fields from the form.
+      setOrgValues(values);
+    }
+    setCurrent(1);
+  };
+
   const handleCreateInvoice = async () => {
-    if (!userId || !organizationId || !selectedProfileId || !priceId) {
+    if (!userId || !priceId) {
       messageApi.error("Missing required information");
       return;
     }
+    // Validate the two modes have what they need before hitting the API.
+    if (newOrg) {
+      if (!purchaserUserId) {
+        messageApi.error("Missing user information");
+        return;
+      }
+      if (!orgValues) {
+        messageApi.error("Please complete the organization details");
+        setCurrent(0);
+        return;
+      }
+    } else if (!organizationId || !selectedProfileId || !purchaserUserId) {
+      messageApi.error("Missing required information");
+      return;
+    }
+
     setCreating(true);
     setErrorMessage(null);
     try {
-      const inv = await invoiceService.create({
-        organizationId,
-        userId,
-        billingProfileId: selectedProfileId,
-        planPriceId: priceId,
-        paymentMethod: method,
-      });
+      // Payment always identifies the buyer by the real users.userId
+      // (OrganizationMember.userId FKs to it), never the Keycloak token id.
+      const inv = await invoiceService.create(
+        newOrg && orgValues && purchaserUserId
+          ? {
+              userId: purchaserUserId,
+              planPriceId: priceId,
+              paymentMethod: method,
+              createNewOrganization: true,
+              orgName: orgValues.orgName,
+              orgType: "team",
+              orgDescription: orgValues.orgDescription,
+              billing: {
+                type: billingType,
+                address: orgValues.address,
+                fullName: orgValues.fullName,
+                nationalId: orgValues.nationalId,
+                companyName: orgValues.companyName,
+                taxId: orgValues.taxId,
+                branchCode: orgValues.branchCode,
+                branchName: orgValues.branchName,
+                contactName: orgValues.contactName,
+                phone: orgValues.phone,
+                email: orgValues.email,
+              },
+            }
+          : {
+              organizationId: organizationId ?? undefined,
+              userId: purchaserUserId,
+              billingProfileId: selectedProfileId,
+              planPriceId: priceId,
+              paymentMethod: method,
+            },
+      );
       setInvoice(inv);
       setCurrent(2);
     } catch {
@@ -205,7 +332,7 @@ export default function CheckoutClient() {
         setQrUri(res.qrImageUri ?? null);
         startPolling(invoice.id);
       } else {
-        const returnUri = `${window.location.origin}/page/payment/checkout?invoiceId=${invoice.id}`;
+        const returnUri = `${window.location.origin}/page/payment/checkout?invoiceId=${invoice.id}${newOrg ? "&newOrg=1" : ""}`;
         const res = await invoiceService.paySource(
           invoice.id,
           "INTERNET_BANKING",
@@ -242,19 +369,91 @@ export default function CheckoutClient() {
       {contextHolder}
 
       <h1 className="text-2xl font-bold text-white">Checkout</h1>
+      <div className="bg-transparent pb-5">
+        <Steps
+          size="small"
+          current={current}
+          items={[
+            { title: newOrg ? "Organization" : "Billing Profile" },
+            { title: "Payment Method" },
+            { title: "Pay" },
+            { title: "Done" },
+          ]}
+        />
+      </div>
 
-      <Steps
-        current={current}
-        items={[
-          { title: "Billing Profile" },
-          { title: "Payment Method" },
-          { title: "Pay" },
-          { title: "Done" },
-        ]}
-      />
+      {/* Step 0 (new-org): organization + tax-invoice details */}
+      {current === 0 && newOrg && (
+        <Card title="Organization details" size="small">
+          <p className="text-gray-400 mb-3">
+            Enter your organization details. Your organization is created after
+            payment is confirmed.
+          </p>
+          <Form
+            form={orgForm}
+            layout="vertical"
+            onFinish={(v) => handleOrgFormFinish(v as OrgBillingFormValues)}
+          >
+            <p className="text-white font-semibold mb-2">Organization</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Form.Item
+                label="Organization Name"
+                name="orgName"
+                rules={[
+                  { required: true, message: "Organization name is required" },
+                ]}
+              >
+                <Input placeholder="My Company" />
+              </Form.Item>
+              <Form.Item label="Description" name="orgDescription">
+                <Input placeholder="Optional" />
+              </Form.Item>
+            </div>
 
-      {/* Step 0: choose billing profile */}
-      {current === 0 && (
+            <p className="text-white font-semibold mt-2 mb-2">
+              Tax Invoice Information
+            </p>
+            {profiles.length > 0 && (
+              <Radio.Group
+                value={billingSource}
+                onChange={(e) => setBillingSource(e.target.value)}
+                className="mb-3 flex flex-col gap-2"
+              >
+                <Radio value="saved">Use a saved billing profile</Radio>
+                <Radio value="new">Enter new tax info</Radio>
+              </Radio.Group>
+            )}
+
+            {billingSource === "saved" && profiles.length > 0 ? (
+              <Form.Item label="Billing profile">
+                <Select
+                  value={selectedProfileId}
+                  onChange={(v) => setSelectedProfileId(v)}
+                  options={profiles.map((p) => ({
+                    value: p.id,
+                    label: `${p.companyName || p.fullName || "Profile"}${
+                      p.type === "JURISTIC" && p.taxId
+                        ? ` (Tax ${p.taxId}/${p.branchCode})`
+                        : ""
+                    }${p.isDefault ? " · default" : ""}`,
+                  }))}
+                />
+              </Form.Item>
+            ) : (
+              <TaxInvoiceFields type={billingType} setType={setBillingType} />
+            )}
+
+            <div className="flex justify-end">
+              <Button type="primary" htmlType="submit">
+                Continue
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      )}
+
+      {/* Step 0 (existing-org): choose billing profile */}
+      {current === 0 && !newOrg && (
         <Card title="Select a billing profile" size="small">
           <Radio.Group
             value={selectedProfileId}
@@ -290,6 +489,7 @@ export default function CheckoutClient() {
       {/* Step 1: payment method */}
       {current === 1 && (
         <Card title="Choose a payment method" size="small">
+          {purchaserUserId}
           <Radio.Group
             value={method}
             onChange={(e) => setMethod(e.target.value as PaymentMethod)}
@@ -359,6 +559,7 @@ export default function CheckoutClient() {
               onSubmit={handleCardSubmit}
               loading={paying}
               errorMessage={errorMessage}
+              setCurrent={setCurrent}
             />
           )}
 
@@ -366,16 +567,29 @@ export default function CheckoutClient() {
             <div className="flex flex-col items-center gap-4">
               {qrUri ? (
                 <>
-                  <Image src={qrUri} alt="PromptPay QR" width={240} preview={false} />
+                  <Image
+                    src={qrUri}
+                    alt="PromptPay QR"
+                    width={240}
+                    preview={false}
+                  />
                   <p className="text-gray-400">
                     Scan with your banking app. Waiting for payment…
                   </p>
                   <Spin />
                 </>
               ) : (
-                <Button type="primary" loading={paying} onClick={handleSourcePay}>
-                  Generate PromptPay QR
-                </Button>
+                <div>
+                  {" "}
+                  <Button onClick={() => setCurrent(1)}>Back</Button>
+                  <Button
+                    type="primary"
+                    loading={paying}
+                    onClick={handleSourcePay}
+                  >
+                    Generate PromptPay QR
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -385,6 +599,7 @@ export default function CheckoutClient() {
               <p className="text-gray-400">
                 You will be redirected to your bank to authorize the payment.
               </p>
+              <Button onClick={() => setCurrent(1)}>Back</Button>
               <Button type="primary" loading={paying} onClick={handleSourcePay}>
                 Continue to bank
               </Button>
@@ -398,22 +613,38 @@ export default function CheckoutClient() {
         <Result
           status="success"
           title="Payment Successful!"
-          subTitle={`Invoice ${invoice.invoiceNo} has been paid. Your credits are now active.`}
-          extra={[
-            <Button
-              key="dashboard"
-              type="primary"
-              onClick={() => router.push("/page/dashboard")}
-            >
-              Go to Dashboard
-            </Button>,
-            <Button
-              key="invoices"
-              onClick={() => router.push("/page/organization")}
-            >
-              View Organization
-            </Button>,
-          ]}
+          subTitle={
+            newOrg
+              ? `Invoice ${invoice.invoiceNo} has been paid. Your organization is ready.`
+              : `Invoice ${invoice.invoiceNo} has been paid. Your credits are now active.`
+          }
+          extra={
+            newOrg
+              ? [
+                  <Button
+                    key="project"
+                    type="primary"
+                    onClick={() => router.push("/page/project")}
+                  >
+                    Go to Project
+                  </Button>,
+                ]
+              : [
+                  <Button
+                    key="dashboard"
+                    type="primary"
+                    onClick={() => router.push("/page/dashboard")}
+                  >
+                    Go to Dashboard
+                  </Button>,
+                  <Button
+                    key="invoices"
+                    onClick={() => router.push("/page/organization")}
+                  >
+                    View Organization
+                  </Button>,
+                ]
+          }
         />
       )}
     </div>
