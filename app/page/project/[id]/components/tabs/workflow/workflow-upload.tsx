@@ -60,11 +60,13 @@ const WorkflowUpload: React.FC<WorkflowUploadProps> = ({
   const tiles = (
     <Flex gap={6} wrap align="center">
       {files.map((file) => {
+        // Prefer server/`data:` sources only — never a `blob:` object URL, which
+        // the app CSP blocks. The handler sets `thumbUrl` (a `data:` URL) for
+        // instant local preview; the placeholder icon covers the brief gap.
         const source =
           file.thumbUrl ||
           file.url ||
-          (typeof file.preview === "string" ? file.preview : "") ||
-          (file.originFileObj ? URL.createObjectURL(file.originFileObj) : "");
+          (typeof file.preview === "string" ? file.preview : "");
 
         return (
           <Flex

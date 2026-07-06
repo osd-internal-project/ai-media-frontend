@@ -38,6 +38,7 @@ import {
   getVideoModelConfig,
 } from "../../tab-layout/model-registry";
 import { getTypeFile } from "../../tab-layout/utils/file-type.util";
+import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import DrawToImage from "../image-gen/shared/draw-to-image";
 import WorkflowUpload from "./workflow-upload";
@@ -242,16 +243,17 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
       if (!blob) return null;
 
       // Image min-size validation (non-images load-error → allowed through).
+      // Use a `data:` URL (not `blob:`) so the probe image isn't CSP-blocked,
+      // which would otherwise force `onerror` and silently skip the check.
+      const previewSrc = await fileToDataUrl(blob);
       const valid = await new Promise<boolean>((resolve) => {
         const img = new window.Image();
-        img.src = URL.createObjectURL(blob);
+        img.src = previewSrc;
         img.onload = () => {
           const minSide = Math.min(img.width, img.height);
-          URL.revokeObjectURL(img.src);
           resolve(minSide >= MIN_IMAGE_SIDE);
         };
         img.onerror = () => {
-          URL.revokeObjectURL(img.src);
           resolve(true);
         };
       });
@@ -285,6 +287,18 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
 
         const nextList = single ? [file] : fileList;
         setLocalFiles(nextList);
+
+        // Show an instant, CSP-safe local preview: encode the file as a `data:`
+        // URL and store it as `thumbUrl` (the tile prefers `thumbUrl`). Avoids
+        // the blocked `blob:` object URL until the server `https:` URL arrives.
+        const previewBlob = file.originFileObj as Blob | undefined;
+        if (previewBlob) {
+          const thumbUrl = await fileToDataUrl(previewBlob);
+          setLocalFiles((prev) =>
+            prev.map((f) => (f.uid === file.uid ? { ...f, thumbUrl } : f)),
+          );
+        }
+
         setIsLoadingUpload(true);
         try {
           const result = await uploadOne(file, nextList.length);

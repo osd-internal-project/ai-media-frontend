@@ -87,8 +87,7 @@ export default function ChatImageInput({
   fetchCerrentUsedCredit,
   organizationId,
   selectedModel,
-  projectId
-
+  projectId,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -244,6 +243,7 @@ export default function ChatImageInput({
             onRemoveFile={onRemoveFile}
             maxUploadFiles={8}
             description="Reference Images (optional, max 8)"
+            accept="image/*"
             extraActions={
               <DrawToImage
                 files={files}
