@@ -77,6 +77,19 @@ export interface INewOrgBilling {
   email?: string;
 }
 
+/** Subscription change intent for an existing-org purchase. */
+export type ChangeType = "CREATE" | "RENEWAL" | "UPGRADE";
+
+/** A saved card returned by the payment-method API (Omise customer card). */
+export interface ISavedCard {
+  id: string;
+  brand?: string;
+  last_digits?: string;
+  name?: string | null;
+  expiration_month?: number | null;
+  expiration_year?: number | null;
+}
+
 export interface ICreateInvoice {
   userId: string;
   planPriceId: string;
@@ -84,6 +97,9 @@ export interface ICreateInvoice {
 
   /** true → create a brand-new org after payment; org/billing profile omitted. */
   createNewOrganization?: boolean;
+
+  /** RENEWAL (default) | UPGRADE for existing-org; CREATE is set for new-org. */
+  changeType?: ChangeType;
 
   // Existing-org purchase (required when createNewOrganization is falsy)
   organizationId?: string;

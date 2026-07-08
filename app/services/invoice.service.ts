@@ -41,9 +41,16 @@ const InvoiceServices = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    payCard: async (id: string, token: string): Promise<IInvoice> => {
+    /**
+     * Pay by card. Provide either a one-time `token` (optionally `saveCard` to
+     * store it for the org) or a previously-saved `cardId`.
+     */
+    payCard: async (
+      id: string,
+      body: { token?: string; saveCard?: boolean; cardId?: string },
+    ): Promise<IInvoice> => {
       return await axiosInstance
-        .post(`${baseUrl}/${id}/pay/card`, { token })
+        .post(`${baseUrl}/${id}/pay/card`, body)
         .then((res) => res.data);
     },
 

@@ -8,7 +8,9 @@ import {
   Spin,
   Button,
   Modal,
+  Popconfirm,
   Radio,
+  message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useRouter } from "next/navigation";
@@ -56,6 +58,18 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
   const handleProceedToCheckout = () => {
     if (!selectedPriceId) return;
     router.push(`/page/payment/checkout?priceId=${selectedPriceId}`);
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      await subscriptionService.cancel(organizationId);
+      message.success(
+        "Subscription will be cancelled at the end of the current cycle.",
+      );
+      fetchData();
+    } catch {
+      message.error("Failed to cancel subscription");
+    }
   };
 
   const fetchData = useCallback(async () => {
@@ -140,13 +154,27 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
             title="Current Subscription"
             size="small"
             extra={
-              <Button
-                type="primary"
-                icon={<ShoppingCart size={16} />}
-                onClick={openBuy}
-              >
-                Buy / Upgrade Package
-              </Button>
+              <div className="flex gap-2">
+                {subscription?.status === "active" && (
+                  <Popconfirm
+                    title="Cancel subscription?"
+                    description="You keep access with your current credits until the end of the current cycle."
+                    okText="Cancel subscription"
+                    okButtonProps={{ danger: true }}
+                    cancelText="Keep"
+                    onConfirm={handleCancelSubscription}
+                  >
+                    <Button danger>Cancel subscription</Button>
+                  </Popconfirm>
+                )}
+                <Button
+                  type="primary"
+                  icon={<ShoppingCart size={16} />}
+                  onClick={openBuy}
+                >
+                  Buy / Upgrade Package
+                </Button>
+              </div>
             }
           >
             {subscription ? (
@@ -155,7 +183,29 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
                   <Text strong>{subscription.plan?.name}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  <Tag color="green">ACTIVE</Tag>
+                  <Tag
+                    color={
+                      subscription.status === "active"
+                        ? "green"
+                        : subscription.status === "pending_cancel"
+                          ? "orange"
+                          : subscription.status === "past_due"
+                            ? "volcano"
+                            : "default"
+                    }
+                  >
+                    {String(subscription.status ?? "active")
+                      .replace("_", " ")
+                      .toUpperCase()}
+                  </Tag>
+                  {subscription.status === "pending_cancel" && (
+                    <Text type="secondary" className="ml-2">
+                      Active until{" "}
+                      {new Date(
+                        subscription.currentPeriodEnd ?? subscription.endDate,
+                      ).toLocaleDateString()}
+                    </Text>
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Starts At">
                   {new Date(subscription.startDate).toLocaleDateString()}

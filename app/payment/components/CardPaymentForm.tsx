@@ -247,8 +247,6 @@ export default function CardPaymentForm({
 
         {/* Submit */}
         <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-          <Button onClick={() => setCurrent(1)}>Back</Button>
-
           <Button
             type="primary"
             htmlType="submit"

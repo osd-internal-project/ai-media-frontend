@@ -34,6 +34,7 @@ import ThemeToggleButton from "../ThemeToggleButton";
 import { useThemeMode } from "../ThemeProvider";
 import "./LayoutStyle.css";
 import { User ,Users} from "lucide-react";
+import Link from "next/link";
 
 const { Text } = Typography;
 const { Header } = Layout;
@@ -276,6 +277,11 @@ export function PrivateHeader({
       </Space>
 
       <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
+        <Link href="/page/plans">
+          <Button type="primary" ghost  style={{ borderColor: "#6C6AC4", color: "#6C6AC4" }}>
+            Change Package
+          </Button>
+        </Link>
         <Card
           hoverable
           className="private-header-balance-card"
