@@ -37,16 +37,20 @@ export default function PlansPage() {
       ),
     [plans],
   );
-   
-  const options = [
-    ...(organizationRole === "OWNER"
-      ? [
-          {
-            label: "Upgrade/Downgrade",
-            value: "current",
-          },
-        ]
-      : []),
+
+  const options: { label: string; value: BuyMode }[] = [
+    // ...(organizationRole === "OWNER"
+    //   ? [
+    //       {
+    //         label: "Upgrade/Downgrade",
+    //         value: "current",
+    //       },
+    //     ]
+    //   : []),
+    {
+      label: "Upgrade/Downgrade",
+      value: "current",
+    },
     { label: "New ", value: "new" },
   ];
 
