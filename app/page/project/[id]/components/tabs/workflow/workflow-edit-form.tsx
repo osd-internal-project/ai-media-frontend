@@ -41,20 +41,21 @@ import { getTypeFile } from "../../tab-layout/utils/file-type.util";
 import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
 import SettingSection from "../../tab-layout/generate-section/setting-section";
 import DrawToImage from "../image-gen/shared/draw-to-image";
-import WorkflowUpload from "./workflow-upload";
+import UploadSection from "../../tab-layout/generate-section/upload-section";
 import WorkflowPrompt from "./workflow-prompt";
 
 /** Image ratio → base size (2k); 4k applies a 1.414x scale. Matches Gen Image. */
-const IMAGE_RATIO_SIZE_MAP: Record<string, { width: number; height: number }> = {
-  "1:1": { width: 2048, height: 2048 },
-  "4:3": { width: 2304, height: 1728 },
-  "3:4": { width: 1728, height: 2304 },
-  "16:9": { width: 2560, height: 1440 },
-  "9:16": { width: 1440, height: 2560 },
-  "3:2": { width: 2496, height: 1664 },
-  "2:3": { width: 1664, height: 2496 },
-  "21:9": { width: 3024, height: 1296 },
-};
+const IMAGE_RATIO_SIZE_MAP: Record<string, { width: number; height: number }> =
+  {
+    "1:1": { width: 2048, height: 2048 },
+    "4:3": { width: 2304, height: 1728 },
+    "3:4": { width: 1728, height: 2304 },
+    "16:9": { width: 2560, height: 1440 },
+    "9:16": { width: 1440, height: 2560 },
+    "3:2": { width: 2496, height: 1664 },
+    "2:3": { width: 1664, height: 2496 },
+    "21:9": { width: 3024, height: 1296 },
+  };
 const IMAGE_RESOLUTION_OPTIONS = ["2k", "4k"];
 
 /** Video resolution → ratio → exact size. Matches Gen Video (seedance). */
@@ -192,14 +193,16 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   /** Compute output width/height from the current ratio + resolution. */
   const computeSize = useCallback((): { width: number; height: number } => {
     if (type === "image") {
-      const base = IMAGE_RATIO_SIZE_MAP[selectedRatio] ?? IMAGE_RATIO_SIZE_MAP["1:1"];
+      const base =
+        IMAGE_RATIO_SIZE_MAP[selectedRatio] ?? IMAGE_RATIO_SIZE_MAP["1:1"];
       const scale = selectedResolution === "4k" ? 1.414 : 1;
       return {
         width: Math.round(base.width * scale),
         height: Math.round(base.height * scale),
       };
     }
-    const byRatio = VIDEO_RATIO_SIZE_MAP[selectedResolution] ?? VIDEO_RATIO_SIZE_MAP["720p"];
+    const byRatio =
+      VIDEO_RATIO_SIZE_MAP[selectedResolution] ?? VIDEO_RATIO_SIZE_MAP["720p"];
     const base = byRatio[selectedRatio] ?? byRatio["1:1"];
     return { width: base.width, height: base.height };
   }, [type, selectedRatio, selectedResolution]);
@@ -209,7 +212,8 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
       type === "image"
         ? Object.keys(IMAGE_RATIO_SIZE_MAP)
         : Object.keys(
-            VIDEO_RATIO_SIZE_MAP[selectedResolution] ?? VIDEO_RATIO_SIZE_MAP["720p"],
+            VIDEO_RATIO_SIZE_MAP[selectedResolution] ??
+              VIDEO_RATIO_SIZE_MAP["720p"],
           );
     return keys.map((ratio) => ({
       label: ratio,
@@ -239,7 +243,11 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
    */
   const uploadOne = useCallback(
     async (file: UploadFile, index: number): Promise<RefImage | null> => {
-      const blob = (file.originFileObj as Blob) ?? null;
+      // When `beforeUpload` returns false, antd may hand back the raw RcFile as
+      // `file` with `originFileObj` undefined; fall back to the file itself (it
+      // is a Blob), mirroring the Gen Image/Video upload handlers.
+      const candidate = (file.originFileObj ?? file) as unknown;
+      const blob = candidate instanceof Blob ? candidate : null;
       if (!blob) return null;
 
       // Image min-size validation (non-images load-error → allowed through).
@@ -268,7 +276,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
       formData.append("file", blob);
       formData.append("organizationId", organizationId ?? "");
 
-      const result = (await uploadsServices.upload(formData)) as RefImage | undefined;
+      const result = (await uploadsServices.upload(formData)) as
+        | RefImage
+        | undefined;
       return result?.imagePath ? result : null;
     },
     [organizationId, projectId, type, uploadsServices, userId],
@@ -292,14 +302,15 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
         // URL and store it as `thumbUrl` (the tile prefers `thumbUrl`), avoiding the
         // blocked `blob:` object URL. Skip non-images — a video/audio `data:` URL is
         // huge and can't render as an image, so those keep the placeholder icon.
-        const previewBlob = file.originFileObj as Blob | undefined;
+        const previewCandidate = (file.originFileObj ?? file) as unknown;
+        const previewBlob =
+          previewCandidate instanceof Blob ? previewCandidate : undefined;
         if (previewBlob && previewBlob.type.startsWith("image/")) {
           const thumbUrl = await fileToDataUrl(previewBlob);
           setLocalFiles((prev) =>
             prev.map((f) => (f.uid === file.uid ? { ...f, thumbUrl } : f)),
           );
         }
-
         setIsLoadingUpload(true);
         try {
           const result = await uploadOne(file, nextList.length);
@@ -319,6 +330,8 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
               ),
             );
           }
+        } catch (error) {
+          console.error("Error uploading file:", error);
         } finally {
           setIsLoadingUpload(false);
         }
@@ -592,7 +605,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
         <Form.Item label="Upload" style={{ marginBottom: 8 }}>
           {isFirstLast ? (
             <Flex gap={12} wrap>
-              <WorkflowUpload
+              <UploadSection
+                bare
+                className="nodrag nopan"
                 semantic={semantic}
                 files={filesFirst}
                 handleUploadChange={handleFirstChange}
@@ -604,7 +619,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
                 accept="image/*"
                 isLoadingUpload={isLoadingUpload}
               />
-              <WorkflowUpload
+              <UploadSection
+                bare
+                className="nodrag nopan"
                 semantic={semantic}
                 files={filesLast}
                 handleUploadChange={handleLastChange}
@@ -618,7 +635,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
               />
             </Flex>
           ) : (
-            <WorkflowUpload
+            <UploadSection
+              bare
+              className="nodrag nopan"
               semantic={semantic}
               files={files}
               handleUploadChange={handleMultiChange}

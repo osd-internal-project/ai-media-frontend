@@ -32,6 +32,20 @@ type Props = {
   accept?: string;
   /** Extra action nodes rendered after the upload (+) button in the file row. */
   extraActions?: React.ReactNode;
+  /**
+   * Lean layout for constrained contexts (e.g. a React Flow canvas node):
+   * renders only the tile row (thumbnails + add tile + extraActions), optionally
+   * preceded by a small `label` caption. Omits the section title, outer Card, and
+   * description. Also skips the `blob:` object-URL preview fallback, which is
+   * CSP-blocked in the workflow app (callers supply a `data:` `thumbUrl` instead).
+   */
+  bare?: boolean;
+  /** Allow selecting multiple files at once (false for single first/last slots). */
+  multiple?: boolean;
+  /** Small caption shown above the tiles in `bare` mode (e.g. "First frame"). */
+  label?: string;
+  /** Applied to the outermost element (e.g. "nodrag nopan" inside React Flow). */
+  className?: string;
 };
 
 export default function UploadSection({
@@ -48,12 +62,169 @@ export default function UploadSection({
   uploadTooltipText,
   renderContent,
   extraActions,
+  bare = false,
+  multiple = true,
+  label,
+  className,
 }: Props) {
   const displayDescription =
     description ?? `Reference Images (optional, max ${maxUploadFiles})`;
 
+  // Shared tile row: thumbnails + the add (+) tile + any extra actions.
+  const tileRow = (
+    <Flex gap={8} wrap>
+      {files.map((file) => {
+        // In `bare` mode never fall back to `blob:` object URLs (CSP-blocked in
+        // the workflow app) — callers provide a CSP-safe `data:` `thumbUrl`.
+        const source =
+          file.thumbUrl ||
+          file.url ||
+          (typeof file.preview === "string" ? file.preview : "") ||
+          (!bare && file.originFileObj
+            ? URL.createObjectURL(file.originFileObj)
+            : "");
+
+        // Re-calculate the source on every render for local files might be expensive,
+        // but for small amount of files it's okay.
+        // Better to avoid memory leaks by revoking if possible, but keep it simple for now as it's a small UI component.
+
+        return (
+          <Flex
+            key={file.uid}
+            style={{ position: "relative", width: 56, height: 56 }}
+          >
+            <Card
+              variant="borderless"
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 8,
+                overflow: "hidden",
+                border: `1px solid ${semantic.colorBorder}`,
+                background: semantic.colorBgElevated,
+              }}
+              styles={{
+                body: { padding: 0, width: "100%", height: "100%" },
+              }}
+            >
+              {source ? (
+                <Image
+                  src={source}
+                  alt={file.name}
+                  preview={false}
+                  width={56}
+                  height={56}
+                  style={{ objectFit: "cover" }}
+                />
+              ) : (
+                <Flex
+                  align="center"
+                  justify="center"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <ImageIcon
+                    size={16}
+                    style={{ color: semantic.colorTextSecondary }}
+                  />
+                </Flex>
+              )}
+            </Card>
+
+            <Button
+              size="small"
+              shape="circle"
+              type="primary"
+              danger
+              icon={<CloseOutlined style={{ fontSize: 10 }} />}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onRemoveFile?.(file);
+              }}
+              style={{
+                position: "absolute",
+                top: -6,
+                right: -6,
+                width: 16,
+                height: 16,
+                minWidth: 16,
+                padding: 0,
+              }}
+            />
+          </Flex>
+        );
+      })}
+
+      {files.length < maxUploadFiles && (
+        <Upload
+          fileList={files}
+          onChange={(info) => handleUploadChange?.(info)}
+          beforeUpload={beforeUpload}
+          onRemove={(file) => {
+            onRemoveFile?.(file);
+            return false;
+          }}
+          accept={accept}
+          multiple={multiple}
+          maxCount={maxUploadFiles}
+          showUploadList={false}
+          disabled={isLoadingUpload}
+        >
+          <Tooltip
+            title={
+              uploadTooltipText ??
+              `Upload files (${files.length}/${maxUploadFiles})`
+            }
+            placement="top"
+          >
+            <Flex
+              align="center"
+              justify="center"
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 8,
+                border: `2px dashed ${semantic.colorBorder}`,
+                background: semantic.colorBgBase,
+                cursor: "pointer",
+              }}
+            >
+              {isLoadingUpload ? (
+                <LoadingOutlined
+                  style={{ color: semantic.colorTextSecondary }}
+                />
+              ) : (
+                <Plus
+                  size={18}
+                  style={{ color: semantic.colorTextSecondary }}
+                />
+              )}
+            </Flex>
+          </Tooltip>
+        </Upload>
+      )}
+      {extraActions}
+    </Flex>
+  );
+
+  // Lean layout for constrained contexts (canvas node) — no title/Card/description.
+  if (bare) {
+    return (
+      <Flex vertical gap={4} className={className}>
+        {label && (
+          <Typography.Text
+            style={{ fontSize: 11, color: semantic.colorTextSecondary }}
+          >
+            {label}
+          </Typography.Text>
+        )}
+        {tileRow}
+      </Flex>
+    );
+  }
+
   return (
-    <Flex vertical gap={8}>
+    <Flex vertical gap={8} className={className}>
       <Typography.Text
         style={{
           fontSize: 11,
@@ -97,137 +268,7 @@ export default function UploadSection({
               )}
             </Flex>
 
-            <Flex gap={8} wrap>
-              {files.map((file) => {
-                const source =
-                  file.thumbUrl ||
-                  file.url ||
-                  (typeof file.preview === "string" ? file.preview : "") ||
-                  (file.originFileObj
-                    ? URL.createObjectURL(file.originFileObj)
-                    : "");
-
-                // Re-calculate the source on every render for local files might be expensive,
-                // but for small amount of files it's okay.
-                // Better to avoid memory leaks by revoking if possible, but keep it simple for now as it's a small UI component.
-
-                return (
-                  <Flex
-                    key={file.uid}
-                    style={{ position: "relative", width: 56, height: 56 }}
-                  >
-                    <Card
-                      variant="borderless"
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        border: `1px solid ${semantic.colorBorder}`,
-                        background: semantic.colorBgElevated,
-                      }}
-                      styles={{
-                        body: { padding: 0, width: "100%", height: "100%" },
-                      }}
-                    >
-                      {source ? (
-                        <Image
-                          src={source}
-                          alt={file.name}
-                          preview={false}
-                          width={56}
-                          height={56}
-                          style={{ objectFit: "cover" }}
-                        />
-                      ) : (
-                        <Flex
-                          align="center"
-                          justify="center"
-                          style={{ width: "100%", height: "100%" }}
-                        >
-                          <ImageIcon
-                            size={16}
-                            style={{ color: semantic.colorTextSecondary }}
-                          />
-                        </Flex>
-                      )}
-                    </Card>
-
-                    <Button
-                      size="small"
-                      shape="circle"
-                      type="primary"
-                      danger
-                      icon={<CloseOutlined style={{ fontSize: 10 }} />}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onRemoveFile?.(file);
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: -6,
-                        right: -6,
-                        width: 16,
-                        height: 16,
-                        minWidth: 16,
-                        padding: 0,
-                      }}
-                    />
-                  </Flex>
-                );
-              })}
-
-              {files.length < maxUploadFiles && (
-                <Upload
-                  fileList={files}
-                  onChange={(info) => handleUploadChange?.(info)}
-                  beforeUpload={beforeUpload}
-                  onRemove={(file) => {
-                    onRemoveFile?.(file);
-                    return false;
-                  }}
-                  accept={accept}
-                  multiple
-                  maxCount={maxUploadFiles}
-                  showUploadList={false}
-                  disabled={isLoadingUpload}
-                >
-                  <Tooltip
-                    title={
-                      uploadTooltipText ??
-                      `Upload files (${files.length}/${maxUploadFiles})`
-                    }
-                    placement="top"
-                  >
-                    <Flex
-                      align="center"
-                      justify="center"
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 8,
-                        border: `2px dashed ${semantic.colorBorder}`,
-                        background: semantic.colorBgBase,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {isLoadingUpload ? (
-                        <LoadingOutlined
-                          style={{ color: semantic.colorTextSecondary }}
-                        />
-                      ) : (
-                        <Plus
-                          size={18}
-                          style={{ color: semantic.colorTextSecondary }}
-                        />
-                      )}
-                    </Flex>
-                  </Tooltip>
-                </Upload>
-              )}
-              {extraActions}
-            </Flex>
+            {tileRow}
           </Flex>
         )}
       </Card>
