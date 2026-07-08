@@ -1,16 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  Button,
-  Card,
-  Image,
-  Radio,
-  Result,
-  Select,
-  Spin,
-} from "antd";
+import { Alert, Button, Card, Image, Radio, Result, Select, Spin } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosUser } from "@/app/lib/axios/axios";
@@ -225,7 +216,12 @@ export default function PaymentClient() {
 
         <Card title="Payment method" size="small">
           {errorMessage && (
-            <Alert type="error" message={errorMessage} showIcon className="mb-4" />
+            <Alert
+              type="error"
+              message={errorMessage}
+              showIcon
+              className="mb-4"
+            />
           )}
 
           <Radio.Group
@@ -246,6 +242,7 @@ export default function PaymentClient() {
               onSubmit={handleCardSubmit}
               loading={paying}
               errorMessage={errorMessage}
+              setCurrent={() => {}}
             />
           )}
 
@@ -253,14 +250,23 @@ export default function PaymentClient() {
             <div className="flex flex-col items-center gap-4">
               {qrUri ? (
                 <>
-                  <Image src={qrUri} alt="PromptPay QR" width={240} preview={false} />
+                  <Image
+                    src={qrUri}
+                    alt="PromptPay QR"
+                    width={240}
+                    preview={false}
+                  />
                   <p className="text-gray-400">
                     Scan with your banking app. Waiting for payment…
                   </p>
                   <Spin />
                 </>
               ) : (
-                <Button type="primary" loading={paying} onClick={handleSourcePay}>
+                <Button
+                  type="primary"
+                  loading={paying}
+                  onClick={handleSourcePay}
+                >
                   Generate PromptPay QR
                 </Button>
               )}
