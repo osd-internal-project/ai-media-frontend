@@ -4,7 +4,7 @@ import type {
   VideoFormState,
 } from "@/app/page/project/[id]/components/tab-layout/types/generator-config.type";
 
-/** seeda1: uses first + last frame images; empty files array */
+/** seeda1: first + last frame images (workflow) plus reference files (Gen tab). */
 export const seeda1Config: VideoModelConfig = {
   buildSubmitPayload: (
     values: Record<string, unknown>,
@@ -22,7 +22,7 @@ export const seeda1Config: VideoModelConfig = {
       model: state.selectedAIModel?.modelType ?? undefined,
       prompt: values.prompt as string,
       image,
-      files: [],
+      files: state.computedFiles,
       sequentialImageGeneration: "auto",
       resolution: state.selectedResolution,
       maxImages: 0,

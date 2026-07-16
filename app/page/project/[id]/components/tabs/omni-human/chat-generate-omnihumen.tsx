@@ -34,6 +34,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OmniResultItem from "./shared/omni-result";
 import OmnihumenResultHeader from "./shared/header";
 import { getSecondsFileDuration } from "@/app/utils/fileUtil";
+import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
 
 export interface OmniHumanChatProps {
   projectId: string;
@@ -908,14 +909,44 @@ const ChatGenerateOmnihumen: FC<
       }
 
       const fileToUpload = file.originFileObj || file;
+      const isImage =
+        fileToUpload instanceof Blob && fileToUpload.type.startsWith("image/");
+
+      // Encode image files once into a CSP-safe `data:` URL, reused for both the
+      // instant preview and the min-size probe below. A `blob:` URL can't be used
+      // for either: the app CSP has no `img-src`, so images fall back to
+      // `default-src` (https:/data: only) and `blob:` loads are blocked.
+      const dataUrl = isImage
+        ? await fileToDataUrl(fileToUpload as Blob)
+        : undefined;
+
+      // Optimistic, CSP-safe preview: store the `data:` URL as `thumbUrl` (the
+      // tile prefers `thumbUrl`) so the selected image shows immediately.
+      if (dataUrl) {
+        if (index === 0) {
+          setFilesFirst((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, thumbUrl: dataUrl } : f,
+            ),
+          );
+        } else {
+          setFilesLast((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, thumbUrl: dataUrl } : f,
+            ),
+          );
+        }
+      }
+
       if (fileToUpload instanceof Blob) {
         try {
+          // Probe via the `data:` URL (not `blob:`) so the image loads under CSP;
+          // otherwise `onerror` fires and the size check is silently skipped.
+          const probeSrc = dataUrl ?? (await fileToDataUrl(fileToUpload as Blob));
           await new Promise<void>((resolve, reject) => {
             const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
             img.onload = () => {
               const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
               if (minSide < 300) {
                 reject(
                   "Image size is too small, minimum side length must not be less than 300 px",
@@ -925,9 +956,9 @@ const ChatGenerateOmnihumen: FC<
               }
             };
             img.onerror = () => {
-              URL.revokeObjectURL(img.src);
               resolve();
             };
+            img.src = probeSrc;
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));

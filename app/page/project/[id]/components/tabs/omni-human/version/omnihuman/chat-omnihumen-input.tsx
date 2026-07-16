@@ -227,13 +227,7 @@ export default function ChatOmnihumenInput({
             </Flex>
           ) : (
             <Image
-              src={
-                file.url ||
-                file.thumbUrl ||
-                (file.originFileObj
-                  ? URL.createObjectURL(file.originFileObj)
-                  : undefined)
-              }
+              src={file.url || file.thumbUrl || undefined}
               alt={label}
               preview={false}
               style={{

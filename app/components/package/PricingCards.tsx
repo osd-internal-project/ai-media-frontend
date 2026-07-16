@@ -210,20 +210,19 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                     // Public CTA: select this plan's price for the current
                     // interval and proceed to payment. Falls back to an empty
                     // id (free/enterprise plans) so the parent can redirect.
-                    // <Button
-                    //   block
-                    //   size="large"
-                    //   type="primary"
-                    //   onClick={() =>
-                    //     onGetStarted(
-                    //       plan.prices.find((p) => p.interval === planInterval)
-                    //         ?.id || "",
-                    //     )
-                    //   }
-                    // >
-                    //   Get Started
-                    // </Button>
-                    <></>
+                    <Button
+                      block
+                      size="large"
+                      type="primary"
+                      onClick={() =>
+                        onGetStarted(
+                          plan.prices.find((p) => p.interval === planInterval)
+                            ?.id || "",
+                        )
+                      }
+                    >
+                      Get Started
+                    </Button>
                   )}
                 </div>
               </div>
