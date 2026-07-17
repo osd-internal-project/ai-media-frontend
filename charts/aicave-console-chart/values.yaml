@@ -43,9 +43,9 @@ ingress:
       more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
       more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()"; 
     # จำกัดการส่งข้อมูลออก (Transmit) ของ Pod นี้ไว้ไม่ให้เกิน 50 Mbps
-    kubernetes.io/egress-bandwidth: "50M"
+    kubernetes.io/egress-bandwidth: "10M"
         # (เลือกใส่หรือไม่ก็ได้) จำกัดขาเข้า Pod
-    kubernetes.io/ingress-bandwidth: "50M"
+    kubernetes.io/ingress-bandwidth: "10M"  
   hosts:
     - host: www.aicave.ai
       paths:
