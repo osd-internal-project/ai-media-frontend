@@ -42,6 +42,8 @@ ingress:
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
       more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()";
+    # nginx.ingress.kubernetes.io/limit-rate: "1024"
+    # nginx.ingress.kubernetes.io/limit-rate-after: "5120" # KB sent before throttling
   hosts:
     - host: www.aicave.ai
       paths:
@@ -58,6 +60,10 @@ env:
   nextauthUrlInternal: "http://aicave-console"
   keycloakIssuer: "https://id24.aicave.ai/realms/eportal"
   authTrustHost: "true"
+  # Cap V8 old-space below the container memory limit so GC runs before the
+  # cgroup OOMKills the Node process. Keep ~2/3 of the limit (this base = 768Mi
+  # limit). Per-env overrides scale this to their smaller limits.
+  # nodeOptions: "--max-old-space-size=512"
 
 # Secrets managed via GitHub Actions secrets and passed with --set:
 #   secretEnv.NEXTAUTH_SECRET
@@ -89,3 +95,7 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
+# Restrict pod egress (DNS + in-namespace + external HTTPS only) to block
+# malware download / C2 like the plain-HTTP fetch seen in the incident.
+networkPolicy:
+  enabled: true

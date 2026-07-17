@@ -1,6 +1,6 @@
 {
   "name": "ai-media-fe",
-  "version": "v1.1.07",
+  "version": "v1.1.08",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -16,19 +16,17 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@types/axios": "^0.14.4",
     "@xyflow/react": "^12.11.0",
     "antd": "^5.27.4",
-    "axios": "^1.13.2",
+    "axios": "^1.18.1",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.19",
     "fabric": "^7.3.1",
     "file-saver": "^2.0.5",
     "jsonwebtoken": "^9.0.2",
-    "keycloak": "^1.2.0",
     "keycloak-js": "^26.2.1",
     "lucide-react": "^0.553.0",
-    "next": "15.5.3",
+    "next": "15.5.20",
     "next-auth": "^4.24.13",
     "omise": "^1.1.0",
     "react": "19.1.0",
@@ -46,9 +44,16 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.3",
+    "eslint-config-next": "15.5.20",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "resolutions": {
+    "ws": "^8.21.1",
+    "postcss": "^8.5.19",
+    "form-data": "^4.0.6",
+    "follow-redirects": "^1.16.0",
+    "flatted": "^3.4.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
