@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         - name: {{ .Values.imagePullSecretName }}
       securityContext:
-        runAsNonRoot: true
+        runAsNonRoot: false
         seccompProfile:
           type: RuntimeDefault
       volumes:
