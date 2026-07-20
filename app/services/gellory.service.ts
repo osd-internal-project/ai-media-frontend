@@ -68,18 +68,26 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    downloadFile: async (id: string, organizationId: string) => {
-      return await axiosInstance
-        .get(`${baseUrl}/download/${id}?organizationId=${organizationId}`, {
-          responseType: "blob",
-        })
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+    /**
+     * Trigger a file download for a gallery item. The core endpoint 302-redirects
+     * to a presigned TOS URL (with `Content-Disposition: attachment`), so the
+     * bytes stream straight from object storage to the browser instead of being
+     * proxied through the API pod. Navigating an anchor (not an XHR) avoids a
+     * cross-origin body read, so no TOS CORS config is required.
+     *
+     * @param id - Gallery item id.
+     * @param organizationId - Owning organization id.
+     * @param fileName - Optional download filename (server sets Content-Disposition).
+     */
+    downloadFile: (id: string, organizationId: string, fileName?: string) => {
+      const params = new URLSearchParams({ organizationId });
+      if (fileName) params.set("filename", fileName);
+      const base = axiosInstance.defaults.baseURL ?? "";
+      const link = document.createElement("a");
+      link.href = `${base}${baseUrl}/download/${id}?${params.toString()}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     },
     updateShareOptions: async (
       taskId: string,

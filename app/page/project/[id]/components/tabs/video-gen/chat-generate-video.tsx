@@ -675,17 +675,11 @@ const ChatGenerateVideo: FC<Props> = ({
   const onDownloadVideo = async (fileName: string, videoId: string) => {
     const hide = messageApi.loading("Downloading video...", 0);
     try {
-      const response = await galleryService.downloadFile(
+      galleryService.downloadFile(
         videoId,
         session?.user?.organizationId || "",
+        fileName,
       );
-      if (!response) throw new Error("Download failed or response is empty");
-      const url = URL.createObjectURL(response);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
       hide();
       messageApi.success("Video downloaded successfully");
     } catch (error) {

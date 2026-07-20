@@ -168,12 +168,10 @@ const PromptActivity: FC<props> = ({
     };
   };
 
-  const openImageEditor = async (id: string) => {
-    const response = await galleryservices.downloadFile(id, organizationId);
-    if (!response) throw new Error("Download failed or response is empty");
-
-    const url = URL.createObjectURL(response);
-    setImageEditorUrl(url);
+  // ImageEditor loads a remote (presigned) URL directly with crossOrigin, so we
+  // pass the record's presigned URL instead of proxying the bytes through the API.
+  const openImageEditor = (imageUrl: string) => {
+    setImageEditorUrl(imageUrl);
   };
 
   const columns: ColumnsType<any> = [
@@ -418,7 +416,7 @@ const PromptActivity: FC<props> = ({
                 // className=" text-yellow-500 drop-shadow-[0_0_5px_#f59e0b] animate-pulse"
                 />
               }
-                onClick={() => openImageEditor(record.id)}
+                onClick={() => openImageEditor(record.imageUrl)}
                 type="text"
                 shape="circle"
                 className="activity-star-button"
@@ -482,12 +480,6 @@ const PromptActivity: FC<props> = ({
                   if (typeof maybeHide === "function") {
                     hide = maybeHide;
                   }
-                  const response = await galleryservices.downloadFile(
-                    record.id,
-                    organizationId,
-                  );
-                  if (!response)
-                    throw new Error("Download failed or response is empty");
                   let ext = "";
                   if (record.typeGenerate === "image") {
                     ext = ".jpg";
@@ -500,12 +492,7 @@ const PromptActivity: FC<props> = ({
                     ext = ".mp4";
                   }
                   const fileName = "image" + ext;
-                  const url = URL.createObjectURL(response);
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.download = fileName;
-                  link.click();
-                  URL.revokeObjectURL(url);
+                  galleryservices.downloadFile(record.id, organizationId, fileName);
                   hide && hide();
                   api.success({ message: "Downloaded successfully" });
                 } catch (err) {

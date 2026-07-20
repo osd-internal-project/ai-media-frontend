@@ -919,17 +919,11 @@ const ChatGenerateImage: FC<
   const onDownloadImage = async (fileName: string, imageId: string) => {
     const hide = messageApi.loading("Downloading image...", 0);
     try {
-      const response = await galleryService.downloadFile(
+      galleryService.downloadFile(
         imageId,
         session?.user?.organizationId || "",
+        fileName,
       );
-      if (!response) throw new Error("Download failed or response is empty");
-      const url = URL.createObjectURL(response);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
       hide();
       messageApi.success("Image downloaded successfully");
     } catch (error) {
