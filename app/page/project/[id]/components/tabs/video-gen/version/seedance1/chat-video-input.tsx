@@ -448,15 +448,15 @@ export default function ChatVideoInput(props: Props) {
             handleUploadChange={handleUploadChangeMuti}
             beforeUpload={beforeUploadMuti}
             onRemoveFile={onRemoveFileMuti}
-            maxUploadFiles={8}
-            description="Upload Reference (optional, image, video, audio, max 8)"
-            accept="image/*,video/*,audio/*"
+            maxUploadFiles={2}
+            description="Upload first & last frame (optional, image only, max 2)"
+            accept="image/*"
             extraActions={
               <DrawToImage
                 files={files}
                 handleUploadChange={handleUploadChangeMuti}
                 semantic={semantic}
-                disabled={isLoadingUpload || files.length >= 8}
+                disabled={isLoadingUpload || files.length >= 2}
               />
             }
           />
