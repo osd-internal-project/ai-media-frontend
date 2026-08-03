@@ -61,12 +61,7 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
   const outerRadius = isMobile ? 88 : 84;
   const realTotal = data.reduce((sum, item) => sum + item.value, 0);
   const hasPositiveValue = realTotal > 0;
-  const normalizedData = hasPositiveValue
-    ? data
-    : data.map((item) => ({ ...item, angleValue: 1 }));
-  const total = hasPositiveValue
-    ? realTotal
-    : Math.max(normalizedData.length, 1);
+  const total = Math.max(realTotal, 1);
 
   useEffect(() => {
     let raf = 0;
@@ -90,20 +85,18 @@ export default function ByTypeChart({ data, colors }: ByTypeChartProps) {
     return () => cancelAnimationFrame(raf);
   }, [data]);
 
-  // Add gap between arcs
+  // Add gap between arcs.
+  // With no data we render no arcs at all — previously every slice was given an equal
+  // synthetic value, which drew a full, colourful donut labelled "Total 0".
   const gapAngle = 2; // degrees
   let startAngle = 0;
-  const arcs = normalizedData.map((item) => {
-    const valueForAngle = hasPositiveValue
-      ? item.value
-      : (item as ByTypeItem & { angleValue: number }).angleValue;
-    const angle = (valueForAngle / total) * 360;
+  const arcs = (hasPositiveValue ? data : []).map((item) => {
+    const angle = (item.value / total) * 360;
     const arcStart = startAngle + gapAngle / 2;
     const arcEnd = startAngle + angle - gapAngle / 2;
     const animatedEnd = arcStart + (arcEnd - arcStart) * animationProgress;
     const arc = {
       ...item,
-      value: hasPositiveValue ? item.value : 0,
       path: donutArc(cx, cy, innerRadius, outerRadius, arcStart, animatedEnd),
     };
     startAngle += angle;

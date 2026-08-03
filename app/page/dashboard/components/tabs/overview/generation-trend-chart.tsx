@@ -1,14 +1,27 @@
-import { IDashboardCreditPerMonthAndType } from "@/app/common/dashbaord";
+import { IGenerationSeriesPoint } from "@/app/common/dashbaord";
 import React, { useMemo, useState } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
+import {
+  GENERATION_TYPE_KEYS,
+  GENERATION_TYPE_LABEL,
+  type GenerationTypeKey,
+} from "@/app/common/generation-type";
+
+/** Dash pattern per series, so overlapping lines stay distinguishable. */
+const STROKE_DASH: Readonly<Record<GenerationTypeKey, string | undefined>> = {
+  image: undefined,
+  video: undefined,
+  omnihuman: "6 4",
+  dreamactor: "2 4",
+};
 
 type GenerationTrendChartProps = {
-  data: IDashboardCreditPerMonthAndType[];
+  data: IGenerationSeriesPoint[];
+  /** Which series to draw. Driven by the type multi-select in the filter bar. */
+  visibleTypes: GenerationTypeKey[];
   colors: {
-    image: string;
-    video: string;
-    human: string;
-    dreamactor: string;
+    /** Colour per generation type, shared with the legend so they cannot disagree. */
+    types: Record<GenerationTypeKey, string>;
     axis: string;
     grid: string;
     tooltipBg: string;
@@ -68,11 +81,17 @@ const smoothAreaPath = (points: Point[], baselineY: number) => {
 
 export default function GenerationTrendChart({
   data,
+  visibleTypes,
   colors,
 }: GenerationTrendChartProps) {
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const { isMobile } = useResponsive();
+
+  // Keep the canonical display order regardless of the order the user picked them in.
+  const activeTypes = GENERATION_TYPE_KEYS.filter((key) =>
+    visibleTypes.includes(key),
+  );
 
   // Responsive chart size
   const width = isMobile ? 340 : 980;
@@ -90,21 +109,18 @@ export default function GenerationTrendChart({
   const chartHeight = height - padding.top - padding.bottom;
 
 
-  // Find the first index where any series has a non-zero value
-  const firstActiveIndex = data.findIndex(
-    (item) => item.image > 0 || item.video > 0 || item.omnihuman > 0 || item.dreamactor > 0
+  // Find the first index where any visible series has a non-zero value
+  const firstActiveIndex = data.findIndex((item) =>
+    activeTypes.some((key) => item[key] > 0),
   );
   // Show only from firstActiveIndex-2 (or 0 if not enough), and always start at 0 if firstActiveIndex is 0 or negative
   const displayStartIndex = Math.max(0, firstActiveIndex > 2 ? firstActiveIndex - 2 : firstActiveIndex);
   const displayData = data.slice(displayStartIndex);
 
 
-  const allValues = displayData.flatMap((item) => [
-    item.image,
-    item.video,
-    item.omnihuman,
-    item.dreamactor,
-  ]);
+  const allValues = displayData.flatMap((item) =>
+    activeTypes.map((key) => item[key]),
+  );
 
   // ตรวจสอบว่ามีข้อมูลขยับหรือไม่ (มีค่า > 0)
   const hasActiveData = allValues.some((v) => v > 0);
@@ -165,26 +181,6 @@ export default function GenerationTrendChart({
   const baselineY = padding.top + chartHeight;
 
 
-  const imagePoints = displayData.map((item, index) => ({
-    x: toX(index),
-    y: toY(item.image),
-  }));
-
-  const videoPoints = displayData.map((item, index) => ({
-    x: toX(index),
-    y: toY(item.video),
-  }));
-
-  const humanPoints = displayData.map((item, index) => ({
-    x: toX(index),
-    y: toY(item.omnihuman),
-  }));
-
-  const dreamactorPoints = displayData.map((item, index) => ({
-    x: toX(index),
-    y: toY(item.dreamactor),
-  }));
-
   const hoverItem = hoveredIndex !== null ? displayData[hoveredIndex] : null;
   const hoverX = hoveredIndex !== null ? toX(hoveredIndex) : 0;
 
@@ -199,56 +195,29 @@ export default function GenerationTrendChart({
     return Math.min(preferred, width - 180);
   }, [hoveredIndex, displayData]);
 
+  // One series per visible type, all labels and colours from the shared type module.
+  const series = activeTypes.map((key) => ({
+    key,
+    color: colors.types[key],
+    label: GENERATION_TYPE_LABEL[key],
+    values: displayData.map((item) => item[key]),
+    points: displayData.map((item, index) => ({
+      x: toX(index),
+      y: toY(item[key]),
+    })),
+    gradientId: `gradient-${key}`,
+    strokeDasharray: STROKE_DASH[key],
+  }));
+
   const tooltipY = useMemo(() => {
     if (!hoverItem) return 0;
 
     const highestPoint = Math.min(
-      toY(hoverItem.image),
-      toY(hoverItem.video),
-      toY(hoverItem.omnihuman),
-      toY(hoverItem.dreamactor),
+      ...activeTypes.map((key) => toY(hoverItem[key])),
     );
 
     return Math.max(12, highestPoint - 110);
-  }, [hoverItem]);
-  const series = [
-    {
-      key: "image",
-      color: colors.image,
-      points: imagePoints,
-      label: "Image",
-      values: displayData.map((item) => item.image),
-      gradientId: "gImage",
-      strokeDasharray: undefined,
-    },
-    {
-      key: "video",
-      color: colors.video,
-      points: videoPoints,
-      label: "Video",
-      values: displayData.map((item) => item.video),
-      gradientId: "gVideo",
-      strokeDasharray: undefined,
-    },
-    {
-      key: "human",
-      color: colors.human,
-      points: humanPoints,
-      label: "Human",
-      values: displayData.map((item) => item.omnihuman),
-      gradientId: "gHuman",
-      strokeDasharray: "6 4",
-    },
-    {
-      key: "dreamactor",
-      color: colors.dreamactor,
-      points: dreamactorPoints,
-      label: "Dream",
-      values: displayData.map((item) => item.dreamactor),
-      gradientId: "gDreamactor",
-      strokeDasharray: "2 4",
-    },
-  ];
+  }, [hoverItem, activeTypes]);
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -261,25 +230,19 @@ export default function GenerationTrendChart({
       }}
     >
       <defs>
-        <linearGradient id="gImage" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.image} stopOpacity="0.28" />
-          <stop offset="100%" stopColor={colors.image} stopOpacity="0" />
-        </linearGradient>
-
-        <linearGradient id="gVideo" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.video} stopOpacity="0.24" />
-          <stop offset="100%" stopColor={colors.video} stopOpacity="0" />
-        </linearGradient>
-
-        <linearGradient id="gHuman" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.human} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={colors.human} stopOpacity="0" />
-        </linearGradient>
-
-        <linearGradient id="gDreamactor" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.dreamactor} stopOpacity="0.16" />
-          <stop offset="100%" stopColor={colors.dreamactor} stopOpacity="0" />
-        </linearGradient>
+        {series.map((item) => (
+          <linearGradient
+            key={item.gradientId}
+            id={item.gradientId}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop offset="0%" stopColor={item.color} stopOpacity="0.24" />
+            <stop offset="100%" stopColor={item.color} stopOpacity="0" />
+          </linearGradient>
+        ))}
 
         <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow
@@ -365,7 +328,7 @@ export default function GenerationTrendChart({
      
 
       {displayData.map((item, index) => (
-        <g key={`${item.month}-${index}`}>
+        <g key={`${item.bucket}-${index}`}>
           <rect
             x={toX(index) - xStep / 2}
             y={padding.top}
@@ -386,7 +349,7 @@ export default function GenerationTrendChart({
             opacity={0.85}
             fontWeight={index === firstLabelIndex ? 700 : 400}
           >
-            {item.month}
+            {item.bucket}
           </text>
         </g>
       ))}
@@ -406,8 +369,8 @@ export default function GenerationTrendChart({
           <rect
             x={tooltipX}
             y={tooltipY}
-            width={160}
-            height={102}
+            width={170}
+            height={30 + series.length * 16}
             rx={14}
             fill={colors.tooltipBg}
             stroke={colors.tooltipBorder}
@@ -421,44 +384,21 @@ export default function GenerationTrendChart({
             fontWeight="700"
             fill={colors.tooltipText}
           >
-            {hoverItem.month}
+            {hoverItem.bucket}
           </text>
 
-          <text
-            x={tooltipX + 14}
-            y={tooltipY + 42}
-            fontSize="11"
-            fill={colors.image}
-          >
-            Image: {hoverItem.image}
-          </text>
-
-          <text
-            x={tooltipX + 14}
-            y={tooltipY + 58}
-            fontSize="11"
-            fill={colors.video}
-          >
-            Video: {hoverItem.video}
-          </text>
-
-          <text
-            x={tooltipX + 14}
-            y={tooltipY + 74}
-            fontSize="11"
-            fill={colors.human}
-          >
-            Human: {hoverItem.omnihuman}
-          </text>
-
-          <text
-            x={tooltipX + 14}
-            y={tooltipY + 90}
-            fontSize="11"
-            fill={colors.dreamactor}
-          >
-            Dream: {hoverItem.dreamactor}
-          </text>
+          {/* One row per visible series — previously two rows were both labelled "Human". */}
+          {series.map((item, index) => (
+            <text
+              key={`tooltip-${item.key}`}
+              x={tooltipX + 14}
+              y={tooltipY + 42 + index * 16}
+              fontSize="11"
+              fill={item.color}
+            >
+              {item.label}: {hoverItem[item.key]}
+            </text>
+          ))}
         </>
       )}
 
