@@ -58,31 +58,21 @@ const Page: FC = () => {
     }
   };
 
-  // const handleGoogleLogin = () => {
-  //   const issuer = "https://id24.aicave.ai/realms/eportal";
-  //   const clientId = "ai-cave-prod";
-  //   const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/callback` : "";
-  //   const url = `${issuer}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&kc_idp_hint=google`;
-  //   window.location.href = url;
-  // };
-  const handleGoogleLogin = async () => {
+  /**
+   * Redirects to Keycloak for a brokered identity-provider login.
+   *
+   * @param idp Which provider to sign in with.
+   * @param label Provider name, used only in the error message.
+   */
+  const handleIdpLogin = async (idp: "google" | "microsoft", label: string) => {
     try {
-      const res = await axios.get("/api/auth/google");
+      const res = await axios.get(`/api/auth/idp/${idp}`);
       window.location.href = res.data.url;
     } catch (error) {
-      console.error("Google login error:", error);
-      messageApi.error("Failed to connect to Google Login");
+      console.error(`${label} login error:`, error);
+      messageApi.error(`Failed to connect to ${label} Login`);
     }
   };
-
-  // const handleMicrosoftLogin = () => {
-  //   const issuer = "https://id24.aicave.ai/realms/eportal";
-  //   const clientId = "ai-cave-prod";
-  //   const redirectUri =
-  //     typeof window !== "undefined" ? `${window.location.origin}/callback` : "";
-  //   const url = `${issuer}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&kc_idp_hint=microsoft`;
-  //   window.location.href = url;
-  // };
 
   // Check URL errors (e.g. from Google/Keycloak redirects)
   React.useEffect(() => {
@@ -150,8 +140,8 @@ const Page: FC = () => {
               {/* Socials */}
               <div className="flex gap-4 mb-8">
                 <button
-                  // disabled
-                  onClick={handleGoogleLogin}
+                  type="button"
+                  onClick={() => handleIdpLogin("google", "Google")}
                   className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -180,10 +170,7 @@ const Page: FC = () => {
                 <button
                   type="button"
                   className="flex-1 bg-[#1A1D21] hover:bg-[#25282C] h-12 rounded-lg flex items-center justify-center gap-3 border border-[#333] transition-colors group"
-                  onClick={() =>
-                    messageApi.info("Microsoft login not implemented yet")
-                  }
-                  disabled
+                  onClick={() => handleIdpLogin("microsoft", "Microsoft")}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 23 23">
                     <path fill="#f35325" d="M1 1h10v10H1z" />

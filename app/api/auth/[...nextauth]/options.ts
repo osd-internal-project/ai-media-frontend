@@ -8,6 +8,33 @@ if (process.env.NODE_ENV === "development") {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
+/**
+ * Verifies an access token against Keycloak via the backend's introspection endpoint.
+ *
+ * Fails closed: any network error, non-2xx response, or `valid !== true` rejects the
+ * sign-in. Treating an unreachable backend as "valid" would reopen the forgery hole this
+ * guards against.
+ *
+ * @param accessToken The bearer token supplied to the credentials provider.
+ * @returns True only when Keycloak confirms the token is active.
+ */
+async function validateAccessToken(accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${config.backendAuthUrl}/auth/validate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    return data?.valid === true;
+  } catch (error) {
+    console.error("Access token validation failed:", error);
+    return false;
+  }
+}
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   console.log("🔄 Starting token refresh process...");
 
@@ -113,6 +140,16 @@ export const authOptions = {
       async authorize(credentials) {
         try {
           if (credentials?.accessToken) {
+            // This branch is how brokered IdP logins (Google, Microsoft) enter NextAuth:
+            // /callback exchanges the code with the backend, then signs in with the
+            // resulting token. The token MUST be introspected here — without it, posting an
+            // arbitrary string to /api/auth/callback/credentials mints a valid session.
+            const isValid = await validateAccessToken(credentials.accessToken);
+            if (!isValid) {
+              console.error("Rejected credentials sign-in: access token is not valid");
+              return null;
+            }
+
             return {
               accessToken: credentials.accessToken,
               refreshToken: credentials.refreshToken,
