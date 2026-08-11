@@ -37,8 +37,9 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
 import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
-import { Edit2, Image, Paintbrush, Workflow } from "lucide-react";
+import { Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
+import PublicSocial from "./components/tabs/public-social/public-social";
 
 type GenerateTabKey =
   | "image"
@@ -48,7 +49,8 @@ type GenerateTabKey =
   | "workflow"
   | "library"
   | "activity"
-  | "editor";
+  | "editor"
+  | "social";
 
 // Resolves saved → default → first available model for a given tab key
 function resolveModel(
@@ -109,6 +111,11 @@ const GenerateImagePage: FC = () => {
     (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const [projectRole, setProjectRole] = useState<string | null>(null);
+  // gallery item ที่ผู้ใช้กด "Share to social" จากแท็บ All Activity —
+  // เก็บไว้ที่ระดับ page เพราะต้องข้ามแท็บไปเปิด wizard ในแท็บ Public Social
+  const [socialPresetGalleryIds, setSocialPresetGalleryIds] = useState<
+    string[] | undefined
+  >(undefined);
 
   const onSetPromptTextRef = React.useRef<
     ((id: number) => Promise<void>) | null
@@ -130,6 +137,7 @@ const GenerateImagePage: FC = () => {
     canAccessDream,
     canAccessEditor,
     canAccessWorkflow,
+    canAccessSocial,
   } = useMemo(() => {
     const has = normalizedAccessCodes.length > 0;
     return {
@@ -145,6 +153,8 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
         !has || normalizedAccessCodes.some((c) => c.includes("editor")),
+      canAccessSocial:
+        !has || normalizedAccessCodes.some((c) => c.includes("social")),
     };
   }, [normalizedAccessCodes]);
 
@@ -159,6 +169,7 @@ const GenerateImagePage: FC = () => {
       library: "#1890ff",
       activity: semantic.colorTextSecondary || "#8c8c8c",
       editor: semantic.colorInfo || "#1890ff",
+      social: semantic.colorPrimary || "#6F6ADE",
     }),
     [semantic],
   );
@@ -238,6 +249,16 @@ const GenerateImagePage: FC = () => {
   const onChangeTab = useCallback((key: GenerateTabKey) => {
     setActiveKey(key);
     setSelectedAIModel(undefined); // let the effect above pick the right model
+  }, []);
+
+  /**
+   * เปิดแท็บ Public Social พร้อม preselect สื่อที่กดมาจากแท็บ All Activity
+   *
+   * @param galleryId gallery item ที่ผู้ใช้กดปุ่ม Share
+   */
+  const onShareToSocial = useCallback((galleryId: string) => {
+    setSocialPresetGalleryIds([galleryId]);
+    setActiveKey("social");
   }, []);
 
   const onAIModelChange = useCallback(
@@ -321,7 +342,7 @@ const GenerateImagePage: FC = () => {
         teamView={teamView}
         setTeamView={setTeamView}
         getProject={getProject}
-        activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+        activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
         selectedAIModel={selectedAIModel}
         filteredAIModels={filteredAIModels}
         onAIModelChange={onAIModelChange}
@@ -343,7 +364,7 @@ const GenerateImagePage: FC = () => {
             overflow: "hidden",
           }}
           className="ant-tabs-full generate-tabs"
-          activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+          activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
           size={isMobile ? "small" : "large"}
           tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
           tabBarStyle={{
@@ -372,7 +393,7 @@ const GenerateImagePage: FC = () => {
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -400,7 +421,7 @@ const GenerateImagePage: FC = () => {
                       <VideoFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -429,7 +450,7 @@ const GenerateImagePage: FC = () => {
                       <OmnihumenFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -458,7 +479,7 @@ const GenerateImagePage: FC = () => {
                       <DreamactorFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -486,7 +507,7 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <WorkflowFormRenderer
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
                         }
                         projectId={id}
                       />
@@ -503,7 +524,7 @@ const GenerateImagePage: FC = () => {
               children: (
                 <div className="h-full">
                   <PromptLibrary
-                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
                   />
                 </div>
               ),
@@ -519,7 +540,8 @@ const GenerateImagePage: FC = () => {
               ),
               children: (
                 <PromptActivity
-                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow">}
+                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+                  onShareToSocial={canAccessSocial ? onShareToSocial : undefined}
                 />
               ),
             },
@@ -538,6 +560,29 @@ const GenerateImagePage: FC = () => {
                       <div className="h-full w-full">
                         <EditorSpace />
                       </div>
+                    ),
+                  },
+                ]
+              : []),
+            ...(canAccessSocial
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "social",
+                    destroyOnHidden: true,
+                    label: renderTabLabel(
+                      "social",
+                      "Public Social",
+                      <Share2 size={16} />,
+                    ),
+                    children: (
+                      <PublicSocial
+                        activeKey={activeKey}
+                        presetGalleryIds={socialPresetGalleryIds}
+                        onPresetConsumed={() =>
+                          setSocialPresetGalleryIds(undefined)
+                        }
+                      />
                     ),
                   },
                 ]

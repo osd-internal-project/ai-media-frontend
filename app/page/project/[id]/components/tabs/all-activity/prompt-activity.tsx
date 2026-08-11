@@ -30,6 +30,7 @@ import {
   Share2,
   Copy,
   Paintbrush,
+  Megaphone,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -51,11 +52,17 @@ import type { SocialShareItem } from "./useSocialShare";
 export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
+  /**
+   * เปิดแท็บ Public Social พร้อม preselect รายการนี้
+   * undefined = org ไม่มีสิทธิ์ใช้ฟีเจอร์ ปุ่มจะไม่แสดง
+   */
+  onShareToSocial?: (galleryId: string) => void;
 }
 
 const PromptActivity: FC<props> = ({
   shouldRefetch,
   activeKey,
+  onShareToSocial,
 }): ReactElement => {
   const params = useParams();
   const { data: session } = useSession();
@@ -548,6 +555,21 @@ const PromptActivity: FC<props> = ({
                 });
               }}
             />
+            {/* Publish to social — สร้าง task รออนุมัติในแท็บ Public Social
+                (ต่างจากปุ่ม Share ด้านบนที่เป็นการแชร์เองแบบเร็ว ๆ) */}
+            {onShareToSocial && (
+              <Tooltip title="Publish to social">
+                <Button
+                  icon={<Megaphone size={16} />}
+                  type="text"
+                  shape="circle"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShareToSocial(record.id);
+                  }}
+                />
+              </Tooltip>
+            )}
           </div>
         );
       },

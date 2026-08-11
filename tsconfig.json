@@ -29,12 +29,13 @@
     }
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+    "app/home/page.bak",
     "app/page/generate-video/page.bak",
-    "app/home/page.bak"
+    "next-env.d.ts",
+    ".next-verify/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -40,6 +40,16 @@ export const MenuSider = [
         ),
       },
       {
+        key: `communication`,
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
+        icon: <MessageSquare size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>
+            Communication
+          </span>
+        ),
+      },
+      {
         key: `settings/template-new`,
         role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
         icon: <BookTemplate size={22} />,

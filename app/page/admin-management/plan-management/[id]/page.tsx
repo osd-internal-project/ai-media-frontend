@@ -43,6 +43,7 @@ export default function PlanDetailPage() {
     { label: "Dream Actor", value: "dream", className: "label-4" },
     { label: "Workflow", value: "workflow", className: "label-5" },
     { label: "Editor", value: "editor", className: "label-6" },
+    { label: "Social Media", value: "social", className: "label-7" },
   ];
   useEffect(() => {
     if (id && id !== "create") {
