@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import type {
+  ChatModelOption,
   ChatResponse,
   Conversation,
   CreateConversationPayload,
@@ -8,13 +9,30 @@ import type {
   Message,
   SendChatPayload,
   SetConversationPayload,
-  TokenUsageSummary,
 } from "./chat-assistant.types";
 
+/**
+ * client ของ service chat-assistant
+ *
+ * หมายเหตุเรื่องสิทธิ์: ทุก endpoint ที่แตะบทสนทนาใบเดียวต้องส่ง `userId` ไปด้วย
+ * เพราะ backend ตรวจความเป็นเจ้าของก่อนคืนหรือแก้ข้อมูล (เดิมค้นด้วย id อย่างเดียว
+ * ใครรู้ id ของคนอื่นก็เปิดอ่านได้)
+ */
 const ChatAssistantService = (axiosInstance: AxiosInstance) => {
   const base = "/conversations";
 
   return {
+    /** GET /chat-models — โมเดลที่ผู้ใช้เลือกได้ */
+    listChatModels: async (): Promise<ChatModelOption[]> => {
+      return axiosInstance
+        .get("/chat-models")
+        .then((res) => res.data ?? [])
+        .catch((err) => {
+          console.error("[ChatAssistant] listChatModels:", err);
+          return [];
+        });
+    },
+
     /** POST /conversations */
     createConversation: async (
       payload: CreateConversationPayload,
@@ -51,13 +69,16 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    /** GET /conversations/:id/messages?limit=50 */
+    /** GET /conversations/:id/messages?userId=xxx&limit=50 */
     getMessages: async (
       conversationId: string,
+      userId: string,
       limit = 50,
     ): Promise<Message[]> => {
       return axiosInstance
-        .get(`${base}/${conversationId}/messages`, { params: { limit } })
+        .get(`${base}/${conversationId}/messages`, {
+          params: { userId, limit },
+        })
         .then((res) => res.data ?? [])
         .catch((err) => {
           console.error("[ChatAssistant] getMessages:", err);
@@ -65,26 +86,32 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    /** POST /chat  (non-streaming) */
-    sendChat: async (
-      payload: SendChatPayload,
-    ): Promise<ChatResponse | undefined> => {
+    /**
+     * POST /chat — ตอบแบบรอจนจบ
+     *
+     * error ถูก throw ต่อ ไม่ swallow เหมือนเมธอดอื่นในไฟล์นี้ เพราะการส่งข้อความ
+     * แล้วไม่ได้คำตอบต้องบอกผู้ใช้ให้รู้ ไม่ใช่เงียบไปเฉย ๆ
+     */
+    sendChat: async (payload: SendChatPayload): Promise<ChatResponse> => {
       return axiosInstance
-        .post("/chat", { ...payload, stream: false })
+        .post("/chat", payload)
         .then((res) => res.data)
         .catch((err) => {
           console.error("[ChatAssistant] sendChat:", err);
-          return undefined;
+          throw new Error(
+            err.response?.data?.message ?? "Failed to send the message",
+          );
         });
     },
 
     /** PATCH /conversations/:id */
     updateConversation: async (
       id: string,
+      userId: string,
       title: string,
     ): Promise<Conversation | undefined> => {
       return axiosInstance
-        .patch(`${base}/${id}`, { title })
+        .patch(`${base}/${id}`, { userId, title })
         .then((res) => res.data)
         .catch((err) => {
           console.error("[ChatAssistant] updateConversation:", err);
@@ -92,27 +119,17 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         });
     },
 
-    /** DELETE /conversations/:id */
-    deleteConversation: async (id: string): Promise<boolean> => {
+    /** DELETE /conversations/:id?userId=xxx */
+    deleteConversation: async (
+      id: string,
+      userId: string,
+    ): Promise<boolean> => {
       return axiosInstance
-        .delete(`${base}/${id}`)
+        .delete(`${base}/${id}`, { params: { userId } })
         .then(() => true)
         .catch((err) => {
           console.error("[ChatAssistant] deleteConversation:", err);
           return false;
-        });
-    },
-
-    /** GET /conversations/:id/token-usage */
-    getTokenUsage: async (
-      conversationId: string,
-    ): Promise<TokenUsageSummary | undefined> => {
-      return axiosInstance
-        .get(`${base}/${conversationId}/token-usage`)
-        .then((res) => res.data)
-        .catch((err) => {
-          console.error("[ChatAssistant] getTokenUsage:", err);
-          return undefined;
         });
     },
 

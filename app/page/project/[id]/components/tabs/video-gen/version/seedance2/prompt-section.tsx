@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Mentions, Typography } from "antd";
+import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
 import AssistantModal from "../../../../assistant/assistant-modal";
 
 type Props = {
@@ -21,6 +22,8 @@ type Props = {
   required?: boolean;
   mentionOptions?: any[];
   projectId: string;
+  /** แท็บ generate ที่เปิดอยู่ — กำหนดบทบาทของผู้ช่วยแชท */
+  generateType?: ChatGenerateType;
 };
 
 export default function PromptSection({
@@ -41,6 +44,7 @@ export default function PromptSection({
   required = true,
   mentionOptions = [],
   projectId,
+  generateType,
 }: Props) {
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
@@ -136,6 +140,7 @@ export default function PromptSection({
           openAssistant={openAssistant}
           setOpenAssistant={setOpenAssistant}
           projectId={projectId}
+          generateType={generateType}
           onUsePrompt={(text) => {
             form.setFieldValue(fieldName, text);
             setOpenAssistant(false);

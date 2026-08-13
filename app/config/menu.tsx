@@ -39,16 +39,16 @@ export const MenuSider = [
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Projects</span>
         ),
       },
-      {
-        key: `communication`,
-        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
-        icon: <MessageSquare size={22} />,
-        label: (
-          <span style={{ fontSize: 12, fontWeight: "normal" }}>
-            Communication
-          </span>
-        ),
-      },
+      // {
+      //   key: `communication`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
+      //   icon: <MessageSquare size={22} />,
+      //   label: (
+      //     <span style={{ fontSize: 12, fontWeight: "normal" }}>
+      //       Communication
+      //     </span>
+      //   ),
+      // },
       {
         key: `settings/template-new`,
         role: ["OWNER", "ADMIN", "SUPER_ADMIN"],

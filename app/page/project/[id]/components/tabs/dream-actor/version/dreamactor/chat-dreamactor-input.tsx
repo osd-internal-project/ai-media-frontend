@@ -356,6 +356,7 @@ export default function ChatDreamactorInput({
           />
 
           <PromptSection
+            generateType="dreamactor"
             semantic={semantic}
             placeholder="Describe what you want to actor video...\n\nBe specific about style, lighting, mood, and details for best results."
             rows={5}

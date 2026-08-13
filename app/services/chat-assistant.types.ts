@@ -75,9 +75,29 @@ export interface SetConversationPayload {
 
 export interface SendChatPayload {
   userId: string;
+  /** จำเป็น — เป็นตัวเลือก key ของ gateway ที่จะใช้ยิงโมเดล */
+  organizationId: string;
   conversationId: string;
   message: string;
-  stream?: boolean;
+  /** แท็บ generate ที่เปิดอยู่ — เป็นตัวเลือกบทบาทของผู้ช่วย */
+  generateType?: ChatGenerateType;
+  model?: string;
+}
+
+/** แท็บ generate ที่มีบทบาทผู้ช่วยเป็นของตัวเอง (ตรงกับ CHAT_GENERATE_TYPES ฝั่ง backend) */
+export type ChatGenerateType =
+  | "image"
+  | "video"
+  | "omnihumen"
+  | "dreamactor";
+
+/** โมเดลที่เลือกได้ในหน้าแชท (GET /chat-models) */
+export interface ChatModelOption {
+  modelId: string;
+  displayName: string;
+  description: string | null;
+  supportsVision: boolean;
+  isDefault: boolean;
 }
 
 // ============================================================

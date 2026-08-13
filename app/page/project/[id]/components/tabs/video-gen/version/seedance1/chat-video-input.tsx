@@ -461,6 +461,7 @@ export default function ChatVideoInput(props: Props) {
             }
           />
           <PromptSection
+            generateType="video"
             semantic={semantic}
             placeholder="Describe what you want to video... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
             rows={5}
