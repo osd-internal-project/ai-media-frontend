@@ -40,6 +40,7 @@ import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-rende
 import { Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
 import PublicSocial from "./components/tabs/public-social/public-social";
+import { FEATURES } from "@/app/config/features";
 
 type GenerateTabKey =
   | "image"
@@ -153,8 +154,11 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
         !has || normalizedAccessCodes.some((c) => c.includes("editor")),
+      // Gated by the feature flag on top of the plan's access code, so the Public
+      // Social tab and the "share to social" action disappear together.
       canAccessSocial:
-        !has || normalizedAccessCodes.some((c) => c.includes("social")),
+        FEATURES.social &&
+        (!has || normalizedAccessCodes.some((c) => c.includes("social"))),
     };
   }, [normalizedAccessCodes]);
 

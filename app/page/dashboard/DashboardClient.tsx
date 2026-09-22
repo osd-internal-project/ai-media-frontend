@@ -41,7 +41,7 @@ import {
 } from "@/app/common/generation-type";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
-import { canViewDashboard } from "@/app/utils/permissions";
+import { canSeeBilling, canViewDashboard } from "@/app/utils/permissions";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { CreditCard, FolderOpen, Sparkles, Ticket, Users } from "lucide-react";
 import { formatCompactNumber, formatNumber } from "@/app/utils/format";
@@ -75,6 +75,7 @@ const DashboardClient: FC = () => {
   const { token } = theme.useToken();
   const router = useRouter();
   const organizationId = session?.user?.organizationId;
+  const showBilling = canSeeBilling(session?.user?.systemRole);
   const dashboardServices = useMemo(() => DashboardServices(axiosReport), []);
   const couponService = useMemo(() => CouponService(axiosUser), []);
   const creditBalanceServices = useMemo(
@@ -592,7 +593,7 @@ const DashboardClient: FC = () => {
       progress: quotaPercent,
       progressColor: quotaColor,
       footer:
-        quotaPercent >= QUOTA_CRITICAL_PERCENT ? (
+        showBilling && quotaPercent >= QUOTA_CRITICAL_PERCENT ? (
           <div className="mt-2">
             <Button
               size="small"
@@ -696,13 +697,15 @@ const DashboardClient: FC = () => {
           chipBg={token.colorBgTextActive}
           chipText={token.colorTextSecondary}
           rightSlot={
-            <Button
-              type="primary"
-              onClick={showRedeemCouponModal}
-              icon={<Ticket size={14} />}
-            >
-              Redeem Coupon
-            </Button>
+            showBilling ? (
+              <Button
+                type="primary"
+                onClick={showRedeemCouponModal}
+                icon={<Ticket size={14} />}
+              >
+                Redeem Coupon
+              </Button>
+            ) : undefined
           }
           compact
         />

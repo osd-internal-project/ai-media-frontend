@@ -7,6 +7,7 @@ import PlanServices from "../services/plan.service";
 import PricingCards from "./components/PricingCards";
 import DetailedComparisonTable from "./components/DetailedComparisonTable";
 import { TPlan } from "../common/plan.type";
+import BillingGate from "../components/BillingGate";
 
 const PackagePage = () => {
   const router = useRouter();
@@ -182,4 +183,10 @@ const PackagePage = () => {
   );
 };
 
-export default PackagePage;
+const GatedPackagePage = () => (
+  <BillingGate>
+    <PackagePage />
+  </BillingGate>
+);
+
+export default GatedPackagePage;

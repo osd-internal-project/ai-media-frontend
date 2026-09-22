@@ -1,3 +1,5 @@
+import { FEATURES } from "../config/features";
+
 export type OrganizationRole =
   | "OWNER"
   | "ADMIN"
@@ -68,3 +70,7 @@ export const canViewTemplates = (organizationRole: string | undefined) =>
 
 export const canManageTemplates = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.manageTemplates, organizationRole);
+
+/** Plans, checkout and credits stay hidden until billing ships — SUPER_ADMIN bypasses. */
+export const canSeeBilling = (systemRole: string | null | undefined) =>
+  FEATURES.billing || systemRole === "SUPER_ADMIN";

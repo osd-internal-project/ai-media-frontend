@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { FEATURES } from "@/app/config/features";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -17,7 +18,7 @@ export default function Navbar() {
       <div className="hidden md:flex items-center gap-8">
         <Link href="/home" className="nav-link">Home</Link>
         <Link href="/features" className="nav-link">Features</Link>
-        <Link href="/pricing" className="nav-link">Pricing</Link>
+        {FEATURES.billing && <Link href="/pricing" className="nav-link">Pricing</Link>}
         <Link href="/login" className="nav-link">Login</Link>
 
         <a
@@ -44,7 +45,7 @@ export default function Navbar() {
       >
         <Link href="/home" onClick={() => setOpen(false)}>Home</Link>
         <Link href="/features" onClick={() => setOpen(false)}>Features</Link>
-        <Link href="/pricing" onClick={() => setOpen(false)}>Pricing</Link>
+        {FEATURES.billing && <Link href="/pricing" onClick={() => setOpen(false)}>Pricing</Link>}
         <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
 
         <a

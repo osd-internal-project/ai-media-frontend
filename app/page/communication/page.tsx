@@ -13,7 +13,9 @@ import {
 } from "antd";
 import { ExternalLink, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import { axiosCore } from "@/app/lib/axios/axios";
+import { FEATURES } from "@/app/config/features";
 import CommunityPostServices from "@/app/services/community-post.service";
 import ProjectService from "@/app/services/project.service";
 import { CommunityPostDetail } from "@/app/common/community-post.type";
@@ -44,6 +46,10 @@ interface ProjectOption {
  * ทั้งสองฟีเจอร์แยกกันโดยสิ้นเชิงและไม่แชร์ข้อมูลกัน
  */
 const CommunicationPage: React.FC = () => {
+  if (!FEATURES.social) {
+    notFound();
+  }
+
   const { data: session } = useSession();
   const { mode } = useThemeMode();
   const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);

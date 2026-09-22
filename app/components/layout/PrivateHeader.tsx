@@ -30,6 +30,7 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import { ICreditBalance, IOrganization } from "@/app/common/organization.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { formatCompactNumber } from "@/app/utils/format";
+import { canSeeBilling } from "@/app/utils/permissions";
 import ThemeToggleButton from "../ThemeToggleButton";
 import { useThemeMode } from "../ThemeProvider";
 import "./LayoutStyle.css";
@@ -76,6 +77,7 @@ export function PrivateHeader({
 
   const [orgOpen, setOrgOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const showBilling = canSeeBilling(systemRole);
 
   // const allOrganizations = [
   //   // ...(personalOrganizations || []),
@@ -277,11 +279,14 @@ export function PrivateHeader({
       </Space>
 
       <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
-        <Link href="/page/plans">
-          <Button type="primary" ghost  style={{ borderColor: "#6C6AC4", color: "#6C6AC4" }}>
-            Change Package
-          </Button>
-        </Link>
+        {showBilling ? (
+          <Link href="/page/plans">
+            <Button type="primary" ghost  style={{ borderColor: "#6C6AC4", color: "#6C6AC4" }}>
+              Change Package
+            </Button>
+          </Link>
+        ) : null}
+        {showBilling ? (
         <Card
           hoverable
           className="private-header-balance-card"
@@ -331,6 +336,7 @@ export function PrivateHeader({
             ) : null}
           </Space>
         </Card>
+        ) : null}
 
         <div className="private-header-action-wrap">
           <ThemeToggleButton />

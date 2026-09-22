@@ -40,6 +40,7 @@ import {
   canCreateOrganization,
   canViewOrganization,
   canViewDashboard,
+  canSeeBilling,
 } from "../utils/permissions";
 import { renderMenuItems, MenuSider } from "../config/menu";
 import { useState, useEffect } from "react";
@@ -81,6 +82,7 @@ const NavbarUser: React.FC<Props> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [packageModalOpen, setPackageModalOpen] = useState(false);
   const [isHoldTokenAmountTag, setIsHoldTokenAmountTag] = useState(false);
+  const showBilling = canSeeBilling(systemRole);
 
   const currentPath = pathname.split("/")[2];
   const mappedPath = currentPath === "project" ? "project" : currentPath;
@@ -124,6 +126,7 @@ const NavbarUser: React.FC<Props> = ({
         </div>
       )}
 
+      {showBilling ? (
       <div className="px-3 py-1">
         <div className="flex items-center gap-3 py-2 text-white">
           <CreditCard className="w-4 h-4" />
@@ -158,6 +161,7 @@ const NavbarUser: React.FC<Props> = ({
           <span className="text-sm text-gray-300">Payments</span>
         </div>
       </div>
+      ) : null}
       <div className="h-px bg-gray-600/50 mx-3 my-2"></div>
       <div
         className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-gray-500/30 hover:rounded-lg cursor-pointer transition-colors text-left"
@@ -279,7 +283,7 @@ const NavbarUser: React.FC<Props> = ({
           {/* User Section */}
           {user && (
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-              {canViewDashboard(organizationRole) && (
+              {showBilling && canViewDashboard(organizationRole) && (
                 <Button
                   type="primary"
                   onClick={() => setPackageModalOpen(true)}
@@ -303,6 +307,7 @@ const NavbarUser: React.FC<Props> = ({
                 </Button>
               )}
 
+              {showBilling ? (
               <Tag
                 style={{
                   // background:
@@ -345,6 +350,7 @@ const NavbarUser: React.FC<Props> = ({
                   )}
                 </div>
               </Tag>
+              ) : null}
               <div
                 className={`flex items-center ${
                   isMobile ? "gap-1" : "gap-2 sm:gap-4"
