@@ -152,6 +152,7 @@ const PhotoKioskPage = () => {
           selectedPhoto={selectedPhoto}
           submitting={submitting}
           onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
+          onChangeTemplate={() => setStep("template")}
           onGenerate={startGeneration}
         />
       )}

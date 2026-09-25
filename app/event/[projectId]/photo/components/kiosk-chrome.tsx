@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Check, ChevronLeft, Maximize, Minimize } from "lucide-react";
+import { ChevronLeft, Maximize, Minimize } from "lucide-react";
 import { KIOSK_STEPS, TKioskStep } from "../kiosk.types";
 
 interface KioskChromeProps {
@@ -12,6 +12,7 @@ interface KioskChromeProps {
 export default function KioskChrome({ step, onBack }: KioskChromeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const activeIndex = KIOSK_STEPS.findIndex((s) => s.key === step);
+  const active = KIOSK_STEPS[activeIndex];
 
   useEffect(() => {
     const sync = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -33,20 +34,24 @@ export default function KioskChrome({ step, onBack }: KioskChromeProps) {
       <button type="button" className="kiosk-icon-btn" onClick={onBack} aria-label="Back">
         <ChevronLeft size={22} />
       </button>
-      <div className="kiosk-steps">
-        {KIOSK_STEPS.map((item, index) => (
-          <React.Fragment key={item.key}>
-            {index > 0 && <div className="kiosk-step-line" />}
-            <div
-              className={`kiosk-step-dot ${index === activeIndex ? "is-active" : ""} ${
-                index < activeIndex ? "is-done" : ""
-              }`}
-            >
-              <span>{index < activeIndex ? <Check size={14} /> : index + 1}</span>
-              <em style={{ fontStyle: "normal" }}>{item.label}</em>
-            </div>
-          </React.Fragment>
-        ))}
+      <div className="kiosk-progress">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="kiosk-logo" src="/images/Logo.png" alt="AI CAVE" />
+        <div className="kiosk-progress-bars">
+          {KIOSK_STEPS.map((item, index) => (
+            <span
+              key={item.key}
+              className={
+                index === activeIndex ? "is-active" : index < activeIndex ? "is-done" : ""
+              }
+            />
+          ))}
+        </div>
+        {active && (
+          <div className="kiosk-progress-label">
+            <b>{String(activeIndex + 1).padStart(2, "0")}</b> / 04 · {active.th} · {active.en}
+          </div>
+        )}
       </div>
       <button
         type="button"

@@ -21,38 +21,38 @@ export default function TemplateStep({
   return (
     <div className="kiosk-content">
       <div className="kiosk-heading">
-        <h1>{projectName || "AI Photo Booth"}</h1>
-        <p>Choose your style</p>
+        <span className="kiosk-eyebrow">{projectName || "AI Photo Booth"}</span>
+        <h1>เลือกสไตล์ของคุณ</h1>
+        <span className="kiosk-sub kiosk-serif">Choose your style</span>
       </div>
       {!loading && templates.length === 0 ? (
         <div className="kiosk-empty">
-          <Sparkles size={48} />
-          No templates yet — add them in Photo Event › Templates
+          <Sparkles size={44} color="var(--k-accent)" />
+          ยังไม่มีสไตล์ให้เลือก — เพิ่มได้ที่ Photo Event › Setting
+          <span className="kiosk-serif">No styles yet</span>
         </div>
       ) : (
         <div className="kiosk-template-grid kiosk-scroll">
           {templates.map((template, index) => (
-            <div
+            <button
+              type="button"
               key={template.promptGuideId}
-              className="kiosk-template-card"
-              style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+              className="kiosk-card"
+              style={{ animationDelay: `${Math.min(index * 50, 450)}ms` }}
+              onClick={() => onSelect(template)}
             >
-              <div className="kiosk-frame">
-                {template.imageUrls[0] && (
-                  <LoadingImage className="kiosk-img" src={template.imageUrls[0]} alt={template.title} />
-                )}
+              {template.imageUrls[0] && (
+                <LoadingImage
+                  className="kiosk-img"
+                  src={template.imageUrls[0]}
+                  alt={template.title}
+                />
+              )}
+              <div className="kiosk-card-meta">
+                <div className="kiosk-card-title">{template.title}</div>
+                <span className="kiosk-pill">เลือก · Select</span>
               </div>
-              <div className="kiosk-template-body">
-                <div className="kiosk-template-title">{template.title}</div>
-                <button
-                  type="button"
-                  className="kiosk-btn is-primary"
-                  onClick={() => onSelect(template)}
-                >
-                  Select
-                </button>
-              </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

@@ -1,10 +1,10 @@
 export type TKioskStep = "template" | "photo" | "generating" | "result";
 
-export const KIOSK_STEPS: readonly { key: TKioskStep; label: string }[] = [
-  { key: "template", label: "Style" },
-  { key: "photo", label: "Photo" },
-  { key: "generating", label: "Create" },
-  { key: "result", label: "Download" },
+export const KIOSK_STEPS: readonly { key: TKioskStep; th: string; en: string }[] = [
+  { key: "template", th: "เลือกสไตล์", en: "Style" },
+  { key: "photo", th: "เลือกรูป", en: "Photo" },
+  { key: "generating", th: "สร้างภาพ", en: "Create" },
+  { key: "result", th: "ดาวน์โหลด", en: "Download" },
 ] as const;
 
 /** ไม่มีการแตะหน้าจอนานเท่านี้ → กลับไปหน้าเลือก template */

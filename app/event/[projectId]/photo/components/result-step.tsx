@@ -21,10 +21,12 @@ export default function ResultStep({
   return (
     <div className="kiosk-content">
       <div className="kiosk-heading">
-        <h1>Your photo is ready!</h1>
+        <span className="kiosk-eyebrow">Step 04 · Your photo is ready</span>
+        <h1>ภาพของคุณพร้อมแล้ว</h1>
+        <span className="kiosk-sub kiosk-serif">Scan the code to keep it</span>
       </div>
       <div className="kiosk-result">
-        <div className="kiosk-frame">
+        <div className="kiosk-hero">
           {generation.resultUrl && (
             <LoadingImage className="kiosk-img" src={generation.resultUrl} alt="Your AI photo" />
           )}
@@ -33,19 +35,19 @@ export default function ResultStep({
           <div className="kiosk-qr-card">
             <QRCode
               value={buildPhotoShareUrl(generation.id)}
-              size={200}
+              size={196}
               bordered={false}
               bgColor="#ffffff"
-              color="#000000"
+              color="#191c20"
             />
             <div>
-              <strong>Scan to download</strong>
-              <span>Open your camera and point it at the code</span>
+              <strong>สแกนเพื่อดาวน์โหลด</strong>
+              <span>Scan to download · เปิดกล้องมือถือแล้วส่องที่โค้ด</span>
             </div>
           </div>
           <button type="button" className="kiosk-btn" onClick={onRestart}>
             <RotateCcw size={22} />
-            Start over ({idleSecondsLeft}s)
+            เริ่มใหม่ <small>Start over · {idleSecondsLeft}s</small>
           </button>
         </div>
       </div>

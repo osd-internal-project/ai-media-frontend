@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { kioskFontVariables } from "@/app/components/photo-event/fonts";
 
 export const metadata: Metadata = {
   title: "AI CAVE · Photo Event",
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 export default function EventLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return <AntdRegistry>{children}</AntdRegistry>;
+  return (
+    <AntdRegistry>
+      <div className={kioskFontVariables}>{children}</div>
+    </AntdRegistry>
+  );
 }

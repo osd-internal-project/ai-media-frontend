@@ -1,0 +1,5 @@
+/* ชนะกฎ `* { font-family: 'Prompt' !important }` ใน globals.css — ฟอนต์จริงโหลดผ่าน next/font */
+.share-root,
+.share-root * {
+  font-family: var(--font-kiosk-sans), "Prompt", sans-serif !important;
+}
