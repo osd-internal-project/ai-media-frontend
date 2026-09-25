@@ -26,6 +26,7 @@ import UploadsServices from "@/app/services/uploads.service";
 import { useSession } from "next-auth/react";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -334,25 +335,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
-          await new Promise<void>((resolve, reject) => {
-            const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
-            img.onload = () => {
-              const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
-              if (minSide < 300) {
-                reject(
-                  "Image size is too small, minimum side length must not be less than 300 px",
-                );
-              } else {
-                resolve();
-              }
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-          });
+          // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+          const size = await readImageSize(fileToUpload as Blob);
+          if (size && Math.min(size.width, size.height) < 300) {
+            throw "Image size is too small, minimum side length must not be less than 300 px";
+          }
         } catch (error) {
           openNotificationWithIcon("error", String(error));
           setIsLoadingUpload(false);
@@ -415,25 +402,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
         const fileToUpload = file.originFileObj || file;
         if (fileToUpload instanceof Blob) {
           try {
-            await new Promise<void>((resolve, reject) => {
-              const img = new window.Image();
-              img.src = URL.createObjectURL(fileToUpload as Blob);
-              img.onload = () => {
-                const minSide = Math.min(img.width, img.height);
-                URL.revokeObjectURL(img.src);
-                if (minSide < 300) {
-                  reject(
-                    "Image size is too small, minimum side length must not be less than 300 px",
-                  );
-                } else {
-                  resolve();
-                }
-              };
-              img.onerror = () => {
-                URL.revokeObjectURL(img.src);
-                resolve();
-              };
-            });
+            // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+            const size = await readImageSize(fileToUpload as Blob);
+            if (size && Math.min(size.width, size.height) < 300) {
+              throw "Image size is too small, minimum side length must not be less than 300 px";
+            }
           } catch (error) {
             openNotificationWithIcon("error", String(error));
             setIsLoadingFirstFrame(false);
@@ -469,25 +442,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
         const fileToUpload = file.originFileObj || file;
         if (fileToUpload instanceof Blob) {
           try {
-            await new Promise<void>((resolve, reject) => {
-              const img = new window.Image();
-              img.src = URL.createObjectURL(fileToUpload as Blob);
-              img.onload = () => {
-                const minSide = Math.min(img.width, img.height);
-                URL.revokeObjectURL(img.src);
-                if (minSide < 300) {
-                  reject(
-                    "Image size is too small, minimum side length must not be less than 300 px",
-                  );
-                } else {
-                  resolve();
-                }
-              };
-              img.onerror = () => {
-                URL.revokeObjectURL(img.src);
-                resolve();
-              };
-            });
+            // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+            const size = await readImageSize(fileToUpload as Blob);
+            if (size && Math.min(size.width, size.height) < 300) {
+              throw "Image size is too small, minimum side length must not be less than 300 px";
+            }
           } catch (error) {
             openNotificationWithIcon("error", String(error));
             setIsLoadingLastFrame(false);

@@ -46,12 +46,7 @@ export default function CameraCaptureModal({
     streamRef.current = null;
   }, []);
 
-  const clearSnapshot = useCallback(() => {
-    setSnapshot((prev) => {
-      if (prev) URL.revokeObjectURL(prev.previewUrl);
-      return null;
-    });
-  }, []);
+  const clearSnapshot = useCallback(() => setSnapshot(null), []);
 
   useEffect(() => {
     if (!open || snapshot) return;
@@ -107,7 +102,8 @@ export default function CameraCaptureModal({
         }
         const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
         stopStream();
-        setSnapshot({ file, previewUrl: URL.createObjectURL(blob) });
+        // data: URL แทน blob: — CSP ของ prod บล็อก blob: สำหรับรูป
+        setSnapshot({ file, previewUrl: canvas.toDataURL("image/jpeg", JPEG_QUALITY) });
       },
       "image/jpeg",
       JPEG_QUALITY,

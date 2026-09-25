@@ -16,3 +16,32 @@ export function fileToDataUrl(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+/**
+ * Read an image's pixel size without a `blob:` URL (CSP-safe); `null` if it cannot be decoded.
+ */
+export async function readImageSize(
+  blob: Blob,
+): Promise<{ width: number; height: number } | null> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(blob);
+      const size = { width: bitmap.width, height: bitmap.height };
+      bitmap.close();
+      return size;
+    } catch {
+      // บาง browser decode บางชนิดไฟล์ไม่ได้ — ลองผ่าน <img> ด้านล่าง
+    }
+  }
+  try {
+    const dataUrl = await fileToDataUrl(blob);
+    return await new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+  } catch {
+    return null;
+  }
+}

@@ -40,6 +40,7 @@ import type {
   RefImage,
 } from "../../tab-layout/types/generator-config.type";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
 
 /** Props for each version's form input component */
 export interface VideoInputProps {
@@ -740,23 +741,11 @@ const ChatGenerateVideo: FC<Props> = ({
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
-          await new Promise<void>((resolve, reject) => {
-            const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
-            img.onload = () => {
-              const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
-              if (minSide < 300)
-                reject(
-                  "Image size is too small, minimum side length must not be less than 300 px",
-                );
-              else resolve();
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-          });
+          // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+          const size = await readImageSize(fileToUpload as Blob);
+          if (size && Math.min(size.width, size.height) < 300) {
+            throw "Image size is too small, minimum side length must not be less than 300 px";
+          }
         } catch (error) {
           openNotificationWithIcon("error", String(error));
           return;
@@ -854,23 +843,11 @@ const ChatGenerateVideo: FC<Props> = ({
       ) {
         setIsLoadingUpload(true);
         try {
-          await new Promise<void>((resolve, reject) => {
-            const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
-            img.onload = () => {
-              const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
-              if (minSide < 300)
-                reject(
-                  "Image size is too small, minimum side length must not be less than 300 px",
-                );
-              else resolve();
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-          });
+          // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+          const size = await readImageSize(fileToUpload as Blob);
+          if (size && Math.min(size.width, size.height) < 300) {
+            throw "Image size is too small, minimum side length must not be less than 300 px";
+          }
         } catch (error) {
           openNotificationWithIcon("error", String(error));
           setIsLoadingUpload(false);
