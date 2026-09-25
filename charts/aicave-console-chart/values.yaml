@@ -37,11 +37,11 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "32k"
     nginx.ingress.kubernetes.io/large-client-header-buffers: "4 32k"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-      more_set_headers "Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; media-src 'self' blob: data: https:; img-src 'self' blob: data: https:;";
+    more_set_headers "Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; media-src 'self' blob: data: https:;";
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
-      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=(self)"; 
+      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()"; 
     # จำกัดการส่งข้อมูลออก (Transmit) ของ Pod นี้ไว้ไม่ให้เกิน 10 Mbps
     kubernetes.io/egress-bandwidth: "10M"
         # (เลือกใส่หรือไม่ก็ได้) จำกัดขาเข้า Pod
