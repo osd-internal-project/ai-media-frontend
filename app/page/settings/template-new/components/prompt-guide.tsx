@@ -54,7 +54,7 @@ export interface props {
   onUpdatePromptGuide: (values: TPromptGuide) => void;
   onCreatePromptGuideType: (values: any) => void;
   onDeletePromptGuideType: (id: number) => void;
-  onCreatePromptGuide: (values: any) => void;
+  onCreatePromptGuide: (values: any) => Promise<boolean>;
   onDeletePromptGuide: (id: number) => void;
   canManage: boolean;
   generateType: TGenerateType | "all";
@@ -259,11 +259,12 @@ const PromptGuideComponent: FC<props> = ({
   );
 
   const renderFileEditor = () => {
-    if (generateType === "video") {
+    const editingType = selectedPromptGuide?.generateType ?? generateType;
+    if (editingType === "video") {
       return renderVideoUpload();
     }
 
-    if (generateType === "omnihumen") {
+    if (editingType === "omnihumen") {
       return renderDualUpload(
         {
           accept: "image/*",
@@ -284,7 +285,7 @@ const PromptGuideComponent: FC<props> = ({
       );
     }
 
-    if (generateType === "dreamactor") {
+    if (editingType === "dreamactor") {
       return renderDualUpload(
         {
           accept: "image/*",
@@ -434,9 +435,10 @@ const PromptGuideComponent: FC<props> = ({
         isMobile={isMobile}
         promptGuideTypes={promptGuideTypes}
         onCancel={() => setIsGuideModalOpen(false)}
-        onSubmit={(values) => {
-          onCreatePromptGuide(values);
+        onSubmit={async (values) => {
           setIsGuideModalOpen(false);
+          // create modal ไม่มีช่องรูป — เปิด edit ของ template ใหม่ให้ upload ต่อ
+          if (await onCreatePromptGuide(values)) setIsEditModalOpen(true);
         }}
       />
 

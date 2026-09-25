@@ -1,0 +1,412 @@
+/* Kiosk photo booth — ออกแบบสำหรับจอแนวตั้ง 1080x1920 และรองรับแนวนอน */
+.kiosk-root {
+  --kiosk-accent: #6f6ade;
+  --kiosk-accent-soft: rgba(111, 106, 222, 0.22);
+  --kiosk-surface: rgba(255, 255, 255, 0.06);
+  --kiosk-border: rgba(255, 255, 255, 0.12);
+  --kiosk-muted: rgba(255, 255, 255, 0.62);
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  background:
+    radial-gradient(1200px 800px at 15% -10%, rgba(111, 106, 222, 0.35), transparent 60%),
+    radial-gradient(900px 700px at 110% 110%, rgba(236, 72, 153, 0.18), transparent 60%),
+    #0d0f14;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overflow: hidden;
+}
+
+/* ── Top chrome ───────────────────────────────────────────── */
+.kiosk-chrome {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  padding: 16px 20px 8px;
+  flex-shrink: 0;
+}
+.kiosk-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--kiosk-border);
+  background: var(--kiosk-surface);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.kiosk-icon-btn:active { background: var(--kiosk-accent-soft); }
+.kiosk-icon-btn:disabled { opacity: 0.35; cursor: default; }
+.kiosk-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.kiosk-step-dot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--kiosk-muted);
+}
+.kiosk-step-dot span {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--kiosk-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+.kiosk-step-dot.is-active { color: #fff; }
+.kiosk-step-dot.is-active span,
+.kiosk-step-dot.is-done span {
+  background: var(--kiosk-accent);
+  border-color: var(--kiosk-accent);
+  color: #fff;
+}
+.kiosk-step-line { width: 28px; height: 1px; background: var(--kiosk-border); }
+
+/* ── Shared ───────────────────────────────────────────────── */
+.kiosk-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 32px 28px;
+  gap: 20px;
+}
+.kiosk-heading { text-align: center; flex-shrink: 0; }
+.kiosk-heading h1 {
+  margin: 0;
+  font-size: clamp(28px, 4.2vmin, 56px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.kiosk-heading p {
+  margin: 6px 0 0;
+  font-size: clamp(16px, 2.2vmin, 26px);
+  color: var(--kiosk-muted);
+}
+.kiosk-btn {
+  min-height: 60px;
+  padding: 0 32px;
+  border-radius: 999px;
+  border: 1px solid var(--kiosk-border);
+  background: var(--kiosk-surface);
+  color: #fff;
+  font-size: clamp(18px, 2.2vmin, 26px);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 150ms ease;
+}
+.kiosk-btn:active { transform: scale(0.97); }
+.kiosk-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.kiosk-btn.is-primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #7c77f0, #b05ce8);
+  box-shadow: 0 12px 32px rgba(124, 119, 240, 0.35);
+}
+.kiosk-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+.kiosk-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--kiosk-surface);
+  border: 1px solid var(--kiosk-border);
+}
+.kiosk-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--kiosk-muted);
+  font-size: clamp(18px, 2.4vmin, 28px);
+  text-align: center;
+}
+.kiosk-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* ── Step 1: templates ────────────────────────────────────── */
+.kiosk-template-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  gap: 20px;
+  padding-bottom: 8px;
+}
+.kiosk-template-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--kiosk-surface);
+  border: 1px solid var(--kiosk-border);
+  animation: kiosk-rise 360ms ease both;
+}
+.kiosk-template-card .kiosk-frame { border: none; border-radius: 0; }
+.kiosk-template-body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kiosk-template-title {
+  font-size: clamp(16px, 2vmin, 24px);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kiosk-template-body .kiosk-btn { min-height: 56px; width: 100%; padding: 0 12px; }
+
+/* ── Step 2: photo picker ─────────────────────────────────── */
+.kiosk-photo-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "template preview" "strip strip";
+  gap: 20px;
+}
+.kiosk-panel {
+  border-radius: 22px;
+  background: var(--kiosk-surface);
+  border: 1px solid var(--kiosk-border);
+  padding: 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kiosk-panel-title {
+  font-size: clamp(14px, 1.8vmin, 20px);
+  color: var(--kiosk-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.kiosk-template-panel { grid-area: template; }
+.kiosk-template-panel .kiosk-frame {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+.kiosk-template-panel h2 { margin: 0; font-size: clamp(20px, 2.6vmin, 32px); color: #fff; }
+.kiosk-template-panel p {
+  margin: 0;
+  color: var(--kiosk-muted);
+  font-size: clamp(14px, 1.7vmin, 20px);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kiosk-preview-panel { grid-area: preview; align-items: center; }
+.kiosk-preview-panel .kiosk-frame {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  max-width: 100%;
+}
+.kiosk-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--kiosk-muted);
+  font-size: clamp(16px, 2vmin, 24px);
+  border: 2px dashed var(--kiosk-border);
+  border-radius: 20px;
+}
+.kiosk-preview-panel .kiosk-btn { width: 100%; flex-shrink: 0; }
+.kiosk-strip-panel { grid-area: strip; }
+/* แถวเดียว เลื่อนแนวนอน — รูปใหม่อยู่ซ้ายสุด */
+.kiosk-strip-grid {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.kiosk-strip-panel .kiosk-empty { min-height: clamp(120px, 14vh, 200px); }
+.kiosk-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  height: clamp(120px, 14vh, 200px);
+  scroll-snap-align: start;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: var(--kiosk-surface);
+  cursor: pointer;
+  animation: kiosk-rise 320ms ease both;
+}
+.kiosk-thumb.is-selected {
+  border-color: var(--kiosk-accent);
+  box-shadow: 0 0 0 4px var(--kiosk-accent-soft);
+}
+.kiosk-thumb.is-new { animation: kiosk-rise 320ms ease both, kiosk-glow 1.6s ease 3; }
+.kiosk-thumb-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #ec4899;
+  color: #fff;
+}
+.kiosk-thumb-check {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--kiosk-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Step 3: generating ───────────────────────────────────── */
+.kiosk-generating {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+}
+.kiosk-generating .kiosk-frame {
+  height: min(52vh, 70vw);
+  max-width: 90vw;
+}
+.kiosk-generating .kiosk-frame img { filter: blur(10px) saturate(1.2); transform: scale(1.1); }
+.kiosk-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: kiosk-shimmer 1.8s linear infinite;
+}
+.kiosk-progress-ring {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(40px, 7vmin, 88px);
+  font-weight: 800;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+.kiosk-generating h2 { margin: 0; font-size: clamp(24px, 3.4vmin, 44px); color: #fff; }
+.kiosk-generating p { margin: 0; color: var(--kiosk-muted); font-size: clamp(16px, 2.2vmin, 26px); min-height: 1.5em; }
+.kiosk-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+/* ── Step 4: result ───────────────────────────────────────── */
+.kiosk-result {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.kiosk-result .kiosk-frame {
+  height: min(58vh, 80vw);
+  max-width: 92vw;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  animation: kiosk-pop 520ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.kiosk-result-side {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.kiosk-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 22px 16px 16px;
+  border-radius: 22px;
+  background: #fff;
+  color: #111;
+}
+.kiosk-qr-card strong { display: block; font-size: clamp(18px, 2.4vmin, 28px); }
+.kiosk-qr-card span { color: #555; font-size: clamp(13px, 1.6vmin, 18px); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (orientation: landscape) {
+  .kiosk-template-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .kiosk-result { flex-direction: row; gap: 48px; }
+  .kiosk-result .kiosk-frame { height: min(76vh, 60vw); }
+  .kiosk-result-side { flex-direction: column; }
+  .kiosk-generating .kiosk-frame { height: min(56vh, 40vw); }
+}
+@media (max-width: 720px) {
+  .kiosk-content { padding: 8px 14px 16px; }
+  .kiosk-template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .kiosk-step-dot em { display: none; }
+}
+
+@keyframes kiosk-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes kiosk-glow {
+  50% { box-shadow: 0 0 0 6px rgba(236, 72, 153, 0.55); }
+}
+@keyframes kiosk-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -100% 0; }
+}
+@keyframes kiosk-pop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}

@@ -132,7 +132,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
               mappedPath,
               `${mappedPath}/${currentPathSub}`,
             ]}
-            items={renderMenuItems(MenuSider, organizationRole)}
+            items={renderMenuItems(MenuSider, organizationRole, systemRole)}
             className="osd-menu-padding"
           /> 
         </div>

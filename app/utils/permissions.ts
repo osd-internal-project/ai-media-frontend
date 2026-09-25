@@ -28,6 +28,7 @@ export const organizationPermissions = {
   viewDashboard: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
   viewTemplates: ["OWNER", "ADMIN", "MEMBER", "SUPER_ADMIN"] as OrganizationRole[],
   manageTemplates: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
+  managePhotoEvent: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
 };
 
 export const projectPermissions = {
@@ -70,6 +71,9 @@ export const canViewTemplates = (organizationRole: string | undefined) =>
 
 export const canManageTemplates = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.manageTemplates, organizationRole);
+
+export const canManagePhotoEvent = (organizationRole: string | undefined) =>
+  checkRole(organizationPermissions.managePhotoEvent, organizationRole);
 
 /** Plans, checkout and credits stay hidden until billing ships — SUPER_ADMIN bypasses. */
 export const canSeeBilling = (systemRole: string | null | undefined) =>

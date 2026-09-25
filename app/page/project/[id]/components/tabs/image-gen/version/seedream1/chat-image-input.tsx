@@ -18,6 +18,7 @@ import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../../../tab-layout/generate-section/upload-section";
 import DrawToImage from "../../shared/draw-to-image";
 import PromptSection from "../../../../tab-layout/generate-section/prompt-section";
+import { PROMPT_MAX_LENGTH } from "@/app/config/prompt";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
@@ -260,6 +261,7 @@ export default function ChatImageInput({
             placeholder="Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."
             required={true}
             projectId={projectId}
+            maxLength={PROMPT_MAX_LENGTH}
           />
 
           <PromptTemplateSection
