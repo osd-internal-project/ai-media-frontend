@@ -58,6 +58,17 @@ export interface IOrganizationInvitation {
   expiredAt: string;
 }
 
+/** คำเชิญที่ยังรอตอบของ user ที่ login อยู่ — ใช้แสดงในกระดิ่ง noti */
+export interface IPendingInvitation {
+  id: string;
+  token: string;
+  organizationId: string;
+  organizationName: string | null;
+  role: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
 export interface IOrganization {
   id: number;
   organizationId: string;

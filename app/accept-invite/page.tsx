@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Form, Input, Button, Spin, notification, Divider, FormInstance, message, Checkbox } from "antd";
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
@@ -293,6 +294,13 @@ const AcceptInviteContent = () => {
     const [isError, setIsError] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
     const [notificationApi, contextHolderNotification] = notification.useNotification();
+    const { data: session, status: sessionStatus, update: updateSession } = useSession();
+    const [invitedEmail, setInvitedEmail] = useState("");
+    const isLoggedIn = sessionStatus === "authenticated";
+    const sessionEmail = session?.user?.email ?? "";
+    // login อยู่ด้วยบัญชีอื่น — ห้ามกดยอมรับแทนเจ้าของ email
+    const emailMismatch =
+        isLoggedIn && Boolean(invitedEmail) && sessionEmail.toLowerCase() !== invitedEmail.toLowerCase();
 
 
     useEffect(() => {
@@ -321,6 +329,7 @@ const AcceptInviteContent = () => {
                     fullname: invitationDetail.fullname,
                 })
                 setUserExists(invitationDetail.hasAccount);
+                setInvitedEmail(invitationDetail.email);
                 setIsError(false);
             } else {
                 setIsError(true);
@@ -343,11 +352,21 @@ const AcceptInviteContent = () => {
             const response = await organizationService.acceptInvitation({
                 ...registerData,
                 fullname,
-                token: token ?? ""
+                token: token ?? "",
+                ...(isLoggedIn && session?.user?.id && { userId: session.user.id }),
             });
             if (response) {
                 messageApi.success("Invitation accepted successfully");
-                router.push("page/project");
+                if (isLoggedIn && response.organizationId) {
+                    // สลับเข้า org ใหม่ทันที แบบเดียวกับ handleOrganizationChange ใน PrivateLayout
+                    await updateSession({
+                        ...session,
+                        user: { ...session?.user, organizationId: response.organizationId },
+                    });
+                    window.location.href = "/page/project";
+                    return;
+                }
+                router.push("/page/project");
             }
         } catch (error: any) {
             console.error("Error accepting invitation:", error);
@@ -433,12 +452,20 @@ const AcceptInviteContent = () => {
                         >
                             <InvitationInfo form={form} userExists={userExists} />
 
-                            {!userExists && <RegistrationFields />}
+                            {!userExists && !emailMismatch && <RegistrationFields />}
+
+                            {emailMismatch && (
+                                <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                                    This invitation was sent to <b>{invitedEmail}</b>, but you are signed in as{" "}
+                                    <b>{sessionEmail}</b>. Sign in with the invited account to accept it.
+                                </div>
+                            )}
 
                             <Form.Item className="mb-0 mt-6">
                                 <Button
                                     htmlType="submit"
                                     loading={submitting}
+                                    disabled={emailMismatch}
                                     style={{
                                         backgroundColor: "#5465FF",
                                         color: "white",

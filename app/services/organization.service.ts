@@ -1,5 +1,9 @@
 import { AxiosInstance } from "axios";
-import { IOrganization, IOrganizationInvitation } from "../common/organization.type";
+import {
+  IOrganization,
+  IOrganizationInvitation,
+  IPendingInvitation,
+} from "../common/organization.type";
 
 const OrganizationServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/organization";
@@ -121,6 +125,8 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
       password: string;
       fullname: string;
       phoneNumber: string;
+      /** Keycloak sub ของคนที่ login อยู่ — backend เช็คว่า email ตรงกับคำเชิญ */
+      userId?: string;
     }) => {
       return await axiosInstance
         .post(`${baseUrl}/invitation/accept`, value)
@@ -143,6 +149,15 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
         })
         .catch((err) => {
           throw err;
+        });
+    },
+    findPendingInvitations: async (email: string): Promise<IPendingInvitation[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/invitation/pending`, { params: { email } })
+        .then((res) => res.data ?? [])
+        .catch((err) => {
+          console.log(err);
+          return [];
         });
     },
     findInvitationsByOrganization: async (organizationId: string): Promise<IOrganizationInvitation[]> => {

@@ -41,6 +41,7 @@ import type {
 } from "../../tab-layout/types/generator-config.type";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
+import { fetchOlderTasks, HISTORY_PAGE_SIZE } from "../fetch-older-tasks";
 
 /** Props for each version's form input component */
 export interface VideoInputProps {
@@ -182,6 +183,8 @@ const ChatGenerateVideo: FC<Props> = ({
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
+    setHasMore(true);
+    setLoading(true);
     isFirstLoad.current = true;
     fetchMessages();
   }, [projectId, activeKey, teamView]);
@@ -242,7 +245,7 @@ const ChatGenerateVideo: FC<Props> = ({
       if (isFetchingHistory || type === "loadmore") {
         isLoadingMoreRef.current = true;
       }
-      if (messageData.length < currentLimitRef.current) {
+      if (type === "reload" && messageData.length < currentLimitRef.current) {
         setHasMore(false);
       }
       if (messageData.length === 0) {
@@ -277,10 +280,7 @@ const ChatGenerateVideo: FC<Props> = ({
           const newItems = itemsToProcess.filter(
             (m: Message) => !existingIds.has(m.taskId),
           );
-          if (newItems.length === 0) {
-            setHasMore(false);
-            return prev;
-          }
+          if (newItems.length === 0) return prev;
           return [...prev, ...newItems];
         });
         isFirstLoad.current = false;
@@ -334,6 +334,7 @@ const ChatGenerateVideo: FC<Props> = ({
       }
       generateMessage(data, "reload");
     }
+    if (!data) setLoading(false);
     fetchCredit();
   };
 
@@ -349,20 +350,28 @@ const ChatGenerateVideo: FC<Props> = ({
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
-      organizationId: session?.user?.organizationId || "",
-      type: "video",
-      skip: 0,
-      take: 1,
-      fristsql: fristRowSeq,
-      ...(!teamView && { userId: userId }),
-    });
-    if (data && data.length > 0) {
-      const seqValues = data
-        .map((p) => p.seq)
-        .filter((s): s is number => s !== undefined && s !== null);
-      if (seqValues.length > 0) setFristRowSeq(Math.min(...seqValues));
-      generateMessage(data, "loadmore");
+    try {
+      const result = await fetchOlderTasks<Message>(
+        fristRowSeq,
+        new Set(messagesRef.current.map((m) => m.id)),
+        (fristsql) =>
+          logsService.findProjectTaskByPage(projectId, {
+            organizationId: session?.user?.organizationId || "",
+            type: "video",
+            skip: 0,
+            take: HISTORY_PAGE_SIZE,
+            fristsql,
+            ...(!teamView && { userId: userId }),
+          }),
+      );
+      if (result.status === "end") setHasMore(false);
+      if (result.status !== "found") return;
+      setFristRowSeq(result.cursor);
+      if (result.items.length > 0) generateMessage(result.items, "loadmore");
+    } finally {
+      // reset ทุกกรณี — ได้ [] หรือ request พังต้องไม่ทิ้ง spinner ค้าง
+      isFetchingRef.current = false;
+      setIsFetchingHistory(false);
     }
   };
 
@@ -615,8 +624,6 @@ const ChatGenerateVideo: FC<Props> = ({
           message: `Joined room ${projectId}`,
         });
       }
-      setLoading(true);
-      isFirstLoad.current = true;
     }
   }, [socket, projectId, activeKey]);
 
@@ -628,6 +635,7 @@ const ChatGenerateVideo: FC<Props> = ({
     isAtBottomRef.current = isAtBottom;
     if (
       target.scrollTop === 0 &&
+      hasMore &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current

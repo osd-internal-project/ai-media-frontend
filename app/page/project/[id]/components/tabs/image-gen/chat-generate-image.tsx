@@ -72,6 +72,7 @@ import ResultItem from "./shared/image-result-item";
 import { TPromptGuide } from "@/app/common/prompt-guide.type";
 import AssistantModal from "../../assistant/assistant-modal";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
+import { fetchOlderTasks, HISTORY_PAGE_SIZE } from "../fetch-older-tasks";
 
 export interface ImageChatProps {
   teamView: boolean;
@@ -239,7 +240,6 @@ const ChatGenerateImage: FC<
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   const initialPageSize = 3;
-  const historyPageSize = 1;
   const currentLimitRef = useRef<number>(initialPageSize);
   const { socket, isConnected } = useWebSocket();
   const [form] = Form.useForm();
@@ -290,6 +290,8 @@ const ChatGenerateImage: FC<
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
+    setHasMore(true);
+    setLoading(true);
     isFirstLoad.current = true;
     fetchMessages();
   }, [projectId, activeKey, teamView]);
@@ -304,8 +306,6 @@ const ChatGenerateImage: FC<
           message: `Joined room ${projectId}`,
         });
       }
-      setLoading(true);
-      isFirstLoad.current = true;
       // loadMoreMessages(0, false, currentId);
     }
     fetchCredit();
@@ -611,6 +611,7 @@ const ChatGenerateImage: FC<
     isAtBottomRef.current = isAtBottom;
     if (
       target.scrollTop === 0 &&
+      hasMore &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
@@ -674,6 +675,7 @@ const ChatGenerateImage: FC<
       }
       generateMessage(data, "reload");
     }
+    if (!data) setLoading(false);
     fetchCredit();
   };
 
@@ -691,23 +693,28 @@ const ChatGenerateImage: FC<
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
-      organizationId: session?.user?.organizationId || "",
-      type: "image",
-      skip: 0,
-      take: 1,
-      fristsql: fristRowSeq,
-      ...(!teamView && { userId: userId }),
-    });
-    if (data && data.length > 0) {
-      const seqValues = data
-        .map((p) => p.seq)
-        .filter((s) => s !== undefined && s !== null);
-      if (seqValues && seqValues.length > 0) {
-        const minSeq = Math.min(...seqValues);
-        setFristRowSeq(minSeq);
-      }
-      generateMessage(data, "loadmore");
+    try {
+      const result = await fetchOlderTasks<Message>(
+        fristRowSeq,
+        new Set(messagesRef.current.map((m) => m.id)),
+        (fristsql) =>
+          logsService.findProjectTaskByPage(projectId, {
+            organizationId: session?.user?.organizationId || "",
+            type: "image",
+            skip: 0,
+            take: HISTORY_PAGE_SIZE,
+            fristsql,
+            ...(!teamView && { userId: userId }),
+          }),
+      );
+      if (result.status === "end") setHasMore(false);
+      if (result.status !== "found") return;
+      setFristRowSeq(result.cursor);
+      if (result.items.length > 0) generateMessage(result.items, "loadmore");
+    } finally {
+      // reset ทุกกรณี — ได้ [] หรือ request พังต้องไม่ทิ้ง spinner ค้าง
+      isFetchingRef.current = false;
+      setIsFetchingHistory(false);
     }
   };
   const fetchNewMessage = async () => {
@@ -736,7 +743,7 @@ const ChatGenerateImage: FC<
     if (isFetchingHistory || type === "loadmore") {
       isLoadingMoreRef.current = true;
     }
-    if (messageData.length < currentLimitRef.current) {
+    if (type === "reload" && messageData.length < currentLimitRef.current) {
       setHasMore(false);
     }
     if (messageData.length === 0) {
@@ -777,10 +784,7 @@ const ChatGenerateImage: FC<
           (m: Message) => !existingTaskIds.has(m.taskId),
         );
 
-        if (uniqueNewMessages.length === 0) {
-          setHasMore(false);
-          return prev;
-        }
+        if (uniqueNewMessages.length === 0) return prev;
         return [...prev, ...uniqueNewMessages];
       });
       isFirstLoad.current = false;

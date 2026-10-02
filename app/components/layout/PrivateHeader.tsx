@@ -32,6 +32,7 @@ import useResponsive from "@/app/hooks/useResponsive";
 import { formatCompactNumber } from "@/app/utils/format";
 import { canSeeBilling } from "@/app/utils/permissions";
 import ThemeToggleButton from "../ThemeToggleButton";
+import InvitationBell from "./InvitationBell";
 import { useThemeMode } from "../ThemeProvider";
 import "./LayoutStyle.css";
 import { User ,Users} from "lucide-react";
@@ -337,6 +338,10 @@ export function PrivateHeader({
           </Space>
         </Card>
         ) : null}
+
+        <div className="private-header-action-wrap">
+          <InvitationBell />
+        </div>
 
         <div className="private-header-action-wrap">
           <ThemeToggleButton />

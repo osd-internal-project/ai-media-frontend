@@ -35,6 +35,7 @@ import OmniResultItem from "./shared/omni-result";
 import OmnihumenResultHeader from "./shared/header";
 import { getSecondsFileDuration } from "@/app/utils/fileUtil";
 import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
+import { fetchOlderTasks, HISTORY_PAGE_SIZE } from "../fetch-older-tasks";
 
 export interface OmniHumanChatProps {
   projectId: string;
@@ -202,7 +203,6 @@ const ChatGenerateOmnihumen: FC<
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   const initialPageSize = 3;
-  const historyPageSize = 1;
   const currentLimitRef = useRef<number>(initialPageSize);
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
@@ -266,6 +266,8 @@ const ChatGenerateOmnihumen: FC<
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
+    setHasMore(true);
+    setLoading(true);
     isFirstLoad.current = true;
     fetchMessages();
   }, [projectId, activeKey, teamView]);
@@ -359,7 +361,7 @@ const ChatGenerateOmnihumen: FC<
       if (isFetchingHistory || type === "loadmore") {
         isLoadingMoreRef.current = true;
       }
-      if (messageData.length < currentLimitRef.current) {
+      if (type === "reload" && messageData.length < currentLimitRef.current) {
         setHasMore(false);
       }
       if (messageData.length === 0) {
@@ -396,10 +398,7 @@ const ChatGenerateOmnihumen: FC<
             (m: Message) => !existingTaskIds.has(m.taskId),
           );
 
-          if (uniqueNewMessages.length === 0) {
-            setHasMore(false);
-            return prev;
-          }
+          if (uniqueNewMessages.length === 0) return prev;
           return [...prev, ...uniqueNewMessages];
         });
         isFirstLoad.current = false;
@@ -458,6 +457,7 @@ const ChatGenerateOmnihumen: FC<
       }
       generateMessage(data, "reload");
     }
+    if (!data) setLoading(false);
     fetchCredit();
   };
 
@@ -473,23 +473,28 @@ const ChatGenerateOmnihumen: FC<
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
-      organizationId: session?.user?.organizationId || "",
-      type: "omnihumen",
-      skip: 0,
-      take: 1,
-      fristsql: fristRowSeq,
-      ...(!teamView && { userId: userId }),
-    });
-    if (data && data.length > 0) {
-      const seqValues = data
-        .map((p) => p.seq)
-        .filter((s) => s !== undefined && s !== null);
-      if (seqValues && seqValues.length > 0) {
-        const minSeq = Math.min(...seqValues);
-        setFristRowSeq(minSeq);
-      }
-      generateMessage(data, "loadmore");
+    try {
+      const result = await fetchOlderTasks<Message>(
+        fristRowSeq,
+        new Set(messagesRef.current.map((m) => m.id)),
+        (fristsql) =>
+          logsService.findProjectTaskByPage(projectId, {
+            organizationId: session?.user?.organizationId || "",
+            type: "omnihumen",
+            skip: 0,
+            take: HISTORY_PAGE_SIZE,
+            fristsql,
+            ...(!teamView && { userId: userId }),
+          }),
+      );
+      if (result.status === "end") setHasMore(false);
+      if (result.status !== "found") return;
+      setFristRowSeq(result.cursor);
+      if (result.items.length > 0) generateMessage(result.items, "loadmore");
+    } finally {
+      // reset ทุกกรณี — ได้ [] หรือ request พังต้องไม่ทิ้ง spinner ค้าง
+      isFetchingRef.current = false;
+      setIsFetchingHistory(false);
     }
   };
 
@@ -770,8 +775,6 @@ const ChatGenerateOmnihumen: FC<
           message: `Joined room ${projectId}`,
         });
       }
-      setLoading(true);
-      isFirstLoad.current = true;
     }
   }, [socket, projectId, activeKey]);
 
@@ -783,6 +786,7 @@ const ChatGenerateOmnihumen: FC<
     isAtBottomRef.current = isAtBottom;
     if (
       target.scrollTop === 0 &&
+      hasMore &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
