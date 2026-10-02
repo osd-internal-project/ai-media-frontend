@@ -47,7 +47,17 @@ const PhotoEventSettingPage = () => {
               icon={<ArrowLeft size={18} />}
               onClick={() => router.push("/page/photo-event")}
             />
-            {projectName ? `${projectName} · Event Settings` : "Event Settings"}
+            <span
+              style={{
+                minWidth: 0,
+                maxWidth: isMobile ? "45vw" : undefined,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {projectName ? `${projectName} · Event Settings` : "Event Settings"}
+            </span>
           </span>
         }
         count={photos.length}
@@ -67,9 +77,10 @@ const PhotoEventSettingPage = () => {
               type="primary"
               size="small"
               icon={<MonitorPlay size={14} />}
+              aria-label="Open kiosk"
               onClick={() => window.open(buildKioskUrl(projectId), "_blank", "noopener")}
             >
-              Open kiosk
+              {isMobile ? null : "Open kiosk"}
             </Button>
           </span>
         }

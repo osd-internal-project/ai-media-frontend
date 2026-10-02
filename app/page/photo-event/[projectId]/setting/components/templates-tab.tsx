@@ -19,6 +19,7 @@ import PhotoEventService, {
   getPhotoEventErrorMessage,
 } from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
+import useResponsive from "@/app/hooks/useResponsive";
 import { PROMPT_MAX_LENGTH } from "@/app/config/prompt";
 
 interface TemplatesTabProps {
@@ -41,6 +42,7 @@ export default function TemplatesTab({
   semantic,
 }: TemplatesTabProps) {
   const [messageApi, contextHolder] = message.useMessage();
+  const { isMobile } = useResponsive();
   const promptGuideService = useMemo(() => PromptGuideServices(axiosCore), []);
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const [guides, setGuides] = useState<TPromptGuide[]>([]);
@@ -156,8 +158,8 @@ export default function TemplatesTab({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-          gap: 16,
+          gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 140 : 170}px, 1fr))`,
+          gap: isMobile ? 10 : 16,
         }}
       >
         {guides.map((guide) => {

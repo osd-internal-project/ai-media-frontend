@@ -24,6 +24,7 @@ import PhotoEventService, {
   getPhotoEventErrorMessage,
 } from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
+import useResponsive from "@/app/hooks/useResponsive";
 import GenerationResultModal from "./generation-result-modal";
 import CameraCaptureModal, {
   canUseLiveCamera,
@@ -84,6 +85,7 @@ export default function PhotosTab({
   onPhotosAdded,
 }: PhotosTabProps) {
   const [messageApi, contextHolder] = message.useMessage();
+  const { isMobile } = useResponsive();
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const [pendingUploads, setPendingUploads] = useState<IPendingUpload[]>([]);
   // ส่งทีละ batch ต่อคิว — กดถ่าย/เลือกไฟล์ต่อได้ระหว่างที่ชุดก่อนยังส่งอยู่
@@ -278,8 +280,8 @@ export default function PhotosTab({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: 16,
+            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 140 : 180}px, 1fr))`,
+            gap: isMobile ? 10 : 16,
           }}
         >
           {pendingUploads.map((item) => (
@@ -298,6 +300,7 @@ export default function PhotosTab({
               semantic={semantic}
               onOpenGeneration={setOpenedGeneration}
               onRemove={removePhoto}
+              largeTouchTargets={isMobile}
             />
           ))}
         </div>
@@ -382,6 +385,7 @@ interface PhotoCardProps {
   semantic: Record<string, unknown>;
   onOpenGeneration: (generation: IPhotoEventGeneration) => void;
   onRemove: (photoId: string) => void;
+  largeTouchTargets: boolean;
 }
 
 const PhotoCard = memo(function PhotoCard({
@@ -389,6 +393,7 @@ const PhotoCard = memo(function PhotoCard({
   semantic,
   onOpenGeneration,
   onRemove,
+  largeTouchTargets,
 }: PhotoCardProps) {
   const usage = getPhotoUsage(photo);
   const running = photo.generations.find(
@@ -432,7 +437,7 @@ const PhotoCard = memo(function PhotoCard({
         </Tag>
         <Popconfirm title="Remove this photo?" onConfirm={() => onRemove(photo.id)}>
           <Button
-            size="small"
+            size={largeTouchTargets ? "middle" : "small"}
             danger
             icon={<Trash2 size={14} />}
             style={{ position: "absolute", top: 8, right: 8 }}

@@ -41,7 +41,7 @@ ingress:
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
-      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()"; 
+      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=(self)"; 
     # จำกัดการส่งข้อมูลออก (Transmit) ของ Pod นี้ไว้ไม่ให้เกิน 10 Mbps
     kubernetes.io/egress-bandwidth: "10M"
         # (เลือกใส่หรือไม่ก็ได้) จำกัดขาเข้า Pod

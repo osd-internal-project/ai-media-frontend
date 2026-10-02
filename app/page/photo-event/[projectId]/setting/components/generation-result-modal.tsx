@@ -8,6 +8,7 @@ import PhotoEventService from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
 import { usePrintGeneration } from "@/app/components/photo-event/print-sheet";
+import useResponsive from "@/app/hooks/useResponsive";
 
 interface GenerationResultModalProps {
   generation: IPhotoEventGeneration | null;
@@ -19,6 +20,7 @@ export default function GenerationResultModal({
   onClose,
 }: GenerationResultModalProps) {
   const [messageApi, contextHolder] = message.useMessage();
+  const { isMobile } = useResponsive();
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const shareUrl = generation ? buildPhotoShareUrl(generation.id) : "";
   const { print, printing, sheet: printSheet } = usePrintGeneration(() =>
@@ -47,7 +49,7 @@ export default function GenerationResultModal({
       {printSheet}
       {generation?.resultUrl && (
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 320px", maxWidth: 380 }}>
+          <div style={{ flex: "1 1 320px", maxWidth: isMobile ? "100%" : 380 }}>
             <Image
               src={generation.resultUrl}
               alt="Generated photo"
@@ -55,9 +57,9 @@ export default function GenerationResultModal({
             />
           </div>
           <Space direction="vertical" size={16} style={{ flex: "1 1 220px", alignItems: "center" }}>
-            <QRCode value={shareUrl} size={220} bgColor="#ffffff" color="#000000" />
+            <QRCode value={shareUrl} size={isMobile ? 160 : 220} bgColor="#ffffff" color="#000000" />
             <Typography.Text type="secondary">Scan to download</Typography.Text>
-            <Space wrap>
+            <Space wrap style={{ justifyContent: "center" }}>
               <Button icon={<Copy size={14} />} onClick={copyLink}>
                 Copy link
               </Button>

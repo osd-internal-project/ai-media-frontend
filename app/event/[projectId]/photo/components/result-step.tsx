@@ -6,6 +6,7 @@ import { Printer, RotateCcw } from "lucide-react";
 import type { IPhotoEventGeneration } from "@/app/common/photo-event.type";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
 import LoadingImage from "@/app/components/photo-event/loading-image";
+import useResponsive from "@/app/hooks/useResponsive";
 
 interface ResultStepProps {
   generation: IPhotoEventGeneration;
@@ -24,6 +25,8 @@ export default function ResultStep({
   onPrint,
   onRestart,
 }: ResultStepProps) {
+  const { isMobile } = useResponsive();
+
   return (
     <div className="kiosk-content">
       <div className="kiosk-heading">
@@ -41,7 +44,7 @@ export default function ResultStep({
           <div className="kiosk-qr-card">
             <QRCode
               value={buildPhotoShareUrl(generation.id)}
-              size={196}
+              size={isMobile ? 140 : 196}
               bordered={false}
               bgColor="#ffffff"
               color="#191c20"

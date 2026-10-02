@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Modal, Result, Space, Spin, Typography } from "antd";
+import { Button, Modal, Result, Spin, Typography } from "antd";
 import { Camera, RefreshCw, RotateCcw, SwitchCamera } from "lucide-react";
+import useResponsive from "@/app/hooks/useResponsive";
 
 type TFacingMode = "user" | "environment";
 
@@ -54,6 +55,16 @@ export default function CameraCaptureModal({
   const [retryKey, setRetryKey] = useState(0);
   const [snapshot, setSnapshot] = useState<{ file: File; previewUrl: string } | null>(null);
   const [sentCount, setSentCount] = useState(0);
+  const { isMobile } = useResponsive();
+  // มือถือ: ปุ่มเต็มความกว้าง ปุ่มหลัก (ตัวสุดท้าย) อยู่บนสุด
+  const footerStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: isMobile ? "column-reverse" : "row",
+    flexWrap: "wrap",
+    alignItems: isMobile ? "stretch" : "center",
+    justifyContent: "flex-end",
+    gap: 8,
+  };
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -143,25 +154,38 @@ export default function CameraCaptureModal({
       open={open}
       onCancel={handleClose}
       title="Take photo"
-      width={720}
-      centered
+      width={isMobile ? "100vw" : 720}
+      centered={!isMobile}
+      style={isMobile ? { top: 0, maxWidth: "100vw", margin: 0, paddingBottom: 0 } : undefined}
+      styles={isMobile ? { content: { minHeight: "100dvh", borderRadius: 0, padding: 12 } } : undefined}
       destroyOnHidden
       footer={
         error ? null : snapshot ? (
-          <Space>
-            <Button icon={<RotateCcw size={16} />} onClick={() => setSnapshot(null)}>
+          <div style={footerStyle}>
+            <Button
+              block={isMobile}
+              size={isMobile ? "large" : "middle"}
+              icon={<RotateCcw size={16} />}
+              onClick={() => setSnapshot(null)}
+            >
               Retake
             </Button>
-            <Button type="primary" onClick={usePhoto}>
+            <Button
+              type="primary"
+              block={isMobile}
+              size={isMobile ? "large" : "middle"}
+              onClick={usePhoto}
+            >
               {continuous ? "Use & take next" : "Use photo"}
             </Button>
-          </Space>
+          </div>
         ) : (
-          <Space wrap>
+          <div style={footerStyle}>
             {continuous && sentCount > 0 && (
               <Typography.Text type="secondary">Sent {sentCount} photo(s)</Typography.Text>
             )}
             <Button
+              block={isMobile}
               icon={<SwitchCamera size={16} />}
               onClick={() =>
                 setFacingMode((mode) => (mode === "user" ? "environment" : "user"))
@@ -171,13 +195,15 @@ export default function CameraCaptureModal({
             </Button>
             <Button
               type="primary"
+              block={isMobile}
+              size={isMobile ? "large" : "middle"}
               icon={<Camera size={16} />}
               disabled={starting}
               onClick={takeSnapshot}
             >
               Capture
             </Button>
-          </Space>
+          </div>
         )
       }
     >
@@ -204,7 +230,7 @@ export default function CameraCaptureModal({
             position: "relative",
             width: "100%",
             aspectRatio: "3 / 4",
-            maxHeight: "65vh",
+            maxHeight: isMobile ? "calc(100dvh - 200px)" : "65vh",
             margin: "0 auto",
             background: "#000",
             borderRadius: 12,
