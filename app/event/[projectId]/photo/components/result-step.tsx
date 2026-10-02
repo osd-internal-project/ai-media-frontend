@@ -2,7 +2,7 @@
 
 import React from "react";
 import { QRCode } from "antd";
-import { RotateCcw } from "lucide-react";
+import { Printer, RotateCcw } from "lucide-react";
 import type { IPhotoEventGeneration } from "@/app/common/photo-event.type";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
 import LoadingImage from "@/app/components/photo-event/loading-image";
@@ -10,12 +10,18 @@ import LoadingImage from "@/app/components/photo-event/loading-image";
 interface ResultStepProps {
   generation: IPhotoEventGeneration;
   idleSecondsLeft: number;
+  printing: boolean;
+  printFailed: boolean;
+  onPrint: () => void;
   onRestart: () => void;
 }
 
 export default function ResultStep({
   generation,
   idleSecondsLeft,
+  printing,
+  printFailed,
+  onPrint,
   onRestart,
 }: ResultStepProps) {
   return (
@@ -45,6 +51,20 @@ export default function ResultStep({
               <span>Scan to download · เปิดกล้องมือถือแล้วส่องที่โค้ด</span>
             </div>
           </div>
+          <button
+            type="button"
+            className="kiosk-btn is-primary"
+            disabled={printing}
+            onClick={onPrint}
+          >
+            <Printer size={22} />
+            {printing ? "กำลังพิมพ์…" : "พิมพ์ภาพ"} <small>Print</small>
+          </button>
+          {printFailed && (
+            <div className="kiosk-empty">
+              พิมพ์ไม่สำเร็จ ลองอีกครั้ง <span className="kiosk-serif">Print failed, try again</span>
+            </div>
+          )}
           <button type="button" className="kiosk-btn" onClick={onRestart}>
             <RotateCcw size={22} />
             เริ่มใหม่ <small>Start over · {idleSecondsLeft}s</small>

@@ -8,32 +8,47 @@ type TLoadState = "loading" | "loaded" | "error";
 
 interface LoadingImageProps {
   src: string;
+  /** ใช้แทนเมื่อ src โหลดไม่ได้ เช่น thumbnail ที่ bucket ไม่เปิด image processing */
+  fallbackSrc?: string | null;
   alt: string;
   className?: string;
   style?: React.CSSProperties;
 }
 
 /** ซ่อนรูปจนโหลดครบแล้วค่อย fade-in — ไม่ให้เห็นรูปค่อยๆ render ทีละส่วน; ต้องวางใน parent ที่ position: relative */
-export default function LoadingImage({ src, alt, className, style }: LoadingImageProps) {
+export default function LoadingImage({
+  src,
+  fallbackSrc,
+  alt,
+  className,
+  style,
+}: LoadingImageProps) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [state, setState] = useState<TLoadState>("loading");
+  const [useFallback, setUseFallback] = useState(false);
+  const currentSrc = useFallback && fallbackSrc ? fallbackSrc : src;
+
+  useEffect(() => setUseFallback(false), [src]);
 
   useEffect(() => {
     // รูปที่อยู่ใน cache อาจโหลดเสร็จก่อน onLoad ถูกผูก
     const img = imgRef.current;
     setState(img?.complete && img.naturalWidth > 0 ? "loaded" : "loading");
-  }, [src]);
+  }, [currentSrc]);
 
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imgRef}
-        src={src}
+        src={currentSrc}
         alt={alt}
         className={className}
         onLoad={() => setState("loaded")}
-        onError={() => setState("error")}
+        onError={() => {
+          if (!useFallback && fallbackSrc && fallbackSrc !== src) setUseFallback(true);
+          else setState("error");
+        }}
         style={{
           ...style,
           opacity: state === "loaded" ? 1 : 0,

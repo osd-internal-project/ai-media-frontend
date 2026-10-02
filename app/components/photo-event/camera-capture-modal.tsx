@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Modal, Result, Space, Spin } from "antd";
+import { Button, Modal, Result, Space, Spin, Typography } from "antd";
 import { Camera, RefreshCw, RotateCcw, SwitchCamera } from "lucide-react";
 
 type TFacingMode = "user" | "environment";
@@ -10,6 +10,9 @@ interface CameraCaptureModalProps {
   open: boolean;
   onClose: () => void;
   onCapture: (file: File) => void;
+  /** true = กด Use photo แล้วกลับไปหน้ากล้องทันทีเพื่อถ่ายใบต่อไป, false = ปิด modal */
+  continuous?: boolean;
+  defaultFacingMode?: TFacingMode;
 }
 
 /** เปิดกล้องได้ต้องเป็น https หรือ localhost และ browser รองรับ getUserMedia */
@@ -28,34 +31,44 @@ const describeCameraError = (error: unknown): string => {
   return error instanceof Error ? error.message : "Cannot open the camera.";
 };
 
+const readAsDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("Cannot read the photo."));
+    reader.readAsDataURL(blob);
+  });
+
 export default function CameraCaptureModal({
   open,
   onClose,
   onCapture,
+  continuous = false,
+  defaultFacingMode = "environment",
 }: CameraCaptureModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [facingMode, setFacingMode] = useState<TFacingMode>("environment");
+  const [facingMode, setFacingMode] = useState<TFacingMode>(defaultFacingMode);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   const [snapshot, setSnapshot] = useState<{ file: File; previewUrl: string } | null>(null);
+  const [sentCount, setSentCount] = useState(0);
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
   }, []);
 
-  const clearSnapshot = useCallback(() => setSnapshot(null), []);
-
+  // stream เปิดค้างตลอดที่ modal เปิด — ถ่ายซ้ำ/Retake ไม่ต้องรอกล้อง warm-up ใหม่
   useEffect(() => {
-    if (!open || snapshot) return;
+    if (!open) return;
     let cancelled = false;
     setStarting(true);
     setError(null);
     navigator.mediaDevices
       .getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1920 } },
+        video: { facingMode, width: { ideal: 3840 }, height: { ideal: 3840 } },
         audio: false,
       })
       .then((stream) => {
@@ -72,11 +85,12 @@ export default function CameraCaptureModal({
       cancelled = true;
       stopStream();
     };
-  }, [open, facingMode, snapshot, stopStream, retryKey]);
+  }, [open, facingMode, stopStream, retryKey]);
 
   const handleClose = () => {
     stopStream();
-    clearSnapshot();
+    setSnapshot(null);
+    setSentCount(0);
     onClose();
   };
 
@@ -95,15 +109,18 @@ export default function CameraCaptureModal({
     }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(
-      (blob) => {
+      async (blob) => {
         if (!blob) {
           setError("Cannot capture the photo. Please try again.");
           return;
         }
         const file = new File([blob], `camera-${Date.now()}.jpg`, { type: "image/jpeg" });
-        stopStream();
-        // data: URL แทน blob: — CSP ของ prod บล็อก blob: สำหรับรูป
-        setSnapshot({ file, previewUrl: canvas.toDataURL("image/jpeg", JPEG_QUALITY) });
+        try {
+          // data: URL แทน blob: — CSP ของ prod บล็อก blob: สำหรับรูป
+          setSnapshot({ file, previewUrl: await readAsDataUrl(blob) });
+        } catch (err) {
+          setError(describeCameraError(err));
+        }
       },
       "image/jpeg",
       JPEG_QUALITY,
@@ -113,7 +130,12 @@ export default function CameraCaptureModal({
   const usePhoto = () => {
     if (!snapshot) return;
     onCapture(snapshot.file);
-    handleClose();
+    if (!continuous) {
+      handleClose();
+      return;
+    }
+    setSnapshot(null);
+    setSentCount((count) => count + 1);
   };
 
   return (
@@ -127,15 +149,18 @@ export default function CameraCaptureModal({
       footer={
         error ? null : snapshot ? (
           <Space>
-            <Button icon={<RotateCcw size={16} />} onClick={clearSnapshot}>
+            <Button icon={<RotateCcw size={16} />} onClick={() => setSnapshot(null)}>
               Retake
             </Button>
             <Button type="primary" onClick={usePhoto}>
-              Use photo
+              {continuous ? "Use & take next" : "Use photo"}
             </Button>
           </Space>
         ) : (
-          <Space>
+          <Space wrap>
+            {continuous && sentCount > 0 && (
+              <Typography.Text type="secondary">Sent {sentCount} photo(s)</Typography.Text>
+            )}
             <Button
               icon={<SwitchCamera size={16} />}
               onClick={() =>
@@ -165,7 +190,7 @@ export default function CameraCaptureModal({
             <Button
               icon={<RefreshCw size={16} />}
               onClick={() => {
-                clearSnapshot();
+                setSnapshot(null);
                 setRetryKey((key) => key + 1);
               }}
             >
@@ -186,24 +211,30 @@ export default function CameraCaptureModal({
             overflow: "hidden",
           }}
         >
-          {snapshot ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              transform: facingMode === "user" ? "scaleX(-1)" : undefined,
+              visibility: snapshot ? "hidden" : "visible",
+            }}
+          />
+          {snapshot && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={snapshot.previewUrl}
               alt="Captured"
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
-          ) : (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
               style={{
+                position: "absolute",
+                inset: 0,
                 width: "100%",
                 height: "100%",
                 objectFit: "contain",
-                transform: facingMode === "user" ? "scaleX(-1)" : undefined,
               }}
             />
           )}

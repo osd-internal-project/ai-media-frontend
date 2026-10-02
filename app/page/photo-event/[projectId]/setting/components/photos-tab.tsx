@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Empty,
@@ -15,7 +15,7 @@ import {
   message,
 } from "antd";
 import type { RcFile } from "antd/es/upload";
-import { Camera, FolderUp, ImageUp, Trash2 } from "lucide-react";
+import { Camera, FolderUp, ImageUp, RotateCw, Trash2, X } from "lucide-react";
 import type {
   IPhotoEventGeneration,
   IPhotoEventPhoto,
@@ -25,13 +25,46 @@ import PhotoEventService, {
 } from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GenerationResultModal from "./generation-result-modal";
-import CameraCaptureModal, { canUseLiveCamera } from "./camera-capture-modal";
+import CameraCaptureModal, {
+  canUseLiveCamera,
+} from "@/app/components/photo-event/camera-capture-modal";
 import { PHOTO_USAGE_META, TPhotoUsage, getPhotoUsage } from "./photo-status";
 
 /** ต้องไม่เกิน PHOTO_EVENT_MAX_UPLOAD_FILES ของ backend */
 const UPLOAD_BATCH_SIZE = 20;
+/** ขนาดรวมต่อ request — ไฟล์ใหญ่หลายไฟล์รวมกันต้องไม่ชน proxy-body-size ของ ingress */
+const UPLOAD_BATCH_BYTES = 80 * 1024 * 1024;
+/** ต้องเท่ากับ PHOTO_EVENT_MAX_FILE_BYTES ของ backend */
+const PHOTO_EVENT_MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 type TFilter = "all" | TPhotoUsage;
+
+interface IPendingUpload {
+  id: string;
+  file: File;
+  progress: number;
+  error: string | null;
+}
+
+/** แบ่งไฟล์เป็นชุดไม่เกินทั้งจำนวนและขนาดรวมต่อ request */
+const chunkFiles = (files: File[]): File[][] => {
+  const batches: File[][] = [];
+  let current: File[] = [];
+  let currentBytes = 0;
+  files.forEach((file) => {
+    const full =
+      current.length >= UPLOAD_BATCH_SIZE || currentBytes + file.size > UPLOAD_BATCH_BYTES;
+    if (current.length > 0 && full) {
+      batches.push(current);
+      current = [];
+      currentBytes = 0;
+    }
+    current.push(file);
+    currentBytes += file.size;
+  });
+  if (current.length > 0) batches.push(current);
+  return batches;
+};
 
 interface PhotosTabProps {
   projectId: string;
@@ -39,6 +72,7 @@ interface PhotosTabProps {
   photos: IPhotoEventPhoto[];
   loading: boolean;
   semantic: Record<string, unknown>;
+  onPhotosAdded: (photos: IPhotoEventPhoto[]) => void;
 }
 
 export default function PhotosTab({
@@ -47,10 +81,13 @@ export default function PhotosTab({
   photos,
   loading,
   semantic,
+  onPhotosAdded,
 }: PhotosTabProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
-  const [uploading, setUploading] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState<IPendingUpload[]>([]);
+  // ส่งทีละ batch ต่อคิว — กดถ่าย/เลือกไฟล์ต่อได้ระหว่างที่ชุดก่อนยังส่งอยู่
+  const uploadQueue = useRef<Promise<void>>(Promise.resolve());
   const [filter, setFilter] = useState<TFilter>("all");
   const [openedGeneration, setOpenedGeneration] =
     useState<IPhotoEventGeneration | null>(null);
@@ -81,24 +118,68 @@ export default function PhotosTab({
     [photos, filter],
   );
 
-  const uploadFiles = async (files: File[]) => {
-    setUploading(true);
-    let uploaded = 0;
-    try {
-      for (let i = 0; i < files.length; i += UPLOAD_BATCH_SIZE) {
-        const batch = files.slice(i, i + UPLOAD_BATCH_SIZE);
-        const result = await photoEventService.uploadPhotos(projectId, userId, batch);
-        uploaded += result.length;
+  const patchPending = useCallback(
+    (ids: string[], patch: Partial<IPendingUpload>) =>
+      setPendingUploads((prev) =>
+        prev.map((item) => (ids.includes(item.id) ? { ...item, ...patch } : item)),
+      ),
+    [],
+  );
+
+  const sendBatch = useCallback(
+    async (batch: IPendingUpload[]) => {
+      const ids = batch.map((item) => item.id);
+      patchPending(ids, { progress: 0, error: null });
+      try {
+        const created = await photoEventService.uploadPhotos(
+          projectId,
+          userId,
+          batch.map((item) => item.file),
+          (progress) => patchPending(ids, { progress }),
+        );
+        onPhotosAdded(created);
+        setPendingUploads((prev) => prev.filter((item) => !ids.includes(item.id)));
+      } catch (error) {
+        patchPending(ids, { error: getPhotoEventErrorMessage(error) });
+        messageApi.error(`Import failed: ${getPhotoEventErrorMessage(error)}`);
       }
-      messageApi.success(`Imported ${uploaded} photo(s)`);
-    } catch (error) {
+    },
+    [photoEventService, projectId, userId, onPhotosAdded, patchPending, messageApi],
+  );
+
+  const enqueue = useCallback(
+    (batch: IPendingUpload[]) => {
+      uploadQueue.current = uploadQueue.current.then(() => sendBatch(batch));
+    },
+    [sendBatch],
+  );
+
+  const uploadFiles = (files: File[]) => {
+    const tooLarge = files.filter((file) => file.size > PHOTO_EVENT_MAX_FILE_BYTES);
+    if (tooLarge.length > 0) {
       messageApi.error(
-        `Imported ${uploaded}/${files.length}: ${getPhotoEventErrorMessage(error)}`,
+        `Over ${PHOTO_EVENT_MAX_FILE_BYTES / 1024 / 1024}MB, skipped: ${tooLarge
+          .map((file) => file.name)
+          .join(", ")}`,
       );
-    } finally {
-      setUploading(false);
     }
+    const accepted = files.filter((file) => file.size <= PHOTO_EVENT_MAX_FILE_BYTES);
+    chunkFiles(accepted).forEach((batchFiles) => {
+      const batch = batchFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        progress: 0,
+        error: null,
+      }));
+      setPendingUploads((prev) => [...batch, ...prev]);
+      enqueue(batch);
+    });
   };
+
+  const retryUpload = (item: IPendingUpload) => enqueue([item]);
+
+  const dismissUpload = (id: string) =>
+    setPendingUploads((prev) => prev.filter((item) => item.id !== id));
 
   /** antd เรียก beforeUpload ทีละไฟล์ — รวบให้ครบทั้งชุดก่อนแล้วค่อยอัปโหลดครั้งเดียว */
   const handleBeforeUpload = (file: RcFile, fileList: RcFile[]) => {
@@ -111,13 +192,16 @@ export default function PhotosTab({
     return Upload.LIST_IGNORE;
   };
 
-  const removePhoto = async (photoId: string) => {
-    try {
-      await photoEventService.removePhoto(projectId, photoId, userId);
-    } catch (error) {
-      messageApi.error(getPhotoEventErrorMessage(error));
-    }
-  };
+  const removePhoto = useCallback(
+    async (photoId: string) => {
+      try {
+        await photoEventService.removePhoto(projectId, photoId, userId);
+      } catch (error) {
+        messageApi.error(getPhotoEventErrorMessage(error));
+      }
+    },
+    [photoEventService, projectId, userId, messageApi],
+  );
 
   const filterOptions = (Object.keys(counts) as TFilter[]).map((key) => ({
     value: key,
@@ -132,16 +216,11 @@ export default function PhotosTab({
         accept="image/*"
         showUploadList={false}
         beforeUpload={handleBeforeUpload}
-        disabled={uploading}
       >
         <div style={{ padding: 12 }}>
-          {uploading ? (
-            <Spin />
-          ) : (
-            <ImageUp size={36} style={{ color: semantic.colorPrimary as string }} />
-          )}
+          <ImageUp size={36} style={{ color: semantic.colorPrimary as string }} />
           <Typography.Title level={5} style={{ margin: "8px 0 4px" }}>
-            {uploading ? "Importing…" : "Drop photos here or tap to import"}
+            Drop photos here or tap to import
           </Typography.Title>
           <Typography.Text type="secondary">
             Photos appear on the kiosk screen right away
@@ -155,16 +234,14 @@ export default function PhotosTab({
           accept="image/*"
           showUploadList={false}
           beforeUpload={handleBeforeUpload}
-          disabled={uploading}
         >
-          <Button icon={<FolderUp size={16} />} disabled={uploading}>
+          <Button icon={<FolderUp size={16} />}>
             Choose from device
           </Button>
         </Upload>
         {liveCamera ? (
           <Button
             icon={<Camera size={16} />}
-            disabled={uploading}
             onClick={() => setCameraOpen(true)}
           >
             Take photo
@@ -176,9 +253,8 @@ export default function PhotosTab({
             capture="environment"
             showUploadList={false}
             beforeUpload={handleBeforeUpload}
-            disabled={uploading}
           >
-            <Button icon={<Camera size={16} />} disabled={uploading}>
+            <Button icon={<Camera size={16} />}>
               Take photo
             </Button>
           </Upload>
@@ -196,7 +272,7 @@ export default function PhotosTab({
         <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
           <Spin />
         </div>
-      ) : visiblePhotos.length === 0 ? (
+      ) : visiblePhotos.length === 0 && pendingUploads.length === 0 ? (
         <Empty description="No photos yet" />
       ) : (
         <div
@@ -206,13 +282,22 @@ export default function PhotosTab({
             gap: 16,
           }}
         >
+          {pendingUploads.map((item) => (
+            <PendingCard
+              key={item.id}
+              item={item}
+              semantic={semantic}
+              onRetry={() => retryUpload(item)}
+              onDismiss={() => dismissUpload(item.id)}
+            />
+          ))}
           {visiblePhotos.map((photo) => (
             <PhotoCard
               key={photo.id}
               photo={photo}
               semantic={semantic}
               onOpenGeneration={setOpenedGeneration}
-              onRemove={() => removePhoto(photo.id)}
+              onRemove={removePhoto}
             />
           ))}
         </div>
@@ -222,6 +307,7 @@ export default function PhotosTab({
         open={cameraOpen}
         onClose={() => setCameraOpen(false)}
         onCapture={(file) => uploadFiles([file])}
+        continuous
       />
 
       <GenerationResultModal
@@ -232,14 +318,78 @@ export default function PhotosTab({
   );
 }
 
+interface PendingCardProps {
+  item: IPendingUpload;
+  semantic: Record<string, unknown>;
+  onRetry: () => void;
+  onDismiss: () => void;
+}
+
+function PendingCard({ item, semantic, onRetry, onDismiss }: PendingCardProps) {
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        overflow: "hidden",
+        border: `1px dashed ${(item.error ? semantic.colorError : semantic.colorBorder) as string}`,
+        background: semantic.colorBgContainer as string,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          aspectRatio: "3 / 4",
+          background: "#0003",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          padding: 16,
+        }}
+      >
+        {item.error ? (
+          <>
+            <Typography.Text type="danger" style={{ textAlign: "center", fontSize: 12 }}>
+              {item.error}
+            </Typography.Text>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button size="small" icon={<RotateCw size={14} />} onClick={onRetry}>
+                Retry
+              </Button>
+              <Button size="small" icon={<X size={14} />} onClick={onDismiss} />
+            </div>
+          </>
+        ) : (
+          <>
+            <Spin />
+            <Progress percent={item.progress} size="small" style={{ width: "100%" }} />
+          </>
+        )}
+      </div>
+      <div style={{ padding: 10 }}>
+        <Typography.Text type="secondary" ellipsis style={{ fontSize: 12 }}>
+          {item.error ? "Failed" : "Uploading"} · {item.file.name}
+        </Typography.Text>
+      </div>
+    </div>
+  );
+}
+
 interface PhotoCardProps {
   photo: IPhotoEventPhoto;
   semantic: Record<string, unknown>;
   onOpenGeneration: (generation: IPhotoEventGeneration) => void;
-  onRemove: () => void;
+  onRemove: (photoId: string) => void;
 }
 
-function PhotoCard({ photo, semantic, onOpenGeneration, onRemove }: PhotoCardProps) {
+const PhotoCard = memo(function PhotoCard({
+  photo,
+  semantic,
+  onOpenGeneration,
+  onRemove,
+}: PhotoCardProps) {
   const usage = getPhotoUsage(photo);
   const running = photo.generations.find(
     (g) => g.status === "pending" || g.status === "processing",
@@ -261,8 +411,15 @@ function PhotoCard({ photo, semantic, onOpenGeneration, onRemove }: PhotoCardPro
         {photo.url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={photo.url}
+            src={photo.thumbUrl || photo.url}
             alt={photo.imageName}
+            loading="lazy"
+            onError={(event) => {
+              // bucket ไม่เปิด image processing → กลับไปใช้รูปเต็ม
+              if (photo.url && event.currentTarget.src !== photo.url) {
+                event.currentTarget.src = photo.url;
+              }
+            }}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         )}
@@ -273,7 +430,7 @@ function PhotoCard({ photo, semantic, onOpenGeneration, onRemove }: PhotoCardPro
           {PHOTO_USAGE_META[usage].label}
           {usage === "generated" ? ` · ${results.length}` : ""}
         </Tag>
-        <Popconfirm title="Remove this photo?" onConfirm={onRemove}>
+        <Popconfirm title="Remove this photo?" onConfirm={() => onRemove(photo.id)}>
           <Button
             size="small"
             danger
@@ -325,4 +482,4 @@ function PhotoCard({ photo, semantic, onOpenGeneration, onRemove }: PhotoCardPro
       </div>
     </div>
   );
-}
+});

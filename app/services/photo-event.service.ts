@@ -64,12 +64,16 @@ const PhotoEventService = (axiosInstance: AxiosInstance) => {
       projectId: string,
       userId: string,
       files: File[],
+      onProgress?: (percent: number) => void,
     ): Promise<IPhotoEventPhoto[]> => {
       const formData = new FormData();
       formData.append("userId", userId);
       files.forEach((file) => formData.append("files", file));
       const res = await axiosInstance.post(`${baseUrl(projectId)}/photos`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (event) => {
+          if (onProgress && event.total) onProgress(Math.round((event.loaded / event.total) * 100));
+        },
       });
       return res.data;
     },

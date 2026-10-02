@@ -25,7 +25,7 @@ const PhotoEventSettingPage = () => {
   const { isMobile } = useResponsive();
   const projectService = useMemo(() => ProjectService(axiosCore), []);
   const [projectName, setProjectName] = useState("");
-  const { photos, loading, isConnected } = usePhotoEventPhotos(projectId);
+  const { photos, loading, addPhotos, isConnected } = usePhotoEventPhotos(projectId);
 
   const userId = session?.user?.id ?? "";
   const organizationId = session?.user?.organizationId ?? "";
@@ -86,6 +86,7 @@ const PhotoEventSettingPage = () => {
                   userId={userId}
                   photos={photos}
                   loading={loading}
+                  onPhotosAdded={addPhotos}
                   semantic={semantic}
                 />
               ),

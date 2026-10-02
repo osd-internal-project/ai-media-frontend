@@ -34,6 +34,8 @@ export interface IPhotoEventPhoto {
   projectId: string;
   imageName: string;
   url: string | null;
+  /** รูปย่อจาก TOS image processing — null/โหลดไม่ได้ให้ใช้ url */
+  thumbUrl?: string | null;
   createdAt: string;
   generations: IPhotoEventGeneration[];
 }

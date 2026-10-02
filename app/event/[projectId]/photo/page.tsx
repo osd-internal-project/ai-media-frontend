@@ -13,6 +13,7 @@ import PhotoEventService, {
 import ProjectService from "@/app/services/project.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { usePhotoEventPhotos } from "@/app/hooks/usePhotoEventPhotos";
+import { usePrintGeneration } from "@/app/components/photo-event/print-sheet";
 import KioskChrome from "./components/kiosk-chrome";
 import TemplateStep from "./components/template-step";
 import PhotoStep from "./components/photo-step";
@@ -53,7 +54,11 @@ const PhotoKioskPage = () => {
     if (next.status === "failed") setErrorMessage(next.errorMessage || "Generation failed");
   }, []);
 
-  const { photos, applyGeneration } = usePhotoEventPhotos(projectId, {
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const { photos, applyGeneration, addPhotos } = usePhotoEventPhotos(projectId, {
     onGenerationUpdated: applyGenerationUpdate,
   });
   const selectedPhoto = photos.find((photo) => photo.id === selectedPhotoId) ?? null;
@@ -74,17 +79,45 @@ const PhotoKioskPage = () => {
     setGeneration(null);
     setErrorMessage(null);
     setSelectedPhotoId(null);
+    setPrintFailed(false);
+    setUploadError(null);
+    setCameraOpen(false);
     setTemplate(null);
     setStep("template");
     // โหลดใหม่เพื่อให้ URL รูป template ไม่หมดอายุ และเห็น template ที่ staff เพิ่งแก้
     loadTemplates();
   }, [loadTemplates]);
 
+  const [printFailed, setPrintFailed] = useState(false);
+  const { print, printing, sheet: printSheet } = usePrintGeneration(() =>
+    setPrintFailed(true),
+  );
+
+  // หยุดนับถอยหลังระหว่างพิมพ์/ถ่ายรูป — กันจอรีเซ็ตกลับหน้าแรกกลางคัน
   const idleSecondsLeft = useIdleCountdown(
-    step === "photo" || step === "result",
+    (step === "photo" || step === "result") && !printing && !cameraOpen && !uploading,
     KIOSK_IDLE_SECONDS,
     restart,
   );
+
+  const uploadGuestPhoto = async (file: File) => {
+    if (!userId) {
+      setUploadError("Session expired. Please ask staff to sign in again.");
+      return;
+    }
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const [created] = await photoEventService.uploadPhotos(projectId, userId, [file]);
+      if (!created) throw new Error("The photo could not be saved. Please try again.");
+      addPhotos([created]);
+      setSelectedPhotoId(created.id);
+    } catch (error) {
+      setUploadError(getPhotoEventErrorMessage(error));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const startGeneration = async () => {
     if (!template || !selectedPhoto || !userId) return;
@@ -151,6 +184,11 @@ const PhotoKioskPage = () => {
           photos={photos}
           selectedPhoto={selectedPhoto}
           submitting={submitting}
+          uploading={uploading}
+          uploadError={uploadError}
+          cameraOpen={cameraOpen}
+          onCameraOpenChange={setCameraOpen}
+          onTakePhoto={uploadGuestPhoto}
           onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
           onChangeTemplate={() => setStep("template")}
           onGenerate={startGeneration}
@@ -169,9 +207,16 @@ const PhotoKioskPage = () => {
         <ResultStep
           generation={generation}
           idleSecondsLeft={idleSecondsLeft}
+          printing={printing}
+          printFailed={printFailed}
+          onPrint={() => {
+            setPrintFailed(false);
+            print(generation);
+          }}
           onRestart={restart}
         />
       )}
+      {printSheet}
     </div>
   );
 };

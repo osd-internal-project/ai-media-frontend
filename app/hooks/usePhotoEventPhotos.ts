@@ -16,6 +16,14 @@ interface UsePhotoEventPhotosOptions {
   onGenerationUpdated?: (generation: IPhotoEventGeneration) => void;
 }
 
+const prependPhotos = (
+  photos: IPhotoEventPhoto[],
+  added: IPhotoEventPhoto[],
+): IPhotoEventPhoto[] => {
+  const fresh = added.filter((photo) => !photos.some((p) => p.id === photo.id));
+  return fresh.length ? [...fresh.reverse(), ...photos] : photos;
+};
+
 const upsertGeneration = (
   photos: IPhotoEventPhoto[],
   generation: IPhotoEventGeneration,
@@ -62,9 +70,7 @@ export const usePhotoEventPhotos = (
     refresh();
 
     const handlePhotoCreated = (photo: IPhotoEventPhoto) =>
-      setPhotos((prev) =>
-        prev.some((p) => p.id === photo.id) ? prev : [photo, ...prev],
-      );
+      setPhotos((prev) => prependPhotos(prev, [photo]));
     const handlePhotoDeleted = ({ photoId }: { photoId: string }) =>
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
     const handleGenerationUpdated = (generation: IPhotoEventGeneration) => {
@@ -89,5 +95,11 @@ export const usePhotoEventPhotos = (
     [],
   );
 
-  return { photos, loading, refresh, applyGeneration, isConnected };
+  /** ใส่รูปจาก response ของ upload ทันที ไม่ต้องรอ socket — ซ้ำกับ event ทีหลังก็ไม่เพิ่มซ้ำ */
+  const addPhotos = useCallback(
+    (added: IPhotoEventPhoto[]) => setPhotos((prev) => prependPhotos(prev, added)),
+    [],
+  );
+
+  return { photos, loading, refresh, applyGeneration, addPhotos, isConnected };
 };

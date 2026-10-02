@@ -2,11 +2,12 @@
 
 import React, { useMemo } from "react";
 import { Button, Image, Modal, QRCode, Space, Typography, message } from "antd";
-import { Copy, Download, ExternalLink } from "lucide-react";
+import { Copy, Download, ExternalLink, Printer } from "lucide-react";
 import type { IPhotoEventGeneration } from "@/app/common/photo-event.type";
 import PhotoEventService from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
+import { usePrintGeneration } from "@/app/components/photo-event/print-sheet";
 
 interface GenerationResultModalProps {
   generation: IPhotoEventGeneration | null;
@@ -20,6 +21,9 @@ export default function GenerationResultModal({
   const [messageApi, contextHolder] = message.useMessage();
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const shareUrl = generation ? buildPhotoShareUrl(generation.id) : "";
+  const { print, printing, sheet: printSheet } = usePrintGeneration(() =>
+    messageApi.error("Cannot load the photo for printing"),
+  );
 
   const copyLink = async () => {
     try {
@@ -40,6 +44,7 @@ export default function GenerationResultModal({
       title={generation?.templateTitle || "Generated photo"}
     >
       {contextHolder}
+      {printSheet}
       {generation?.resultUrl && (
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px", maxWidth: 380 }}>
@@ -62,6 +67,13 @@ export default function GenerationResultModal({
                 target="_blank"
               >
                 Open
+              </Button>
+              <Button
+                icon={<Printer size={14} />}
+                loading={printing}
+                onClick={() => print(generation)}
+              >
+                Print
               </Button>
               <Button
                 type="primary"
