@@ -37,6 +37,8 @@ export interface Message {
   createdAt: string;
   status: boolean;
   genneratedStatus: string;
+  /** เหตุผลที่ fail ของงานใน session นี้ — ไม่ได้มาจาก DB, reload แล้วหาย */
+  errorMessage?: string;
   generateConfig: {
     ratio: string;
     width: number;
@@ -57,3 +59,9 @@ export interface Message {
   seq?: number;
   organizationId?: string;
 }
+
+// core ตอบ QUEUED ทันทีหลังเข้าคิว — ต้องนับเป็น loading ไม่งั้น card ว่างจนกว่า worker เริ่ม
+const LOADING_STATUSES = ["PENDING", "QUEUED", "PROCESSING"];
+
+export const isVideoLoading = (status: string | undefined): boolean =>
+  !!status && LOADING_STATUSES.includes(status);

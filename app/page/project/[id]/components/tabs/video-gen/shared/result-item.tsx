@@ -2,7 +2,7 @@ import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Card, Space, Typography, Button, Divider, Row, Col } from "antd";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
-import { Message, VideoMessage } from "./video.types";
+import { Message, VideoMessage, isVideoLoading } from "./video.types";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
 import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
@@ -35,9 +35,7 @@ const VideoResultItem: FC<Props> = ({
 }) => {
   const [messageApi, contextHolder] = antdMessage.useMessage();
 
-  const isLoading =
-    message.genneratedStatus === "PENDING" ||
-    message.genneratedStatus === "PROCESSING";
+  const isLoading = isVideoLoading(message.genneratedStatus);
 
   const isError =
     message.genneratedStatus === "FAILED" ||
@@ -311,9 +309,18 @@ const VideoResultItem: FC<Props> = ({
 
       {/* ERROR */}
       {isError && (
-        <Typography.Text style={{ color: semantic.colorError }}>
-          Generate failed
-        </Typography.Text>
+        <div>
+          <Typography.Text style={{ color: semantic.colorError }}>
+            Generate failed
+          </Typography.Text>
+          {message.errorMessage && (
+            <Typography.Paragraph
+              style={{ color: semantic.colorError, margin: "4px 0 0" }}
+            >
+              {message.errorMessage}
+            </Typography.Paragraph>
+          )}
+        </div>
       )}
 
       {/* VIDEOS */}

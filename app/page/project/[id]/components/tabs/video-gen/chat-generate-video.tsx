@@ -31,7 +31,7 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import VideoResultItem from "./shared/result-item";
 import ResultHeader from "./shared/result-header";
-import { Message } from "./shared/video.types";
+import { Message, isVideoLoading } from "./shared/video.types";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { VideoFormManagerProps } from "./video-form-renderer";
 import type {
@@ -165,6 +165,8 @@ const ChatGenerateVideo: FC<Props> = ({
   const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
   const [lastRowSeq, setLastRowSeq] = useState<number | undefined>(undefined);
   const messagesRef = useRef<Message[]>([]);
+  // error ที่มาถึงก่อน card ของ taskId นั้นจะอยู่ใน list — ใช้ปิด card ตอนมันเข้ามา ไม่ให้ค้าง loading
+  const failedTasksRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -393,6 +395,83 @@ const ChatGenerateVideo: FC<Props> = ({
     }
   };
 
+  /**
+   * หลัง socket reconnect — event ระหว่างหลุดหายไป จึงดึงสถานะจริงของ card ที่ยัง loading จาก DB
+   * history กรอง FAILED ออก: card ที่ loading แต่ไม่มีในผลลัพธ์ = fail ไปแล้ว
+   */
+  const resyncLoadingTasks = async () => {
+    const loadingCards = messagesRef.current.filter((m) =>
+      isVideoLoading(m.genneratedStatus),
+    );
+    if (loadingCards.length === 0) return;
+
+    const seqs = loadingCards
+      .map((m) => m.seq)
+      .filter((s): s is number => s !== undefined && s !== null);
+    const sinceSeq = seqs.length > 0 ? Math.min(...seqs) - 1 : lastRowSeq;
+    const data: Message[] | undefined = await logsService.findProjectTaskByPage(
+      projectId,
+      {
+        organizationId: session?.user?.organizationId || "",
+        type: "video",
+        skip: 0,
+        take: 50,
+        ...(sinceSeq !== undefined && { lastsql: sinceSeq }),
+        ...(!teamView && { userId: userId }),
+      },
+    );
+    // request ล้ม — ไม่เดาสถานะ ปล่อย card ไว้ให้ event/sweeper ปิด
+    if (!data) return;
+
+    const byTaskId = new Map(data.map((row) => [row.taskId, row]));
+    const knownIds = new Set(messagesRef.current.map((m) => m.taskId));
+    const newRows = [...data].reverse().filter((row) => !knownIds.has(row.taskId));
+    const lostText = "Generation failed";
+    // ได้เต็ม page อาจมีแถวเก่ากว่าที่ไม่ได้ดึงมา — ไม่ตัดสินว่า fail
+    const isComplete = data.length < 50;
+
+    setMessages((prev) => {
+      const merged = prev.flatMap((m): Message[] => {
+        if (!isVideoLoading(m.genneratedStatus)) return [m];
+        const row = byTaskId.get(m.taskId);
+        if (row) return [{ ...m, ...row }];
+        if (!isComplete) return [m];
+        // temp card: ถ้า core สร้างงานแล้ว row จะอยู่ใน newRows แทน — ไม่มีเลยแปลว่าไม่ถูกสร้าง
+        if (m.taskId.startsWith("temp-")) {
+          return newRows.length > 0
+            ? []
+            : [{ ...m, genneratedStatus: "FAILED", errorMessage: lostText }];
+        }
+        return [{ ...m, genneratedStatus: "FAILED", errorMessage: lostText }];
+      });
+      return [...merged, ...newRows];
+    });
+
+    const rowSeqs = data
+      .map((row) => row.seq)
+      .filter((s): s is number => s !== undefined && s !== null);
+    if (rowSeqs.length > 0) {
+      setLastRowSeq((prev) => Math.max(prev ?? 0, ...rowSeqs));
+    }
+    fetchCredit();
+  };
+
+  // handler ใน socket effect ผูกครั้งเดียว — เรียกผ่าน ref ให้ได้ state ล่าสุด
+  const resyncRef = useRef(resyncLoadingTasks);
+  resyncRef.current = resyncLoadingTasks;
+
+  /** ปิด card เป็น FAILED พร้อมเหตุผล — ถ้า card ยังไม่อยู่ใน list จำไว้ใส่ตอนมันเข้ามา */
+  const markTaskFailed = (taskId: string, errorText: string) => {
+    failedTasksRef.current.set(taskId, errorText);
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.taskId === taskId
+          ? { ...m, genneratedStatus: "FAILED", errorMessage: errorText }
+          : m,
+      ),
+    );
+  };
+
   useEffect(() => {
     if (!socket || activeKey !== "video") return;
 
@@ -411,6 +490,10 @@ const ChatGenerateVideo: FC<Props> = ({
       oldTaskId: string;
     }) => {
       if (data.status === 200) {
+        const knownError = failedTasksRef.current.get(data.data.taskId);
+        const incoming: Message = knownError
+          ? { ...data.data, genneratedStatus: "FAILED", errorMessage: knownError }
+          : data.data;
         setMessages((prev) => {
           const index = prev.findIndex(
             (msg) =>
@@ -418,10 +501,10 @@ const ChatGenerateVideo: FC<Props> = ({
           );
           if (index !== -1) {
             return prev.map((msg, i) =>
-              i === index ? { ...msg, ...data.data } : msg,
+              i === index ? { ...msg, ...incoming } : msg,
             );
           }
-          return [...prev, data.data];
+          return [...prev, incoming];
         });
       } else {
         setMessages((prev) =>
@@ -553,29 +636,19 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
+    // ใช้ทั้ง worker:video-error (หลังเข้าคิว) และ video-generate:error (core ปฏิเสธ, taskId = temp id)
     const handleError = (error: {
       taskId?: string;
-      message: string;
+      message?: unknown;
       details?: unknown;
     }) => {
-      openNotificationWithIcon("error", error.message || "Generation failed");
+      const errorText =
+        typeof error.message === "string" && error.message
+          ? error.message
+          : "Generation failed";
+      openNotificationWithIcon("error", errorText);
       setSubmitting(false);
-      if (error.taskId) {
-        const found = messagesRef.current.find(
-          (m) => m.taskId === error.taskId,
-        );
-        if (found) {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.taskId === error.taskId
-                ? { ...m, genneratedStatus: "FAILED" }
-                : m,
-            ),
-          );
-        } else {
-          fetchNewMessage();
-        }
-      }
+      if (error.taskId) markTaskFailed(error.taskId, errorText);
     };
 
     const handleCreditChange = (res: {
@@ -591,9 +664,22 @@ const ChatGenerateVideo: FC<Props> = ({
       }
     };
 
+    // reconnect ได้ socket id ใหม่และหลุดจากห้อง — join ใหม่ก่อน ไม่งั้น event ของงานถัดไปไม่มาเลย
+    const handleReconnect = () => {
+      socket.emit("join-room", {
+        projectId,
+        type: "video",
+        message: `Joined room ${projectId}`,
+      });
+      resyncRef.current().catch((err: unknown) =>
+        console.error("Resync video tasks failed:", err),
+      );
+    };
+
+    socket.on("connect", handleReconnect);
     socket.on("video-task:created", handleTaskCreated);
     socket.on("task-video:started", handleTaskStarted);
-    // socket.on("video-generate:error", handleError);
+    socket.on("video-generate:error", handleError);
     socket.on("worker:video-error", handleError);
     socket.on("worker:video-started", workerTaskStarted);
     socket.on("worker:video-url-success", workerUrlSuccess);
@@ -603,9 +689,10 @@ const ChatGenerateVideo: FC<Props> = ({
     socket.on("chat:used-credit", handleCreditChange);
 
     return () => {
+      socket.off("connect", handleReconnect);
       socket.off("video-task:created", handleTaskCreated);
       socket.off("task-video:started", handleTaskStarted);
-      // socket.off("video-generate:error", handleError);
+      socket.off("video-generate:error", handleError);
       socket.off("worker:video-error", handleError);
       socket.off("worker:video-url-success", workerUrlSuccess);
       socket.off("worker:video-upload-success", workerUploadSuccess);
@@ -1172,7 +1259,9 @@ const ChatGenerateVideo: FC<Props> = ({
     }, 100);
 
     if (!socket || !isConnected) {
-      messageApi.error("WebSocket is not connected. Please refresh the page.");
+      const errorText = "WebSocket is not connected. Please refresh the page.";
+      messageApi.error(errorText);
+      markTaskFailed(tempTask, errorText);
       return;
     }
     socket.emit("generate:video", socketPayload);
