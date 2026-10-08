@@ -332,6 +332,11 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
           }
         } catch (error) {
           console.error("Error uploading file:", error);
+          setLocalFiles((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, status: "error" } : f,
+            ),
+          );
         } finally {
           setIsLoadingUpload(false);
         }
