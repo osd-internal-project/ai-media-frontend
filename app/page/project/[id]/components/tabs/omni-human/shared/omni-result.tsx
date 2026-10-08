@@ -5,6 +5,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
  
 import { Message } from "../chat-generate-omnihumen";
 import OmniActionBar from "./action-bar";
+import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { Trash2, User } from "lucide-react";
 import VideoItem from "../../../chat-components/video-player";
 
@@ -78,6 +79,7 @@ const OmniResultItem: FC<Props> = ({
                   <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
+                <ImageSmartReference referenceImages={message.referenceImages} />
               </Typography.Text>
             </div>
             <div style={{ display: "flex", alignItems: "center", marginTop: 2 }}>
@@ -185,6 +187,7 @@ const OmniResultItem: FC<Props> = ({
                   <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
+                <ImageSmartReference referenceImages={message.referenceImages} />
               </Typography.Text>
             </Col>
             <Col flex="auto" style={{ minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>

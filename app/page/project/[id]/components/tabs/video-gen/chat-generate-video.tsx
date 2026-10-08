@@ -1157,6 +1157,7 @@ const ChatGenerateVideo: FC<Props> = ({
       referenceImages: [
         ...(refImageFrist[0] ? [refImageFrist[0].url] : []),
         ...(refImageLast[0] ? [refImageLast[0].url] : []),
+        ...refImage.map((image) => image.url),
       ],
       resolution: selectedResolution,
       ratio: selectedRatio,

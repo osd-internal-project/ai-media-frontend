@@ -5,6 +5,7 @@ import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { Message, VideoMessage } from "./video.types";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
+import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { Volume1, VolumeX, User, Trash2 } from "lucide-react";
 
@@ -91,6 +92,7 @@ const VideoResultItem: FC<Props> = ({
                   <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
+                <ImageSmartReference referenceImages={message.referenceImages} />
               </Typography.Text>
             </div>
             <div style={{ display: "flex", alignItems: "center", marginTop: 2 }}>
@@ -228,6 +230,7 @@ const VideoResultItem: FC<Props> = ({
                   <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
                   {message.users?.fullname || message.users?.username || "-"}
                 </span>
+                <ImageSmartReference referenceImages={message.referenceImages} />
               </Typography.Text>
             </Col>
             <Col flex="auto" style={{ minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>

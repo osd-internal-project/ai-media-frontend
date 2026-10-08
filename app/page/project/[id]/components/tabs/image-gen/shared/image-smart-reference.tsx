@@ -34,6 +34,9 @@ export default function ImageSmartReference({ referenceImages }: Props) {
     }
   };
 
+  // ไม่มีรูป reference ก็ไม่ต้องแสดงกล่อง (ทุกแท็บใช้ component นี้)
+  if (!referenceImages || referenceImages.length === 0) return null;
+
   return (
     <>
       <div className="my-1  p-1 bg-[#1e1e21] rounded-lg border border-white/5">
