@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useCallback,
   type FC,
+  useLayoutEffect,
 } from "react";
 import {
   Card,
@@ -43,7 +44,11 @@ import DreamactorResultItem from "./shared/dream-item-result";
 import DreamactorResultHeader from "./shared/header";
 import { getSecondsFileDuration } from "@/app/utils/fileUtil";
 import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
-import { fetchOlderTasks, HISTORY_PAGE_SIZE } from "../fetch-older-tasks";
+import {
+  fetchOlderTasks,
+  HISTORY_LOAD_THRESHOLD_PX,
+  HISTORY_PAGE_SIZE,
+} from "../fetch-older-tasks";
 
 export interface DreamactorChatProps {
   teamView: boolean;
@@ -206,7 +211,8 @@ const ChatGenerateDreamactor: FC<
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
-  const scrollHeightRef = useRef<number>(0);
+  // ระยะจากขอบล่าง — คืนตำแหน่งแบบ absolute จึงไม่ชนกับ scroll anchoring ของ browser
+  const scrollBottomRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
@@ -790,8 +796,12 @@ const ChatGenerateDreamactor: FC<
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
+    // user ยัง scroll ต่อได้ระหว่างรอ — จำตำแหน่งล่าสุดไว้คืนหลังต่อ row
+    if (isFetchingRef.current) {
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
+    }
     if (
-      target.scrollTop === 0 &&
+      target.scrollTop < HISTORY_LOAD_THRESHOLD_PX &&
       hasMore &&
       !loading &&
       !isFirstLoad.current &&
@@ -799,19 +809,18 @@ const ChatGenerateDreamactor: FC<
     ) {
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
-      scrollHeightRef.current = target.scrollHeight;
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
       fetchOldMessages();
     }
   };
 
   // Restore scroll position after loading more
-  useEffect(() => {
+  // layout effect = คืนตำแหน่งก่อน paint ไม่เห็นภาพกระโดด 1 frame
+  useLayoutEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
-      const newScrollHeight = chatContainerRef.current.scrollHeight;
-      const scrollDiff = newScrollHeight - scrollHeightRef.current;
-
       chatContainerRef.current.style.scrollBehavior = "auto";
-      chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight - scrollBottomRef.current;
 
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {

@@ -1,5 +1,8 @@
 /** จำนวน task ต่อครั้งตอน scroll ขึ้นดูประวัติ */
-export const HISTORY_PAGE_SIZE = 1;
+export const HISTORY_PAGE_SIZE = 5;
+
+/** เริ่มโหลดประวัติก่อนถึงขอบบน — รอถึง 0 พอดีทำให้ต้องหยุดรอทุกครั้ง */
+export const HISTORY_LOAD_THRESHOLD_PX = 300;
 
 const MAX_CURSOR_STEPS = 5;
 

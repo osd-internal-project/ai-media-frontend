@@ -555,12 +555,20 @@ useEffect(() => {
                   )}
                 </Flex>
               </Flex>
-            ) : (loading || isFetchingHistory) && hasMore ? (
+            ) : loading && messagesLength === 0 ? (
               <Flex justify="center" style={{ paddingBlock: 8 }}>
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
               </Flex>
             ) : (
               <>
+                {/* โหลดประวัติ: ห้ามแทน list ด้วย spinner (unmount = รูปโหลดใหม่ทั้งหน้า) — height 0 จึงไม่ดัน content */}
+                {isFetchingHistory && hasMore && (
+                  <div style={{ position: "sticky", top: 0, height: 0, zIndex: 2, pointerEvents: "none" }}>
+                    <Flex justify="center" style={{ paddingTop: 8 }}>
+                      <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+                    </Flex>
+                  </div>
+                )}
                 {rightContent}
                 <div ref={bottomRef} />
                 {/* Auto-hide overlay after generate: listen for loading=false and overlay open */}

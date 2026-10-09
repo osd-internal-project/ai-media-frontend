@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   type FC,
+  useLayoutEffect,
 } from "react";
 import {
   Flex,
@@ -41,7 +42,11 @@ import type {
 } from "../../tab-layout/types/generator-config.type";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
-import { fetchOlderTasks, HISTORY_PAGE_SIZE } from "../fetch-older-tasks";
+import {
+  fetchOlderTasks,
+  HISTORY_LOAD_THRESHOLD_PX,
+  HISTORY_PAGE_SIZE,
+} from "../fetch-older-tasks";
 
 /** Props for each version's form input component */
 export interface VideoInputProps {
@@ -137,7 +142,8 @@ const ChatGenerateVideo: FC<Props> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
-  const scrollHeightRef = useRef<number>(0);
+  // ระยะจากขอบล่าง — คืนตำแหน่งแบบ absolute จึงไม่ชนกับ scroll anchoring ของ browser
+  const scrollBottomRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
@@ -720,8 +726,12 @@ const ChatGenerateVideo: FC<Props> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
+    // user ยัง scroll ต่อได้ระหว่างรอ — จำตำแหน่งล่าสุดไว้คืนหลังต่อ row
+    if (isFetchingRef.current) {
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
+    }
     if (
-      target.scrollTop === 0 &&
+      target.scrollTop < HISTORY_LOAD_THRESHOLD_PX &&
       hasMore &&
       !loading &&
       !isFirstLoad.current &&
@@ -729,7 +739,7 @@ const ChatGenerateVideo: FC<Props> = ({
     ) {
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
-      scrollHeightRef.current = target.scrollHeight;
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
       fetchOldMessages();
     }
   };
@@ -753,12 +763,12 @@ const ChatGenerateVideo: FC<Props> = ({
     }
   }
 
-  useEffect(() => {
+  // layout effect = คืนตำแหน่งก่อน paint ไม่เห็นภาพกระโดด 1 frame
+  useLayoutEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
-      const newScrollHeight = chatContainerRef.current.scrollHeight;
-      const scrollDiff = newScrollHeight - scrollHeightRef.current;
       chatContainerRef.current.style.scrollBehavior = "auto";
-      chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight - scrollBottomRef.current;
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {
           chatContainerRef.current.style.scrollBehavior = "smooth";
