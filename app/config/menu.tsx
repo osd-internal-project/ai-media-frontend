@@ -9,7 +9,11 @@ import {
   MessageSquare,
   Camera,
 } from "lucide-react";
-import { organizationPermissions } from "@/app/utils/permissions";
+import {
+  hasAccessCode,
+  organizationPermissions,
+  PHOTO_EVENT_ACCESS_CODE,
+} from "@/app/utils/permissions";
 
 export const MenuSider = [
   {
@@ -43,6 +47,8 @@ export const MenuSider = [
       },
       {
         key: `photo-event`,
+        // org ต้องถูก super admin เปิด code นี้ก่อน — systemRoles ไม่ข้ามเงื่อนไขนี้
+        accessCode: PHOTO_EVENT_ACCESS_CODE,
         role: organizationPermissions.managePhotoEvent,
         // เห็นได้แม้ role ใน org นี้ต่ำกว่า ADMIN
         systemRoles: ["SUPER_ADMIN"],
@@ -124,11 +130,17 @@ export const renderMenuItems = (
   menuList: any[],
   role: string | undefined,
   systemRole?: string,
+  accessCodes?: string[],
 ) => {
   if (!role) {
     return [];
   }
-  const sortedMenu = filterMenuByOrganizationRole(menuList, role, systemRole);
+  const sortedMenu = filterMenuByOrganizationRole(
+    menuList,
+    role,
+    systemRole,
+    accessCodes,
+  );
 
   const items: any[] = [];
   sortedMenu.forEach((menu) => {
@@ -269,6 +281,7 @@ export const filterMenuByOrganizationRole = (
   menuList: any[],
   role: string,
   systemRole?: string,
+  accessCodes?: string[],
 ) => {
   const hasAccess = (itemRole: string[] | string) => {
     if (!itemRole || itemRole === "") return true; // public access
@@ -288,8 +301,10 @@ export const filterMenuByOrganizationRole = (
       const children = menu.children
         ? menu.children.filter(
             (child: any) =>
-              hasAccess(child.role) ||
-              (!!systemRole && child.systemRoles?.includes(systemRole)),
+              (!child.accessCode ||
+                hasAccessCode(accessCodes, child.accessCode)) &&
+              (hasAccess(child.role) ||
+                (!!systemRole && child.systemRoles?.includes(systemRole))),
           )
         : null;
 

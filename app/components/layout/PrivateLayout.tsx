@@ -100,6 +100,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
+  const [accessCodes, setAccessCodes] = useState<string[] | undefined>();
 
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
@@ -133,6 +134,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   };
   async function fecthdataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
+    setAccessCodes(undefined);
+    organizationService
+      .findAccessCodeByOrganizationId(organizationId)
+      .then((codes) => setAccessCodes(codes ?? []));
     const organizationDetail =
       await organizationMemberService.findUserMemberByOrganization(
         organizationId,
@@ -506,6 +511,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             currentPathSub={currentPathSub}
             organizationRole={organizationRole}
             systemRole={session?.user?.systemRole ?? undefined}
+            accessCodes={accessCodes}
           />
         ) : null}
 
@@ -550,6 +556,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 currentPathSub={currentPathSub}
                 organizationRole={organizationRole}
                 systemRole={session?.user?.systemRole ?? undefined}
+                accessCodes={accessCodes}
                 onClose={() => setMobileSiderOpen(false)}
               />
             </div>
@@ -594,6 +601,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <OrganizationProvider
                 value={{
                   organizationRole,
+                  accessCodes,
                 }}
               >
                 {children}

@@ -31,6 +31,16 @@ export const organizationPermissions = {
   managePhotoEvent: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
 };
 
+/** access code ใน Organization.accessCodes ที่ super admin ติ๊กเพื่อเปิด Photo Event ให้ org */
+export const PHOTO_EVENT_ACCESS_CODE = "photo_event";
+
+/** เทียบแบบ lower/trim เหมือนหน้า project — code เก่าบางแถวมีช่องว่าง/ตัวพิมพ์ใหญ่ */
+export const hasAccessCode = (
+  accessCodes: string[] | undefined,
+  code: string,
+): boolean =>
+  (accessCodes ?? []).some((c) => c.toLowerCase().trim() === code);
+
 export const projectPermissions = {
   manageProject: ["OWNER", "ADMIN"] as ProjectRole[],
   useChat: ["OWNER", "ADMIN", "USER","SUPER_ADMIN"] as ProjectRole[],

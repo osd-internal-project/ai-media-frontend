@@ -36,6 +36,7 @@ export default function OrganizationDetailPage() {
     { label: "Workflow", value: "workflow", className: "label-5" },
     { label: "Editor", value: "editor", className: "label-6" },
     { label: "Social Media", value: "social", className: "label-7" },
+    { label: "Photo Event", value: "photo_event", className: "label-8" },
   ];
   const [organization, setOrganization] = useState<IOrganization>();
   const [members, setMembers] = useState<any[]>([]);
