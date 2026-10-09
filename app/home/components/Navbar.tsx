@@ -19,7 +19,7 @@ export default function Navbar() {
         <Link href="/home" className="nav-link">Home</Link>
         <Link href="/features" className="nav-link">Features</Link>
         {FEATURES.billing && <Link href="/pricing" className="nav-link">Pricing</Link>}
-        <Link href="/login" className="nav-link">Login</Link>
+        <a href="/login" className="nav-link">Login</a>
 
         <a
           href="/contact-sale"
@@ -46,7 +46,7 @@ export default function Navbar() {
         <Link href="/home" onClick={() => setOpen(false)}>Home</Link>
         <Link href="/features" onClick={() => setOpen(false)}>Features</Link>
         {FEATURES.billing && <Link href="/pricing" onClick={() => setOpen(false)}>Pricing</Link>}
-        <Link href="/login" onClick={() => setOpen(false)}>Login</Link>
+        <a href="/login" onClick={() => setOpen(false)}>Login</a>
 
         <a
           href="/contact-sale"

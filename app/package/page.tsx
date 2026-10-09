@@ -29,7 +29,7 @@ const PackagePage = () => {
     router.push("/signup");
   };
   const handleToLoginPage = () => {
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   // Payment-first flow: navigate to the purchase form by priceId. The purchase

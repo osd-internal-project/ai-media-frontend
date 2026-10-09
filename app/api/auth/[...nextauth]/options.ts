@@ -187,9 +187,9 @@ export const authOptions = {
 
           const data = await response.json();
           if (!data.exists) {
-            // Redirect to login with error message if user not found in DB
+            // Redirect to the error page if user not found in DB
             // Note: Returning a string redirects in NextAuth v4
-            return "/login?error=403";
+            return "/error?error=403";
           }
 
           // The Keycloak token carries no local identity, so /auth/check is the only

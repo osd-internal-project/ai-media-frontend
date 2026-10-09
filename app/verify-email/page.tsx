@@ -56,7 +56,7 @@ const VerifyEmailContent = () => {
         await userService.confirmEmail(token, values.password);
         setStatus("success");
         messageApi.success("Email verified successfully!");
-        router.push("/login");
+        window.location.href = "/login";
       }
     } catch (error: any) {
       console.error("Error accepting invitation:", error);
@@ -236,7 +236,7 @@ const VerifyEmailContent = () => {
                   The verification link is invalid or has expired. Please
                   request a new verification link or contact support.
                 </p>
-                <Link href="/login" className="w-full">
+                <a href="/login" className="w-full">
                   <Button
                     size="large"
                     style={{
@@ -253,7 +253,7 @@ const VerifyEmailContent = () => {
                   >
                     Back to Login
                   </Button>
-                </Link>
+                </a>
               </div>
             )}
           </div>

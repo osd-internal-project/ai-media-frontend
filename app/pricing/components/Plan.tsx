@@ -71,17 +71,18 @@ export default function Plan() {
    */
   const handleGetStarted = (priceId: string) => {
     if (!priceId) {
-      router.push(`/login`);
+      window.location.href = "/login";
       return;
     }
 
     // newOrg=1 → checkout collects org details and creates a brand-new org after payment
     const checkoutUrl = `/page/payment/checkout?priceId=${priceId}&newOrg=1`;
-    router.push(
-      status === "authenticated"
-        ? checkoutUrl
-        : `/login?callbackUrl=${encodeURIComponent(checkoutUrl)}`,
-    );
+    if (status === "authenticated") {
+      router.push(checkoutUrl);
+      return;
+    }
+    // /login is a route handler that redirects to Keycloak — needs a full page load.
+    window.location.href = `/login?callbackUrl=${encodeURIComponent(checkoutUrl)}`;
   };
 
   const fetchPlans = React.useCallback(async () => {

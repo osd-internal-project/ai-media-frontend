@@ -40,12 +40,12 @@ export default function Navbar() {
           >
             Pricing
           </Link>
-          <Link
+          <a
             href="/login"
             className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
           >
             Login
-          </Link>
+          </a>
         </div>
 
         <a href="/contact-sale"

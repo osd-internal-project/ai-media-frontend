@@ -404,7 +404,7 @@ const AcceptInviteContent = () => {
                     <p className="text-gray-400 mb-8 max-w-sm">
                         The invitation link is invalid or has expired. Please contact your administrator for a new invitation.
                     </p>
-                    <Link href="/login">
+                    <a href="/login">
                         <Button
                             type="primary"
                             size="large"
@@ -412,7 +412,7 @@ const AcceptInviteContent = () => {
                         >
                             Back to Login
                         </Button>
-                    </Link>
+                    </a>
                 </div>
             </div>
         );

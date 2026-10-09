@@ -46,12 +46,12 @@ export default function PublicNavbar() {
               Pricing
             </Link>
           )}
-          <Link
+          <a
             href="/login"
             className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
           >
             Login
-          </Link>
+          </a>
         </div>
 
         <a
@@ -89,9 +89,9 @@ export default function PublicNavbar() {
             Pricing
           </Link>
         )}
-        <Link href="/login" onClick={() => setOpen(false)}>
+        <a href="/login" onClick={() => setOpen(false)}>
           Login
-        </Link>
+        </a>
         <Link
           href="/contact-sale"
           onClick={() => setOpen(false)}
