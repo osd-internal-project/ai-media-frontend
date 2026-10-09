@@ -13,7 +13,6 @@ import {
 } from "antd";
 import { Upload as UploadIcon, Mic, Sparkles } from "lucide-react";
 import type { RcFile } from "antd/es/upload";
-// import OmnihumenServices from "@/app/services/omnihumen.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import OmnihumenTaskServices from "@/app/services/omnihumen-task.service";
 import { TOmnihumenTask } from "@/app/common/omnihumen.type";
@@ -33,7 +32,6 @@ const PromptOmnihumen: FC<props> = ({
   shouldRefetch,
   isActive,
 }): ReactElement => {
-  // const omnihumenServices = OmnihumenServices(axiosCore);
   const omnihumenTaskServices = OmnihumenTaskServices(axiosCore);
   const [api, contextHolders] = notification.useNotification();
   // const [api, contextHolders] = notification.useNotification();
