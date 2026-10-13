@@ -21,16 +21,25 @@ export async function GET(request: NextRequest) {
     return appRedirect(request, `/error?error=${encodeURIComponent(error)}`);
   }
 
-  const internalUrl =
-    process.env.NEXTAUTH_URL_INTERNAL || process.env.NEXTAUTH_URL;
-  if (!internalUrl) {
-    console.error("Login redirect: NEXTAUTH_URL_INTERNAL / NEXTAUTH_URL not set");
+  const publicUrl = process.env.NEXTAUTH_URL;
+  const internalUrl = process.env.NEXTAUTH_URL_INTERNAL || publicUrl;
+  if (!publicUrl || !internalUrl) {
+    console.error("Login redirect: NEXTAUTH_URL / NEXTAUTH_URL_INTERNAL not set");
     return appRedirect(request, "/error?error=Configuration");
   }
+
+  // With AUTH_TRUST_HOST, next-auth derives its origin (redirect_uri, secure cookie names)
+  // from these headers; without them it would use the internal host.
+  const { host, protocol } = new URL(publicUrl);
+  const forwardedHeaders = {
+    "X-Forwarded-Host": host,
+    "X-Forwarded-Proto": protocol.replace(":", ""),
+  };
 
   try {
     const csrfRes = await fetch(`${internalUrl}/api/auth/csrf`, {
       cache: "no-store",
+      headers: forwardedHeaders,
     });
     if (!csrfRes.ok) {
       throw new Error(`csrf request failed with ${csrfRes.status}`);
@@ -46,6 +55,7 @@ export async function GET(request: NextRequest) {
       cache: "no-store",
       redirect: "manual",
       headers: {
+        ...forwardedHeaders,
         "Content-Type": "application/x-www-form-urlencoded",
         // Only name=value goes back in a Cookie header, not the attributes.
         Cookie: csrfCookies.map((cookie) => cookie.split(";")[0]).join("; "),
