@@ -24,6 +24,10 @@ import type {
 import { useOrgIdentity } from "@/app/hooks/useOrgIdentity";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
+import {
+  AuthEventStream,
+  openAuthEventStream,
+} from "@/app/lib/sse/auth-event-stream";
 
 interface Props {
   openAssistant: boolean;
@@ -69,7 +73,7 @@ const AssistantModal: React.FC<Props> = ({
   const [draftPrompt, setDraftPrompt] = useState("");
   const [models, setModels] = useState<ChatModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
-  const esRef = useRef<EventSource | null>(null);
+  const esRef = useRef<AuthEventStream | null>(null);
 
   // `session.user.id` เป็น access token ไม่ใช่ users.userId — backend ตรวจสมาชิก
   // ขององค์กรด้วย userId ตัวจริง ถ้าส่ง token ไปจะถูกปฏิเสธทุกครั้ง
@@ -201,7 +205,7 @@ const AssistantModal: React.FC<Props> = ({
       setIsStreaming(true);
       setStreamingContent("");
 
-      // EventSource ส่ง header ไม่ได้ ทุกอย่างจึงไปทาง query string
+      // ข้อความยังไปทาง query string เหมือนเดิม — token ไปทาง header (openAuthEventStream)
       const url = new URL(`${CHAT_ASSISTANT_BASE_URL}/chat/stream`);
       url.searchParams.set("userId", userId);
       url.searchParams.set("organizationId", organizationId);
@@ -213,7 +217,7 @@ const AssistantModal: React.FC<Props> = ({
       let accumulated = "";
       const assistantMsgId = `tmp-assistant-${Date.now()}`;
 
-      const es = new EventSource(url.toString());
+      const es = openAuthEventStream(url.toString());
       esRef.current = es;
 
       es.onmessage = (event) => {

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import config from '../config';
+import { getAccessToken } from '../lib/axios/access-token';
 
 interface UseWebSocketOptions {
     url?: string;
@@ -44,6 +45,12 @@ export const useWebSocket = (
                 path: '/websockets',
                 transports: ['websocket', 'polling'],
                 autoConnect: false,
+                // เรียกทุกครั้งที่ connect/reconnect → ได้ token ล่าสุดเสมอ (backend ตรวจตอน handshake)
+                auth: (cb) => {
+                    getAccessToken()
+                        .then((token) => cb({ token }))
+                        .catch(() => cb({}));
+                },
             });
 
             // Global listeners for the singleton

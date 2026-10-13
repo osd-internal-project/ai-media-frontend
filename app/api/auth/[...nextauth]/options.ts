@@ -278,16 +278,12 @@ export const authOptions = {
         return token;
       }
 
-      // Check if token needs refresh
-      // const now = Date.now();
-      // const expiresAt = token.expiresAt as number;
-      // const timeUntilExpiry = expiresAt - now;
-      // const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-      // // Refresh token if it expires in less than 5 minutes
-      // if (timeUntilExpiry < fiveMinutes) {
-      //   return refreshAccessToken(token);
-      // }
+      // ต่ออายุก่อนหมด 5 นาที — backend ตรวจ access token ทุก request แล้ว (KeycloakAuthGuard)
+      const expiresAt = Number(token.expiresAt);
+      const fiveMinutes = 5 * 60 * 1000;
+      if (Number.isFinite(expiresAt) && expiresAt - Date.now() < fiveMinutes) {
+        return refreshAccessToken(token);
+      }
 
       // Token is still valid, return as is
       return token;

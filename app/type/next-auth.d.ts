@@ -6,6 +6,10 @@ declare module "next-auth" {
   }
 
   interface Session {
+    /** Keycloak access token — backend ตรวจด้วย KeycloakAuthGuard */
+    accessToken?: string;
+    /** "RefreshAccessTokenError" เมื่อต่ออายุ token ไม่ได้ → ต้อง login ใหม่ */
+    error?: string;
     user: {
       id: string;
       name?: string | null;
