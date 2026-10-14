@@ -174,7 +174,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       dataIndex: ["users", "status"],
       key: "status",
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+        <Tag
+          color={status === "active" ? "green" : "red"}
+          className="rounded-full px-3"
+        >
           {status === "active" ? "Enabled" : "Disabled"}
         </Tag>
       ),
@@ -183,7 +186,9 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       title: "Role",
       dataIndex: "role",
       key: "role",
-      render: (role) => <Tag color={role === "OWNER" ? "gold" : "blue"}>{role}</Tag>,
+      render: (role) => (
+        <Tag color={role === "OWNER" ? "gold" : "blue"}>{role}</Tag>
+      ),
     },
     {
       title: "Joined At",
@@ -200,7 +205,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
             <Button type="link" onClick={() => handleEditMember(record)}>
               Edit
             </Button>
-            <Popconfirm title="Remove Member?" onConfirm={() => handleRemoveMember(record.id)}>
+            <Popconfirm
+              title="Remove Member?"
+              onConfirm={() => handleRemoveMember(record.id)}
+            >
               <Button type="link" danger>
                 Remove
               </Button>
@@ -220,16 +228,22 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       {contextHolder}
       {canManage && (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:gap-0">
-          {/* <Button
+          <Space>
+            {/* <Button
             type="primary"
             icon={<PlusCircleOutlined className="text-orange-500" />}
             onClick={handleExtraCoin}
           >
             Add Extra
           </Button> */}
-          <Button type="primary" onClick={handleInvite} className="w-full sm:w-auto">
-            Invite User
-          </Button>
+            <Button
+              type="primary"
+              onClick={handleInvite}
+              className="w-full sm:w-auto"
+            >
+              Invite User
+            </Button>
+          </Space>
         </div>
       )}
 
@@ -269,7 +283,9 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                 className="rounded-xl border border-white/10 bg-white/5 p-4"
               >
                 <div className="flex items-start gap-3">
-                  <Avatar className="shrink-0">{user?.fullname?.[0] || "U"}</Avatar>
+                  <Avatar className="shrink-0">
+                    {user?.fullname?.[0] || "U"}
+                  </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium text-white">
                       {user?.fullname || member.userId}
@@ -285,10 +301,14 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                     <div className="text-gray-400">Status</div>
                     <div className="mt-1">
                       <Tag
-                        color={member?.users?.status === "active" ? "green" : "red"}
+                        color={
+                          member?.users?.status === "active" ? "green" : "red"
+                        }
                         className="rounded-full px-3"
                       >
-                        {member?.users?.status === "active" ? "Enabled" : "Disabled"}
+                        {member?.users?.status === "active"
+                          ? "Enabled"
+                          : "Disabled"}
                       </Tag>
                     </div>
                   </div>
@@ -313,7 +333,11 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                 <div className="mt-4 flex flex-wrap gap-2">
                   {canManage ? (
                     <>
-                      <Button type="link" className="px-0" onClick={() => handleEditMember(member)}>
+                      <Button
+                        type="link"
+                        className="px-0"
+                        onClick={() => handleEditMember(member)}
+                      >
                         Edit
                       </Button>
                       <Popconfirm
@@ -343,7 +367,11 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         onOk={() => editMemberForm.submit()}
         width={600}
       >
-        <Form form={editMemberForm} onFinish={onEditMemberFinish} layout="vertical">
+        <Form
+          form={editMemberForm}
+          onFinish={onEditMemberFinish}
+          layout="vertical"
+        >
           <Form.Item name="role" label="Role" rules={[{ required: true }]}>
             <Select>
               <Select.Option value="OWNER">OWNER</Select.Option>
@@ -399,7 +427,9 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
               </Form.Item>
             </div>
             <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end sm:space-x-2 sm:gap-0">
-              <Button onClick={() => setIsInviteModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsInviteModalOpen(false)}>
+                Cancel
+              </Button>
               <Button type="primary" htmlType="submit">
                 Confirm
               </Button>
@@ -416,9 +446,17 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         onOk={() => extraCoinForm.submit()}
         width={600}
       >
-        <Form form={extraCoinForm} onFinish={onExtraCoinFinish} layout="vertical" className="pt-4">
+        <Form
+          form={extraCoinForm}
+          onFinish={onExtraCoinFinish}
+          layout="vertical"
+          className="pt-4"
+        >
           <Form.Item name="onTopBalance" label="On Top Balance">
-            <InputNumber style={{ width: "100%" }} placeholder="Enter balance" />
+            <InputNumber
+              style={{ width: "100%" }}
+              placeholder="Enter balance"
+            />
           </Form.Item>
           <Form.Item name="onTopImage" label="On Top Image">
             <InputNumber style={{ width: "100%" }} placeholder="Enter images" />

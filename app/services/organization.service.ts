@@ -4,6 +4,13 @@ import {
   IOrganizationInvitation,
   IPendingInvitation,
 } from "../common/organization.type";
+import {
+  IBulkChunkResult,
+  IBulkMemberRow,
+  IBulkNewProject,
+  IBulkProjectList,
+  IBulkValidationResult,
+} from "../common/organization-member.type";
 
 const OrganizationServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/organization";
@@ -147,6 +154,39 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
         .then((res) => {
           return res.data;
         })
+        .catch((err) => {
+          throw err;
+        });
+    },
+    getBulkProjects: async (organizationId: string): Promise<IBulkProjectList> => {
+      return await axiosInstance
+        .get(`${baseUrl}/${organizationId}/bulk-members/projects`)
+        .then((res) => res.data)
+        .catch((err) => {
+          throw err;
+        });
+    },
+    validateBulkMembers: async (
+      organizationId: string,
+      rows: IBulkMemberRow[],
+    ): Promise<IBulkValidationResult> => {
+      return await axiosInstance
+        .post(`${baseUrl}/${organizationId}/bulk-members/validate`, { rows })
+        .then((res) => res.data)
+        .catch((err) => {
+          throw err;
+        });
+    },
+    createBulkMembersChunk: async (
+      organizationId: string,
+      value: {
+        rows: (IBulkMemberRow & { rowIndex: number })[];
+        newProjects: IBulkNewProject[];
+      },
+    ): Promise<IBulkChunkResult> => {
+      return await axiosInstance
+        .post(`${baseUrl}/${organizationId}/bulk-members`, value)
+        .then((res) => res.data)
         .catch((err) => {
           throw err;
         });

@@ -21,6 +21,7 @@ import OrganizationMembersServices from "@/app/services/organization-members.ser
 import OrganizationService from "@/app/services/organization.service";
 import CreditBalanceServices from "@/app/services/credit-balance.service";
 import { axiosUser } from "@/app/lib/axios/axios";
+import BulkAddUsersModal from "./BulkAddUsersModal";
 
 interface OrganizationMemberTabProps {
   organizationId: string;
@@ -43,6 +44,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
   const [isEditMemberModalOpen, setIsEditMemberModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isExtraCoinModalOpen, setIsExtraCoinModalOpen] = useState(false);
+  const [isBulkAddModalOpen, setIsBulkAddModalOpen] = useState(false);
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
 
   const [editMemberForm] = Form.useForm();
@@ -168,7 +170,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       dataIndex: ["users", "status"],
       key: "status",
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+        <Tag
+          color={status === "active" ? "green" : "red"}
+          className="rounded-full px-3"
+        >
           {status === "active" ? "Enabled" : "Disabled"}
         </Tag>
       ),
@@ -177,7 +182,9 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       title: "Role",
       dataIndex: "role",
       key: "role",
-      render: (role) => <Tag color={role === "OWNER" ? "gold" : "blue"}>{role}</Tag>,
+      render: (role) => (
+        <Tag color={role === "OWNER" ? "gold" : "blue"}>{role}</Tag>
+      ),
     },
     {
       title: "Joined At",
@@ -193,7 +200,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
           <Button type="link" onClick={() => handleEditMember(record)}>
             Edit
           </Button>
-          <Popconfirm title="Remove Member?" onConfirm={() => handleRemoveMember(record.id)}>
+          <Popconfirm
+            title="Remove Member?"
+            onConfirm={() => handleRemoveMember(record.id)}
+          >
             <Button type="link" danger>
               Remove
             </Button>
@@ -206,17 +216,22 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
   return (
     <div className="space-y-4">
       {contextHolder}
-      <div className="flex justify-end space-x-2 mb-4">
-        <Button
-          type="primary"
-          icon={<PlusCircleOutlined className="text-orange-500" />}
-          onClick={handleExtraCoin}
-        >
-          Add Extra
-        </Button>
-        <Button type="primary" onClick={handleInvite}>
-          Invite User
-        </Button>
+      <div className="flex justify-end space-x-3 mb-4">
+        <Space>
+          <Button
+            type="primary"
+            icon={<PlusCircleOutlined className="text-orange-500" />}
+            onClick={handleExtraCoin}
+          >
+            Add Extra
+          </Button>
+          <Button type="primary" onClick={handleInvite}>
+            Invite User
+          </Button>
+          <Button type="primary" onClick={() => setIsBulkAddModalOpen(true)}>
+            Add Users
+          </Button>
+        </Space>
       </div>
 
       <Table
@@ -234,7 +249,11 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         onCancel={() => setIsEditMemberModalOpen(false)}
         onOk={() => editMemberForm.submit()}
       >
-        <Form form={editMemberForm} onFinish={onEditMemberFinish} layout="vertical">
+        <Form
+          form={editMemberForm}
+          onFinish={onEditMemberFinish}
+          layout="vertical"
+        >
           <Form.Item name="role" label="Role" rules={[{ required: true }]}>
             <Select>
               <Select.Option value="OWNER">OWNER</Select.Option>
@@ -285,7 +304,9 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
               </Form.Item>
             </div>
             <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button onClick={() => setIsInviteModalOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsInviteModalOpen(false)}>
+                Cancel
+              </Button>
               <Button type="primary" htmlType="submit">
                 Confirm
               </Button>
@@ -294,6 +315,13 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         </div>
       </Modal>
 
+      <BulkAddUsersModal
+        open={isBulkAddModalOpen}
+        organizationId={organizationId}
+        onClose={() => setIsBulkAddModalOpen(false)}
+        onImported={onRefresh}
+      />
+
       {/* Extra Coin Modal */}
       <Modal
         title="Add Extra"
@@ -301,9 +329,17 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         onCancel={() => setIsExtraCoinModalOpen(false)}
         onOk={() => extraCoinForm.submit()}
       >
-        <Form form={extraCoinForm} onFinish={onExtraCoinFinish} layout="vertical" className="pt-4">
+        <Form
+          form={extraCoinForm}
+          onFinish={onExtraCoinFinish}
+          layout="vertical"
+          className="pt-4"
+        >
           <Form.Item name="onTopBalance" label="On Top Balance">
-            <InputNumber style={{ width: "100%" }} placeholder="Enter balance" />
+            <InputNumber
+              style={{ width: "100%" }}
+              placeholder="Enter balance"
+            />
           </Form.Item>
           <Form.Item name="onTopImage" label="On Top Image">
             <InputNumber style={{ width: "100%" }} placeholder="Enter images" />
