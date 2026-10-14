@@ -59,7 +59,7 @@ const ChangePasswordForm = () => {
 
       messageApi.success("Password changed successfully!");
       setTimeout(() => {
-        router.push("/login");
+        window.location.href = "/login";
       }, 2000);
     } catch (error: any) {
       console.error("Change password error:", error);

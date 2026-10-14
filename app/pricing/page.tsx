@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Navbar from "@/app/home/components/Navbar";
+import BillingGate from "@/app/components/BillingGate";
 import dynamic from "next/dynamic";
 
 const Plan = dynamic(() => import("./components/Plan"), {
@@ -40,6 +41,7 @@ const ContactUs = dynamic(() => import("./components/ContactUs"), {
 
 export default function PricingPage() {
   return (
+    <BillingGate>
     <main
       className="relative min-h-screen overflow-x-hidden bg-[#020308] text-white"
       style={{ fontFamily: "Clash Display Variable" }}
@@ -95,5 +97,6 @@ export default function PricingPage() {
         <ContactUs />
       </div>
     </main>
+    </BillingGate>
   );
 }

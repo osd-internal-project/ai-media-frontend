@@ -27,7 +27,10 @@ const PricingCards: React.FC<PricingCardsProps> = ({
     const card = el.querySelector(".pricing-card") as HTMLElement;
     if (!card) return;
 
-    const nextEdgePadding = Math.max(16, (el.clientWidth - card.clientWidth) / 2);
+    const nextEdgePadding = Math.max(
+      16,
+      (el.clientWidth - card.clientWidth) / 2,
+    );
 
     setEdgePadding(nextEdgePadding);
 
@@ -54,7 +57,6 @@ const PricingCards: React.FC<PricingCardsProps> = ({
 
   return (
     <div className="relative w-full">
-
       {/* 🔥 ARROWS (mobile only) */}
       <button
         onClick={() => scroll("left")}
@@ -99,7 +101,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
               "
             >
               {/* HEADER */}
-              <div className="border-b border-[#4D4D4D] bg-[#4D4D4D] p-4 pb-4 sm:p-8 sm:pb-6">
+              <div className=" min-h-[280px] border-b border-[#4D4D4D] bg-[#4D4D4D] p-4 pb-4 sm:p-8 sm:pb-6">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <h3 className="mb-0 text-[22px] font-medium tracking-tight text-white sm:text-[32px]">
                     {plan.name}
@@ -115,7 +117,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                   <div className="mb-3 flex flex-wrap items-center gap-2">
                     <span className="text-[18px] font-bold tracking-tight text-white sm:text-[22px]">
                       {Number(
-                        plan.detailJson?.creditAllowance || 0
+                        plan.detailJson?.creditAllowance || 0,
                       ).toLocaleString()}
                     </span>
                     <span className="text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3] sm:text-[11px]">
@@ -125,23 +127,24 @@ const PricingCards: React.FC<PricingCardsProps> = ({
 
                   {plan.prices
                     .filter((price) => price.interval === planInterval)
-                    .map((price) => (
-                      price.price > 0 && (
-                        <div key={price.id} className="flex flex-col">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[20px] font-bold tracking-tight text-white sm:text-[24px]">
-                              {Number(price.price).toLocaleString()}
-                            </span>
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3] sm:text-[11px]">
-                              BAHT
-                            </span>
+                    .map(
+                      (price) =>
+                        price.price > 0 && (
+                          <div key={price.id} className="flex flex-col">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[20px] font-bold tracking-tight text-white sm:text-[24px]">
+                                {Number(price.price).toLocaleString()}
+                              </span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3] sm:text-[11px]">
+                                BAHT
+                              </span>
+                            </div>
+                            <div className="mt-[1px] text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3]">
+                              PER {price.interval}
+                            </div>
                           </div>
-                          <div className="mt-[1px] text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3]">
-                            PER {price.interval}
-                          </div>
-                        </div>
-                      )
-                    ))}
+                        ),
+                    )}
                 </div>
               </div>
 
@@ -156,14 +159,16 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                         acc[cat].push(feature);
                         return acc;
                       },
-                      {} as Record<string, TPlanFeature[]>
+                      {} as Record<string, TPlanFeature[]>,
                     );
 
                     return Object.entries(groupedFeatures).map(
                       ([category, items], idx) => (
                         <div
                           key={category || idx}
-                          className={idx === 0 && !category ? "" : "mt-4 sm:mt-8"}
+                          className={
+                            idx === 0 && !category ? "" : "mt-4 sm:mt-8"
+                          }
                         >
                           {category && (
                             <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-[#A3A3A3] sm:mb-4 sm:text-[11px]">
@@ -182,26 +187,45 @@ const PricingCards: React.FC<PricingCardsProps> = ({
                             ))}
                           </div>
                         </div>
-                      )
+                      ),
                     );
                   })()}
-
-                  <div className="mt-6">
-                    {generateManualPrice &&
-                      plan.prices
-                        .filter((p) => p.interval === planInterval)
-                        .map((price) => (
-                          <div key={price.id} className="mt-3">
-                            <Button
-                              size="large"
-                              type="primary"
-                              onClick={() => onGetStarted(price.id || "")}
-                            >
-                              Admin Get Started
-                            </Button>
-                          </div>
-                        ))}
-                  </div>
+                </div>{" "}
+                <div className="mt-6">
+                  {generateManualPrice ? (
+                    plan.prices
+                      .filter((p) => p.interval === planInterval)
+                      .map((price) => (
+                        <div key={price.id} className="mt-3">
+                          <Button
+                            size="large"
+                            type="primary"
+                            onClick={() => onGetStarted(price.id || "")}
+                          >
+                            Admin Get Started
+                          </Button>
+                        </div>
+                      ))
+                  ) : (
+                    // Public CTA: select this plan's price for the current
+                    // interval and proceed to payment. Falls back to an empty
+                    // id (free/enterprise plans) so the parent can redirect.
+                    <>
+                      {/* <Button
+                        block
+                        size="large"
+                        type="primary"
+                        onClick={() =>
+                          onGetStarted(
+                            plan.prices.find((p) => p.interval === planInterval)
+                              ?.id || "",
+                          )
+                        }
+                      >
+                        Get Started
+                      </Button> */}
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -12,8 +12,10 @@ export default function Callback() {
             const code = params.get("code");
             if (!code) return;
 
+            // Provider-agnostic: Keycloak redirects every brokered IdP back here with only
+            // ?code, and the backend's token exchange is identical for all of them.
             const res = await fetch(
-                `${config.backendUserUrl}/auth/google/callback`,
+                `${config.backendUserUrl}/auth/idp/callback`,
                 {
                     method: "POST",
                     headers: {

@@ -26,6 +26,7 @@ export const config = {
      * - package (package page)
      */
     "/page/:path*",
+    "/event/:path*",
     // "/((?!api|_next/static|_next/image|favicon.ico|images|error|add-user|signup|login|signin|package).*)",
   ],
 };

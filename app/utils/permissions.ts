@@ -1,3 +1,5 @@
+import { FEATURES } from "../config/features";
+
 export type OrganizationRole =
   | "OWNER"
   | "ADMIN"
@@ -26,7 +28,18 @@ export const organizationPermissions = {
   viewDashboard: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
   viewTemplates: ["OWNER", "ADMIN", "MEMBER", "SUPER_ADMIN"] as OrganizationRole[],
   manageTemplates: ["OWNER", "ADMIN","SUPER_ADMIN"] as OrganizationRole[],
+  managePhotoEvent: ["OWNER", "ADMIN", "SUPER_ADMIN"] as OrganizationRole[],
 };
+
+/** access code ใน Organization.accessCodes ที่ super admin ติ๊กเพื่อเปิด Photo Event ให้ org */
+export const PHOTO_EVENT_ACCESS_CODE = "photo_event";
+
+/** เทียบแบบ lower/trim เหมือนหน้า project — code เก่าบางแถวมีช่องว่าง/ตัวพิมพ์ใหญ่ */
+export const hasAccessCode = (
+  accessCodes: string[] | undefined,
+  code: string,
+): boolean =>
+  (accessCodes ?? []).some((c) => c.toLowerCase().trim() === code);
 
 export const projectPermissions = {
   manageProject: ["OWNER", "ADMIN"] as ProjectRole[],
@@ -68,3 +81,10 @@ export const canViewTemplates = (organizationRole: string | undefined) =>
 
 export const canManageTemplates = (organizationRole: string | undefined) =>
   checkRole(organizationPermissions.manageTemplates, organizationRole);
+
+export const canManagePhotoEvent = (organizationRole: string | undefined) =>
+  checkRole(organizationPermissions.managePhotoEvent, organizationRole);
+
+/** Plans, checkout and credits stay hidden until billing ships — SUPER_ADMIN bypasses. */
+export const canSeeBilling = (systemRole: string | null | undefined) =>
+  FEATURES.billing || systemRole === "SUPER_ADMIN";

@@ -26,9 +26,9 @@ import {
 } from "@ant-design/icons";
 import PromptLibrary from "./components/tabs/library/prompt-library";
 import PromptActivity from "./components/tabs/all-activity/prompt-activity";
-import ChatGenerateImage from "./components/tabs/image-gen/chat-generate-image";
-import ChatGenerateOmnihumen from "./components/tabs/omni-human/chat-generate-omnihumen";
-import ChatGenerateDreamactor from "./components/tabs/dream-actor/chat-generate-dreamactor";
+import ImageFormRenderer from "./components/tabs/image-gen/image-form-renderer";
+import OmnihumenFormRenderer from "./components/tabs/omni-human/omnihumen-form-renderer";
+import DreamactorFormRenderer from "./components/tabs/dream-actor/dreamactor-form-renderer";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -36,17 +36,22 @@ import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
-import { Edit2, Image, Paintbrush } from "lucide-react";
+import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
+import { Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
+import PublicSocial from "./components/tabs/public-social/public-social";
+import { FEATURES } from "@/app/config/features";
 
 type GenerateTabKey =
   | "image"
   | "video"
   | "omnihumen"
   | "dreamactor"
+  | "workflow"
   | "library"
   | "activity"
-  | "editor";
+  | "editor"
+  | "social";
 
 // Resolves saved → default → first available model for a given tab key
 function resolveModel(
@@ -107,7 +112,12 @@ const GenerateImagePage: FC = () => {
     (TMasterModelType & { capabilities?: string[] }) | undefined
   >(undefined);
   const [projectRole, setProjectRole] = useState<string | null>(null);
- 
+  // gallery item ที่ผู้ใช้กด "Share to social" จากแท็บ All Activity —
+  // เก็บไว้ที่ระดับ page เพราะต้องข้ามแท็บไปเปิด wizard ในแท็บ Public Social
+  const [socialPresetGalleryIds, setSocialPresetGalleryIds] = useState<
+    string[] | undefined
+  >(undefined);
+
   const onSetPromptTextRef = React.useRef<
     ((id: number) => Promise<void>) | null
   >(null);
@@ -127,6 +137,8 @@ const GenerateImagePage: FC = () => {
     canAccessOmni,
     canAccessDream,
     canAccessEditor,
+    canAccessWorkflow,
+    canAccessSocial,
   } = useMemo(() => {
     const has = normalizedAccessCodes.length > 0;
     return {
@@ -138,8 +150,15 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("omni")),
       canAccessDream:
         !has || normalizedAccessCodes.some((c) => c.includes("dream")),
+      canAccessWorkflow:
+        !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
         !has || normalizedAccessCodes.some((c) => c.includes("editor")),
+      // Gated by the feature flag on top of the plan's access code, so the Public
+      // Social tab and the "share to social" action disappear together.
+      canAccessSocial:
+        FEATURES.social &&
+        (!has || normalizedAccessCodes.some((c) => c.includes("social"))),
     };
   }, [normalizedAccessCodes]);
 
@@ -150,9 +169,11 @@ const GenerateImagePage: FC = () => {
       video: semantic.colorPrimary || "#1677ff",
       omnihumen: semantic.colorSuccess || "#52c41a",
       dreamactor: semantic.colorWarning || "#faad14",
+      workflow: semantic.colorPrimary || "#7c3aed",
       library: "#1890ff",
       activity: semantic.colorTextSecondary || "#8c8c8c",
       editor: semantic.colorInfo || "#1890ff",
+      social: semantic.colorPrimary || "#6F6ADE",
     }),
     [semantic],
   );
@@ -232,6 +253,16 @@ const GenerateImagePage: FC = () => {
   const onChangeTab = useCallback((key: GenerateTabKey) => {
     setActiveKey(key);
     setSelectedAIModel(undefined); // let the effect above pick the right model
+  }, []);
+
+  /**
+   * เปิดแท็บ Public Social พร้อม preselect สื่อที่กดมาจากแท็บ All Activity
+   *
+   * @param galleryId gallery item ที่ผู้ใช้กดปุ่ม Share
+   */
+  const onShareToSocial = useCallback((galleryId: string) => {
+    setSocialPresetGalleryIds([galleryId]);
+    setActiveKey("social");
   }, []);
 
   const onAIModelChange = useCallback(
@@ -315,7 +346,7 @@ const GenerateImagePage: FC = () => {
         teamView={teamView}
         setTeamView={setTeamView}
         getProject={getProject}
-        activeKey={activeKey}
+        activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
         selectedAIModel={selectedAIModel}
         filteredAIModels={filteredAIModels}
         onAIModelChange={onAIModelChange}
@@ -337,7 +368,7 @@ const GenerateImagePage: FC = () => {
             overflow: "hidden",
           }}
           className="ant-tabs-full generate-tabs"
-          activeKey={activeKey}
+          activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
           size={isMobile ? "small" : "large"}
           tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
           tabBarStyle={{
@@ -362,10 +393,12 @@ const GenerateImagePage: FC = () => {
                       <PictureOutlined />,
                     ),
                     children: (
-                      <ChatGenerateImage
+                      <ImageFormRenderer
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
-                        activeKey={activeKey}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -391,7 +424,9 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <VideoFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -416,9 +451,11 @@ const GenerateImagePage: FC = () => {
                       <MessageOutlined />,
                     ),
                     children: (
-                      <ChatGenerateOmnihumen
+                      <OmnihumenFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -443,9 +480,11 @@ const GenerateImagePage: FC = () => {
                       <PlaySquareOutlined />,
                     ),
                     children: (
-                      <ChatGenerateDreamactor
+                      <DreamactorFormRenderer
                         teamView={teamView}
-                        activeKey={activeKey}
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                        }
                         projectId={id}
                         userId={session?.user?.id}
                         projectRole={projectRole}
@@ -459,6 +498,28 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
+            ...(canAccessWorkflow
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "workflow",
+                    label: renderTabLabel(
+                      "workflow",
+                      "Workflow",
+                      <Workflow size={16} />,
+                    ),
+                    children: (
+                      <WorkflowFormRenderer
+                        activeKey={
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                        }
+                        projectId={id}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+
             {
               disabled: disableTab,
               key: "library",
@@ -466,7 +527,9 @@ const GenerateImagePage: FC = () => {
               label: renderTabLabel("library", "Library", <StarOutlined />),
               children: (
                 <div className="h-full">
-                  <PromptLibrary activeKey={activeKey} />
+                  <PromptLibrary
+                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+                  />
                 </div>
               ),
             },
@@ -479,7 +542,12 @@ const GenerateImagePage: FC = () => {
                 "All Activity",
                 <FolderOpenOutlined />,
               ),
-              children: <PromptActivity activeKey={activeKey} />,
+              children: (
+                <PromptActivity
+                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+                  onShareToSocial={canAccessSocial ? onShareToSocial : undefined}
+                />
+              ),
             },
             ...(canAccessEditor
               ? [
@@ -500,10 +568,32 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
+            ...(canAccessSocial
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "social",
+                    destroyOnHidden: true,
+                    label: renderTabLabel(
+                      "social",
+                      "Public Social",
+                      <Share2 size={16} />,
+                    ),
+                    children: (
+                      <PublicSocial
+                        activeKey={activeKey}
+                        presetGalleryIds={socialPresetGalleryIds}
+                        onPresetConsumed={() =>
+                          setSocialPresetGalleryIds(undefined)
+                        }
+                      />
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
-     
     </div>
   );
 };

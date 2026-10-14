@@ -1,0 +1,39 @@
+{{- if .Values.networkPolicy.enabled }}
+# Default-deny egress for the console pods, allowing only what the SSR server
+# needs (DNS, in-namespace backends, external HTTPS for Keycloak/OIDC). This
+# blocks malware download / C2 egress like the plain-HTTP fetch to 77.90.13.20.
+# Ingress is intentionally not restricted here so the ingress controller can
+# still reach the pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.appName }}-egress
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # In-namespace backend services (e.g. user-service for NextAuth)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+    # External HTTPS only (Keycloak / OIDC). Plain-HTTP and all other outbound
+    # ports are denied. Tighten `to:` to the Keycloak CIDR when known.
+    - ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

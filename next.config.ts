@@ -2,6 +2,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Hides the floating Next.js dev-tools indicator (the "N Issues" badge in the bottom-left).
+  // It only ever renders under `next dev` and is never part of a production build.
+  devIndicators: false,
   // env: {
   //   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   //   VERSION: process.env.VERSION,
@@ -35,7 +38,7 @@ const nextConfig = {
   //       headers: [
   //         {
   //           key: "Content-Security-Policy",
-  //           value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; img-src 'self' data: blob: https:;",
+  //           value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; media-src 'self' blob: data: https:; img-src 'self' data: blob: https:;",
   //         },
   //       ],
   //     },

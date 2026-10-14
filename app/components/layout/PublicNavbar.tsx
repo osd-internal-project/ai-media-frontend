@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { FEATURES } from "@/app/config/features";
 
 export default function PublicNavbar() {
   const [open, setOpen] = useState(false);
@@ -37,18 +38,20 @@ export default function PublicNavbar() {
           >
             Features
           </Link>
-          <Link
-            href="/pricing"
-            className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
-          >
-            Pricing
-          </Link>
-          <Link
+          {FEATURES.billing && (
+            <Link
+              href="/pricing"
+              className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
+            >
+              Pricing
+            </Link>
+          )}
+          <a
             href="/login"
             className="text-white hover:text-gray-300 font-medium text-[15px] transition-colors"
           >
             Login
-          </Link>
+          </a>
         </div>
 
         <a
@@ -81,12 +84,14 @@ export default function PublicNavbar() {
         <Link href="/features" onClick={() => setOpen(false)}>
           Features
         </Link>
-        <Link href="/pricing" onClick={() => setOpen(false)}>
-          Pricing
-        </Link>
-        <Link href="/login" onClick={() => setOpen(false)}>
+        {FEATURES.billing && (
+          <Link href="/pricing" onClick={() => setOpen(false)}>
+            Pricing
+          </Link>
+        )}
+        <a href="/login" onClick={() => setOpen(false)}>
           Login
-        </Link>
+        </a>
         <Link
           href="/contact-sale"
           onClick={() => setOpen(false)}

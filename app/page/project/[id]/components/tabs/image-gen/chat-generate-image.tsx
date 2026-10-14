@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useCallback,
   type FC,
+  useLayoutEffect,
 } from "react";
 
 import {
@@ -16,6 +17,7 @@ import {
   message,
   type UploadFile,
   type UploadProps,
+  type FormInstance,
   notification,
   Row,
   Col,
@@ -48,11 +50,14 @@ import GenerateServices from "@/app/services/generate.service";
 import Avatars from "@/public/images/Avatar.jpg";
 import LogsServices from "@/app/services/logs.service";
 
-import ImageConfigurationCard from "./image-smart-reference";
+import ImageConfigurationCard from "./shared/image-smart-reference";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PreviewImage from "../../chat-components/preview-image";
 import PromptStart from "../../chat-components/prompt-start";
-import ChatImageInput from "./chat-image-input";
+import type {
+  ImageModelConfig,
+  ImageFormState,
+} from "../../tab-layout/types/generator-config.type";
 import UploadsServices from "@/app/services/uploads.service";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
@@ -62,11 +67,17 @@ import { getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import ActionBar from "./action-bar";
-import ResultHeader from "./result-header";
-import ResultItem from "./image-result-item";
+import ActionBar from "./shared/action-bar";
+import ResultHeader from "./shared/result-header";
+import ResultItem from "./shared/image-result-item";
 import { TPromptGuide } from "@/app/common/prompt-guide.type";
 import AssistantModal from "../../assistant/assistant-modal";
+import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
+import {
+  fetchOlderTasks,
+  HISTORY_LOAD_THRESHOLD_PX,
+  HISTORY_PAGE_SIZE,
+} from "../fetch-older-tasks";
 
 export interface ImageChatProps {
   teamView: boolean;
@@ -99,6 +110,35 @@ export interface GenerateConfig {
   modelName: string;
   imageCount: number;
   resolution: string;
+}
+
+/** Props received by every versioned image form component */
+export interface ImageInputProps {
+  setGroupMode: (groupMode: string | undefined) => void;
+  groupMode: string;
+  setSelectedRatio: (ratio: string) => void;
+  selectedRatio: string;
+  setSelectedResolution: (resolution: string) => void;
+  selectedResolution: string;
+  setSelectedMaximumImage: (n: number) => void;
+  selectedMaximumImage: number;
+  form: FormInstance;
+  files: UploadFile[];
+  handleUploadChange: NonNullable<UploadProps["onChange"]>;
+  beforeUpload: (file: RcFile) => boolean;
+  onRemoveFile: (file: UploadFile) => void;
+  submitting: boolean;
+  handleSendMessage: (values: Record<string, unknown>) => void;
+  isLoadingUpload: boolean;
+  setSelectedWidth: (w: number) => void;
+  setSelectedHeight: (h: number) => void;
+  handleUsePromptGuide: (prompt: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
+  fetchCerrentUsedCredit: () => void;
+  organizationId?: string;
+  selectedModel?: string;
+  projectId: string;
 }
 
 const conicColors: ProgressProps["strokeColor"] = {
@@ -165,7 +205,12 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateImage: FC<ImageChatProps> = ({
+const ChatGenerateImage: FC<
+  ImageChatProps & {
+    modelConfig: ImageModelConfig;
+    FormComponent: FC<ImageInputProps>;
+  }
+> = ({
   teamView,
   projectId,
   userId,
@@ -176,6 +221,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   selectedAIModel,
   setDisableTab,
   onSetPromptTextRef,
+  modelConfig,
+  FormComponent,
 }) => {
   const { data: session } = useSession();
   const { mode } = useThemeMode();
@@ -193,12 +240,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
-  const scrollHeightRef = useRef<number>(0);
+  // ระยะจากขอบล่าง — คืนตำแหน่งแบบ absolute จึงไม่ชนกับ scroll anchoring ของ browser
+  const scrollBottomRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   const initialPageSize = 3;
-  const historyPageSize = 1;
   const currentLimitRef = useRef<number>(initialPageSize);
   const { socket, isConnected } = useWebSocket();
   const [form] = Form.useForm();
@@ -249,6 +296,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
+    setHasMore(true);
+    setLoading(true);
     isFirstLoad.current = true;
     fetchMessages();
   }, [projectId, activeKey, teamView]);
@@ -263,8 +312,6 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           message: `Joined room ${projectId}`,
         });
       }
-      setLoading(true);
-      isFirstLoad.current = true;
       // loadMoreMessages(0, false, currentId);
     }
     fetchCredit();
@@ -457,6 +504,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       };
     }) => {
       console.log("✅ Task complete:", data);
+      // event "worker:image-complete" ถูกยิงทั้งแบบรายรูป (ไม่มี data.data) และแบบจบงาน (มี data.data)
+      // handler นี้สนใจเฉพาะ event จบงานจริง — ถ้าไม่มี data.data.imageUrl ให้ข้าม กัน crash
+      if (!data?.data || !Array.isArray(data.data.imageUrl)) {
+        return;
+      }
       const processMessage = messagesRef.current.find(
         (msg) => msg.taskId === data.taskId,
       );
@@ -504,7 +556,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             if (msg.taskId === error.taskId) {
               return {
                 ...msg,
-                genneratedStatus: "FAIL",
+                genneratedStatus: "FAILED",
               };
             }
             return msg;
@@ -536,8 +588,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     socket.on("worker:started", workerStarted);
     socket.on("worker:progress", handleProgress);
     socket.on("worker:image-complete", handleImageComplete);
-    socket.on("worker:error", handleError);
-    socket.on("worker:complete", handleTaskComplete);
+    socket.on("worker:image-error", handleError);
+    socket.on("worker:image-complete", handleTaskComplete);
     socket.on("generate:error", handleError);
     // socket.on("chat:history", handleHistory);
     socket.on("chat:used-credit", handleCreditChange);
@@ -548,8 +600,8 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       socket.off("worker:started", workerStarted);
       socket.off("worker:progress", handleProgress);
       socket.off("worker:image-complete", handleImageComplete);
-      socket.off("worker:error", handleError);
-      socket.off("worker:complete", handleTaskComplete);
+      socket.off("worker:image-error", handleError);
+      socket.off("worker:image-complete", handleTaskComplete);
       socket.off("generate:error", handleError);
       // socket.off("chat:history", handleHistory);
       socket.off("chat:message-saved");
@@ -565,15 +617,20 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
+    // user ยัง scroll ต่อได้ระหว่างรอ — จำตำแหน่งล่าสุดไว้คืนหลังต่อ row
+    if (isFetchingRef.current) {
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
+    }
     if (
-      target.scrollTop === 0 &&
+      target.scrollTop < HISTORY_LOAD_THRESHOLD_PX &&
+      hasMore &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
     ) {
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
-      scrollHeightRef.current = target.scrollHeight;
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
       // const nextPage = page + 1;
       // setPage(nextPage);
       // loadMoreMessages(nextPage, true);
@@ -583,13 +640,12 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     }
   };
 
-  useEffect(() => {
+  // layout effect = คืนตำแหน่งก่อน paint ไม่เห็นภาพกระโดด 1 frame
+  useLayoutEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
-      const newScrollHeight = chatContainerRef.current.scrollHeight;
-      const scrollDiff = newScrollHeight - scrollHeightRef.current;
-
       chatContainerRef.current.style.scrollBehavior = "auto";
-      chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight - scrollBottomRef.current;
 
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {
@@ -632,11 +688,14 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       }
       generateMessage(data, "reload");
     }
+    if (!data) setLoading(false);
     fetchCredit();
   };
 
   const fetchCredit = async () => {
     if (socket) {
+      console.log("Fetching used credit...");
+
       socket.emit("chat:get-used-credit", {
         projectId,
         organizationId: session?.user?.organizationId,
@@ -647,28 +706,28 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
-      organizationId: session?.user?.organizationId || "",
-      type: "image",
-      skip: 0,
-      take: 1,
-      fristsql: fristRowSeq,
-      ...(!teamView && { userId: userId }),
-    });
-    if (data && data.length > 0) {
-      const seqValues = data
-        .map((p) => p.seq)
-        .filter((s) => s !== undefined && s !== null);
-      if (seqValues && seqValues.length > 0) {
-        const minSeq = Math.min(...seqValues);
-        setFristRowSeq(minSeq);
-      }
-      generateMessage(data, "loadmore");
-    } else {
-      isFirstLoad.current = false;
-      setLoading(false);
-      setIsFetchingHistory(false);
+    try {
+      const result = await fetchOlderTasks<Message>(
+        fristRowSeq,
+        new Set(messagesRef.current.map((m) => m.id)),
+        (fristsql) =>
+          logsService.findProjectTaskByPage(projectId, {
+            organizationId: session?.user?.organizationId || "",
+            type: "image",
+            skip: 0,
+            take: HISTORY_PAGE_SIZE,
+            fristsql,
+            ...(!teamView && { userId: userId }),
+          }),
+      );
+      if (result.status === "end") setHasMore(false);
+      if (result.status !== "found") return;
+      setFristRowSeq(result.cursor);
+      if (result.items.length > 0) generateMessage(result.items, "loadmore");
+    } finally {
+      // reset ทุกกรณี — ได้ [] หรือ request พังต้องไม่ทิ้ง spinner ค้าง
       isFetchingRef.current = false;
+      setIsFetchingHistory(false);
     }
   };
   const fetchNewMessage = async () => {
@@ -697,7 +756,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
     if (isFetchingHistory || type === "loadmore") {
       isLoadingMoreRef.current = true;
     }
-    if (messageData.length < currentLimitRef.current) {
+    if (type === "reload" && messageData.length < currentLimitRef.current) {
       setHasMore(false);
     }
     if (messageData.length === 0) {
@@ -738,10 +797,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
           (m: Message) => !existingTaskIds.has(m.taskId),
         );
 
-        if (uniqueNewMessages.length === 0) {
-          setHasMore(false);
-          return prev;
-        }
+        if (uniqueNewMessages.length === 0) return prev;
         return [...prev, ...uniqueNewMessages];
       });
       isFirstLoad.current = false;
@@ -785,25 +841,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
       if (fileToUpload instanceof Blob) {
         setIsLoadingUpload(true);
         try {
-          await new Promise<void>((resolve, reject) => {
-            const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
-            img.onload = () => {
-              const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
-              if (minSide < 300) {
-                reject(
-                  "Image size is too small, minimum side length must not be less than 300 px",
-                );
-              } else {
-                resolve();
-              }
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-          });
+          // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+          const size = await readImageSize(fileToUpload as Blob);
+          if (size && Math.min(size.width, size.height) < 300) {
+            throw "Image size is too small, minimum side length must not be less than 300 px";
+          }
         } catch (error) {
           openNotificationWithIcon("error", String(error));
           setIsLoadingUpload(false);
@@ -881,17 +923,11 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   const onDownloadImage = async (fileName: string, imageId: string) => {
     const hide = messageApi.loading("Downloading image...", 0);
     try {
-      const response = await galleryService.downloadFile(
+      galleryService.downloadFile(
         imageId,
         session?.user?.organizationId || "",
+        fileName,
       );
-      if (!response) throw new Error("Download failed or response is empty");
-      const url = URL.createObjectURL(response);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
       hide();
       messageApi.success("Image downloaded successfully");
     } catch (error) {
@@ -938,27 +974,27 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
   };
 
   const handleFormSubmit = async (values: any) => {
-    // สร้าง temporary message สำหรับแสดงใน UI ทันที
-    if (!selectedAIModel) return "Plese select model";
+    if (!selectedAIModel) return "Please select model";
     const currentTaskId = `temp-${Date.now()}`;
-    const message = {
-      taskId: currentTaskId,
-      model: selectedAIModel.modelType,
-      prompt: values.prompt,
-      image: refImage.map((image) => image.imagePath),
-      sequentialImageGeneration: "auto",
-      resolution: selectedResolution,
-      maxImages: selectedMaximumImage,
-      watermark: false,
-      ratio: selectedRatio,
-      projectId: projectId,
-      userId: userId,
-      width: selectedWidth,
-      height: selectedHeight,
-      imageGenerateType: groupMode,
-      typeGenerate: "image",
-      organizationId: session?.user?.organizationId,
+    const state: ImageFormState = {
+      selectedAIModel,
+      refImages: refImage,
+      selectedResolution,
+      selectedRatio,
+      selectedWidth,
+      selectedHeight,
+      selectedMaximumImage,
+      groupMode: groupMode || "",
+      projectId,
+      userId: userId || "",
+      organizationId: session?.user?.organizationId ?? undefined,
+      username: username || "",
     };
+    const message = modelConfig.buildSubmitPayload(
+      values,
+      state,
+      currentTaskId,
+    );
     const tempMessage = {
       id: currentTaskId,
       taskId: currentTaskId,
@@ -1149,7 +1185,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
         tabKey="image"
         form={form}
         leftPanel={
-          <ChatImageInput
+          <FormComponent
             setGroupMode={setGroupMode}
             groupMode={groupMode || ""}
             setSelectedRatio={setSelectedRatio}
@@ -1172,7 +1208,7 @@ const ChatGenerateImage: FC<ImageChatProps> = ({
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
             fetchCerrentUsedCredit={fetchCerrentUsedCredit}
-            organizationId={session?.user?.organizationId || undefined}
+            organizationId={session?.user?.organizationId ?? undefined}
             selectedModel={selectedAIModel?.modelType || undefined}
             projectId={projectId}
           />

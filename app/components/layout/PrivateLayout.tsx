@@ -40,7 +40,16 @@ import { useThemeMode } from "../ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import CreditBalanceServices from "@/app/services/credit-balance.service";
 import CouponService from "@/app/services/coupon.service";
+import { canSeeBilling } from "@/app/utils/permissions";
 import "./LayoutStyle.css";
+
+/** Every in-app route behind the billing gate — see canSeeBilling. */
+const BILLING_ROUTE_PREFIXES = [
+  "/page/plans",
+  "/page/payment",
+  "/page/credit",
+  "/page/organization/purchase",
+] as const;
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -91,6 +100,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [searchTexts, setSearchTexts] = useState<{ [key: number]: string }>({});
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
+  const [accessCodes, setAccessCodes] = useState<string[] | undefined>();
 
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
@@ -124,6 +134,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   };
   async function fecthdataByOrganization(organizationId: string) {
     setOrganizationId(organizationId);
+    setAccessCodes(undefined);
+    organizationService
+      .findAccessCodeByOrganizationId(organizationId)
+      .then((codes) => setAccessCodes(codes ?? []));
     const organizationDetail =
       await organizationMemberService.findUserMemberByOrganization(
         organizationId,
@@ -267,6 +281,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
 
   const isAdminRoute = pathname.startsWith("/page/admin-management");
 
+  // Hiding the buttons is not enough — these routes are still reachable by URL.
+  const isBillingRoute = BILLING_ROUTE_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+
   // if (isAdminRoute) {
   //   return (
   //     // <ConfigProvider
@@ -294,6 +313,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   // }
 
   if (isAdminRoute && session?.user?.systemRole !== "SUPER_ADMIN") {
+    notFound();
+  }
+
+  if (isBillingRoute && !canSeeBilling(session?.user?.systemRole)) {
     notFound();
   }
 
@@ -488,6 +511,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             currentPathSub={currentPathSub}
             organizationRole={organizationRole}
             systemRole={session?.user?.systemRole ?? undefined}
+            accessCodes={accessCodes}
           />
         ) : null}
 
@@ -532,6 +556,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 currentPathSub={currentPathSub}
                 organizationRole={organizationRole}
                 systemRole={session?.user?.systemRole ?? undefined}
+                accessCodes={accessCodes}
                 onClose={() => setMobileSiderOpen(false)}
               />
             </div>
@@ -576,6 +601,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
               <OrganizationProvider
                 value={{
                   organizationRole,
+                  accessCodes,
                 }}
               >
                 {children}

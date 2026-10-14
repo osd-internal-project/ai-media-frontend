@@ -27,6 +27,12 @@ const OrganizationSubscriptionServices = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
+    /** Cancel at end of the current cycle (status → pending_cancel). */
+    cancel: async (organizationId: string): Promise<IOrganizationSubscription> => {
+      return await axiosInstance
+        .post(`${baseUrl}/cancel/${organizationId}`)
+        .then((res) => res.data);
+    },
   };
 };
 

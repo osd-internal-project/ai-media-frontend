@@ -2,10 +2,36 @@ import KeycloakProvider from "next-auth/providers/keycloak";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt";
 import config from "../../../config";
-import { decryptPassword } from "../../../utils/crypto";
 
 if (process.env.NODE_ENV === "development") {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
+/**
+ * Verifies an access token against Keycloak via the backend's introspection endpoint.
+ *
+ * Fails closed: any network error, non-2xx response, or `valid !== true` rejects the
+ * sign-in. Treating an unreachable backend as "valid" would reopen the forgery hole this
+ * guards against.
+ *
+ * @param accessToken The bearer token supplied to the credentials provider.
+ * @returns True only when Keycloak confirms the token is active.
+ */
+async function validateAccessToken(accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${config.backendAuthUrl}/auth/validate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    return data?.valid === true;
+  } catch (error) {
+    console.error("Access token validation failed:", error);
+    return false;
+  }
 }
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
@@ -97,11 +123,11 @@ export const authOptions = {
         },
       },
     }),
+    // Brokered-IdP entry point only. Sign-in with a username/password (ROPC) was removed
+    // in favour of the Keycloak authorization-code flow above.
     CredentialsProvider({
       name: "Keycloak",
       credentials: {
-        username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" },
         accessToken: { label: "Access Token", type: "text" },
         refreshToken: { label: "Refresh Token", type: "text" },
         idToken: { label: "ID Token", type: "text" },
@@ -112,51 +138,27 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          if (credentials?.accessToken) {
-            return {
-              accessToken: credentials.accessToken,
-              refreshToken: credentials.refreshToken,
-              idToken: credentials.idToken,
-              id: credentials.userId || "user",
-              expiresIn: credentials.expiresIn,
-              organizationId: credentials.organizationId,
-              userId: credentials.userId,
-              systemRole: credentials.systemRole,
-            };
-          }
-          const decryptedPassword = decryptPassword(
-            credentials?.password || "",
-          );
+          if (!credentials?.accessToken) return null;
 
-          // Call the backend service for login
-          const url = `${config.backendAuthUrl}/auth/login`;
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: credentials?.username,
-              password: decryptedPassword,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            console.error("Login failed:", data);
+          // This branch is how brokered IdP logins (Google, Microsoft) enter NextAuth:
+          // /callback exchanges the code with the backend, then signs in with the
+          // resulting token. The token MUST be introspected here — without it, posting an
+          // arbitrary string to /api/auth/callback/credentials mints a valid session.
+          const isValid = await validateAccessToken(credentials.accessToken);
+          if (!isValid) {
+            console.error("Rejected credentials sign-in: access token is not valid");
             return null;
           }
 
           return {
-            id: data.sub || "user",
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
-            expiresIn: data.expires_in,
-            idToken: data.id_token,
-            organizationId: data.recentOrganizationId,
-            userId: data.userId,
-            systemRole: data.role,
+            accessToken: credentials.accessToken,
+            refreshToken: credentials.refreshToken,
+            idToken: credentials.idToken,
+            id: credentials.userId || "user",
+            expiresIn: credentials.expiresIn,
+            organizationId: credentials.organizationId,
+            userId: credentials.userId,
+            systemRole: credentials.systemRole,
           };
         } catch (error) {
           console.error("Authorize error:", error);
@@ -185,10 +187,16 @@ export const authOptions = {
 
           const data = await response.json();
           if (!data.exists) {
-            // Redirect to login with error message if user not found in DB
+            // Redirect to the error page if user not found in DB
             // Note: Returning a string redirects in NextAuth v4
-            return "/login?error=403";
+            return "/error?error=403";
           }
+
+          // The Keycloak token carries no local identity, so /auth/check is the only
+          // place these reach the session. The jwt callback reads them off `user`.
+          user.userId = data.userId;
+          user.systemRole = data.role;
+          user.organizationId = data.recentOrganizationId;
 
           return true;
         } catch (error) {
@@ -210,6 +218,11 @@ export const authOptions = {
         token.refreshToken = account.refresh_token;
         token.idToken = account.id_token;
         token.expiresAt = account.expires_at! * 1000;
+        // Local identity resolved by the signIn callback via /auth/check — the session
+        // callback reads these three, and every role gate depends on systemRole.
+        token.userId = user?.userId;
+        token.systemRole = user?.systemRole;
+        token.organizationId = user?.organizationId;
         // Extract roles safely
         if (account.access_token) {
           try {
@@ -265,16 +278,12 @@ export const authOptions = {
         return token;
       }
 
-      // Check if token needs refresh
-      // const now = Date.now();
-      // const expiresAt = token.expiresAt as number;
-      // const timeUntilExpiry = expiresAt - now;
-      // const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-      // // Refresh token if it expires in less than 5 minutes
-      // if (timeUntilExpiry < fiveMinutes) {
-      //   return refreshAccessToken(token);
-      // }
+      // ต่ออายุก่อนหมด 5 นาที — backend ตรวจ access token ทุก request แล้ว (KeycloakAuthGuard)
+      const expiresAt = Number(token.expiresAt);
+      const fiveMinutes = 5 * 60 * 1000;
+      if (Number.isFinite(expiresAt) && expiresAt - Date.now() < fiveMinutes) {
+        return refreshAccessToken(token);
+      }
 
       // Token is still valid, return as is
       return token;

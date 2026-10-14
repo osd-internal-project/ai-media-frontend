@@ -26,6 +26,7 @@ import UploadsServices from "@/app/services/uploads.service";
 import { useSession } from "next-auth/react";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
@@ -128,7 +129,10 @@ const TemplateSettingPage: FC = (): ReactElement => {
     { name: string; status: string; uid: string; url: string }[]
   >([]);
 
-  const fetchPromptGuideImages = async (id: number) => {
+  const fetchPromptGuideImages = async (
+    id: number,
+    templateType: TGenerateType | "all",
+  ) => {
     setRefImage([]);
     setFiles([]);
     setFirstFrame([]);
@@ -151,10 +155,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         }));
 
         // For video type, separate into firstFrame (index 1) and lastFrame (index 2)
-        if (
-          generateType === "omnihumen" ||
-          generateType === "dreamactor"
-        ) {
+        if (templateType === "omnihumen" || templateType === "dreamactor") {
           // console.log("promptGuideImages", promptGuideImages);
           const firstFrameFiles = promptGuideImages
             .filter((img: any) => img.index === 1)
@@ -223,10 +224,15 @@ const TemplateSettingPage: FC = (): ReactElement => {
     });
   };
 
+  /** type ของ template ที่กำลังแก้ — ตัวกรองหน้าเป็น "all" ได้ จึงใช้แทนกันไม่ได้ */
+  const editingType: TGenerateType =
+    selectedPromptGuide?.generateType ??
+    (generateType === "all" ? "image" : generateType);
+
   const onSelectPromptGuide = async (id: number) => {
     const promptGuide = await promptguideServices.findById(String(id));
     setSelectedPromptGuide(promptGuide);
-    await fetchPromptGuideImages(id);
+    await fetchPromptGuideImages(id, promptGuide?.generateType ?? generateType);
     promptGuideForm.setFieldsValue(promptGuide);
   };
 
@@ -237,12 +243,14 @@ const TemplateSettingPage: FC = (): ReactElement => {
       promptGuideImages: refImage.map((image) => image.uid),
     });
 
-    if (updatePromptGuide) {
-      modal.success({
-        title: "Success",
-        content: "Update prompt guide successfully",
-      });
+    if (!updatePromptGuide) {
+      openNotificationWithIcon("error", "Failed to update prompt guide");
+      return;
     }
+    modal.success({
+      title: "Success",
+      content: "Update prompt guide successfully",
+    });
     fetchPromptGuideTypes();
   };
 
@@ -281,22 +289,25 @@ const TemplateSettingPage: FC = (): ReactElement => {
     }
   };
 
-  const onCreatePromptGuide = async (values: any) => {
-    if (!organizationId) return;
-    try {
-      await promptguideServices.create({
-        ...values,
-        organizationId,
-        status: true,
-        generateType:
-          values.generateType ||
-          (generateType === "all" ? "image" : generateType),
-      });
-      modal.success({ title: "Success", content: "Created prompt guide" });
-      fetchPromptGuideTypes();
-    } catch (e) {
-      console.error(e);
+  /** คืน true เมื่อสร้างสำเร็จ แล้วเลือก template ใหม่ไว้ให้ upload รูปต่อ */
+  const onCreatePromptGuide = async (values: any): Promise<boolean> => {
+    if (!organizationId) return false;
+    const created: TPromptGuide | undefined = await promptguideServices.create({
+      ...values,
+      organizationId,
+      status: true,
+      generateType:
+        values.generateType ||
+        (generateType === "all" ? "image" : generateType),
+    });
+    if (!created?.id) {
+      openNotificationWithIcon("error", "Failed to create prompt guide");
+      return false;
     }
+    fetchPromptGuideTypes();
+    await onSelectPromptGuide(created.id);
+    message.success("Created — add images to finish the template");
+    return true;
   };
 
   const onDeletePromptGuide = async (id: number) => {
@@ -324,25 +335,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
       const fileToUpload = file.originFileObj || file;
       if (fileToUpload instanceof Blob) {
         try {
-          await new Promise<void>((resolve, reject) => {
-            const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
-            img.onload = () => {
-              const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
-              if (minSide < 300) {
-                reject(
-                  "Image size is too small, minimum side length must not be less than 300 px",
-                );
-              } else {
-                resolve();
-              }
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-          });
+          // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+          const size = await readImageSize(fileToUpload as Blob);
+          if (size && Math.min(size.width, size.height) < 300) {
+            throw "Image size is too small, minimum side length must not be less than 300 px";
+          }
         } catch (error) {
           openNotificationWithIcon("error", String(error));
           setIsLoadingUpload(false);
@@ -359,7 +356,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
       formData.append("userId", userId ? userId : "");
       formData.append("index", newFileList.length.toString());
       formData.append("promptGuideId", String(promptGuideId));
-      formData.append("generateType", generateType);
+      formData.append("generateType", editingType);
       formData.append("organizationId", organizationId || "");
       formData.append("uid", file.uid);
 
@@ -405,25 +402,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
         const fileToUpload = file.originFileObj || file;
         if (fileToUpload instanceof Blob) {
           try {
-            await new Promise<void>((resolve, reject) => {
-              const img = new window.Image();
-              img.src = URL.createObjectURL(fileToUpload as Blob);
-              img.onload = () => {
-                const minSide = Math.min(img.width, img.height);
-                URL.revokeObjectURL(img.src);
-                if (minSide < 300) {
-                  reject(
-                    "Image size is too small, minimum side length must not be less than 300 px",
-                  );
-                } else {
-                  resolve();
-                }
-              };
-              img.onerror = () => {
-                URL.revokeObjectURL(img.src);
-                resolve();
-              };
-            });
+            // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+            const size = await readImageSize(fileToUpload as Blob);
+            if (size && Math.min(size.width, size.height) < 300) {
+              throw "Image size is too small, minimum side length must not be less than 300 px";
+            }
           } catch (error) {
             openNotificationWithIcon("error", String(error));
             setIsLoadingFirstFrame(false);
@@ -441,7 +424,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("userId", userId ? userId : "");
         formData.append("index", index); // Fixed index 1
         formData.append("promptGuideId", String(promptGuideId));
-        formData.append("generateType", generateType);
+        formData.append("generateType", editingType);
         formData.append("uid", file.uid);
         formData.append("organizationId", organizationId || "");
         formData.append("file", fileToUpload as Blob);
@@ -459,25 +442,11 @@ const TemplateSettingPage: FC = (): ReactElement => {
         const fileToUpload = file.originFileObj || file;
         if (fileToUpload instanceof Blob) {
           try {
-            await new Promise<void>((resolve, reject) => {
-              const img = new window.Image();
-              img.src = URL.createObjectURL(fileToUpload as Blob);
-              img.onload = () => {
-                const minSide = Math.min(img.width, img.height);
-                URL.revokeObjectURL(img.src);
-                if (minSide < 300) {
-                  reject(
-                    "Image size is too small, minimum side length must not be less than 300 px",
-                  );
-                } else {
-                  resolve();
-                }
-              };
-              img.onerror = () => {
-                URL.revokeObjectURL(img.src);
-                resolve();
-              };
-            });
+            // อ่านขนาดโดยไม่สร้าง blob: URL ซึ่ง CSP ของ prod บล็อก
+            const size = await readImageSize(fileToUpload as Blob);
+            if (size && Math.min(size.width, size.height) < 300) {
+              throw "Image size is too small, minimum side length must not be less than 300 px";
+            }
           } catch (error) {
             openNotificationWithIcon("error", String(error));
             setIsLoadingLastFrame(false);
@@ -495,7 +464,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
         formData.append("userId", userId ? userId : "");
         formData.append("index", index); // Fixed index 2
         formData.append("promptGuideId", String(promptGuideId));
-        formData.append("generateType", generateType);
+        formData.append("generateType", editingType);
         formData.append("uid", file.uid);
         formData.append("file", fileToUpload as Blob);
         formData.append("organizationId", organizationId || "");

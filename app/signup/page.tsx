@@ -144,7 +144,7 @@ export default function SignupPage() {
                 style={{ objectFit: "contain" }}
               />
             </div>
-            <Link
+            <a
               href="/login"
               style={{
                 color: "#5BC0EB",
@@ -155,7 +155,7 @@ export default function SignupPage() {
               }}
             >
               Log In
-            </Link>
+            </a>
           </div>
 
           <div
@@ -222,7 +222,7 @@ export default function SignupPage() {
                   We've sent a verification link to your email address. Please
                   click the link to verify your account.
                 </p>
-                <Link href="/login" style={{ width: "100%" }}>
+                <a href="/login" style={{ width: "100%" }}>
                   <Button
                     type="primary"
                     size="large"
@@ -239,7 +239,7 @@ export default function SignupPage() {
                   >
                     Back to Login
                   </Button>
-                </Link>
+                </a>
               </div>
             ) : (
               <Form

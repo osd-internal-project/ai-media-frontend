@@ -9,6 +9,11 @@ const config = {
   version: process.env.NEXT_PUBLIC_VERSION,
   backendWebHookUrl: process.env.NEXT_PUBLIC_API_BASE_URL_WEB_HOOK,
   backendChatAssistantUrl: process.env.NEXT_PUBLIC_API_BASE_URL_CHAT_ASSISTANT,
+  // "presign" = presign → PUT → confirm (env ที่ TOS เรียก callback เข้ามาไม่ได้ เช่น SIT)
+  // อื่น ๆ = PostObject + upload callback
+  uploadMode: (process.env.NEXT_PUBLIC_UPLOAD_MODE === "presign"
+    ? "presign"
+    : "post") as "presign" | "post",
 };
 
 export default config;

@@ -160,17 +160,11 @@ const PromptLibrary: FC<props> = ({
   // =========================
   // EDIT (ONLY IMAGE)
   // =========================
-  const openImageEditor = async (id: string) => {
+  // ImageEditor loads a remote (presigned) URL directly with crossOrigin, so we
+  // pass the item's presigned URL instead of proxying the bytes through the API.
+  const openImageEditor = (imageUrl: string) => {
     setOpenEditor(true);
-    const response = await galleryservices.downloadFile(id, organizationId);
-    if (!response) {
-      setOpenEditor(false);
-      message.error("Download failed or response is empty");
-      return;
-    }
-
-    const url = URL.createObjectURL(response);
-    setImageEditorUrl(url);
+    setImageEditorUrl(imageUrl);
   };
   // =========================
   // DOWNLOAD (FIXED)
@@ -179,24 +173,11 @@ const PromptLibrary: FC<props> = ({
     setLoadingDownload(true);
 
     try {
-      const response = await galleryservices.downloadFile(
+      galleryservices.downloadFile(
         imageId,
         session?.user?.organizationId || "",
+        fileName || "file",
       );
-
-      if (!response) throw new Error("Download failed");
-
-      const url = URL.createObjectURL(response);
-      const link = document.createElement("a");
-
-      link.href = url;
-      link.download = fileName || "file";
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(url);
 
       message.success("Downloaded successfully");
     } catch (error) {
@@ -389,7 +370,7 @@ const PromptLibrary: FC<props> = ({
                       {/* {!item.typeGenerate.toLowerCase().includes("video") && (
                         <Button
                           icon={<Paintbrush size={16} />}
-                          onClick={() => openImageEditor(item.id)}
+                          onClick={() => openImageEditor(item.imageUrl)}
                           style={actionButtonStyle}
                           disabled={!item.imageUrl}
                         />

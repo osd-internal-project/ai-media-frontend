@@ -20,7 +20,7 @@ import { IOrganization } from "@/app/common/organization.type";
 import UserServices from "@/app/services/users.service";
 import { TUser } from "@/app/common/user.type";
 import { formatNumber } from "@/app/utils/format";
-import { canEditOrganization } from "@/app/utils/permissions";
+import { canEditOrganization, canSeeBilling } from "@/app/utils/permissions";
 import { useSession } from "next-auth/react";
 import OrganizationMemberTab from "./components/OrganizationMemberTab";
 import OrganizationPackageTab from "./components/OrganizationPackageTab";
@@ -129,11 +129,17 @@ export default function OrganizationDetailPage() {
         />
       ),
     },
-    {
-      key: "package",
-      label: "Package",
-      children: <OrganizationPackageTab organizationId={organizationId} />,
-    },
+    ...(canSeeBilling(session?.user?.systemRole)
+      ? [
+          {
+            key: "package",
+            label: "Package",
+            children: (
+              <OrganizationPackageTab organizationId={organizationId} />
+            ),
+          },
+        ]
+      : []),
     {
       key: "invitations",
       label: "Invitations",

@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 # Install dependencies using Yarn
-RUN yarn install --frozen-lockfile
+RUN yarn install 
 
 ###############################################################################
 # Build application

@@ -30,10 +30,13 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import { ICreditBalance, IOrganization } from "@/app/common/organization.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { formatCompactNumber } from "@/app/utils/format";
+import { canSeeBilling } from "@/app/utils/permissions";
 import ThemeToggleButton from "../ThemeToggleButton";
+import InvitationBell from "./InvitationBell";
 import { useThemeMode } from "../ThemeProvider";
 import "./LayoutStyle.css";
 import { User ,Users} from "lucide-react";
+import Link from "next/link";
 
 const { Text } = Typography;
 const { Header } = Layout;
@@ -75,6 +78,7 @@ export function PrivateHeader({
 
   const [orgOpen, setOrgOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const showBilling = canSeeBilling(systemRole);
 
   // const allOrganizations = [
   //   // ...(personalOrganizations || []),
@@ -194,7 +198,7 @@ export function PrivateHeader({
           open={orgOpen}
           onOpenChange={setOrgOpen}
           trigger={["click"]}
-          dropdownRender={() => (
+          popupRender={() => (
             <div style={dropdownPanelStyle}>
               <div
                 className="private-header-dropdown-scroll"
@@ -276,6 +280,14 @@ export function PrivateHeader({
       </Space>
 
       <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
+        {showBilling ? (
+          <Link href="/page/plans">
+            <Button type="primary" ghost  style={{ borderColor: "#6C6AC4", color: "#6C6AC4" }}>
+              Change Package
+            </Button>
+          </Link>
+        ) : null}
+        {showBilling ? (
         <Card
           hoverable
           className="private-header-balance-card"
@@ -325,6 +337,11 @@ export function PrivateHeader({
             ) : null}
           </Space>
         </Card>
+        ) : null}
+
+        <div className="private-header-action-wrap">
+          <InvitationBell />
+        </div>
 
         <div className="private-header-action-wrap">
           <ThemeToggleButton />

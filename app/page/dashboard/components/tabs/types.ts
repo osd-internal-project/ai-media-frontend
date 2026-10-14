@@ -1,8 +1,12 @@
 import {
   IDashboardCreditPerMonthAndType,
   IDashboardGeneratedPerMonthAndType,
+  IGenerationSeriesPoint,
+  IRecentGeneration,
 } from "@/app/common/dashbaord";
+import type { GenerationTypeKey } from "@/app/common/generation-type";
 import type { IProject } from "@/app/common/project.type";
+import type { DashboardFilters } from "../../hooks/use-dashboard-filters";
 
 export type DashboardUserRow = {
   userId: string;
@@ -10,6 +14,8 @@ export type DashboardUserRow = {
   username?: string;
   email?: string;
   role: string;
+  /** Earliest project membership date, used for the "joined in range" figure. */
+  joinedAt?: string;
   usedCredit: number;
   usedImage: number;
   limitCredit: number;
@@ -28,6 +34,10 @@ export type StatCardItem = {
   sub: string;
   trend?: string;
   progress?: number;
+  /** Progress bar colour, used to signal quota pressure on the Token Usage card. */
+  progressColor?: string;
+  /** Extra content below the progress bar, e.g. an upgrade CTA. */
+  footer?: React.ReactNode;
   icon: React.ReactNode;
   iconBg: string;
   iconColor: string;
@@ -73,14 +83,22 @@ export type ApprovalsTabProps = {
 export type OverviewTabProps = {
   loading: boolean;
   statCards: StatCardItem[];
-  alertUsers: DashboardUserRow[];
-  pendingApprovals: PendingApproval[];
-  openQuotaModal: (user: DashboardUserRow) => void;
-  onApprove: (user: PendingApproval) => void;
-  onDeny: (user: PendingApproval) => void;
-  setActiveTab: (tab: string) => void;
-  usedCreditPerMonth: IDashboardCreditPerMonthAndType[];
-  usedCreditByType: ByTypeItem[];
+  filters: DashboardFilters;
+  onFiltersChange: (patch: Partial<DashboardFilters>) => void;
+  projectOptions: Array<{ value: string; label: string }>;
+  /** Types the trend chart should draw; an empty type filter resolves to all of them. */
+  visibleTypes: GenerationTypeKey[];
+  hasProjects: boolean;
+  /** True when the *selected metric* has non-zero data to plot. */
+  hasGenerations: boolean;
+  /** Total generations in range, regardless of metric. Used to explain empty charts. */
+  generationCount: number;
+  generationSeries: IGenerationSeriesPoint[];
+  /** Donut slices, summed from `generationSeries` so the two can never disagree. */
+  generationByType: ByTypeItem[];
+  recentGenerations: IRecentGeneration[];
+  onCreateProject?: () => void;
+  onStartGenerating?: () => void;
 };
 
 export type ByTypeItem = {

@@ -17,6 +17,7 @@ interface PrivateSiderProps {
   currentPathSub: string;
   organizationRole: string;
   systemRole?: string;
+  accessCodes?: string[];
   onClose?: () => void;
 }
 
@@ -26,6 +27,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   currentPathSub,
   organizationRole,
   systemRole,
+  accessCodes,
   onClose,
 }) => {
   const { mode } = useThemeMode();
@@ -132,7 +134,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
               mappedPath,
               `${mappedPath}/${currentPathSub}`,
             ]}
-            items={renderMenuItems(MenuSider, organizationRole)}
+            items={renderMenuItems(MenuSider, organizationRole, systemRole, accessCodes)}
             className="osd-menu-padding"
           /> 
         </div>

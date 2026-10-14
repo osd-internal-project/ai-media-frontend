@@ -160,7 +160,7 @@ const HeaderGenerateImagePage: FC<props> = ({
             <Switch
               checkedChildren="Team"
               unCheckedChildren="Personal"
-              size="small"
+              // size="small"
               defaultChecked
               value={teamView}
               onChange={setTeamView}
@@ -180,7 +180,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                   AI Model:
                 </span>
                 <Select
-                  size="small"
+                  // size="small"
                   style={
                     {
                       minWidth: isMobile ? 108 : isTablet ? 170 : 220,
@@ -200,11 +200,11 @@ const HeaderGenerateImagePage: FC<props> = ({
                     } as CSSProperties
                   }
                   className="dark-select"
-                  dropdownStyle={{
-                    backgroundColor: semantic.colorBgElevated,
-                    color: semantic.colorTextBase,
-                    fontSize: 12,
-                  }}
+                  // dropdownStyle={{
+                  //   backgroundColor: semantic.colorBgElevated,
+                  //   color: semantic.colorTextBase,
+                  //   fontSize: 12,
+                  // }}
                   placeholder="Choose an AI model"
                   value={selectedAIModel?.id?.toString()}
                   onChange={onAIModelChange}
@@ -215,14 +215,14 @@ const HeaderGenerateImagePage: FC<props> = ({
                         <Select.Option
                           key={model.id}
                           value={model.id.toString()}
-                          label={model.modelType}
+                          label={model.name}
                         >
                           <Tooltip
                             title={
                               <div className="p-4 max-w-sm">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="font-medium text-white">
-                                    {model.modelType}
+                                    {model.name}
                                   </div>
                                   {selectedAIModel?.id === model.id && (
                                     <div className="text-blue-400 text-xs">
@@ -428,7 +428,7 @@ const HeaderGenerateImagePage: FC<props> = ({
                             overlayStyle={{ maxWidth: "none" }}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-xs">{model.modelType}</span>
+                              <span className="text-xs">{model.name}</span>
                               {selectedAIModel?.id === model.id && (
                                 <span className="text-blue-400 ml-2">✓</span>
                               )}

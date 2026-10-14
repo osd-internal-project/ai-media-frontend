@@ -143,17 +143,70 @@ html {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Media loading skeleton — shimmer ใช้ได้ทั้งธีม dark/light */
+@keyframes skeletonShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(140, 153, 169, 0.12) 25%,
+    rgba(140, 153, 169, 0.24) 37%,
+    rgba(140, 153, 169, 0.12) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
+/* Payment page animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeUp {
+  animation: fadeUp 0.4s ease-out both;
+}
+.animate-fadeUp-d1 { animation-delay: 100ms; }
+.animate-fadeUp-d2 { animation-delay: 200ms; }
+.animate-fadeUp-d3 { animation-delay: 300ms; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes checkStroke {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
+}
+.animate-checkStroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkStroke 0.6s ease-out 0.2s forwards;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.animate-scaleIn {
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .activity-star-button.ant-btn {

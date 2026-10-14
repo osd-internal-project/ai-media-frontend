@@ -4,8 +4,16 @@ import React, {
   useState,
   useCallback,
   type FC,
+  useLayoutEffect,
 } from "react";
-import { Flex, Form, message, type UploadFile, notification } from "antd";
+import {
+  Flex,
+  Form,
+  message,
+  type UploadFile,
+  type FormInstance,
+  notification,
+} from "antd";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import {
   TPromptGuide,
@@ -19,16 +27,22 @@ import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import GenerateServices from "@/app/services/generate.service";
 import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
-import ChatOmnihumenInput from "./chat-omnihumen-input";
+import type { OmniModelConfig, OmniFormState } from "../../tab-layout/types/generator-config.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import OmniResultItem from "./omni-result";
-import OmnihumenResultHeader from "./header";
+import OmniResultItem from "./shared/omni-result";
+import OmnihumenResultHeader from "./shared/header";
 import { getSecondsFileDuration } from "@/app/utils/fileUtil";
+import { fileToDataUrl } from "../../tab-layout/utils/file-preview.util";
+import {
+  fetchOlderTasks,
+  HISTORY_LOAD_THRESHOLD_PX,
+  HISTORY_PAGE_SIZE,
+} from "../fetch-older-tasks";
 
-interface OmniHumanChatProps {
+export interface OmniHumanChatProps {
   projectId: string;
   teamView: boolean;
   userId?: string;
@@ -48,6 +62,43 @@ interface OmniHumanChatProps {
   onSetPromptTextRef?: React.MutableRefObject<
     ((id: number) => Promise<void>) | null
   >;
+}
+
+/** Props received by every versioned omni-human form component */
+export interface OmniInputProps {
+  setSelectedRatio: (ratio: string) => void;
+  selectedRatio: string;
+  setSelectedResolution: (resolution: string) => void;
+  selectedResolution: string;
+  form: FormInstance;
+  filesFirst: UploadFile[];
+  filesLast: UploadFile[];
+  handleUploadChange: (args: {
+    index: number;
+    file: UploadFile;
+    fileList: UploadFile[];
+    status: "upload" | "remove";
+  }) => void;
+  handleSendMessage: (values: Record<string, unknown>) => void;
+  isLoadingUpload: boolean;
+  submitting: boolean;
+  setSelectedDuration: (duration: number) => void;
+  selectedDuration: number;
+  setDraftMode: (draftMode: boolean) => void;
+  draftMode: boolean;
+  setFastMode: (fastMode: boolean) => void;
+  fastMode: boolean;
+  onRemoveFile: (file: UploadFile) => void;
+  setSelectedWidth: (width: number) => void;
+  setSelectedHeight: (height: number) => void;
+  promptGuideTemplates: TPromptGuideTemplate[];
+  fetchVideoPromptGuides: () => Promise<void>;
+  handleUsePromptGuide: (template: TPromptGuide) => void;
+  usedCredit: { used?: number; total?: number };
+  cerrentUsedCredit: number;
+  selectedModel?: string;
+  organizationId?: string;
+  projectId: string;
 }
 
 interface UserMessage {
@@ -107,17 +158,24 @@ export interface Message {
 
 type NotificationType = "success" | "info" | "warning" | "error";
 
-const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
+const ChatGenerateOmnihumen: FC<
+  OmniHumanChatProps & {
+    modelConfig: OmniModelConfig;
+    FormComponent: FC<OmniInputProps>;
+  }
+> = ({
   teamView,
   projectId,
   userId,
   activeKey,
   projectRole,
-  promptGuideOpenStatus,
+  promptGuideOpenStatus: _promptGuideOpenStatus,
   username,
   selectedAIModel,
   setDisableTab,
-  onSetPromptTextRef,
+  onSetPromptTextRef: _onSetPromptTextRef,
+  modelConfig,
+  FormComponent,
 }) => {
   const [form] = Form.useForm();
   const { data: session } = useSession();
@@ -145,12 +203,12 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef<boolean>(true);
-  const scrollHeightRef = useRef<number>(0);
+  // ระยะจากขอบล่าง — คืนตำแหน่งแบบ absolute จึงไม่ชนกับ scroll anchoring ของ browser
+  const scrollBottomRef = useRef<number>(0);
   const isLoadingMoreRef = useRef<boolean>(false);
   const shouldAutoScrollRef = useRef<boolean>(false);
   const isAtBottomRef = useRef<boolean>(true);
   const initialPageSize = 3;
-  const historyPageSize = 1;
   const currentLimitRef = useRef<number>(initialPageSize);
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
@@ -214,6 +272,8 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     setMessages([]);
     setFristRowSeq(undefined);
     setLastRowSeq(undefined);
+    setHasMore(true);
+    setLoading(true);
     isFirstLoad.current = true;
     fetchMessages();
   }, [projectId, activeKey, teamView]);
@@ -307,7 +367,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       if (isFetchingHistory || type === "loadmore") {
         isLoadingMoreRef.current = true;
       }
-      if (messageData.length < currentLimitRef.current) {
+      if (type === "reload" && messageData.length < currentLimitRef.current) {
         setHasMore(false);
       }
       if (messageData.length === 0) {
@@ -344,10 +404,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             (m: Message) => !existingTaskIds.has(m.taskId),
           );
 
-          if (uniqueNewMessages.length === 0) {
-            setHasMore(false);
-            return prev;
-          }
+          if (uniqueNewMessages.length === 0) return prev;
           return [...prev, ...uniqueNewMessages];
         });
         isFirstLoad.current = false;
@@ -406,6 +463,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       }
       generateMessage(data, "reload");
     }
+    if (!data) setLoading(false);
     fetchCredit();
   };
 
@@ -415,34 +473,34 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         projectId,
         organizationId: session?.user?.organizationId,
         userId: userId,
-        type: "image",
+        type: "omnihumen",
       });
     }
   };
 
   const fetchOldMessages = async () => {
-    const data: Message[] = await logsService.findProjectTaskByPage(projectId, {
-      organizationId: session?.user?.organizationId || "",
-      type: "omnihumen",
-      skip: 0,
-      take: 1,
-      fristsql: fristRowSeq,
-      ...(!teamView && { userId: userId }),
-    });
-    if (data && data.length > 0) {
-      const seqValues = data
-        .map((p) => p.seq)
-        .filter((s) => s !== undefined && s !== null);
-      if (seqValues && seqValues.length > 0) {
-        const minSeq = Math.min(...seqValues);
-        setFristRowSeq(minSeq);
-      }
-      generateMessage(data, "loadmore");
-    } else {
-      isFirstLoad.current = false;
-      setLoading(false);
-      setIsFetchingHistory(false);
+    try {
+      const result = await fetchOlderTasks<Message>(
+        fristRowSeq,
+        new Set(messagesRef.current.map((m) => m.id)),
+        (fristsql) =>
+          logsService.findProjectTaskByPage(projectId, {
+            organizationId: session?.user?.organizationId || "",
+            type: "omnihumen",
+            skip: 0,
+            take: HISTORY_PAGE_SIZE,
+            fristsql,
+            ...(!teamView && { userId: userId }),
+          }),
+      );
+      if (result.status === "end") setHasMore(false);
+      if (result.status !== "found") return;
+      setFristRowSeq(result.cursor);
+      if (result.items.length > 0) generateMessage(result.items, "loadmore");
+    } finally {
+      // reset ทุกกรณี — ได้ [] หรือ request พังต้องไม่ทิ้ง spinner ค้าง
       isFetchingRef.current = false;
+      setIsFetchingHistory(false);
     }
   };
 
@@ -662,7 +720,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
               m.taskId === error.taskId
                 ? {
                     ...m,
-                    genneratedStatus: "FAIL",
+                    genneratedStatus: "FAILED",
                   }
                 : m,
             ),
@@ -697,7 +755,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     socket.on("worker:omnihumen-url-success", workerUrlSuccess);
     socket.on("worker:omnihumen-upload-success", workerUploadSuccess);
     socket.on("worker:omnihumen-complete", workerComplete);
-    socket.off("worker:omnihumen-error", handleError);
+    socket.on("worker:omnihumen-error", handleError);
     socket.on("worker:omnihumen-progress", handleProgress);
     socket.on("chat:used-credit", handleCreditChange);
 
@@ -723,8 +781,6 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
           message: `Joined room ${projectId}`,
         });
       }
-      setLoading(true);
-      isFirstLoad.current = true;
     }
   }, [socket, projectId, activeKey]);
 
@@ -734,27 +790,31 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
       50;
     isAtBottomRef.current = isAtBottom;
+    // user ยัง scroll ต่อได้ระหว่างรอ — จำตำแหน่งล่าสุดไว้คืนหลังต่อ row
+    if (isFetchingRef.current) {
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
+    }
     if (
-      target.scrollTop === 0 &&
+      target.scrollTop < HISTORY_LOAD_THRESHOLD_PX &&
+      hasMore &&
       !loading &&
       !isFirstLoad.current &&
       !isFetchingRef.current
     ) {
       isFetchingRef.current = true;
       setIsFetchingHistory(true);
-      scrollHeightRef.current = target.scrollHeight;
+      scrollBottomRef.current = target.scrollHeight - target.scrollTop;
       fetchOldMessages();
     }
   };
 
   // Restore scroll position after loading more
-  useEffect(() => {
+  // layout effect = คืนตำแหน่งก่อน paint ไม่เห็นภาพกระโดด 1 frame
+  useLayoutEffect(() => {
     if (isLoadingMoreRef.current && chatContainerRef.current) {
-      const newScrollHeight = chatContainerRef.current.scrollHeight;
-      const scrollDiff = newScrollHeight - scrollHeightRef.current;
-
       chatContainerRef.current.style.scrollBehavior = "auto";
-      chatContainerRef.current.scrollTop = scrollDiff;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight - scrollBottomRef.current;
 
       requestAnimationFrame(() => {
         if (chatContainerRef.current) {
@@ -789,17 +849,11 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
   const onDownloadVideo = async (fileName: string, videoId: string) => {
     const hide = messageApi.loading("Downloading...", 0);
     try {
-      const response = await galleryService.downloadFile(
+      galleryService.downloadFile(
         videoId,
         session?.user?.organizationId || "",
+        fileName,
       );
-      if (!response) throw new Error("Download failed or response is empty");
-      const url = URL.createObjectURL(response);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
       hide();
       messageApi.success("Download completed");
     } catch (error) {
@@ -862,14 +916,44 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
       }
 
       const fileToUpload = file.originFileObj || file;
+      const isImage =
+        fileToUpload instanceof Blob && fileToUpload.type.startsWith("image/");
+
+      // Encode image files once into a CSP-safe `data:` URL, reused for both the
+      // instant preview and the min-size probe below. A `blob:` URL can't be used
+      // for either: the app CSP has no `img-src`, so images fall back to
+      // `default-src` (https:/data: only) and `blob:` loads are blocked.
+      const dataUrl = isImage
+        ? await fileToDataUrl(fileToUpload as Blob)
+        : undefined;
+
+      // Optimistic, CSP-safe preview: store the `data:` URL as `thumbUrl` (the
+      // tile prefers `thumbUrl`) so the selected image shows immediately.
+      if (dataUrl) {
+        if (index === 0) {
+          setFilesFirst((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, thumbUrl: dataUrl } : f,
+            ),
+          );
+        } else {
+          setFilesLast((prev) =>
+            prev.map((f) =>
+              f.uid === file.uid ? { ...f, thumbUrl: dataUrl } : f,
+            ),
+          );
+        }
+      }
+
       if (fileToUpload instanceof Blob) {
         try {
+          // Probe via the `data:` URL (not `blob:`) so the image loads under CSP;
+          // otherwise `onerror` fires and the size check is silently skipped.
+          const probeSrc = dataUrl ?? (await fileToDataUrl(fileToUpload as Blob));
           await new Promise<void>((resolve, reject) => {
             const img = new window.Image();
-            img.src = URL.createObjectURL(fileToUpload as Blob);
             img.onload = () => {
               const minSide = Math.min(img.width, img.height);
-              URL.revokeObjectURL(img.src);
               if (minSide < 300) {
                 reject(
                   "Image size is too small, minimum side length must not be less than 300 px",
@@ -879,9 +963,9 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
               }
             };
             img.onerror = () => {
-              URL.revokeObjectURL(img.src);
               resolve();
             };
+            img.src = probeSrc;
           });
         } catch (error) {
           openNotificationWithIcon("error", String(error));
@@ -1059,22 +1143,20 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
     if (!lastImage)
       return openNotificationWithIcon("error", "Please upload audio");
     const tempTask = `temp-${Date.now()}`;
-    const message = {
-      taskId: tempTask,
-      model: selectedAIModel.modelType,
-      prompt: values.prompt,
-      image: [
-        firstImage?.imagePath ? firstImage.imagePath : null,
-        lastImage?.imagePath ? lastImage.imagePath : null,
-      ],
-      fastMode: fastMode,
-      seed: values.seed,
-      resolution: selectedResolution,
-      projectId: projectId,
-      userId: userId,
-      duration: selectedDuration,
-      organizationId: session?.user?.organizationId,
+    const state: OmniFormState = {
+      selectedAIModel,
+      refImageFirst: refImageFrist,
+      refImageLast: refImageLast,
+      selectedResolution,
+      selectedRatio,
+      selectedDuration,
+      fastMode,
+      projectId,
+      userId: userId || "",
+      organizationId: session?.user?.organizationId ?? undefined,
+      username: username || "",
     };
+    const message = modelConfig.buildSubmitPayload(values, state, tempTask);
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,
@@ -1135,7 +1217,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
         tabKey="omnihumen"
         form={form}
         leftPanel={
-          <ChatOmnihumenInput
+          <FormComponent
             setSelectedRatio={setSelectedRatio}
             selectedRatio={selectedRatio}
             setSelectedResolution={setSelectedResolution}
@@ -1162,7 +1244,7 @@ const ChatGenerateOmnihumen: FC<OmniHumanChatProps> = ({
             usedCredit={usedCredit}
             cerrentUsedCredit={cerrentUsedCredit}
             selectedModel={selectedAIModel?.modelType || undefined}
-            organizationId={session?.user?.organizationId || undefined}
+            organizationId={session?.user?.organizationId ?? undefined}
             projectId={projectId}
           />
         }

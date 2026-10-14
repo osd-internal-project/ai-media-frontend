@@ -43,6 +43,7 @@ import useResponsive from "@/app/hooks/useResponsive";
 import TemplateItem from "./template-item";
 import { Image } from "lucide-react";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { PROMPT_MAX_LENGTH } from "@/app/config/prompt";
 type TemplateFormModalProps = {
   formMode: "create" | "edit";
   allModel: TMasterModelType[];
@@ -164,10 +165,10 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
     return allModel
       .filter((item: TMasterModelType) => item.type === selectedGenerateType)
       .map((item: TMasterModelType) => ({
-        label: item.modelType,
+        label: item.name || item.modelType,
         value: item.modelType,
       }));
-  }, [selectedType?.generateType,selectedGenerateType]);
+  }, [selectedType?.generateType, selectedGenerateType]);
 
   const categoryOptions = useMemo(() => {
     return promptGuideTypes.map((type) => ({
@@ -614,11 +615,17 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                               required: true,
                               message: "Prompt template is required",
                             },
+                            {
+                              max: PROMPT_MAX_LENGTH,
+                              message: `Prompt template must be at most ${PROMPT_MAX_LENGTH} characters`,
+                            },
                           ]}
                         >
                           <Input.TextArea
                             rows={isMobile ? 8 : 12}
                             placeholder="Write your prompt template"
+                            maxLength={PROMPT_MAX_LENGTH}
+                            showCount
                           />
                         </Form.Item>
 

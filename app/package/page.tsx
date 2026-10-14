@@ -7,6 +7,7 @@ import PlanServices from "../services/plan.service";
 import PricingCards from "./components/PricingCards";
 import DetailedComparisonTable from "./components/DetailedComparisonTable";
 import { TPlan } from "../common/plan.type";
+import BillingGate from "../components/BillingGate";
 
 const PackagePage = () => {
   const router = useRouter();
@@ -28,7 +29,14 @@ const PackagePage = () => {
     router.push("/signup");
   };
   const handleToLoginPage = () => {
-    router.push("/login");
+    window.location.href = "/login";
+  };
+
+  // Payment-first flow: navigate to the purchase form by priceId. The purchase
+  // page is under the protected /page/* matcher, so an unauthenticated click is
+  // auto-redirected to /login?callbackUrl=... and returns here after login.
+  const handleBuy = (priceId: string) => {
+    router.push(`/page/organization/purchase?priceId=${priceId}`);
   };
   const fetchPlans = React.useCallback(async () => {
     try {
@@ -115,6 +123,21 @@ const PackagePage = () => {
           </div>
         </div>
       </nav>
+      {/* Pricing section — Buy enters the payment-first onboarding flow */}
+      <div ref={pricingRef} className="max-w-7xl mx-auto mt-12 px-4">
+        <h2 className="text-3xl md:text-4xl font-semibold text-white mb-2">
+          Choose your plan
+        </h2>
+        <p className="text-gray-400 mb-8">
+          Pick a package and pay to create your organization.
+        </p>
+        <PricingCards
+          plans={sortedPlans}
+          onGetStarted={handleGetStarted}
+          onBuy={(_, priceId) => handleBuy(priceId)}
+        />
+      </div>
+
       {/* Content */}
       {/* What is AI Cave Section */}
       <div className="max-w-7xl mx-auto my-18 px-4">
@@ -160,4 +183,10 @@ const PackagePage = () => {
   );
 };
 
-export default PackagePage;
+const GatedPackagePage = () => (
+  <BillingGate>
+    <PackagePage />
+  </BillingGate>
+);
+
+export default GatedPackagePage;

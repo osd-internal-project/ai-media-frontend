@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Input, Typography } from "antd";
+import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
 import AssistantModal from "../../assistant/assistant-modal";
 
 const { TextArea } = Input;
@@ -21,6 +22,8 @@ type Props = {
   regenerateLabel?: string;
   required?: boolean;
   projectId: string;
+  /** แท็บ generate ที่เปิดอยู่ — กำหนดบทบาทของผู้ช่วยแชท */
+  generateType?: ChatGenerateType;
 };
 
 export default function PromptSection({
@@ -37,6 +40,7 @@ export default function PromptSection({
   aiAssistThinkingLabel = "Thinking...",
   required = true,
   projectId,
+  generateType,
 }: Props) {
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
@@ -45,10 +49,6 @@ export default function PromptSection({
   const loading = isAiAssisting ?? internalLoading;
 
   const handleAiAssistClick = async () => {
-    console.log(
-      "PromptSection: handleAiAssistClick called with promptText:",
-      promptText,
-    );
     setOpenAssistant(true);
   };
   return (
@@ -152,6 +152,7 @@ export default function PromptSection({
           openAssistant={openAssistant}
           setOpenAssistant={setOpenAssistant}
           projectId={projectId}
+          generateType={generateType}
           onUsePrompt={(text) => {
             form.setFieldValue(fieldName, text);
             setOpenAssistant(false);

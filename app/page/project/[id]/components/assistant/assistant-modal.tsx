@@ -1,33 +1,40 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
 import {
   Button,
   theme,
   Typography,
   message as antMessage,
-  Segmented,
+  Select,
   Modal,
   Input,
+  Tag,
 } from "antd";
 import { History, MessageSquare, Sparkles } from "lucide-react";
 import { axiosChatAssistant } from "@/app/lib/axios/axios";
 import ChatAssistantService from "@/app/services/chat-assistant.service";
 import type {
+  ChatGenerateType,
+  ChatModelOption,
   Conversation,
   Message,
   StreamChunk,
 } from "@/app/services/chat-assistant.types";
-import ConversationList from "./components/ConversationList";
+import { useOrgIdentity } from "@/app/hooks/useOrgIdentity";
 import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
-import ImageToPromptPanel from "./components/ImageToPromptPanel";
+import {
+  AuthEventStream,
+  openAuthEventStream,
+} from "@/app/lib/sse/auth-event-stream";
 
 interface Props {
   openAssistant: boolean;
   setOpenAssistant: (open: boolean) => void;
   projectId: string;
+  /** แท็บ generate ที่เปิดอยู่ — กำหนดบทบาทของผู้ช่วย */
+  generateType?: ChatGenerateType;
   onUsePrompt?: (text: string) => void;
 }
 
@@ -37,31 +44,41 @@ const CHAT_ASSISTANT_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL_CHAT_ASSISTANT ??
   "http://localhost:4004/api/chat-assistant";
 
+/** คำที่ใช้เรียกแต่ละแท็บให้ผู้ใช้เห็นว่าผู้ช่วยกำลังสวมบทบาทไหน */
+const ROLE_LABELS: Record<ChatGenerateType, string> = {
+  image: "image prompt",
+  video: "video prompt",
+  omnihumen: "avatar prompt",
+  dreamactor: "motion prompt",
+};
+
 const AssistantModal: React.FC<Props> = ({
   openAssistant,
   setOpenAssistant,
   projectId,
+  generateType,
   onUsePrompt,
 }) => {
-  const { data: session } = useSession();
   const { token } = theme.useToken();
   const service = useMemo(() => ChatAssistantService(axiosChatAssistant), []);
 
   // ── State ──────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"chat" | "image-to-prompt">("chat");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingConvs, setLoadingConvs] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [draftPrompt, setDraftPrompt] = useState("");
-  const esRef = useRef<EventSource | null>(null);
+  const [models, setModels] = useState<ChatModelOption[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string | undefined>();
+  const esRef = useRef<AuthEventStream | null>(null);
 
-  const userId = session?.user?.id ?? "";
-  const organizationId = session?.user?.organizationId ?? "";
+  // `session.user.id` เป็น access token ไม่ใช่ users.userId — backend ตรวจสมาชิก
+  // ขององค์กรด้วย userId ตัวจริง ถ้าส่ง token ไปจะถูกปฏิเสธทุกครั้ง
+  // (และเดิมประวัติแชทถูกผูกกับ token ที่หมุนเปลี่ยน ทำให้ประวัติหายเป็นระยะ)
+  const { userId, organizationId } = useOrgIdentity();
 
   // ── Greeting ───────────────────────────────────────────
   const greeting = (() => {
@@ -74,42 +91,29 @@ const AssistantModal: React.FC<Props> = ({
   // ── Load conversations ──────────────────────────────────
   const loadConversations = useCallback(async () => {
     if (!userId) return;
-    setLoadingConvs(true);
     const list = await service.listConversations(userId);
-    if (list) {
-      setConversations(
-        list.sort(
-          (a, b) =>
-            new Date(b.updatedAt ?? b.createdAt).getTime() -
-            new Date(a.updatedAt ?? a.createdAt).getTime(),
-        ),
-      );
-    }
-    setLoadingConvs(false);
+    setConversations(
+      (list ?? []).sort(
+        (a, b) =>
+          new Date(b.updatedAt ?? b.createdAt).getTime() -
+          new Date(a.updatedAt ?? a.createdAt).getTime(),
+      ),
+    );
   }, [userId, service]);
-
-  useEffect(() => {
-    if (openAssistant) {
-      setConversationChat();
-    }
-  }, [openAssistant]);
-
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
 
   // ── Load messages ───────────────────────────────────────
   const loadMessages = useCallback(
     async (convId: string) => {
       setLoadingMsgs(true);
-      const msgs = await service.getMessages(convId);
-      setMessages(msgs);
+      setMessages(await service.getMessages(convId, userId));
       setLoadingMsgs(false);
     },
-    [service],
+    [service, userId],
   );
 
-  const setConversationChat = async () => {
+  /** เปิดบทสนทนาของ project นี้ (สร้างให้ถ้ายังไม่มี) */
+  const setConversationChat = useCallback(async () => {
+    if (!userId || !organizationId) return;
     const data = await service.setConversation({
       userId,
       organizationId,
@@ -121,58 +125,34 @@ const AssistantModal: React.FC<Props> = ({
     setStreamingContent("");
     setActiveConvId(data.id);
     loadMessages(data.id);
-  };
+  }, [userId, organizationId, projectId, service, loadMessages]);
 
-  const handleSelectConversation = useCallback(
-    (id: string) => {
-      if (id === activeConvId) return;
-      esRef.current?.close();
-      setIsStreaming(false);
-      setStreamingContent("");
-      setActiveConvId(id);
-      loadMessages(id);
-    },
-    [activeConvId, loadMessages],
-  );
+  useEffect(() => {
+    if (openAssistant) setConversationChat();
+  }, [openAssistant, setConversationChat]);
 
-  // ── New Chat ────────────────────────────────────────────
-  const handleNewChat = useCallback(async () => {
-    if (!userId) return;
-    setLoadingConvs(true);
-    const conv = await service.createConversation({
-      userId,
-      organizationId,
-      title: "New Chat",
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  // ── Load selectable models ──────────────────────────────
+  useEffect(() => {
+    if (!openAssistant) return;
+    let cancelled = false;
+
+    service.listChatModels().then((rows) => {
+      if (cancelled) return;
+      setModels(rows);
+      // ตั้งค่าเริ่มต้นครั้งเดียว — ไม่ทับตัวเลือกที่ผู้ใช้เพิ่งเปลี่ยน
+      setSelectedModel(
+        (current) => current ?? rows.find((row) => row.isDefault)?.modelId,
+      );
     });
-    if (conv) {
-      await loadConversations();
-      setActiveConvId(conv.id);
-      setMessages([]);
-    }
-    setLoadingConvs(false);
-  }, [userId, organizationId, service, loadConversations]);
 
-  // ── Continue to Chat ────────────────────────────────────
-  const handleContinueChat = useCallback(
-    (id: string) => {
-      setActiveTab("chat");
-      handleSelectConversation(id);
-    },
-    [handleSelectConversation],
-  );
-
-  // ── Delete ──────────────────────────────────────────────
-  const handleDelete = useCallback(
-    async (id: string) => {
-      await service.deleteConversation(id);
-      if (activeConvId === id) {
-        setActiveConvId(null);
-        setMessages([]);
-      }
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-    },
-    [activeConvId, service],
-  );
+    return () => {
+      cancelled = true;
+    };
+  }, [openAssistant, service]);
 
   // ── Append message to draft ─────────────────────────────
   const handleAppendToDraft = useCallback((content: string) => {
@@ -194,11 +174,12 @@ const AssistantModal: React.FC<Props> = ({
       const isFirstMessage =
         messages.filter((m) => m.role === "user").length === 0;
 
+      if (!userId || !organizationId) {
+        antMessage.error("Please log in and select an organization.");
+        return;
+      }
+
       if (!convId) {
-        if (!userId) {
-          antMessage.error("Please log in to use the assistant.");
-          return;
-        }
         const conv = await service.createConversation({
           userId,
           organizationId,
@@ -224,15 +205,19 @@ const AssistantModal: React.FC<Props> = ({
       setIsStreaming(true);
       setStreamingContent("");
 
+      // ข้อความยังไปทาง query string เหมือนเดิม — token ไปทาง header (openAuthEventStream)
       const url = new URL(`${CHAT_ASSISTANT_BASE_URL}/chat/stream`);
       url.searchParams.set("userId", userId);
+      url.searchParams.set("organizationId", organizationId);
       url.searchParams.set("message", text);
       url.searchParams.set("conversationId", convId);
+      if (generateType) url.searchParams.set("generateType", generateType);
+      if (selectedModel) url.searchParams.set("model", selectedModel);
 
       let accumulated = "";
       const assistantMsgId = `tmp-assistant-${Date.now()}`;
 
-      const es = new EventSource(url.toString());
+      const es = openAuthEventStream(url.toString());
       esRef.current = es;
 
       es.onmessage = (event) => {
@@ -262,7 +247,7 @@ const AssistantModal: React.FC<Props> = ({
                 const currentConv = conversations.find((c) => c.id === convId);
                 if (!currentConv || currentConv.title === "New Chat") {
                   const newTitle = text.slice(0, 60);
-                  await service.updateConversation(convId, newTitle);
+                  await service.updateConversation(convId, userId, newTitle);
                   setConversations((prev) =>
                     prev.map((c) =>
                       c.id === convId
@@ -309,8 +294,12 @@ const AssistantModal: React.FC<Props> = ({
     [
       isStreaming,
       activeConvId,
+      messages,
+      conversations,
       userId,
       organizationId,
+      generateType,
+      selectedModel,
       service,
       loadConversations,
     ],
@@ -322,8 +311,6 @@ const AssistantModal: React.FC<Props> = ({
       esRef.current?.close();
     };
   }, []);
-
-  const activeConv = conversations.find((c) => c.id === activeConvId);
 
   // ── Render ──────────────────────────────────────────────
   return (
@@ -494,27 +481,31 @@ const AssistantModal: React.FC<Props> = ({
                 className="text-sm font-medium truncate"
                 style={{ color: token.colorTextBase }}
               >
-                {activeTab === "chat" ? "Chat Assistant" : "Image to Prompt"}
+                Chat Assistant
               </Text>
+              {/* บอกให้ผู้ใช้เห็นว่าผู้ช่วยกำลังเขียน prompt ของแท็บไหนอยู่ */}
+              {generateType && (
+                <Tag color="processing" style={{ marginInlineEnd: 0 }}>
+                  {ROLE_LABELS[generateType]}
+                </Tag>
+              )}
             </div>
 
-            <Segmented
-              value={activeTab}
-              onChange={(value) => setActiveTab(value as "chat" | "image-to-prompt")}
-              options={[
-                { label: "Chat", value: "chat" },
-              ]}
+            <Select
+              value={selectedModel}
+              onChange={setSelectedModel}
+              placeholder="Model"
+              size="small"
+              style={{ minWidth: 190 }}
+              options={models.map((model) => ({
+                value: model.modelId,
+                label: model.displayName,
+                title: model.description ?? undefined,
+              }))}
             />
           </div>
 
-          {activeTab === "image-to-prompt" ? (
-            <ImageToPromptPanel
-              userId={userId}
-              organizationId={organizationId}
-              onContinueChat={handleContinueChat}
-            />
-          ) : (
-            <>
+          <>
               {!activeConvId && (
                 <div className="flex flex-1 flex-col items-center justify-center px-4 -mt-10">
                   <div className="w-full max-w-[700px] flex flex-col items-center text-center">
@@ -552,8 +543,7 @@ const AssistantModal: React.FC<Props> = ({
                     : "Start typing to begin a new chat..."
                 }
               />
-            </>
-          )}
+          </>
         </main>
       </div>
     </Modal>

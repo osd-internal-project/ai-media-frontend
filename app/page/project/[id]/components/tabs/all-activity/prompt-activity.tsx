@@ -30,6 +30,7 @@ import {
   Share2,
   Copy,
   Paintbrush,
+  Megaphone,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -45,15 +46,23 @@ import {
 import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
+import ShareModal from "./share-modal";
+import type { SocialShareItem } from "./useSocialShare";
 
 export interface props {
   shouldRefetch?: boolean;
   activeKey: string;
+  /**
+   * เปิดแท็บ Public Social พร้อม preselect รายการนี้
+   * undefined = org ไม่มีสิทธิ์ใช้ฟีเจอร์ ปุ่มจะไม่แสดง
+   */
+  onShareToSocial?: (galleryId: string) => void;
 }
 
 const PromptActivity: FC<props> = ({
   shouldRefetch,
   activeKey,
+  onShareToSocial,
 }): ReactElement => {
   const params = useParams();
   const { data: session } = useSession();
@@ -76,6 +85,7 @@ const PromptActivity: FC<props> = ({
   const [previewItem, setPreviewItem] = useState<any>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [imageEditorUrl, setImageEditorUrl] = useState<string | null>(null);
+  const [shareItem, setShareItem] = useState<SocialShareItem | null>(null);
   useEffect(() => {
     if (activeKey === "activity" && loading) {
       fectData();
@@ -165,12 +175,10 @@ const PromptActivity: FC<props> = ({
     };
   };
 
-  const openImageEditor = async (id: string) => {
-    const response = await galleryservices.downloadFile(id, organizationId);
-    if (!response) throw new Error("Download failed or response is empty");
-
-    const url = URL.createObjectURL(response);
-    setImageEditorUrl(url);
+  // ImageEditor loads a remote (presigned) URL directly with crossOrigin, so we
+  // pass the record's presigned URL instead of proxying the bytes through the API.
+  const openImageEditor = (imageUrl: string) => {
+    setImageEditorUrl(imageUrl);
   };
 
   const columns: ColumnsType<any> = [
@@ -415,7 +423,7 @@ const PromptActivity: FC<props> = ({
                 // className=" text-yellow-500 drop-shadow-[0_0_5px_#f59e0b] animate-pulse"
                 />
               }
-                onClick={() => openImageEditor(record.id)}
+                onClick={() => openImageEditor(record.imageUrl)}
                 type="text"
                 shape="circle"
                 className="activity-star-button"
@@ -479,12 +487,6 @@ const PromptActivity: FC<props> = ({
                   if (typeof maybeHide === "function") {
                     hide = maybeHide;
                   }
-                  const response = await galleryservices.downloadFile(
-                    record.id,
-                    organizationId,
-                  );
-                  if (!response)
-                    throw new Error("Download failed or response is empty");
                   let ext = "";
                   if (record.typeGenerate === "image") {
                     ext = ".jpg";
@@ -497,12 +499,7 @@ const PromptActivity: FC<props> = ({
                     ext = ".mp4";
                   }
                   const fileName = "image" + ext;
-                  const url = URL.createObjectURL(response);
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.download = fileName;
-                  link.click();
-                  URL.revokeObjectURL(url);
+                  galleryservices.downloadFile(record.id, organizationId, fileName);
                   hide && hide();
                   api.success({ message: "Downloaded successfully" });
                 } catch (err) {
@@ -548,13 +545,31 @@ const PromptActivity: FC<props> = ({
               icon={<Share2 size={16} />}
               type="text"
               shape="circle"
-              onClick={() => {
-                // Share logic: copy link to clipboard
-                const url = window.location.origin + record.imageUrl;
-                navigator.clipboard.writeText(url);
-                api.success({ message: "Link copied" });
+              onClick={(e) => {
+                e.stopPropagation();
+                setShareItem({
+                  imageUrl: record.imageUrl,
+                  typeGenerate: record.typeGenerate,
+                  prompt: record.prompt,
+                  url: record.imageUrl, // <-- แนบ link ปัจจุบัน
+                });
               }}
             />
+            {/* Publish to social — สร้าง task รออนุมัติในแท็บ Public Social
+                (ต่างจากปุ่ม Share ด้านบนที่เป็นการแชร์เองแบบเร็ว ๆ) */}
+            {onShareToSocial && (
+              <Tooltip title="Publish to social">
+                <Button
+                  icon={<Megaphone size={16} />}
+                  type="text"
+                  shape="circle"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShareToSocial(record.id);
+                  }}
+                />
+              </Tooltip>
+            )}
           </div>
         );
       },
@@ -660,6 +675,12 @@ const PromptActivity: FC<props> = ({
             />
           </div>
         ))}
+      {/* Share Modal */}
+      <ShareModal
+        open={!!shareItem}
+        item={shareItem}
+        onClose={() => setShareItem(null)}
+      />
       {/* ImageEditorModal */}
       {imageEditorUrl && (
         <Modal

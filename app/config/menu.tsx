@@ -7,7 +7,13 @@ import {
   PaletteIcon,
   BookTemplate,
   MessageSquare,
+  Camera,
 } from "lucide-react";
+import {
+  hasAccessCode,
+  organizationPermissions,
+  PHOTO_EVENT_ACCESS_CODE,
+} from "@/app/utils/permissions";
 
 export const MenuSider = [
   {
@@ -39,6 +45,28 @@ export const MenuSider = [
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Projects</span>
         ),
       },
+      {
+        key: `photo-event`,
+        // org ต้องถูก super admin เปิด code นี้ก่อน — systemRoles ไม่ข้ามเงื่อนไขนี้
+        accessCode: PHOTO_EVENT_ACCESS_CODE,
+        role: organizationPermissions.managePhotoEvent,
+        // เห็นได้แม้ role ใน org นี้ต่ำกว่า ADMIN
+        systemRoles: ["SUPER_ADMIN"],
+        icon: <Camera size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Photo Event</span>
+        ),
+      },
+      // {
+      //   key: `communication`,
+      //   role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
+      //   icon: <MessageSquare size={22} />,
+      //   label: (
+      //     <span style={{ fontSize: 12, fontWeight: "normal" }}>
+      //       Communication
+      //     </span>
+      //   ),
+      // },
       {
         key: `settings/template-new`,
         role: ["OWNER", "ADMIN", "SUPER_ADMIN"],
@@ -98,11 +126,21 @@ export const MenuSider = [
 ];
 
 // ฟังก์ชันสร้างเมนูแบบ title + children แสดงตรง ๆ
-export const renderMenuItems = (menuList: any[], role: string | undefined) => {
+export const renderMenuItems = (
+  menuList: any[],
+  role: string | undefined,
+  systemRole?: string,
+  accessCodes?: string[],
+) => {
   if (!role) {
     return [];
   }
-  const sortedMenu = filterMenuByOrganizationRole(menuList, role);
+  const sortedMenu = filterMenuByOrganizationRole(
+    menuList,
+    role,
+    systemRole,
+    accessCodes,
+  );
 
   const items: any[] = [];
   sortedMenu.forEach((menu) => {
@@ -239,7 +277,12 @@ export const filterMenuByRole = (menuList: any[], userRoles: string[]) => {
     .filter(Boolean); // ลบ null ออก
 };
 
-export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
+export const filterMenuByOrganizationRole = (
+  menuList: any[],
+  role: string,
+  systemRole?: string,
+  accessCodes?: string[],
+) => {
   const hasAccess = (itemRole: string[] | string) => {
     if (!itemRole || itemRole === "") return true; // public access
 
@@ -256,7 +299,13 @@ export const filterMenuByOrganizationRole = (menuList: any[], role: string) => {
     .map((menu) => {
       // filter children based on role
       const children = menu.children
-        ? menu.children.filter((child: any) => hasAccess(child.role))
+        ? menu.children.filter(
+            (child: any) =>
+              (!child.accessCode ||
+                hasAccessCode(accessCodes, child.accessCode)) &&
+              (hasAccess(child.role) ||
+                (!!systemRole && child.systemRoles?.includes(systemRole))),
+          )
         : null;
 
       // Check if current user can access this menu

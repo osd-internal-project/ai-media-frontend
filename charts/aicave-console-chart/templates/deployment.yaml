@@ -24,6 +24,16 @@ spec:
     spec:
       imagePullSecrets:
         - name: {{ .Values.imagePullSecretName }}
+      securityContext:
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        # Writable scratch so the container root filesystem can stay read-only.
+        - name: tmp
+          emptyDir: {}
+        - name: next-cache
+          emptyDir: {}
       containers:
       - name: {{ .Values.appName }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -44,6 +54,8 @@ spec:
           value: {{ .Values.env.keycloakIssuer | quote }}
         - name: AUTH_TRUST_HOST
           value: {{ .Values.env.authTrustHost | quote }}
+        - name: NODE_OPTIONS
+          value: {{ .Values.env.nodeOptions | quote }}
         - name: NEXTAUTH_SECRET
           valueFrom:
             secretKeyRef:
@@ -66,6 +78,19 @@ spec:
           limits:
             memory: {{ .Values.resources.limits.memory | quote }}
             cpu: {{ .Values.resources.limits.cpu | quote }}
+        securityContext:
+          # Even if the app is exploited, it can't write/execute a dropped binary
+          # on the root fs or escalate privileges.
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: next-cache
+            mountPath: /app/.next/cache
         livenessProbe:
           httpGet:
             path: {{ .Values.livenessProbe.path }}

@@ -14,26 +14,38 @@ export interface VideoFormManagerProps {
     | "editor";
   projectRole?: string | null;
   promptGuideOpenStatus: boolean;
-  username?: string; // Added username
+  username?: string;
   selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
   setDisableTab: (disable: boolean) => void;
-  onSetPromptTextRef?: React.MutableRefObject<
-    ((id: number) => Promise<void>) | null
-  >;
+  onSetPromptTextRef?: React.RefObject<((id: number) => Promise<void>) | null>;
 }
-import Seeda1 from "./version/seeda1/chat-generate-video";
-import Seeda2 from "./version/seeda2/chat-generate-video";
+
+import ChatGenerateVideo, { VideoInputProps } from "./chat-generate-video";
+import Seeda1Input from "./version/seedance1/chat-video-input";
+import Seeda2Input from "./version/seedance2/chat-video-input";
+import { getVideoModelConfig } from "../../tab-layout/model-registry";
+
+/** Maps a model's `sendConfig.type` → form component. Payload config is sourced
+ *  from the shared model-registry so it cannot drift from the workflow. */
+const formComponentByType: Record<string, FC<VideoInputProps>> = {
+  seedance1: Seeda1Input as FC<VideoInputProps>,
+  seedance2: Seeda2Input as FC<VideoInputProps>,
+};
 
 const VideoFormRenderer: FC<VideoFormManagerProps> = (props) => {
-  const { selectedAIModel } = props;
-  const description = selectedAIModel?.description?.toLowerCase() || "";
-  switch (description) {
-    case "seeda1":
-      return <Seeda1 {...props} />;
-    case "seeda2":
-      return <Seeda2 {...props} />;
-    default:
-      return <></>; // default version
-  }
+  const type = props.selectedAIModel?.sendConfig?.type || "";
+  const config = getVideoModelConfig(props.selectedAIModel);
+  const FormComponent = formComponentByType[type];
+
+  if (!config || !FormComponent) return <></>;
+
+  return (
+    <ChatGenerateVideo
+      {...props}
+      modelConfig={config}
+      FormComponent={FormComponent}
+    />
+  );
 };
+
 export default VideoFormRenderer;
