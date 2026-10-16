@@ -61,7 +61,15 @@ type Props = {
   organizationId?: string;
   selectedModel?: string;
   projectId: string;
+  resolutionOptions?: string[];
+  /** Multiplier on RATIO_SIZE_MAP (2K base) per resolution; unlisted = 1 */
+  resolutionScale?: Record<string, number>;
+  maxRefImages?: number;
+  showGroupAndCount?: boolean;
 };
+
+const DEFAULT_RESOLUTION_OPTIONS = ["2k", "4k"];
+const DEFAULT_RESOLUTION_SCALE: Record<string, number> = { "4k": 1.414 };
 
 export default function ChatImageInput({
   setGroupMode,
@@ -89,6 +97,10 @@ export default function ChatImageInput({
   organizationId,
   selectedModel,
   projectId,
+  resolutionOptions = DEFAULT_RESOLUTION_OPTIONS,
+  resolutionScale = DEFAULT_RESOLUTION_SCALE,
+  maxRefImages = 8,
+  showGroupAndCount = true,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -149,7 +161,7 @@ export default function ChatImageInput({
     setSelectedRatio(ratio);
     const size = RATIO_SIZE_MAP[ratio];
     if (size) {
-      const scaleFactor = selectedResolution === "4k" ? 1.414 : 1;
+      const scaleFactor = resolutionScale[selectedResolution] ?? 1;
       const newWidth = Math.round(size.width * scaleFactor);
       const newHeight = Math.round(size.height * scaleFactor);
       setSelectedWidth(newWidth);
@@ -177,7 +189,7 @@ export default function ChatImageInput({
     const baseSize = RATIO_SIZE_MAP[currentRatio];
 
     if (baseSize) {
-      const scaleFactor = resolution === "4k" ? 1.414 : 1;
+      const scaleFactor = resolutionScale[resolution] ?? 1;
       const newWidth = Math.round(baseSize.width * scaleFactor);
       const newHeight = Math.round(baseSize.height * scaleFactor);
       setSelectedWidth(newWidth);
@@ -188,6 +200,16 @@ export default function ChatImageInput({
       });
     }
   };
+
+  // Resolution state outlives a model switch; snap it (and the size) to an
+  // option this model accepts, e.g. 4k → 2k when moving to Seedream 5.0 Pro.
+  React.useEffect(() => {
+    if (resolutionOptions.includes(selectedResolution)) return;
+    handleResolutionChange(
+      resolutionOptions.includes("2k") ? "2k" : resolutionOptions[0],
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolutionOptions]);
 
   // State to get CI prompt and active from BrandKitSection
   const [ciPrompt, setCiPrompt] = React.useState<string>("");
@@ -242,15 +264,15 @@ export default function ChatImageInput({
             handleUploadChange={handleUploadChange}
             beforeUpload={beforeUpload}
             onRemoveFile={onRemoveFile}
-            maxUploadFiles={8}
-            description="Reference Images (optional, max 8)"
+            maxUploadFiles={maxRefImages}
+            description={`Reference Images (optional, max ${maxRefImages})`}
             accept="image/*"
             extraActions={
               <DrawToImage
                 files={files}
                 handleUploadChange={handleUploadChange}
                 semantic={semantic}
-                disabled={isLoadingUpload || files.length >= 8}
+                disabled={isLoadingUpload || files.length >= maxRefImages}
               />
             }
           />
@@ -272,16 +294,21 @@ export default function ChatImageInput({
 
           <SettingSection
             semantic={semantic}
-            groupMode={groupMode}
-            setGroupMode={setGroupMode}
-            groupModes={groupModes}
+            groupMode={showGroupAndCount ? groupMode : undefined}
+            setGroupMode={showGroupAndCount ? setGroupMode : undefined}
+            groupModes={showGroupAndCount ? groupModes : undefined}
             selectedResolution={selectedResolution}
             selectedRatio={selectedRatio}
             handleResolutionChange={handleResolutionChange}
+            resolutionOptions={resolutionOptions}
             ratioOptions={ratioOptions}
             getRatioIcon={getRatioIcon}
-            selectedMaximumImage={selectedMaximumImage}
-            setSelectedMaximumImage={setSelectedMaximumImage}
+            selectedMaximumImage={
+              showGroupAndCount ? selectedMaximumImage : undefined
+            }
+            setSelectedMaximumImage={
+              showGroupAndCount ? setSelectedMaximumImage : undefined
+            }
             ratioSizeMap={RATIO_SIZE_MAP}
           />
           <BrandKitSection

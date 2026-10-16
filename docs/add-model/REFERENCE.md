@@ -131,7 +131,7 @@ interface ComputedFileRef { type: string; url: string }
 | ไฟล์ฟอร์ม | `chat-<domain>-input.tsx` | `chat-video-input.tsx` |
 | import alias ใน renderer | `<Pascal>Input` | `Seeda2Input` |
 
-ตัวย่อที่ใช้อยู่: `seedream1 → seedr1`, `seedance1 → seeda1`, `seedance2 → seeda2`,
+ตัวย่อที่ใช้อยู่: `seedream1 → seedr1`, `seedream2 → seedr2`, `seedance1 → seeda1`, `seedance2 → seeda2`,
 `omnihuman → omih1`, `dreamactor → dreac1`
 
 ---
