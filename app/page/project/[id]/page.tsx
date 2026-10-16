@@ -37,8 +37,10 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
 import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
-import { Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
+import { Clapperboard, Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
+import VideoEditorTab from "./components/tabs/video-editor/video-editor-tab";
+import { STRINGS as VIDEO_EDITOR_STRINGS } from "./components/tabs/video-editor/strings";
 import PublicSocial from "./components/tabs/public-social/public-social";
 import { FEATURES } from "@/app/config/features";
 
@@ -51,6 +53,7 @@ type GenerateTabKey =
   | "library"
   | "activity"
   | "editor"
+  | "video-editor"
   | "social";
 
 // Resolves saved → default → first available model for a given tab key
@@ -137,6 +140,7 @@ const GenerateImagePage: FC = () => {
     canAccessOmni,
     canAccessDream,
     canAccessEditor,
+    canAccessVideoEditor,
     canAccessWorkflow,
     canAccessSocial,
   } = useMemo(() => {
@@ -154,6 +158,10 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
         !has || normalizedAccessCodes.some((c) => c.includes("editor")),
+      // Editing video is part of the video plan; the flag hides it while unfinished.
+      canAccessVideoEditor:
+        FEATURES.videoEditor &&
+        (!has || normalizedAccessCodes.some((c) => c.includes("video"))),
       // Gated by the feature flag on top of the plan's access code, so the Public
       // Social tab and the "share to social" action disappear together.
       canAccessSocial:
@@ -173,6 +181,7 @@ const GenerateImagePage: FC = () => {
       library: "#1890ff",
       activity: semantic.colorTextSecondary || "#8c8c8c",
       editor: semantic.colorInfo || "#1890ff",
+      "video-editor": semantic.colorInfo || "#1890ff",
       social: semantic.colorPrimary || "#6F6ADE",
     }),
     [semantic],
@@ -346,7 +355,7 @@ const GenerateImagePage: FC = () => {
         teamView={teamView}
         setTeamView={setTeamView}
         getProject={getProject}
-        activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+        activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
         selectedAIModel={selectedAIModel}
         filteredAIModels={filteredAIModels}
         onAIModelChange={onAIModelChange}
@@ -368,7 +377,7 @@ const GenerateImagePage: FC = () => {
             overflow: "hidden",
           }}
           className="ant-tabs-full generate-tabs"
-          activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+          activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
           size={isMobile ? "small" : "large"}
           tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
           tabBarStyle={{
@@ -397,7 +406,7 @@ const GenerateImagePage: FC = () => {
                         teamView={teamView}
                         promptGuideOpenStatus={promptGuideOpenStatus}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -425,7 +434,7 @@ const GenerateImagePage: FC = () => {
                       <VideoFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -454,7 +463,7 @@ const GenerateImagePage: FC = () => {
                       <OmnihumenFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -483,7 +492,7 @@ const GenerateImagePage: FC = () => {
                       <DreamactorFormRenderer
                         teamView={teamView}
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">
                         }
                         projectId={id}
                         userId={session?.user?.id}
@@ -511,7 +520,7 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <WorkflowFormRenderer
                         activeKey={
-                          activeKey as Exclude<GenerateTabKey, "workflow" | "social">
+                          activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">
                         }
                         projectId={id}
                       />
@@ -528,7 +537,7 @@ const GenerateImagePage: FC = () => {
               children: (
                 <div className="h-full">
                   <PromptLibrary
-                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+                    activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
                   />
                 </div>
               ),
@@ -544,7 +553,7 @@ const GenerateImagePage: FC = () => {
               ),
               children: (
                 <PromptActivity
-                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social">}
+                  activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
                   onShareToSocial={canAccessSocial ? onShareToSocial : undefined}
                 />
               ),
@@ -563,6 +572,24 @@ const GenerateImagePage: FC = () => {
                     children: (
                       <div className="h-full w-full">
                         <EditorSpace />
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
+            ...(canAccessVideoEditor
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "video-editor",
+                    label: renderTabLabel(
+                      "video-editor",
+                      VIDEO_EDITOR_STRINGS.tabLabel,
+                      <Clapperboard size={16} />,
+                    ),
+                    children: (
+                      <div className="h-full w-full">
+                        <VideoEditorTab projectId={id} />
                       </div>
                     ),
                   },

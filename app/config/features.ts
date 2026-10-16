@@ -4,4 +4,6 @@ export const FEATURES = {
   social: false,
   /** Plans, checkout, credits. SUPER_ADMIN sees these regardless — see canSeeBilling. */
   billing: false,
+  /** Browser video editor tab in a project (in development). */
+  videoEditor: true,
 } as const;

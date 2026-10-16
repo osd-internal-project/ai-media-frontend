@@ -1,7 +1,7 @@
 import { AxiosInstance, isAxiosError } from "axios";
 import config from "@/app/config";
 
-type DirectUploadKind = "ref" | "prompt-guide";
+type DirectUploadKind = "ref" | "prompt-guide" | "editor-export";
 type UploadMediaType = "image" | "video" | "audio";
 
 // axiosWorker ตั้ง default เป็น multipart/form-data — ถ้าไม่ override axios จะแปลง object เป็น
@@ -204,13 +204,18 @@ const uploadViaPresign = async (
     data = res.data;
   } catch (error) {
     // ปล่อย row ที่จองไว้ ให้ user อัปไฟล์เดิม (uid เดิม) ซ้ำได้
+    // editor-export ไม่มี endpoint ลบ — cron ของ worker ลบ row ที่ค้างเกิน 24 ชม.
     const releasePath =
       kind === "ref"
         ? `/upload/delete/${presign.uid}`
-        : `/upload/prompt-guide-image/delete/${presign.uid}`;
-    await axiosInstance.delete(releasePath).catch((releaseError) => {
-      console.warn("Cannot release reserved upload", releaseError);
-    });
+        : kind === "prompt-guide"
+          ? `/upload/prompt-guide-image/delete/${presign.uid}`
+          : null;
+    if (releasePath) {
+      await axiosInstance.delete(releasePath).catch((releaseError) => {
+        console.warn("Cannot release reserved upload", releaseError);
+      });
+    }
     throw toUploadError(error);
   }
   if (!data.imagePath || !data.url) {
@@ -266,6 +271,13 @@ const UploadsServices = (axiosInstance: AxiosInstance) => {
     //Prompt guide Images
     uploadPromptGuideImage: async (formData: any) => {
       return uploadDirect(axiosInstance, "prompt-guide", formData);
+    },
+    /**
+     * MP4 จาก video editor → Library ของ project (Gallery row) — ใช้ presign เสมอ
+     * เพราะ callback ของโหมด policy รู้จักแค่ ref / prompt-guide
+     */
+    saveEditorExport: async (formData: FormData) => {
+      return uploadViaPresign(axiosInstance, "editor-export", formData);
     },
     removePromptGuideImage: async (uid: string) => {
       return await axiosInstance
