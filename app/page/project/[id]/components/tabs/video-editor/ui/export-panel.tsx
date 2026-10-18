@@ -25,7 +25,7 @@ function errorMessage(error: unknown): string {
   if (error instanceof ExportError) {
     if (error.reason === "video-codec") return STRINGS.exportNoCodec;
     if (error.reason === "source-missing") return STRINGS.exportSourceMissing;
-    return STRINGS.emptyTimeline;
+    return STRINGS.exportEmpty;
   }
   return STRINGS.exportFailed;
 }

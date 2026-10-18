@@ -21,15 +21,14 @@ import {
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "antd";
-import { Film, Music, Plus, ZoomIn, ZoomOut } from "lucide-react";
+import { Film, Music, ZoomIn, ZoomOut } from "lucide-react";
 import { useEditor, type Selection } from "../editor-context";
 import { useEditorColors, type EditorColors } from "../editor-theme";
-import { itemDuration, layerDuration, projectDuration, trimInPlace } from "../model/timeline";
-import type { Layer, LayerKind, TimelineItem } from "../model/types";
+import { itemDuration, projectDuration, trimInPlace } from "../model/timeline";
+import type { LayerKind, TimelineItem } from "../model/types";
 import { STRINGS } from "../strings";
 import { Filmstrip, Waveform } from "./clip-visuals";
 import { formatTime } from "./item-actions";
-import { useDeviceImport } from "./media-bin";
 
 const MIN_PPS = 8;
 const MAX_PPS = 240;
@@ -190,7 +189,11 @@ function Ruler({ width, pxPerSecond, color }: { width: number; pxPerSecond: numb
   return (
     <div className="relative text-[11px] tabular-nums" style={{ height: RULER_HEIGHT, width, color }} aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
-        <span key={index} className="absolute top-2 -translate-x-1/2" style={{ left: index * step * pxPerSecond }}>
+        <span
+          key={index}
+          className={`absolute top-1 ${index === 0 ? "" : "-translate-x-1/2"}`}
+          style={{ left: index * step * pxPerSecond }}
+        >
           {formatTime(index * step).replace(/\.0$/, "")}
         </span>
       ))}
@@ -198,16 +201,13 @@ function Ruler({ width, pxPerSecond, color }: { width: number; pxPerSecond: numb
   );
 }
 
-const VISUAL_ACCEPT = "video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/webp";
-
-/** `onAddMedia` replaces the + button's file picker (mobile opens the media drawer instead). */
-export default function Timeline({ onAddMedia }: { onAddMedia?: () => void }) {
+/** Media is added from the media bin (desktop) or the toolbar (mobile), never from here. */
+export default function Timeline({ emptyMessage }: { emptyMessage: string }) {
   const { state, dispatch, selection, setSelection, playhead, setPlayhead, playing, setPlaying } = useEditor();
   const colors = useEditorColors();
   const [pxPerSecond, setPxPerSecond] = useState(40);
   const [trim, setTrim] = useState<TrimDrag | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const deviceImport = useDeviceImport();
   const project = state.present;
   const width = Math.max(projectDuration(project) + 8, 12) * pxPerSecond;
   const isEmpty = project.layers.every((layer) => layer.items.length === 0);
@@ -308,54 +308,8 @@ export default function Timeline({ onAddMedia }: { onAddMedia?: () => void }) {
 
   const select = useCallback((next: Selection) => setSelection(next), [setSelection]);
 
-  const addButton = (layer: Layer) => {
-    const left = HEADER_WIDTH + layerDuration(layer) * pxPerSecond + 12;
-    if (layer.kind === "music" && layer.items.length === 0) {
-      return (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            deviceImport.open("audio/*");
-          }}
-          className="absolute top-1 h-9 px-3 rounded-md flex items-center gap-1.5 text-xs bg-transparent cursor-pointer"
-          style={{ left: HEADER_WIDTH + 4, border: `1px dashed ${colors.border}`, color: colors.textSecondary }}
-        >
-          <Plus size={14} aria-hidden="true" />
-          {STRINGS.addMusic}
-        </button>
-      );
-    }
-    const size = layer.kind === "video" ? 44 : 32;
-    return (
-      <button
-        type="button"
-        aria-label={layer.kind === "video" ? STRINGS.addVisual : STRINGS.addMusic}
-        title={layer.kind === "video" ? STRINGS.addVisual : STRINGS.addMusic}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (layer.kind === "music") deviceImport.open("audio/*");
-          else if (onAddMedia) onAddMedia();
-          else deviceImport.open(VISUAL_ACCEPT);
-        }}
-        className="absolute rounded-[10px] grid place-items-center border-0 cursor-pointer"
-        style={{
-          left,
-          top: (ROW_HEIGHT[layer.kind] - size) / 2,
-          width: size,
-          height: size,
-          background: colors.text,
-          color: colors.bg,
-        }}
-      >
-        <Plus size={layer.kind === "video" ? 20 : 16} aria-hidden="true" />
-      </button>
-    );
-  };
-
   return (
     <div className="relative h-full" style={{ background: colors.bg }}>
-      {deviceImport.elements}
       <div
         ref={scrollerRef}
         className="h-full overflow-x-auto overflow-y-auto"
@@ -412,15 +366,14 @@ export default function Timeline({ onAddMedia }: { onAddMedia?: () => void }) {
                     />
                   ))}
                 </div>
-                {addButton(layer)}
               </div>
             ))}
           </DndContext>
           <div
             className="absolute bottom-0 w-0.5 pointer-events-none z-40"
-            style={{ top: RULER_HEIGHT - 2, left: HEADER_WIDTH + playhead * pxPerSecond - 1, background: colors.text }}
+            style={{ top: RULER_HEIGHT - 6, left: HEADER_WIDTH + playhead * pxPerSecond - 1, background: colors.text }}
           >
-            <span className="absolute -top-1 -left-[5px] w-3 h-2 rounded-sm" style={{ background: colors.text }} />
+            <span className="absolute top-0 -left-[5px] w-3 h-2 rounded-sm" style={{ background: colors.text }} />
           </div>
         </div>
       </div>
@@ -428,9 +381,18 @@ export default function Timeline({ onAddMedia }: { onAddMedia?: () => void }) {
         <Button size="small" type="text" aria-label={STRINGS.zoomOut} icon={<ZoomOut size={14} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value / 1.5))} />
         <Button size="small" type="text" aria-label={STRINGS.zoomIn} icon={<ZoomIn size={14} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value * 1.5))} />
       </div>
-      <p className="absolute inset-x-0 bottom-1 m-0 text-center text-[11px] pointer-events-none" style={{ color: colors.textSecondary }}>
-        {isEmpty ? STRINGS.emptyTimeline : STRINGS.timelineHint}
-      </p>
+      {isEmpty ? (
+        <p
+          className="absolute inset-0 m-0 grid place-items-center px-12 text-center text-sm pointer-events-none"
+          style={{ paddingTop: RULER_HEIGHT, color: colors.textSecondary }}
+        >
+          {emptyMessage}
+        </p>
+      ) : (
+        <p className="absolute inset-x-0 bottom-1 m-0 text-center text-[11px] pointer-events-none" style={{ color: colors.textSecondary }}>
+          {STRINGS.timelineHint}
+        </p>
+      )}
     </div>
   );
 }

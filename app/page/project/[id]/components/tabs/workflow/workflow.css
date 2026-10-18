@@ -1,0 +1,402 @@
+/* Workflow canvas — every colour comes from the --wf-* vars set on the canvas
+   wrapper (derived from the AI CAVE antd tokens), so light/dark both work. */
+
+.wf-node {
+  position: relative;
+  border-radius: 16px;
+  background: var(--wf-card-bg);
+  border: 1px solid var(--wf-border);
+  color: var(--wf-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.wf-node:hover {
+  border-color: color-mix(in srgb, var(--wf-primary) 45%, var(--wf-border));
+}
+.wf-node--selected,
+.wf-node--selected:hover {
+  border-color: var(--wf-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wf-primary) 25%, transparent),
+    0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.wf-node--editing {
+  border-color: color-mix(in srgb, var(--wf-primary) 60%, var(--wf-border));
+}
+
+/* header (drag handle) */
+.wf-node__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 8px 12px;
+  cursor: grab;
+}
+.wf-node__header:active {
+  cursor: grabbing;
+}
+.wf-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  color: var(--wf-primary);
+  background: color-mix(in srgb, var(--wf-primary) 16%, transparent);
+}
+.wf-node__title {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* status pill */
+.wf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--wf-status);
+  background: color-mix(in srgb, var(--wf-status) 14%, transparent);
+}
+.wf-status__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.wf-status--processing .wf-status__dot {
+  animation: wfPulse 1.2s ease-in-out infinite;
+}
+@keyframes wfPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+/* icon-only button (header menu, media toolbar) */
+.wf-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--wf-text-dim);
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.wf-icon-btn:hover {
+  color: var(--wf-text);
+  background: var(--wf-hairline);
+}
+.wf-icon-btn--overlay {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+}
+.wf-icon-btn--overlay:hover {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* media area */
+.wf-media {
+  position: relative;
+  margin: 0 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--wf-surface);
+}
+.wf-media img,
+.wf-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.wf-media__toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.wf-node:hover .wf-media__toolbar,
+.wf-media__toolbar:focus-within {
+  opacity: 1;
+}
+.wf-media__badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+.wf-media__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--wf-text-dim);
+}
+.wf-media__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--wf-primary) 20%, transparent);
+}
+.wf-media__bar > span {
+  display: block;
+  height: 100%;
+  background: var(--wf-primary);
+  transition: width 0.4s ease;
+}
+.wf-media--failed {
+  background: color-mix(in srgb, var(--wf-error) 10%, var(--wf-surface));
+}
+.wf-media--pending {
+  border: 1px dashed var(--wf-border);
+  background: transparent;
+}
+
+/* selection checkbox for Combine */
+.wf-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.wf-node:hover .wf-check,
+.wf-check--on {
+  opacity: 1;
+}
+.wf-check--on {
+  border-color: var(--wf-primary);
+  background: var(--wf-primary);
+}
+
+/* body text + meta */
+.wf-node__prompt {
+  padding: 10px 12px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wf-node__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 12px;
+  font-size: 11px;
+  color: var(--wf-text-dim);
+}
+.wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--wf-text-dim);
+  background: var(--wf-hairline);
+  white-space: nowrap;
+}
+
+/* inputs (parent outputs + uploads) */
+.wf-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wf-input-tile {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--wf-border);
+  background: var(--wf-surface);
+  flex-shrink: 0;
+}
+.wf-input-tile--lg {
+  width: 64px;
+  height: 64px;
+}
+.wf-input-tile__role {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1px 0;
+  font-size: 9px;
+  line-height: 1.3;
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+}
+.wf-input-tile--blocked {
+  outline: 2px solid var(--wf-error);
+  outline-offset: -2px;
+}
+
+/* "+" add-next button on the right edge */
+.wf-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background: var(--wf-primary);
+  border: 3px solid var(--wf-canvas-bg);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--wf-primary) 40%, transparent);
+  transition: transform 0.15s ease;
+}
+.wf-add-btn:hover {
+  transform: scale(1.1);
+}
+
+/* composer (generate form inside a node) */
+.wf-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.wf-composer__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--wf-text-dim);
+  margin-bottom: 6px;
+}
+.wf-composer__prompt {
+  border-radius: 12px;
+  border: 1px solid var(--wf-border);
+  background: var(--wf-surface);
+  transition: border-color 0.15s ease;
+}
+.wf-composer__prompt:focus-within {
+  border-color: var(--wf-primary);
+}
+.wf-composer__prompt textarea.ant-input {
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.wf-composer__bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wf-composer__hint {
+  font-size: 11px;
+  color: var(--wf-text-dim);
+}
+.wf-composer__warn {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--wf-text);
+  background: color-mix(in srgb, var(--wf-warning) 14%, transparent);
+}
+.wf-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--wf-text);
+  border: 1px solid var(--wf-border);
+  background: transparent;
+  transition: border-color 0.15s ease;
+}
+.wf-chip-btn:hover {
+  border-color: var(--wf-primary);
+}
+
+/* empty canvas */
+.wf-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  pointer-events: none;
+  color: var(--wf-text-dim);
+  text-align: center;
+}
+.wf-empty > * {
+  pointer-events: auto;
+}

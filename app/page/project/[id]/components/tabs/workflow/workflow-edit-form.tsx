@@ -5,19 +5,23 @@ import {
   Button,
   Flex,
   Form,
-  InputNumber,
   Popover,
   Segmented,
   Select,
   Space,
   Switch,
-  Tag,
   Tooltip,
-  Typography,
   type UploadFile,
 } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
-import { Image as ImageIcon, SlidersHorizontal, Video } from "lucide-react";
+import {
+  AlertTriangle,
+  Image as ImageIcon,
+  SlidersHorizontal,
+  Sparkles,
+  Video,
+} from "lucide-react";
+import { SmartImage, SmartVideo } from "../../shared/smart-media";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
@@ -43,6 +47,12 @@ import SettingSection from "../../tab-layout/generate-section/setting-section";
 import DrawToImage from "../image-gen/shared/draw-to-image";
 import UploadSection from "../../tab-layout/generate-section/upload-section";
 import WorkflowPrompt from "./workflow-prompt";
+import type { ParentRef } from "./workflow-block-node";
+import {
+  getCapability,
+  parentRoleLabel,
+  planParents,
+} from "./workflow-capabilities";
 
 /** Image ratio → base size (2k); 4k applies a 1.414x scale. Matches Gen Image. */
 const IMAGE_RATIO_SIZE_MAP: Record<string, { width: number; height: number }> =
@@ -107,6 +117,8 @@ interface WorkflowEditFormProps {
   organizationId?: string;
   /** Models pre-filtered by type */
   models: TMasterModelType[];
+  /** Outputs of the parent blocks this block takes as input */
+  parents?: ParentRef[];
   submitting?: boolean;
   onSubmit: (
     payload: Pick<
@@ -132,6 +144,7 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   userId,
   organizationId,
   models,
+  parents = [],
   submitting,
   onSubmit,
   onCancel,
@@ -144,13 +157,26 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   const uploadsServices = useMemo(() => UploadsServices(axiosWorker), []);
   const generateServices = useMemo(() => GenerateServices(axiosCore), []);
 
-  const [modelId, setModelId] = useState<number | undefined>(
-    models.find((m) => m.isDefault)?.id ?? models[0]?.id,
-  );
+  const parentKinds = useMemo(() => parents.map((p) => p.type), [parents]);
+  /** Why each model can't take these parents (absent = usable). */
+  const modelBlockReason = useMemo(() => {
+    const reasons = new Map<number, string>();
+    models.forEach((m) => {
+      const plan = planParents(m, parentKinds, 0);
+      if (!plan.ok) reasons.set(m.id, plan.reason);
+    });
+    return reasons;
+  }, [models, parentKinds]);
+
+  const [modelId, setModelId] = useState<number | undefined>(() => {
+    const usable = models.filter((m) => !modelBlockReason.has(m.id));
+    return (usable.find((m) => m.isDefault) ?? usable[0] ?? models[0])?.id;
+  });
   const model = useMemo(
     () => models.find((m) => m.id === modelId),
     [models, modelId],
   );
+  const capability = getCapability(model);
 
   const videoConfig = useMemo(
     () => (type === "video" ? getVideoModelConfig(model) : undefined),
@@ -163,10 +189,16 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   /** Video upload mode from the model config; "multi-file" by default. */
   const uploadMode = videoConfig?.features?.uploadMode ?? "multi-file";
   const isFirstLast = type === "video" && uploadMode === "first-last";
-  const maxDuration = videoConfig?.features?.maxDuration ?? 12;
+  const maxDuration =
+    capability?.duration?.max ?? videoConfig?.features?.maxDuration ?? 12;
+  const minDuration = capability?.duration?.min ?? 4;
   const supportAudio = videoConfig?.features?.supportAudio ?? true;
   const showDraftMode = videoConfig?.features?.showDraftMode ?? false;
   const showDraw = !isFirstLast; // image + multi-file video
+  const resolutionOptions =
+    capability?.resolutions ??
+    (type === "image" ? IMAGE_RESOLUTION_OPTIONS : VIDEO_RESOLUTION_OPTIONS);
+  const maxImages = capability?.maxImages ?? 1;
 
   const [selectedRatio, setSelectedRatio] = useState("1:1");
   const [selectedResolution, setSelectedResolution] = useState(
@@ -174,6 +206,20 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   );
   const [selectedMaximumImage, setSelectedMaximumImage] = useState(1);
   const [duration, setDuration] = useState(6);
+
+  // Switching model can leave values the new model rejects — snap them back into range.
+  useEffect(() => {
+    if (!resolutionOptions.includes(selectedResolution)) {
+      const preferred = type === "image" ? "2k" : "720p";
+      setSelectedResolution(
+        resolutionOptions.includes(preferred) ? preferred : resolutionOptions[0],
+      );
+    }
+    if (selectedMaximumImage > maxImages) setSelectedMaximumImage(maxImages);
+    if (duration > maxDuration) setDuration(maxDuration);
+    if (duration < minDuration) setDuration(minDuration);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelId]);
   const [generateAudio, setGenerateAudio] = useState(false);
   const [draftMode, setDraftMode] = useState(false);
 
@@ -188,6 +234,18 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
 
   const [estimate, setEstimate] = useState(0);
 
+  /** How parents reach the model given the user's own uploads. */
+  const uploadCount = isFirstLast
+    ? refImageFirst.length + refImageLast.length
+    : refImages.length;
+  const parentPlan = planParents(model, parentKinds, uploadCount);
+  /** seedance1: parents take the frame slots first, uploads fill what's left */
+  const freeFrameSlots = isFirstLast ? Math.max(0, 2 - parents.length) : 0;
+  const maxMultiUploads = Math.max(
+    0,
+    (capability?.maxInputs ?? 8) - parents.length,
+  );
+
   // ── size derivation ─────────────────────────────────────────────────────────
 
   /** Compute output width/height from the current ratio + resolution. */
@@ -195,7 +253,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
     if (type === "image") {
       const base =
         IMAGE_RATIO_SIZE_MAP[selectedRatio] ?? IMAGE_RATIO_SIZE_MAP["1:1"];
-      const scale = selectedResolution === "4k" ? 1.414 : 1;
+      const scale =
+        capability?.resolutionScale?.[selectedResolution] ??
+        (selectedResolution === "4k" ? 1.414 : 1);
       return {
         width: Math.round(base.width * scale),
         height: Math.round(base.height * scale),
@@ -205,7 +265,7 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
       VIDEO_RATIO_SIZE_MAP[selectedResolution] ?? VIDEO_RATIO_SIZE_MAP["720p"];
     const base = byRatio[selectedRatio] ?? byRatio["1:1"];
     return { width: base.width, height: base.height };
-  }, [type, selectedRatio, selectedResolution]);
+  }, [type, selectedRatio, selectedResolution, capability]);
 
   const ratioOptions = useMemo(() => {
     const keys =
@@ -503,6 +563,7 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
 
   /** Validate, build the payload and hand it to the canvas. */
   const handleFinish = async () => {
+    if (submitting || isLoadingUpload || !parentPlan.ok) return;
     const values = await form.validateFields();
     const config = buildGenerateConfig(values.prompt);
     if (!model?.modelType || !config) return;
@@ -525,27 +586,31 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
         showModeSection={false}
         selectedResolution={selectedResolution}
         handleResolutionChange={handleResolutionChange}
-        resolutionOptions={
-          type === "image" ? IMAGE_RESOLUTION_OPTIONS : VIDEO_RESOLUTION_OPTIONS
-        }
+        resolutionOptions={resolutionOptions}
         selectedRatio={selectedRatio}
         ratioOptions={ratioOptions}
-        showCountSection={type === "image"}
-        selectedMaximumImage={selectedMaximumImage}
-        setSelectedMaximumImage={setSelectedMaximumImage}
+        showCountSection={type === "video" || maxImages > 1}
+        countControl={
+          type === "video"
+            ? {
+                min: minDuration,
+                max: maxDuration,
+                value: duration,
+                onChange: setDuration,
+                label: "Duration (s)",
+              }
+            : {
+                min: 1,
+                max: maxImages,
+                value: selectedMaximumImage,
+                onChange: setSelectedMaximumImage,
+                label: "Images",
+              }
+        }
       />
 
-      {type === "video" && (
+      {type === "video" && (supportAudio || showDraftMode) && (
         <Space style={{ marginTop: 8 }} size="large">
-          <Form.Item label={`Duration (s)`} style={{ marginBottom: 0 }}>
-            <InputNumber
-              size="small"
-              min={1}
-              max={maxDuration}
-              value={duration}
-              onChange={(v) => setDuration(v ?? 6)}
-            />
-          </Form.Item>
           {supportAudio && (
             <Form.Item label="Audio" style={{ marginBottom: 0 }}>
               <Switch checked={generateAudio} onChange={setGenerateAudio} />
@@ -561,160 +626,241 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
     </div>
   );
 
+  /** One tile per parent output, labelled with the slot it fills. */
+  const parentTiles = parents.map((p, i) => (
+    <Tooltip
+      key={`parent-${i}`}
+      title={parentPlan.ok ? "จากบล็อกก่อนหน้า" : parentPlan.reason}
+    >
+      <span
+        className={`wf-input-tile wf-input-tile--lg ${
+          parentPlan.ok ? "" : "wf-input-tile--blocked"
+        }`}
+      >
+        {p.url ? (
+          p.type === "video" ? (
+            <SmartVideo src={p.url} muted preload="metadata" />
+          ) : (
+            <SmartImage src={p.url} alt={`input ${i + 1}`} />
+          )
+        ) : null}
+        <span className="wf-input-tile__role">
+          {parentRoleLabel(parentPlan, i)}
+        </span>
+      </span>
+    </Tooltip>
+  ));
+
+  /** Upload slots that remain after parents took their place. */
+  const renderUploads = () => {
+    if (isFirstLast) {
+      if (freeFrameSlots === 0) return null;
+      // A parent already fills the first frame — the user's upload becomes the last
+      // frame. It is stored in the "first" state so seeda1 sends it as image[0];
+      // the backend puts parents in front, giving [parent, upload].
+      if (parents.length > 0) {
+        return (
+          <UploadSection
+            bare
+            className="nodrag nopan"
+            semantic={semantic}
+            files={filesFirst}
+            handleUploadChange={handleFirstChange}
+            beforeUpload={beforeUpload}
+            onRemoveFile={removeFirst}
+            maxUploadFiles={1}
+            multiple={false}
+            label="Last frame"
+            accept="image/*"
+            isLoadingUpload={isLoadingUpload}
+          />
+        );
+      }
+      return (
+        <>
+          <UploadSection
+            bare
+            className="nodrag nopan"
+            semantic={semantic}
+            files={filesFirst}
+            handleUploadChange={handleFirstChange}
+            beforeUpload={beforeUpload}
+            onRemoveFile={removeFirst}
+            maxUploadFiles={1}
+            multiple={false}
+            label="First frame"
+            accept="image/*"
+            isLoadingUpload={isLoadingUpload}
+          />
+          <UploadSection
+            bare
+            className="nodrag nopan"
+            semantic={semantic}
+            files={filesLast}
+            handleUploadChange={handleLastChange}
+            beforeUpload={beforeUpload}
+            onRemoveFile={removeLast}
+            maxUploadFiles={1}
+            multiple={false}
+            label="Last frame"
+            accept="image/*"
+            isLoadingUpload={isLoadingUpload}
+          />
+        </>
+      );
+    }
+    if (maxMultiUploads === 0) return null;
+    return (
+      <UploadSection
+        bare
+        className="nodrag nopan"
+        semantic={semantic}
+        files={files}
+        handleUploadChange={handleMultiChange}
+        beforeUpload={beforeUpload}
+        onRemoveFile={removeMulti}
+        maxUploadFiles={maxMultiUploads}
+        isLoadingUpload={isLoadingUpload}
+        accept={type === "video" ? "image/*,video/*,audio/*" : "image/*"}
+        extraActions={
+          showDraw ? (
+            <DrawToImage
+              files={files}
+              handleUploadChange={handleMultiChange}
+              semantic={semantic}
+              disabled={isLoadingUpload || files.length >= maxMultiUploads}
+            />
+          ) : undefined
+        }
+      />
+    );
+  };
+
+  const settingsSummary = [
+    selectedRatio,
+    selectedResolution.toUpperCase(),
+    type === "video" ? `${duration}s` : maxImages > 1 ? `${selectedMaximumImage}x` : null,
+    type === "video" && generateAudio ? "Audio" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <Form form={form} layout="vertical" className="workflow-edit-form">
-      <div>
+      <div
+        className="wf-composer"
+        onKeyDown={(e) => {
+          // ⌘/Ctrl + Enter = Generate (เหมือนช่อง prompt ของ Gen tab อื่น ๆ ที่ผู้ใช้คุ้น)
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            e.preventDefault();
+            void handleFinish();
+          }
+        }}
+      >
         {/* สลับชนิด generate (image/video) ก่อน generate — ล็อกเมื่อ ref ไม่ใช่รูปภาพ */}
         {onChangeType && (
-          <Form.Item label="Generate type" style={{ marginBottom: 8 }}>
-            <Tooltip
-              title={
-                canSwitchType
-                  ? undefined
-                  : "บล็อกอ้างอิงไม่ใช่รูปภาพ จึงสลับชนิดไม่ได้ — ล็อกเป็นวิดีโอ"
-              }
-            >
-              <Segmented
-                size="small"
-                block
-                value={type}
-                disabled={!canSwitchType}
-                onChange={(value) => onChangeType(value as WorkflowBlockType)}
-                options={[
-                  {
-                    label: "Image",
-                    value: "image",
-                    icon: <ImageIcon size={13} />,
-                  },
-                  {
-                    label: "Video",
-                    value: "video",
-                    icon: <Video size={13} />,
-                  },
-                ]}
-              />
-            </Tooltip>
-          </Form.Item>
+          <Tooltip
+            title={
+              canSwitchType
+                ? undefined
+                : "บล็อกอ้างอิงเป็นวิดีโอ จึงสร้างได้เฉพาะวิดีโอ"
+            }
+          >
+            <Segmented
+              size="small"
+              block
+              value={type}
+              disabled={!canSwitchType}
+              onChange={(value) => onChangeType(value as WorkflowBlockType)}
+              options={[
+                { label: "Image", value: "image", icon: <ImageIcon size={13} /> },
+                { label: "Video", value: "video", icon: <Video size={13} /> },
+              ]}
+            />
+          </Tooltip>
         )}
 
-        <Form.Item label="Model" required style={{ marginBottom: 8 }}>
+        {/* Inputs: parent outputs (with their role) + the user's uploads */}
+        <div>
+          <div className="wf-composer__label">
+            Inputs
+            {capability && (
+              <span style={{ marginInlineStart: 6, opacity: 0.7 }}>
+                {parents.length + uploadCount}/{capability.maxInputs}
+              </span>
+            )}
+          </div>
+          <Flex gap={8} wrap align="flex-start">
+            {parentTiles}
+            {renderUploads()}
+          </Flex>
+        </div>
+
+        {!parentPlan.ok && (
+          <div className="wf-composer__warn">
+            <AlertTriangle size={14} color={semantic.colorWarning} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span>
+              {model?.name ?? "โมเดลนี้"}: {parentPlan.reason} — เลือกโมเดลอื่น
+            </span>
+          </div>
+        )}
+
+        <div className="wf-composer__prompt">
+          <WorkflowPrompt semantic={semantic} fieldName="prompt" rows={4} />
+        </div>
+
+        {/* Model + settings */}
+        <div className="wf-composer__bar">
           <Select
             size="small"
             value={modelId}
             onChange={setModelId}
             placeholder="Select model"
-            options={models.map((m) => ({ label: m.name, value: m.id }))}
+            popupMatchSelectWidth={false}
+            style={{ minWidth: 150, flex: 1 }}
+            options={models.map((m) => ({
+              label: m.name,
+              value: m.id,
+              disabled: modelBlockReason.has(m.id),
+              reason: modelBlockReason.get(m.id),
+            }))}
+            optionRender={(option) => (
+              <div>
+                <div>{option.data.label}</div>
+                {option.data.reason && (
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>
+                    {option.data.reason}
+                  </div>
+                )}
+              </div>
+            )}
           />
-        </Form.Item>
-
-        <Form.Item label="Upload" style={{ marginBottom: 8 }}>
-          {isFirstLast ? (
-            <Flex gap={12} wrap>
-              <UploadSection
-                bare
-                className="nodrag nopan"
-                semantic={semantic}
-                files={filesFirst}
-                handleUploadChange={handleFirstChange}
-                beforeUpload={beforeUpload}
-                onRemoveFile={removeFirst}
-                maxUploadFiles={1}
-                multiple={false}
-                label="First frame"
-                accept="image/*"
-                isLoadingUpload={isLoadingUpload}
-              />
-              <UploadSection
-                bare
-                className="nodrag nopan"
-                semantic={semantic}
-                files={filesLast}
-                handleUploadChange={handleLastChange}
-                beforeUpload={beforeUpload}
-                onRemoveFile={removeLast}
-                maxUploadFiles={1}
-                multiple={false}
-                label="Last frame"
-                accept="image/*"
-                isLoadingUpload={isLoadingUpload}
-              />
-            </Flex>
-          ) : (
-            <UploadSection
-              bare
-              className="nodrag nopan"
-              semantic={semantic}
-              files={files}
-              handleUploadChange={handleMultiChange}
-              beforeUpload={beforeUpload}
-              onRemoveFile={removeMulti}
-              maxUploadFiles={8}
-              isLoadingUpload={isLoadingUpload}
-              accept={type === "video" ? "image/*,video/*,audio/*" : "image/*"}
-              extraActions={
-                showDraw ? (
-                  <DrawToImage
-                    files={files}
-                    handleUploadChange={handleMultiChange}
-                    semantic={semantic}
-                    disabled={isLoadingUpload || files.length >= 8}
-                  />
-                ) : undefined
-              }
-            />
-          )}
-        </Form.Item>
-
-        <Form.Item label="Prompt" required style={{ marginBottom: 8 }}>
-          <WorkflowPrompt semantic={semantic} fieldName="prompt" rows={3} />
-        </Form.Item>
-
-        {/* Settings trigger + selected-value tags + credit estimate */}
-        <Flex align="center" gap={6} wrap style={{ marginTop: 8 }}>
-          <Popover
-            content={settingsPopoverContent}
-            trigger="click"
-            placement="topLeft"
-          >
-            <Button size="small" icon={<SlidersHorizontal size={12} />}>
-              Settings
-            </Button>
+          <Popover content={settingsPopoverContent} trigger="click" placement="topLeft">
+            <button type="button" className="wf-chip-btn">
+              <SlidersHorizontal size={13} />
+              {settingsSummary}
+            </button>
           </Popover>
+        </div>
 
-          <Tag color="blue" style={{ margin: 0 }}>
-            {selectedRatio}
-          </Tag>
-          <Tag style={{ margin: 0 }}>{selectedResolution.toUpperCase()}</Tag>
-          {type === "image" && (
-            <Tag style={{ margin: 0 }}>{selectedMaximumImage}x</Tag>
-          )}
-          {type === "video" && <Tag style={{ margin: 0 }}>{duration}s</Tag>}
-          {type === "video" && generateAudio && (
-            <Tag color="green" style={{ margin: 0 }}>
-              Audio
-            </Tag>
-          )}
-          <Typography.Text
-            style={{
-              marginLeft: "auto",
-              fontSize: 12,
-              color: semantic.colorPrimary,
-            }}
-          >
-            ~{estimate} credits
-          </Typography.Text>
-        </Flex>
-
-        <div className="flex justify-end gap-2 mt-3">
-          <Button size="small" onClick={onCancel}>
+        {/* Credit + actions */}
+        <div className="wf-composer__bar">
+          <span className="wf-composer__hint">
+            <span style={{ color: semantic.colorPrimary, fontWeight: 600 }}>
+              ~{estimate}
+            </span>{" "}
+            credits · ⌘↵
+          </span>
+          <Button size="small" type="text" onClick={onCancel} style={{ marginInlineStart: "auto" }}>
             Cancel
           </Button>
           <Button
             size="small"
             type="primary"
+            icon={<Sparkles size={13} />}
             loading={submitting}
             onClick={handleFinish}
-            disabled={!modelId || isLoadingUpload}
+            disabled={!modelId || isLoadingUpload || !parentPlan.ok}
           >
             Generate
           </Button>

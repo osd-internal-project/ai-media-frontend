@@ -99,7 +99,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
   const header = (
     <EditorHeader fullscreen={fullscreen} onToggleFullscreen={() => setFullscreen((value) => !value)} />
   );
-  const timeline = (onAddMedia: (() => void) | undefined, className: string) => (
+  const timeline = (className: string) => (
     <section
       className={`relative shrink-0 overflow-hidden transition-[height] duration-200 ${className}`}
       style={{ ...panel, height: timelineCollapsed ? 40 : isDesktop ? 216 : 196 }}
@@ -109,7 +109,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
           {STRINGS.timeline}
         </div>
       ) : (
-        <Timeline onAddMedia={onAddMedia} />
+        <Timeline emptyMessage={isDesktop ? STRINGS.emptyTimelineDesktop : STRINGS.emptyTimelineMobile} />
       )}
       <CollapseToggle
         collapsed={timelineCollapsed}
@@ -148,7 +148,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
             <Inspector />
           </aside>
         </div>
-        {timeline(undefined, "rounded-[14px]")}
+        {timeline("rounded-[14px]")}
       </div>
     );
   }
@@ -159,7 +159,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
       <div className="flex-1 min-h-50">
         <PreviewFrame />
       </div>
-      {timeline(() => setMediaOpen(true), "")}
+      {timeline("")}
       <div className="shrink-0" style={{ background: colors.panel, borderTop: `1px solid ${colors.border}` }}>
         <MobileToolbar onOpenMedia={() => setMediaOpen(true)} />
       </div>

@@ -21,9 +21,19 @@ import {
   type OnNodeDrag,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "./workflow.css";
 import { Button, Dropdown, message } from "antd";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Layers, Plus, Coins } from "lucide-react";
+import { isAxiosError } from "axios";
+import {
+  ArrowLeft,
+  Coins,
+  Image as ImageIcon,
+  Layers,
+  Plus,
+  Sparkles,
+  Video as VideoIcon,
+} from "lucide-react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -36,6 +46,7 @@ import GenerateServices from "@/app/services/generate.service";
 import type { TMasterModelType } from "@/app/common/master-model-type.type";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import WorkflowBlockNode, {
+  type ParentRef,
   type WorkflowNodeData,
 } from "./workflow-block-node";
 import WorkflowEditForm from "./workflow-edit-form";
@@ -103,6 +114,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       error: "#FF3C38",
       canvasBg: isDark ? "#191C20" : "#F2F4F5",
       dot: isDark ? "#3A434F" : "#D3DAE3",
+      // พื้นหลัง media/ช่องกรอก — เข้มกว่าการ์ดเล็กน้อยให้ภาพเด่น
+      surface: isDark ? "#191C20" : "#F2F4F5",
     };
   }, [mode]);
 
@@ -119,11 +132,15 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         "--wf-success": palette.success,
         "--wf-warning": palette.warning,
         "--wf-error": palette.error,
+        "--wf-surface": palette.surface,
+        "--wf-canvas-bg": palette.canvasBg,
       }) as React.CSSProperties,
     [palette],
   );
 
   const [blocks, setBlocks] = useState<CanvasBlock[]>([]);
+  /** โหลดครั้งแรกเสร็จแล้ว (กัน empty state กะพริบระหว่างโหลด) */
+  const [loaded, setLoaded] = useState(false);
   const [models, setModels] = useState<TMasterModelType[]>([]);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -178,6 +195,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       } catch (error) {
         console.error("Failed to load workflow canvas:", error);
         message.error("โหลดแคนวาสไม่สำเร็จ");
+      } finally {
+        if (mounted) setLoaded(true);
       }
     })();
     return () => {
@@ -191,6 +210,40 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     workflowService,
   ]);
 
+  /**
+   * โหลดบล็อกจาก server ใหม่ (ตามทัน event ที่พลาดตอน socket หลุด/แท็บหลับ)
+   * คง placeholder ฝั่ง client และ progress ที่รู้อยู่แล้วไว้
+   */
+  const resyncBlocks = useCallback(async () => {
+    try {
+      const conversation = await workflowService.getConversation(
+        projectId,
+        conversationId,
+      );
+      const serverBlocks = (conversation.blocks ?? []) as CanvasBlock[];
+      setBlocks((prev) => {
+        const prevById = new Map(prev.map((b) => [b.id, b]));
+        const merged = serverBlocks.map((b) => {
+          const known = prevById.get(b.id);
+          return b.status === "processing" && known?._progress !== undefined
+            ? { ...b, _progress: known._progress }
+            : b;
+        });
+        return [...merged, ...prev.filter((b) => b._local)];
+      });
+    } catch (error) {
+      console.error("Resync workflow blocks failed:", error);
+    }
+  }, [conversationId, projectId, workflowService]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") resyncBlocks();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [resyncBlocks]);
+
   // ── websocket: เข้าห้อง + ฟัง workflow.block.updated ───────────────────────
   useEffect(() => {
     if (!socket) return;
@@ -198,8 +251,12 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     const joinRoom = () =>
       socket.emit("join-room", { projectId, type: "workflow" });
     joinRoom();
-    // เข้าห้องซ้ำทุกครั้งที่ socket reconnect เพื่อไม่ให้หลุดห้อง (update จะได้ไหลลื่น)
-    socket.on("connect", joinRoom);
+    // reconnect: เข้าห้องซ้ำ + resync เพราะ event ระหว่างหลุดจะไม่ถูกส่งซ้ำ
+    const onReconnect = () => {
+      joinRoom();
+      resyncBlocks();
+    };
+    socket.on("connect", onReconnect);
 
     const handleUpdate = (payload: BlockUpdatePayload) => {
       // กัน outputUrl ที่ไม่ใช่ string (เช่น array จาก payload เก่า)
@@ -224,9 +281,9 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     return () => {
       socket.emit("leave-room", { projectId, type: "workflow" });
       socket.off("workflow.block.updated", handleUpdate);
-      socket.off("connect", joinRoom);
+      socket.off("connect", onReconnect);
     };
-  }, [socket, projectId]);
+  }, [socket, projectId, resyncBlocks]);
 
   // ── interactions ───────────────────────────────────────────────────────────
 
@@ -304,17 +361,16 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   );
 
   /**
-   * + Add child: คลิกครั้งเดียวสร้าง placeholder ผูกกับ parent แล้วเปิดฟอร์ม
-   * ชนิดเริ่มต้น: parent รูป → image (สลับเป็น video ได้ใน Segmented ของฟอร์ม),
-   * parent วิดีโอ → ล็อกเป็น video (output วิดีโอใส่ได้เฉพาะบล็อกวิดีโอ)
+   * + Add child: สร้าง placeholder ชนิดที่เลือกจากเมนู ผูกกับ parent แล้วเปิดฟอร์ม
+   * parent วิดีโอ → บังคับเป็น video (output วิดีโอใส่ได้เฉพาะบล็อกวิดีโอ)
    */
   const handleAddChild = useCallback(
-    (parentId: string) => {
+    (parentId: string, requested: WorkflowBlockType) => {
       const parent = blocksRef.current.find((b) => b.id === parentId);
       if (!parent) return;
       const type: WorkflowBlockType =
-        parent.type === "video" ? "video" : "image";
-      addPlaceholder(type, parent.positionX + 380, parent.positionY, [
+        parent.type === "video" ? "video" : requested;
+      addPlaceholder(type, parent.positionX + 420, parent.positionY, [
         parentId,
       ]);
     },
@@ -422,7 +478,15 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         setEditingBlockId(null);
       } catch (error) {
         console.error("Generate failed:", error);
-        message.error("สร้างงาน generate ไม่สำเร็จ");
+        // backend ตอบ 400 พร้อมเหตุผล (เช่น model ไม่รับ input ชนิดนี้) — แสดงให้ผู้ใช้เห็น
+        const reason = isAxiosError<{ message?: string | string[] }>(error)
+          ? error.response?.data?.message
+          : undefined;
+        message.error(
+          reason
+            ? `สร้างงาน generate ไม่สำเร็จ: ${[reason].flat().join(", ")}`
+            : "สร้างงาน generate ไม่สำเร็จ",
+        );
       } finally {
         setSubmitting(false);
       }
@@ -488,6 +552,30 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     [workflowService],
   );
 
+  /** output + ชนิดของ parent แต่ละตัว (ใช้ทั้ง thumbnail บนการ์ดและฟอร์ม) */
+  const parentRefsOf = useCallback(
+    (block: WorkflowBlock): ParentRef[] =>
+      block.parentBlockIds.map((pid) => {
+        const parent = blocksRef.current.find((b) => b.id === pid);
+        return { url: parent?.outputUrl ?? "", type: parent?.type ?? "image" };
+      }),
+    [],
+  );
+
+  /**
+   * ลากเส้นได้เฉพาะจากบล็อกที่ success ไปยัง placeholder ที่ยังไม่ generate
+   * และบล็อกรูปรับได้เฉพาะ parent ที่เป็นรูป (model ของบล็อกวิดีโอตรวจต่อในฟอร์ม)
+   */
+  const isValidConnection = useCallback((conn: Edge | Connection) => {
+    if (!conn.source || !conn.target || conn.source === conn.target) return false;
+    const source = blocksRef.current.find((b) => b.id === conn.source);
+    const target = blocksRef.current.find((b) => b.id === conn.target);
+    if (!source || !target || !target._local) return false;
+    if (source.status !== "success") return false;
+    if (target.parentBlockIds.includes(source.id)) return false;
+    return target.type === "video" || source.type === "image";
+  }, []);
+
   // ── สร้าง nodes/edges จาก blocks ────────────────────────────────────────────
   const renderEditForm = useCallback(
     (block: WorkflowBlock) => (
@@ -501,6 +589,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         userId={userId}
         organizationId={organizationId}
         models={modelsByType(block.type)}
+        parents={parentRefsOf(block)}
         submitting={submitting}
         onSubmit={(payload) => handleGenerate(block as CanvasBlock, payload)}
         onEstimate={(credit) =>
@@ -514,6 +603,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       handleChangeBlockType,
       handleGenerate,
       modelsByType,
+      parentRefsOf,
       organizationId,
       projectId,
       submitting,
@@ -530,7 +620,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       return blocks.map<Node>((block) => {
         const data: WorkflowNodeData = {
           block,
-          progress: block._progress ?? (block.status === "success" ? 1 : 0),
+          modelName: models.find((m) => m.modelType === block.model)?.name,
+          progress: block._progress,
           selected: selectedIds.includes(block.id),
           editing: editingBlockId === block.id,
           parentRefs: block.parentBlockIds.map((pid) => {
@@ -601,6 +692,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     setNodes,
     setEdges,
     palette,
+    models,
   ]);
 
   // สรุปจำนวนตามสถานะ
@@ -727,8 +819,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           <Dropdown
             menu={{
               items: [
-                { key: "image", label: "Image block" },
-                { key: "video", label: "Video block" },
+                { key: "image", label: "Image block", icon: <ImageIcon size={14} /> },
+                { key: "video", label: "Video block", icon: <VideoIcon size={14} /> },
               ],
               onClick: ({ key }) => handleNewBlock(key as WorkflowBlockType),
             }}
@@ -741,7 +833,19 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative">
+        {loaded && blocks.length === 0 && (
+          <div className="wf-empty">
+            <Sparkles size={28} color={palette.primary} />
+            <div style={{ fontSize: 15, fontWeight: 600, color: palette.text }}>
+              Start your workflow
+            </div>
+            <div style={{ fontSize: 13, maxWidth: 340 }}>
+              Use <b>New block</b> to generate an image or video, then press +
+              on the result to keep building from it.
+            </div>
+          </div>
+        )}
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -749,6 +853,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           onNodesChange={onNodesChange}
           onNodeDragStop={onNodeDragStop}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           fitView
           proOptions={{ hideAttribution: true }}
           style={{ background: palette.canvasBg }}
