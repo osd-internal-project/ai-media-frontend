@@ -88,6 +88,7 @@ export interface ImageChatProps {
     | "video"
     | "omnihumen"
     | "dreamactor"
+    | "audio"
     | "library"
     | "activity"
     | "editor";

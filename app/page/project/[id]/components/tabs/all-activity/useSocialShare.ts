@@ -9,6 +9,7 @@ export interface SocialShareItem {
     | "image"
     | "video"
     | "dreamactor"
+    | "audio"
     | "omnihumen"
     | "omnihuman"
     | string;

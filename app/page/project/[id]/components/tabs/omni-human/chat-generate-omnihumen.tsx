@@ -51,6 +51,7 @@ export interface OmniHumanChatProps {
     | "video"
     | "omnihumen"
     | "dreamactor"
+    | "audio"
     | "library"
     | "activity"
     | "editor";

@@ -9,6 +9,7 @@ export interface VideoFormManagerProps {
     | "video"
     | "omnihumen"
     | "dreamactor"
+    | "audio"
     | "library"
     | "activity"
     | "editor";

@@ -19,7 +19,7 @@ import {
   notification,
 } from "antd";
 import dynamic from "next/dynamic";
-import { Eye } from "lucide-react";
+import { AudioLines, Eye } from "lucide-react";
 
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -210,7 +210,13 @@ const PromptActivity: FC<props> = ({
             onClick={() => setPreviewItem(record)}
           >
             {/* Thumbnail or video preview */}
-            {isVideo ? (
+            {record.typeGenerate === "audio" ? (
+              <AudioLines
+                size={28}
+                aria-label="Audio"
+                style={{ margin: "auto", color: semantic.colorPrimary }}
+              />
+            ) : isVideo ? (
               record.imageUrl ? (
                 <>
                   <video
@@ -497,8 +503,15 @@ const PromptActivity: FC<props> = ({
                     record.typeGenerate === "omnihuman"
                   ) {
                     ext = ".mp4";
+                  } else if (record.typeGenerate === "audio") {
+                    ext =
+                      record.generateConfig?.format === "wav"
+                        ? ".wav"
+                        : record.generateConfig?.format === "ogg_opus"
+                        ? ".ogg"
+                        : ".mp3";
                   }
-                  const fileName = "image" + ext;
+                  const fileName = (record.typeGenerate === "audio" ? "audio" : "image") + ext;
                   galleryservices.downloadFile(record.id, organizationId, fileName);
                   hide && hide();
                   api.success({ message: "Downloaded successfully" });
@@ -666,13 +679,23 @@ const PromptActivity: FC<props> = ({
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-            <video
-              src={previewItem.imageUrl}
-              controls
-              autoPlay
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {previewItem.typeGenerate === "audio" ? (
+              <audio
+                src={previewItem.imageUrl}
+                controls
+                autoPlay
+                style={{ width: "min(480px, 90vw)" }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <video
+                src={previewItem.imageUrl}
+                controls
+                autoPlay
+                className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </div>
         ))}
       {/* Share Modal */}

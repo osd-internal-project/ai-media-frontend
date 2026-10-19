@@ -59,6 +59,7 @@ export interface DreamactorChatProps {
     | "video"
     | "omnihumen"
     | "dreamactor"
+    | "audio"
     | "library"
     | "activity"
     | "editor";

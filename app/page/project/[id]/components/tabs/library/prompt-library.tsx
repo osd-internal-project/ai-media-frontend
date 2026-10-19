@@ -24,6 +24,7 @@ import {
 } from "antd";
 import dynamic from "next/dynamic";
 import {
+  AudioLines,
   Download,
   ExternalLink,
   Eye,
@@ -257,6 +258,28 @@ const PromptLibrary: FC<props> = ({
   // =========================
   const renderPreview = (record: any) => {
     const isVideo = isVideoType(record.typeGenerate);
+
+    if (record.typeGenerate === "audio") {
+      return (
+        <Flex
+          vertical
+          align="center"
+          justify="center"
+          gap={12}
+          style={{ width: "100%", height: "100%", padding: 16 }}
+        >
+          <AudioLines size={40} style={{ color: semantic.colorPrimary }} />
+          <audio
+            controls
+            preload="none"
+            src={record.imageUrl}
+            style={{ width: "100%" }}
+            aria-label={`Audio: ${record.prompt ?? ""}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Flex>
+      );
+    }
 
     if (!isVideo) {
       return (
@@ -580,13 +603,23 @@ const PromptLibrary: FC<props> = ({
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-            <video
-              src={previewItem.imageUrl}
-              controls
-              autoPlay
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
-              onClick={(e) => e.stopPropagation()}
-            />
+            {previewItem.typeGenerate === "audio" ? (
+              <audio
+                src={previewItem.imageUrl}
+                controls
+                autoPlay
+                style={{ width: "min(480px, 90vw)" }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <video
+                src={previewItem.imageUrl}
+                controls
+                autoPlay
+                className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-50 duration-300"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </div>
         ))}
       {/* ImageEditorModal */}

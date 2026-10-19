@@ -45,3 +45,21 @@ export async function readImageSize(
     return null;
   }
 }
+
+/**
+ * Read an audio file's length in seconds via Web Audio (no `blob:` URL, CSP-safe); `null` if it cannot be decoded.
+ */
+export async function readAudioDuration(blob: Blob): Promise<number | null> {
+  if (typeof window === "undefined" || typeof AudioContext !== "function") {
+    return null;
+  }
+  const context = new AudioContext();
+  try {
+    const buffer = await context.decodeAudioData(await blob.arrayBuffer());
+    return buffer.duration;
+  } catch {
+    return null;
+  } finally {
+    void context.close();
+  }
+}

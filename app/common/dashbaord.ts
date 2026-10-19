@@ -131,6 +131,7 @@ export interface IGenerationSeriesPoint {
   video: number;
   omnihuman: number;
   dreamactor: number;
+  audio: number;
 }
 
 /** A single generation as shown in the Recent Generations panel. */

@@ -6,7 +6,7 @@ import React, {
   useState,
   type FC,
 } from "react";
-import { Tabs, Typography } from "antd";
+import { Skeleton, Tabs, Typography } from "antd";
 import "./styles/styles.css";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
@@ -36,8 +36,9 @@ import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OrganizationServices from "@/app/services/organization.service";
 import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
+import AudioFormRenderer from "./components/tabs/audio-gen/audio-form-renderer";
 import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
-import { Clapperboard, Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
+import { AudioLines, Clapperboard, Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
 import EditorSpace from "./components/tabs/editor/editor-space";
 import VideoEditorTab from "./components/tabs/video-editor/video-editor-tab";
 import { STRINGS as VIDEO_EDITOR_STRINGS } from "./components/tabs/video-editor/strings";
@@ -49,6 +50,7 @@ type GenerateTabKey =
   | "video"
   | "omnihumen"
   | "dreamactor"
+  | "audio"
   | "workflow"
   | "library"
   | "activity"
@@ -104,6 +106,10 @@ const GenerateImagePage: FC = () => {
   const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
   const [teamView, setTeamView] = useState<boolean>(true);
   const [accessCode, setAccessCode] = useState<string[]>([]);
+  // Empty accessCode means "no restriction", so tabs must wait for the fetch to settle.
+  const [accessStatus, setAccessStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -139,11 +145,25 @@ const GenerateImagePage: FC = () => {
     canAccessVideo,
     canAccessOmni,
     canAccessDream,
+    canAccessAudio,
     canAccessEditor,
     canAccessVideoEditor,
     canAccessWorkflow,
     canAccessSocial,
   } = useMemo(() => {
+    if (accessStatus !== "ready") {
+      return {
+        canAccessImage: false,
+        canAccessVideo: false,
+        canAccessOmni: false,
+        canAccessDream: false,
+        canAccessAudio: false,
+        canAccessWorkflow: false,
+        canAccessEditor: false,
+        canAccessVideoEditor: false,
+        canAccessSocial: false,
+      };
+    }
     const has = normalizedAccessCodes.length > 0;
     return {
       canAccessImage:
@@ -154,6 +174,8 @@ const GenerateImagePage: FC = () => {
         !has || normalizedAccessCodes.some((c) => c.includes("omni")),
       canAccessDream:
         !has || normalizedAccessCodes.some((c) => c.includes("dream")),
+      canAccessAudio:
+        !has || normalizedAccessCodes.some((c) => c.includes("audio")),
       canAccessWorkflow:
         !has || normalizedAccessCodes.some((c) => c.includes("workflow")),
       canAccessEditor:
@@ -168,7 +190,7 @@ const GenerateImagePage: FC = () => {
         FEATURES.social &&
         (!has || normalizedAccessCodes.some((c) => c.includes("social"))),
     };
-  }, [normalizedAccessCodes]);
+  }, [normalizedAccessCodes, accessStatus]);
 
   // Memoized tab icon colours — only changes with theme
   const tabIconColorByType = useMemo<Record<GenerateTabKey, string>>(
@@ -177,6 +199,7 @@ const GenerateImagePage: FC = () => {
       video: semantic.colorPrimary || "#1677ff",
       omnihumen: semantic.colorSuccess || "#52c41a",
       dreamactor: semantic.colorWarning || "#faad14",
+      audio: semantic.colorSuccess || "#13c2c2",
       workflow: semantic.colorPrimary || "#7c3aed",
       library: "#1890ff",
       activity: semantic.colorTextSecondary || "#8c8c8c",
@@ -213,6 +236,7 @@ const GenerateImagePage: FC = () => {
   // Fetch project role and org access codes in parallel
   const fetchRoleAndAccess = useCallback(async () => {
     if (!session?.user?.id || !id) return;
+    let accessReady = false;
     try {
       const [userDetails, code] = await Promise.all([
         userService.findDetailByToken(session.user.id),
@@ -220,12 +244,19 @@ const GenerateImagePage: FC = () => {
           ? organizationServices.findAccessCodeByOrganizationId(organizationId)
           : Promise.resolve(null),
       ]);
+      if (code) setAccessCode(Array.isArray(code) ? code : []);
+      setAccessStatus("ready");
+      accessReady = true;
       const actualUserId = userDetails?.userId || session.user.id;
       const userRole = await projectService.checkUserRole(id, actualUserId);
       setProjectRole(userRole);
-      if (code) setAccessCode(Array.isArray(code) ? code : []);
     } catch (error) {
       console.error("Failed to fetch role/access:", error);
+      // Unknown access → show only the always-available tabs.
+      if (!accessReady) {
+        setAccessStatus("error");
+        setActiveKey("library");
+      }
     }
   }, [
     session?.user?.id,
@@ -365,6 +396,24 @@ const GenerateImagePage: FC = () => {
       />
 
       <div className="flex-1 min-h-0 w-full overflow-hidden">
+        {accessStatus === "loading" ? (
+          <div
+            style={{
+              display: "flex",
+              gap: isMobile ? 6 : isTablet ? 8 : 12,
+              paddingInline: isMobile ? 8 : isTablet ? 10 : 14,
+              paddingBlock: isMobile ? 8 : 12,
+              overflow: "hidden",
+              height: "100%",
+              background: semantic.colorBgContainer,
+              borderTop: `1px solid ${semantic.colorBorder}`,
+            }}
+          >
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton.Button key={i} active size="small" />
+            ))}
+          </div>
+        ) : (
         <Tabs
           tabPosition="top"
           style={{
@@ -507,6 +556,31 @@ const GenerateImagePage: FC = () => {
                   },
                 ]
               : []),
+            ...(canAccessAudio
+              ? [
+                  {
+                    disabled: disableTab,
+                    key: "audio",
+                    label: renderTabLabel(
+                      "audio",
+                      "Audio Gen",
+                      <AudioLines size={16} />,
+                    ),
+                    children: (
+                      <AudioFormRenderer
+                        teamView={teamView}
+                        activeKey={activeKey}
+                        projectId={id}
+                        userId={session?.user?.id}
+                        projectRole={projectRole}
+                        selectedAIModel={selectedAIModel}
+                        username={session?.user?.name || ""}
+                        setDisableTab={setDisableTab}
+                      />
+                    ),
+                  },
+                ]
+              : []),
             ...(canAccessWorkflow
               ? [
                   {
@@ -620,6 +694,7 @@ const GenerateImagePage: FC = () => {
               : []),
           ]}
         />
+        )}
       </div>
     </div>
   );

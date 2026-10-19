@@ -218,3 +218,65 @@ export interface DreamactorModelConfig {
     maxDuration?: number;
   };
 }
+
+// ─── Audio Gen ────────────────────────────────────────────────────────────────
+
+/** pcm ไม่มี — browser เล่นไม่ได้ (ตรงกับ AUDIO_FORMATS ฝั่ง backend) */
+export type AudioFormat = "mp3" | "wav" | "ogg_opus";
+
+/** ช่องอ้างอิงที่ N ตรงกับ `@AudioN` ใน prompt · upload = object key จากการอัปโหลด */
+export interface AudioReferenceSlot {
+  mode: "upload" | "url" | "speaker";
+  value: string;
+}
+
+export interface AudioFormState {
+  selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
+  references: AudioReferenceSlot[];
+  refImage: RefImage | null;
+  format: AudioFormat;
+  sampleRate: number | undefined;
+  speechRate: number;
+  loudnessRate: number;
+  pitchRate: number;
+  enableSubtitle: boolean;
+  projectId: string;
+  userId: string;
+  organizationId: string | undefined;
+  username: string;
+}
+
+/** The payload emitted to socket "generate:audio" — ตรงกับ RequestAudioGenerateDto */
+export interface AudioGeneratePayload {
+  taskId: string;
+  model: string | undefined;
+  prompt: string;
+  projectId: string;
+  userId: string | undefined;
+  organizationId: string | undefined;
+  typeGenerate: string;
+  references: { url?: string; speaker?: string }[];
+  image: string[];
+  format: AudioFormat;
+  sampleRate?: number;
+  speechRate?: number;
+  loudnessRate?: number;
+  pitchRate?: number;
+  enableSubtitle?: boolean;
+}
+
+export interface AudioModelFeatures {
+  maxReferences: number;
+  maxReferenceSeconds: number;
+  formats: AudioFormat[];
+  sampleRates: number[];
+}
+
+export interface AudioModelConfig {
+  buildSubmitPayload: (
+    values: Record<string, unknown>,
+    state: AudioFormState,
+    tempTaskId: string,
+  ) => AudioGeneratePayload;
+  features: AudioModelFeatures;
+}

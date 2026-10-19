@@ -13,6 +13,7 @@ export const GENERATION_TYPE_KEYS = [
   "video",
   "omnihuman",
   "dreamactor",
+  "audio",
 ] as const;
 
 export type GenerationTypeKey = (typeof GENERATION_TYPE_KEYS)[number];
@@ -24,6 +25,7 @@ export const GENERATION_TYPE_LABEL: Readonly<
   video: "Video",
   omnihuman: "OmniHuman",
   dreamactor: "DreamActor",
+  audio: "Audio",
 };
 
 /** Options for antd Select / Segmented controls, in display order. */
@@ -51,6 +53,7 @@ export const generationTypeColors = (
   video: token.colorInfo,
   omnihuman: token.colorWarning,
   dreamactor: aiCaveColors.dreamActor,
+  audio: token.colorSuccess,
 });
 
 /**

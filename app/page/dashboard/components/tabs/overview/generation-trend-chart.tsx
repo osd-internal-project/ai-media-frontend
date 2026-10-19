@@ -13,6 +13,7 @@ const STROKE_DASH: Readonly<Record<GenerationTypeKey, string | undefined>> = {
   video: undefined,
   omnihuman: "6 4",
   dreamactor: "2 4",
+  audio: "8 3 2 3",
 };
 
 type GenerationTrendChartProps = {
