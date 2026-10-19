@@ -197,6 +197,15 @@ const statusTag = (row: TableRow) => {
   );
 };
 
+const errorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError(error)) {
+    const msg = error.response?.data?.message;
+    if (Array.isArray(msg)) return msg.join(", ");
+    if (typeof msg === "string") return msg;
+  }
+  return fallback;
+};
+
 const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
   open,
   organizationId,
@@ -217,7 +226,7 @@ const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
       setProjectList(await organizationService.getBulkProjects(organizationId));
     } catch (error) {
       console.error(error);
-      messageApi.error("Failed to load projects");
+      messageApi.error(errorMessage(error, "Failed to load projects"));
     }
   }, [organizationService, organizationId, messageApi]);
 
@@ -299,15 +308,6 @@ const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
         ? { ...row, status: result.status, errors: result.errors }
         : row;
     });
-  };
-
-  const errorMessage = (error: unknown, fallback: string) => {
-    if (isAxiosError(error)) {
-      const msg = error.response?.data?.message;
-      if (Array.isArray(msg)) return msg.join(", ");
-      if (typeof msg === "string") return msg;
-    }
-    return fallback;
   };
 
   const handleSubmit = async () => {

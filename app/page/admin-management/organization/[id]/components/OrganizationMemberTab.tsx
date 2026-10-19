@@ -46,6 +46,8 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
   const [isExtraCoinModalOpen, setIsExtraCoinModalOpen] = useState(false);
   const [isBulkAddModalOpen, setIsBulkAddModalOpen] = useState(false);
   const [currentMemberId, setCurrentMemberId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const [editMemberForm] = Form.useForm();
   const [inviteForm] = Form.useForm();
@@ -123,6 +125,52 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
     }
   };
 
+  const runBulk = async (action: () => Promise<string>) => {
+    setBulkBusy(true);
+    try {
+      showMessage("success", await action());
+      setSelectedIds([]);
+      onRefresh();
+    } catch (error: any) {
+      let msg = error?.response?.data?.message || "Action failed";
+      if (Array.isArray(msg)) msg = msg.join(", ");
+      showMessage("error", msg);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const handleBulkRemove = () =>
+    runBulk(async () => {
+      const r = await organizationService.removeMembers(
+        organizationId,
+        selectedIds,
+      );
+      return `Removed ${r.removed}, skipped ${r.skipped}`;
+    });
+
+  const handleBulkStatus = (status: "active" | "inactive") =>
+    runBulk(async () => {
+      const r = await organizationService.setMembersStatus(
+        organizationId,
+        selectedIds,
+        status,
+      );
+      return `${status === "active" ? "Enabled" : "Disabled"} ${r.updated}, skipped ${r.skipped}`;
+    });
+
+  const handleBulkSendEmail = () =>
+    runBulk(async () => {
+      const r = await organizationService.sendAccessEmails(
+        organizationId,
+        selectedIds,
+      );
+      const failed = r.failed.length
+        ? `, failed ${r.failed.length} (${r.failed.map((f) => f.email).join(", ")})`
+        : "";
+      return `Sent ${r.sent}${failed}`;
+    });
+
   const handleExtraCoin = () => {
     extraCoinForm.resetFields();
     setIsExtraCoinModalOpen(true);
@@ -167,7 +215,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
     },
     {
       title: "Status",
-      dataIndex: ["users", "status"],
+      dataIndex: "status",
       key: "status",
       render: (status) => (
         <Tag
@@ -216,7 +264,42 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
   return (
     <div className="space-y-4">
       {contextHolder}
-      <div className="flex justify-end space-x-3 mb-4">
+      <div className="flex justify-between items-center flex-wrap gap-3 mb-4">
+        <Space wrap>
+          {selectedIds.length > 0 && (
+            <>
+              <span className="text-[#99a1af]">
+                {selectedIds.length} selected
+              </span>
+              <Button
+                loading={bulkBusy}
+                onClick={handleBulkSendEmail}
+              >
+                Send access email
+              </Button>
+              <Popconfirm
+                title={`Disable ${selectedIds.length} member(s) in this organization?`}
+                onConfirm={() => handleBulkStatus("inactive")}
+              >
+                <Button loading={bulkBusy}>Disable</Button>
+              </Popconfirm>
+              <Button
+                loading={bulkBusy}
+                onClick={() => handleBulkStatus("active")}
+              >
+                Enable
+              </Button>
+              <Popconfirm
+                title={`Remove ${selectedIds.length} member(s) from this organization?`}
+                onConfirm={handleBulkRemove}
+              >
+                <Button danger loading={bulkBusy}>
+                  Remove
+                </Button>
+              </Popconfirm>
+            </>
+          )}
+        </Space>
         <Space>
           <Button
             type="primary"
@@ -240,6 +323,12 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        rowSelection={{
+          selectedRowKeys: selectedIds,
+          onChange: (keys) => setSelectedIds(keys as number[]), // rowKey is the numeric member id
+          preserveSelectedRowKeys: true,
+          getCheckboxProps: (record) => ({ disabled: record.role === "OWNER" }),
+        }}
       />
 
       {/* Edit Member Modal */}

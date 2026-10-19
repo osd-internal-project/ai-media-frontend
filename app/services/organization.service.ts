@@ -191,6 +191,40 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    removeMembers: async (
+      organizationId: string,
+      memberIds: number[],
+    ): Promise<{ removed: number; skipped: number }> => {
+      return await axiosInstance
+        .post(`${baseUrl}/${organizationId}/bulk-members/remove`, { memberIds })
+        .then((res) => res.data);
+    },
+    setMembersStatus: async (
+      organizationId: string,
+      memberIds: number[],
+      status: "active" | "inactive",
+    ): Promise<{ updated: number; skipped: number }> => {
+      return await axiosInstance
+        .post(`${baseUrl}/${organizationId}/bulk-members/status`, {
+          memberIds,
+          status,
+        })
+        .then((res) => res.data);
+    },
+    sendAccessEmails: async (
+      organizationId: string,
+      memberIds: number[],
+    ): Promise<{
+      sent: number;
+      skipped: number;
+      failed: { email: string; reason: string }[];
+    }> => {
+      return await axiosInstance
+        .post(`${baseUrl}/${organizationId}/bulk-members/send-access-email`, {
+          memberIds,
+        })
+        .then((res) => res.data);
+    },
     findPendingInvitations: async (email: string): Promise<IPendingInvitation[]> => {
       return await axiosInstance
         .get(`${baseUrl}/invitation/pending`, { params: { email } })

@@ -149,6 +149,14 @@ const UserServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    changeMyPassword: async (value: {
+      currentPassword: string;
+      newPassword: string;
+    }) => {
+      return await axiosInstance
+        .post(`${baseUsersUrl}/me/change-password`, value)
+        .then((res) => res.data);
+    },
     confirmChangePassword: async (value: any) => {
       return await axiosInstance
         .post(`${baseUsersUrl}/confirm-change-password`, value)

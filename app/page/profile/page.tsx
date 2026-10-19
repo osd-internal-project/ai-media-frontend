@@ -18,9 +18,11 @@ import {
   Edit3,
   Save,
   X,
+  Lock,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import type { UploadProps } from "antd";
+import { isAxiosError } from "axios";
 import UserServices from "../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 
@@ -46,6 +48,30 @@ const UserProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+  const [passwordForm] = Form.useForm();
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const handleChangePassword = async (values: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    setChangingPassword(true);
+    try {
+      await UserServices(axiosUser).changeMyPassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      passwordForm.resetFields();
+      messageApi.success("Password changed successfully");
+    } catch (error) {
+      const msg = isAxiosError(error) ? error.response?.data?.message : null;
+      messageApi.error(
+        Array.isArray(msg) ? msg.join(", ") : msg || "Failed to change password",
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -397,6 +423,76 @@ const UserProfilePage: React.FC = () => {
               )}
             </div>
           )}
+        </Card>
+
+        <Card
+          className="lg:col-span-2 lg:col-start-2"
+          style={{ backgroundColor: "#18181B" }}
+          title={
+            <div>
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                <span>Change Password</span>
+              </div>
+              <Divider style={{ margin: "8px 0 0 0", borderColor: "#333" }} />
+            </div>
+          }
+          styles={{
+            body: { padding: 24, backgroundColor: "#18181B" },
+            header: {
+              backgroundColor: "#18181B",
+              borderBottom: "1px solid #333",
+            },
+          }}
+        >
+          <Form
+            form={passwordForm}
+            layout="vertical"
+            onFinish={handleChangePassword}
+          >
+            <Form.Item
+              name="currentPassword"
+              label="Current Password"
+              rules={[{ required: true, message: "Enter your current password" }]}
+            >
+              <Input.Password autoComplete="current-password" />
+            </Form.Item>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item
+                name="newPassword"
+                label="New Password"
+                rules={[{ required: true, message: "Enter a new password" }]}
+              >
+                <Input.Password autoComplete="new-password" />
+              </Form.Item>
+              <Form.Item
+                name="confirmPassword"
+                label="Confirm New Password"
+                dependencies={["newPassword"]}
+                rules={[
+                  { required: true, message: "Confirm the new password" },
+                  ({ getFieldValue }) => ({
+                    validator: (_, value) =>
+                      !value || getFieldValue("newPassword") === value
+                        ? Promise.resolve()
+                        : Promise.reject(new Error("Passwords do not match")),
+                  }),
+                ]}
+              >
+                <Input.Password autoComplete="new-password" />
+              </Form.Item>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={changingPassword}
+                icon={<Save className="w-4 h-4" />}
+              >
+                Change Password
+              </Button>
+            </div>
+          </Form>
         </Card>
       </div>
     </div>
