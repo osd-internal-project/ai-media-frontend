@@ -108,6 +108,8 @@ const PromptActivity: FC<props> = ({
       organizationId,
       page,
       pageSize,
+      undefined,
+      { hideFailed: true },
     );
 
     setTotal(res.total);

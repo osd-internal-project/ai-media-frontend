@@ -29,7 +29,8 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
       organizationId: string,
       page: number,
       pageSize: number,
-      status?: boolean
+      status?: boolean,
+      options?: { hideFailed?: boolean }
     ) => {
       return await axiosInstance
         .get(`${baseUrl}/${projectId}`, {
@@ -38,6 +39,7 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
             page,
             pageSize,
             status,
+            ...(options?.hideFailed && { hideFailed: true }),
           },
         })
         .then((res) => {

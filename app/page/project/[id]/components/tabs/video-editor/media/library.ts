@@ -61,7 +61,9 @@ export async function fetchActivityMedia(
   page: number,
   pageSize: number,
 ): Promise<ActivityPage> {
-  const res: unknown = await GalleryServices(axiosCore).findById(projectId, organizationId, page, pageSize);
+  const res: unknown = await GalleryServices(axiosCore).findById(projectId, organizationId, page, pageSize, undefined, {
+    hideFailed: true,
+  });
   // The service swallows errors and resolves undefined.
   if (typeof res !== "object" || res === null) throw new Error("activity request failed");
   const body = res as { data?: unknown; total?: unknown }; // shape checked field by field below
