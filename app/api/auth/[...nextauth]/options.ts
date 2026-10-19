@@ -185,11 +185,20 @@ export const authOptions = {
 
           if (!response.ok) return false;
 
-          const data = await response.json();
+          let data = await response.json();
           if (!data.exists) {
-            // Redirect to the error page if user not found in DB
+            // First SSO sign-in: the backend creates the user from the verified Keycloak token
+            const provision = await fetch(
+              `${config.backendAuthUrl}/auth/sso/provision`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ accessToken: account.access_token }),
+              },
+            );
             // Note: Returning a string redirects in NextAuth v4
-            return "/error?error=403";
+            if (!provision.ok) return "/error?error=403";
+            data = await provision.json();
           }
 
           // The Keycloak token carries no local identity, so /auth/check is the only
