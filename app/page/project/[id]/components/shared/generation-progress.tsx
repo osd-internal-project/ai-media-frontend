@@ -39,12 +39,23 @@ export const parseRatio = (ratio?: string): number | undefined => {
   return w > 0 && h > 0 ? w / h : undefined;
 };
 
-const STAGE_LABEL: Record<GenerationStage, string> = {
-  queued: "In queue",
-  preparing: "Preparing reference images",
-  generating: "Generating",
-  saving: "Saving results",
+export type GenerationKind = "image" | "video" | "avatar" | "audio";
+
+const GENERATING_LABEL: Record<GenerationKind, string> = {
+  image: "Creating image",
+  video: "Creating video",
+  avatar: "Animating",
+  audio: "Composing audio",
 };
+
+// ทุกขั้นสื่อว่ากำลังทำงาน — ไม่ใช้คำแบบ "รอคิว"
+const stageLabel = (stage: GenerationStage, kind: GenerationKind) =>
+  ({
+    queued: "Preparing request",
+    preparing: "Processing references",
+    generating: GENERATING_LABEL[kind],
+    saving: "Finalizing",
+  })[stage];
 
 const deriveStage = (status: string, stage?: GenerationStage) =>
   stage ?? (status === "PROCESSING" ? "generating" : "queued");
@@ -53,6 +64,7 @@ const formatElapsed = (sec: number) =>
   `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 
 interface Props {
+  kind: GenerationKind;
   status: string;
   stage?: GenerationStage;
   current?: number;
@@ -64,6 +76,7 @@ interface Props {
 }
 
 const GenerationProgress: React.FC<Props> = ({
+  kind,
   status,
   stage,
   current,
@@ -117,7 +130,7 @@ const GenerationProgress: React.FC<Props> = ({
         }}
       >
         <Typography.Text strong style={{ fontSize: isMobile ? 13 : 14 }}>
-          {STAGE_LABEL[active]}
+          {stageLabel(active, kind)}
           {counter}
         </Typography.Text>
         <Typography.Text
@@ -165,7 +178,7 @@ const GenerationProgress: React.FC<Props> = ({
                   background: "currentColor",
                 }}
               />
-              {STAGE_LABEL[s]}
+              {stageLabel(s, kind)}
             </li>
           ))}
         </ol>

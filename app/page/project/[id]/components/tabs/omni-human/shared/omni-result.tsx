@@ -266,6 +266,7 @@ const OmniResultItem: FC<Props> = ({
       {(message.genneratedStatus === "PENDING" ||
         message.genneratedStatus === "PROCESSING") && (
         <GenerationProgress
+          kind="avatar"
           status={message.genneratedStatus}
           createdAt={message.createdAt}
           tiles={{ count: 1, ratio: 16 / 9 }}

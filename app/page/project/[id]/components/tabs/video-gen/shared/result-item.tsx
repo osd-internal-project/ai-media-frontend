@@ -313,6 +313,7 @@ const VideoResultItem: FC<Props> = ({
       {/* LOADING */}
       {isLoading && (
         <GenerationProgress
+          kind="video"
           status={message.genneratedStatus}
           stage={message.stage}
           current={message.current}

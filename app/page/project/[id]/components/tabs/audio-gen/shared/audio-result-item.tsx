@@ -131,6 +131,7 @@ const AudioResultItem: FC<Props> = ({
       {isLoading && (
         <div style={{ maxWidth: 640 }}>
           <GenerationProgress
+            kind="audio"
             status={message.genneratedStatus}
             percentage={message.percentage}
             createdAt={message.createdAt}

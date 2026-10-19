@@ -419,6 +419,7 @@ const ResultItem: FC<Props> = ({
       {(message.genneratedStatus === "PENDING" ||
         message.genneratedStatus === "PROCESSING") && (
         <GenerationProgress
+          kind="image"
           status={message.genneratedStatus}
           stage={message.stage}
           current={message.current}

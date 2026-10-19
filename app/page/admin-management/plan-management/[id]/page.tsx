@@ -45,6 +45,7 @@ export default function PlanDetailPage() {
     { label: "Editor", value: "editor", className: "label-6" },
     { label: "Social Media", value: "social", className: "label-7" },
     { label: "Photo Event", value: "photo_event", className: "label-8" },
+    { label: "Audio", value: "audio", className: "label-9" },
   ];
   useEffect(() => {
     if (id && id !== "create") {

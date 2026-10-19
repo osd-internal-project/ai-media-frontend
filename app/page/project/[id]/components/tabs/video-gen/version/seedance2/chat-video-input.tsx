@@ -459,7 +459,7 @@ export default function ChatVideoInput(props: Props) {
             handleUploadChange={handleUploadChangeMuti}
             beforeUpload={beforeUploadMuti}
             onRemoveFile={onRemoveFileMuti}
-            maxUploadFiles={2}
+            maxUploadFiles={8}
             description="Upload Reference (optional, image, video, audio, max 8)"
             accept="image/*,video/*,audio/*"
             extraActions={
