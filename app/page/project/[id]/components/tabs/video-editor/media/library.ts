@@ -5,7 +5,9 @@ import GalleryServices from "@/app/services/gellory.service";
 export interface ActivityMedia {
   galleryId: string;
   name: string;
-  media: "video" | "image";
+  media: "video" | "image" | "audio";
+  /** Audio Gen output format (`mp3` | `wav` | `ogg_opus`); picks the file extension. */
+  format?: string;
   /** Presigned, expires after ~6h — never persist it, re-fetch by galleryId instead. */
   url: string;
   createdAt: string;
@@ -30,17 +32,22 @@ function toActivityMedia(row: unknown): ActivityMedia | null {
   const url = asString(record.imageUrl);
   // Pending, failed and still-uploading rows have nothing to show yet.
   if (!type || !galleryId || !url || record.genneratedStatus !== "SUCCESS") return null;
-  const media = VIDEO_TYPES.has(type) ? "video" : type === "image" ? "image" : null;
+  const media = VIDEO_TYPES.has(type) ? "video" : type === "image" || type === "audio" ? type : null;
   if (!media) return null;
 
   const createdAt = asString(record.createdAt) ?? "";
   const prompt = asString(record.prompt);
+  const config = record.generateConfig;
+  const format =
+    typeof config === "object" && config !== null ? asString((config as Record<string, unknown>).format) : null; // narrowed above
+  const label = media === "video" ? "Video" : media === "image" ? "Image" : "Audio";
   return {
     galleryId,
     url,
     media,
     createdAt,
-    name: prompt ? prompt.slice(0, 40) : `${media === "video" ? "Video" : "Image"} ${createdAt.slice(0, 10)}`,
+    ...(format ? { format } : {}),
+    name: prompt ? prompt.slice(0, 40) : `${label} ${createdAt.slice(0, 10)}`,
   };
 }
 

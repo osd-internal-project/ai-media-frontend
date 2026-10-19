@@ -29,6 +29,13 @@ import {
 } from "./storage/draft-db";
 import { STRINGS } from "./strings";
 
+/** Same mapping as the worker's FILE_BY_FORMAT for Audio Gen output; mp3 is its default. */
+function audioFileType(format: string | undefined): { extension: string; mime: string } {
+  if (format === "wav") return { extension: "wav", mime: "audio/wav" };
+  if (format === "ogg_opus") return { extension: "ogg", mime: "audio/ogg" };
+  return { extension: "mp3", mime: "audio/mpeg" };
+}
+
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 /** Drafts saved before images existed have no `media`; infer it from the layer. */
@@ -292,18 +299,20 @@ export function EditorProvider({ projectId, children }: { projectId: string; chi
           return STRINGS.activityImageFailed;
         }
       }
-      // Generated videos are small too; a local copy needs no Range/CORS support from the bucket.
+      // Generated videos and audio are small too; a local copy needs no Range/CORS support from the bucket.
+      const { media } = entry;
+      const { extension, mime } = media === "audio" ? audioFileType(entry.format) : { extension: "mp4", mime: "video/mp4" };
       let file: File;
       try {
-        file = await downloadAsFile(entry.url, `${entry.name}.mp4`, "video/mp4");
+        file = await downloadAsFile(entry.url, `${entry.name}.${extension}`, mime);
       } catch (error) {
-        console.error("[video-editor] activity video download failed", error);
-        return STRINGS.activityVideoFailed;
+        console.error(`[video-editor] activity ${media} download failed`, error);
+        return media === "audio" ? STRINGS.activityAudioFailed : STRINGS.activityVideoFailed;
       }
       try {
         const probe = await probeMedia(file);
-        if (probe.duration <= 0 || !probe.hasVideo) return STRINGS.probeFailed;
-        addItem("video", entry.name, { type: "local", fileKey: storeLocalFile(file) }, probe.duration);
+        if (probe.duration <= 0 || !(media === "audio" ? probe.hasAudio : probe.hasVideo)) return STRINGS.probeFailed;
+        addItem(media, entry.name, { type: "local", fileKey: storeLocalFile(file) }, probe.duration);
         return null;
       } catch (error) {
         console.error("[video-editor] activity probe failed", error);

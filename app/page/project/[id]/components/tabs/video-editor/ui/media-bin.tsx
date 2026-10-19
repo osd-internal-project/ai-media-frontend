@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Empty, Segmented, Spin, message } from "antd";
-import { Film, ImageIcon, Plus, Upload } from "lucide-react";
+import { AudioLines, Film, ImageIcon, Music, Plus, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useEditor } from "../editor-context";
 import { useEditorColors } from "../editor-theme";
@@ -13,8 +13,18 @@ import { STRINGS } from "../strings";
 const PAGE_SIZE = 24;
 
 type BinTab = "activity" | "device";
+type MediaFilter = "all" | ActivityMedia["media"];
 
-/** All Activity (videos + images) and device imports; `onAdded` lets the mobile drawer close itself. */
+const FILTERS: { label: string; value: MediaFilter }[] = [
+  { label: STRINGS.filterAll, value: "all" },
+  { label: STRINGS.filterVideo, value: "video" },
+  { label: STRINGS.filterImage, value: "image" },
+  { label: STRINGS.filterAudio, value: "audio" },
+];
+
+const BADGE_ICON = { video: Film, image: ImageIcon, audio: Music } as const;
+
+/** All Activity (videos, images, audio) and device imports; `onAdded` lets the mobile drawer close itself. */
 export default function MediaBin({ projectId, onAdded }: { projectId: string; onAdded?: () => void }) {
   const [tab, setTab] = useState<BinTab>("activity");
   return (
@@ -51,6 +61,9 @@ function ActivityList({ projectId, onAdded }: { projectId: string; onAdded?: () 
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
+  // The gallery endpoint has no type filter, so this narrows the pages loaded so far.
+  const [filter, setFilter] = useState<MediaFilter>("all");
+  const visible = filter === "all" ? items : items.filter((entry) => entry.media === filter);
 
   const load = useCallback(
     async (nextPage: number) => {
@@ -96,11 +109,20 @@ function ActivityList({ projectId, onAdded }: { projectId: string; onAdded?: () 
   return (
     <div className="flex flex-col gap-3">
       {contextHolder}
-      {items.length === 0 && !loading && (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={STRINGS.noLibraryVideos} />
+      {items.length > 0 && (
+        <Segmented<MediaFilter> size="small" block value={filter} onChange={setFilter} options={FILTERS} />
+      )}
+      {visible.length === 0 && !loading && (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={items.length === 0 ? STRINGS.noLibraryVideos : STRINGS.noFilteredMedia}
+        />
       )}
       <div className="grid grid-cols-2 gap-2">
-        {items.map((entry) => (
+        {visible.map((entry) => {
+          const BadgeIcon = BADGE_ICON[entry.media];
+          return (
+
           <button
             key={entry.galleryId}
             type="button"
@@ -120,6 +142,14 @@ function ActivityList({ projectId, onAdded }: { projectId: string; onAdded?: () 
                 preload="metadata"
                 className="w-full h-full object-cover pointer-events-none"
               />
+            ) : entry.media === "audio" ? (
+              <span
+                className="w-full h-full flex flex-col items-center justify-center gap-1 px-2 pt-5 pb-2"
+                style={{ color: colors.textSecondary }}
+              >
+                <AudioLines size={22} aria-hidden="true" style={{ color: colors.primary }} />
+                <span className="text-[11px] leading-tight text-center line-clamp-2 pr-6">{entry.name}</span>
+              </span>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element -- presigned URLs, no next/image domain config
               <img src={entry.url} alt="" loading="lazy" className="w-full h-full object-cover" />
@@ -128,7 +158,7 @@ function ActivityList({ projectId, onAdded }: { projectId: string; onAdded?: () 
               className="absolute left-1.5 top-1.5 w-5 h-5 rounded grid place-items-center"
               style={{ background: `${colors.bg}cc`, color: colors.text }}
             >
-              {entry.media === "video" ? <Film size={12} aria-hidden="true" /> : <ImageIcon size={12} aria-hidden="true" />}
+              <BadgeIcon size={12} aria-hidden="true" />
             </span>
             <span
               className="absolute right-1.5 bottom-1.5 w-7 h-7 rounded-full grid place-items-center"
@@ -137,7 +167,8 @@ function ActivityList({ projectId, onAdded }: { projectId: string; onAdded?: () 
               {addingId === entry.galleryId ? <Spin size="small" /> : <Plus size={16} aria-hidden="true" />}
             </span>
           </button>
-        ))}
+          );
+        })}
       </div>
       {loading && <Spin className="self-center" />}
       {hasMore && !loading && <Button onClick={() => void load(page + 1)}>{STRINGS.loadMore}</Button>}
