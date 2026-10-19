@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from "react";
-import { Flex, Space, Typography, Tag, Button } from "antd";
+import { Flex, Space, Typography, Tag, Button, theme } from "antd";
 import { Message } from "../chat-generate-dreamactor";
 
 interface ResultHeaderProps {
@@ -11,6 +11,7 @@ const DreamactorResultHeader: FC<ResultHeaderProps> = ({
   messages,
   onClear,
 }) => {
+  const { token } = theme.useToken();
   const totalVideos = useMemo(() => {
     return messages.reduce(
       (acc, m) => acc + (m.imageUrls?.length || 0),
@@ -25,8 +26,9 @@ const DreamactorResultHeader: FC<ResultHeaderProps> = ({
         top: 0,
         zIndex: 20,
         padding: "10px 12px",
-        background: "inherit",
-        backdropFilter: "blur(6px)",
+        background: token.colorBgBase,
+        // ปิดช่อง padding ของ scroll container เหนือ header ไม่ให้เห็นรูปเลื่อนผ่าน
+        boxShadow: `0 -16px 0 ${token.colorBgBase}`,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >

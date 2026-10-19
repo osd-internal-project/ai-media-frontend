@@ -1,3 +1,4 @@
+import type { GenerationStage } from "../../../shared/generation-progress";
 interface UserMessage {
   id?: number;
   userId?: string;
@@ -51,6 +52,9 @@ export interface Message {
     generateAudio: boolean;
   };
   percentage?: number;
+  stage?: GenerationStage;
+  current?: number;
+  total?: number;
   users: UserMessage;
   referenceImages: string[];
   resolution: string;

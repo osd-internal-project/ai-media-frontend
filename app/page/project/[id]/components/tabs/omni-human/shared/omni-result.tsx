@@ -1,7 +1,10 @@
 import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Card, Space, Typography, Divider, Row, Col, Button } from "antd";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import GenerationProgress, {
+  mediaRowStyle,
+  useTileHeight,
+} from "../../../shared/generation-progress";
  
 import { Message } from "../chat-generate-omnihumen";
 import OmniActionBar from "./action-bar";
@@ -29,6 +32,7 @@ const OmniResultItem: FC<Props> = ({
   messageApi,
 }) => {
   const { isMobile, isTablet } = useResponsive();
+  const tileHeight = useTileHeight();
   const metaFontSize = isMobile ? 11 : isTablet ? 12 : 14;
   const promptFontSize = isMobile ? 13 : isTablet ? 14 : 16;
 
@@ -261,9 +265,11 @@ const OmniResultItem: FC<Props> = ({
       {/* LOADING */}
       {(message.genneratedStatus === "PENDING" ||
         message.genneratedStatus === "PROCESSING") && (
-        <Card size="small">
-          <AiImageLoader />
-        </Card>
+        <GenerationProgress
+          status={message.genneratedStatus}
+          createdAt={message.createdAt}
+          tiles={{ count: 1, ratio: 16 / 9 }}
+        />
       )}
 
       {/* ERROR */}
@@ -279,10 +285,12 @@ const OmniResultItem: FC<Props> = ({
       {/* SUCCESS */}
       {message.genneratedStatus === "SUCCESS" &&
         message.imageUrls?.length > 0 && (
-          <Row gutter={[8, 8]}>
+          <div style={mediaRowStyle}>
             {message.imageUrls.map((video, i) => (
-              <Col key={video.id} xs={isMobile ? 24 : 24} sm={12} md={12} lg={8}>
-                <div style={{ position: "relative", marginBottom: isMobile ? 8 : 0 }}>
+                <div
+                  key={video.id}
+                  style={{ position: "relative", flex: "0 0 auto", maxWidth: "100%" }}
+                >
                   <VideoItem
                     videoData={video}
                     onDownloadVideo={onDownloadVideo}
@@ -290,6 +298,7 @@ const OmniResultItem: FC<Props> = ({
                       onShareVideo(message.taskId, id, status)
                     }
                     taskId={message.taskId}
+                    height={tileHeight}
                   />
 
                   <OmniActionBar
@@ -314,9 +323,8 @@ const OmniResultItem: FC<Props> = ({
                     }}
                   />
                 </div>
-              </Col>
             ))}
-          </Row>
+          </div>
         )}
     </Card>
   );

@@ -70,6 +70,7 @@ import { TMasterModelType } from "@/app/common/master-model-type.type";
 import ActionBar from "./shared/action-bar";
 import ResultHeader from "./shared/result-header";
 import ResultItem from "./shared/image-result-item";
+import type { GenerationStage } from "../../shared/generation-progress";
 import { TPromptGuide } from "@/app/common/prompt-guide.type";
 import AssistantModal from "../../assistant/assistant-modal";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
@@ -196,6 +197,9 @@ export interface Message {
     resolution: string;
   };
   percentage?: number;
+  stage?: GenerationStage;
+  current?: number;
+  total?: number;
   users: UserMessage;
   referenceImages: string[];
   resolution: string;
@@ -388,9 +392,9 @@ const ChatGenerateImage: FC<
     // 3. Event เมื่อมีความคืบหน้าในการสร้างภาพ
     const handleProgress = (data: {
       taskId: string;
-      currentImage: number;
-      totalImages: number;
-      progress: number;
+      stage?: "generating" | "downloading" | "uploading";
+      current?: number;
+      total?: number;
       percentage: number;
     }) => {
       console.log("📊 Progress:", data);
@@ -406,6 +410,9 @@ const ChatGenerateImage: FC<
                   ...msg,
                   genneratedStatus: "PROCESSING",
                   percentage: data.percentage,
+                  stage: data.stage === "generating" ? "generating" : "saving",
+                  current: data.current,
+                  total: data.total,
                 }
               : msg,
           ),
@@ -427,8 +434,10 @@ const ChatGenerateImage: FC<
             msg.taskId === data.taskId
               ? {
                   ...msg,
+                  // image: worker:started ยิงหลัง provider ตอบแล้ว = เริ่มบันทึกผล (backend เริ่มที่ 30%)
                   genneratedStatus: "PROCESSING",
-                  percentage: 10,
+                  percentage: 30,
+                  stage: "saving",
                 }
               : msg,
           ),

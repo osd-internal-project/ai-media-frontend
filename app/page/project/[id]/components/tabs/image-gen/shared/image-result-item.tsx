@@ -12,11 +12,15 @@ import {
 } from "antd";
 import { CopyOutlined } from "@ant-design/icons";
 import { ImageOff, Trash2, User } from "lucide-react";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import ActionBar from "./action-bar";
 import { Message } from "../chat-generate-image";
 import ImageSmartReference from "./image-smart-reference";
 import { MediaSkeleton } from "../../../shared/smart-media";
+import GenerationProgress, {
+  mediaRowStyle,
+  tileStyle,
+  useTileHeight,
+} from "../../../shared/generation-progress";
 
 interface Props {
   message: Message;
@@ -40,6 +44,9 @@ const ResultItem: FC<Props> = ({
   messageApi,
 }) => {
   const { isMobile, isTablet } = useResponsive();
+  const tileHeight = useTileHeight();
+  const { width, height, imageCount } = message.generateConfig ?? {};
+  const ratio = width && height ? width / height : 1;
   const metaFontSize = isMobile ? 11 : isTablet ? 12 : 14;
   const promptFontSize = isMobile ? 13 : isTablet ? 14 : 16;
 
@@ -411,18 +418,15 @@ const ResultItem: FC<Props> = ({
       {/* LOADING */}
       {(message.genneratedStatus === "PENDING" ||
         message.genneratedStatus === "PROCESSING") && (
-        <Card
-          size="small"
-          style={{
-            marginTop: 8,
-            borderRadius: 8,
-            borderColor: semantic.colorBorder,
-            background: semantic.colorBgElevated,
-          }}
-          styles={{ body: { padding: 8 } }}
-        >
-          <AiImageLoader />
-        </Card>
+        <GenerationProgress
+          status={message.genneratedStatus}
+          stage={message.stage}
+          current={message.current}
+          total={message.total}
+          percentage={message.percentage}
+          createdAt={message.createdAt}
+          tiles={{ count: imageCount || 1, ratio }}
+        />
       )}
 
       {/* ERROR */}
@@ -457,95 +461,82 @@ const ResultItem: FC<Props> = ({
       {message.genneratedStatus === "SUCCESS" &&
         message.imageUrls &&
         message.imageUrls.length > 0 && (
-          <Row gutter={[8, 8]} style={{ marginTop: 8, width: "100%" }}>
+          <div style={mediaRowStyle}>
             <Image.PreviewGroup>
               {message.imageUrls.map((imgUrl, i) => (
-                <Col
+                <div
                   key={imgUrl.id}
-                  xs={isMobile ? 24 : 12}
-                  sm={12}
-                  md={12}
-                  lg={6}
+                  style={tileStyle(tileHeight, ratio)}
+                  className="image-item"
                 >
-                  <div
+                  <Image
+                    src={imgUrl.imageUrl}
+                    alt={`Generated ${i + 1}`}
+                    width="100%"
+                    height="100%"
+                    placeholder={<MediaSkeleton rounded={isMobile ? 6 : 8} />}
                     style={{
-                      position: "relative",
-                      overflow: "hidden",
-                      borderRadius: 8,
-                      aspectRatio: `${message.generateConfig.width} / ${message.generateConfig.height}`,
-                      marginBottom: isMobile ? 8 : 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: isMobile ? 6 : 8,
                     }}
-                    className="image-item"
-                  >
-                    <Image
-                      src={imgUrl.imageUrl}
-                      alt={`Generated ${i + 1}`}
-                      width="100%"
-                      height="100%"
-                      placeholder={<MediaSkeleton rounded={isMobile ? 6 : 8} />}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: isMobile ? 6 : 8,
-                      }}
-                    />
+                  />
 
-                    {/* File size label */}
-                    {message.generateConfig?.width &&
-                      message.generateConfig?.height && (
-                        <div
+                  {/* File size label */}
+                  {message.generateConfig?.width &&
+                    message.generateConfig?.height && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 6,
+                          left: 6,
+                          background: "rgba(0,0,0,0.55)",
+                          borderRadius: 4,
+                          padding: "1px 6px",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <Typography.Text
                           style={{
-                            position: "absolute",
-                            bottom: 6,
-                            left: 6,
-                            background: "rgba(0,0,0,0.55)",
-                            borderRadius: 4,
-                            padding: "1px 6px",
-                            pointerEvents: "none",
+                            color: "#fff",
+                            fontSize: isMobile ? 10 : 11,
+                            fontWeight: 500,
+                            lineHeight: 1.4,
                           }}
                         >
-                          <Typography.Text
-                            style={{
-                              color: "#fff",
-                              fontSize: isMobile ? 10 : 11,
-                              fontWeight: 500,
-                              lineHeight: 1.4,
-                            }}
-                          >
-                            {message.generateConfig.width}×
-                            {message.generateConfig.height}
-                          </Typography.Text>
-                        </div>
-                      )}
+                          {message.generateConfig.width}×
+                          {message.generateConfig.height}
+                        </Typography.Text>
+                      </div>
+                    )}
 
-                    <ActionBar
-                      item={imgUrl}
-                      message={message}
-                      onToggleFavorite={onShareImage}
-                      onDownload={onDownloadImage}
-                      onDelete={(taskId, id) => {
-                        setMessages((prev) =>
-                          prev.map((msg) => {
-                            if (msg.taskId === taskId) {
-                              return {
-                                ...msg,
-                                imageUrls: msg.imageUrls.filter(
-                                  (img) => img.id !== id,
-                                ),
-                              };
-                            }
-                            return msg;
-                          }),
-                        );
-                      }}
-                      messageApi={messageApi}
-                    />
-                  </div>
-                </Col>
+                  <ActionBar
+                    item={imgUrl}
+                    message={message}
+                    onToggleFavorite={onShareImage}
+                    onDownload={onDownloadImage}
+                    onDelete={(taskId, id) => {
+                      setMessages((prev) =>
+                        prev.map((msg) => {
+                          if (msg.taskId === taskId) {
+                            return {
+                              ...msg,
+                              imageUrls: msg.imageUrls.filter(
+                                (img) => img.id !== id,
+                              ),
+                            };
+                          }
+                          return msg;
+                        }),
+                      );
+                    }}
+                    messageApi={messageApi}
+                  />
+                </div>
               ))}
             </Image.PreviewGroup>
-          </Row>
+          </div>
         )}
     </Card>
   );

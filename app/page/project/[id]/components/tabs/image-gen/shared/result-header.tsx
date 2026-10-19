@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from "react";
-import { Flex, Space, Typography, Tag, Button } from "antd";
+import { Flex, Space, Typography, Tag, Button, theme } from "antd";
 
 interface Message {
   imageUrls?: { id: string }[];
@@ -11,6 +11,7 @@ interface ResultHeaderProps {
 }
 
 const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
+  const { token } = theme.useToken();
   const totalImages = useMemo(() => {
     return messages.reduce(
       (acc, m) => acc + (m.imageUrls?.length || 0),
@@ -25,8 +26,9 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
         top: 0,
         zIndex: 20,
         padding: "8px 12px",
-        background: "inherit",
-        backdropFilter: "blur(6px)",
+        background: token.colorBgBase,
+        // ปิดช่อง padding ของ scroll container เหนือ header ไม่ให้เห็นรูปเลื่อนผ่าน
+        boxShadow: `0 -16px 0 ${token.colorBgBase}`,
       }}
     >
       <Flex justify="space-between" align="center">

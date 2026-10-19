@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from "react";
-import { Flex, Space, Typography, Tag, Button } from "antd";
+import { Flex, Space, Typography, Tag, Button, theme } from "antd";
 
 interface VideoMessage {
   id?: string;
@@ -17,6 +17,7 @@ interface ResultHeaderProps {
 
 const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
   // ✅ นับจำนวน video ทั้งหมด
+  const { token } = theme.useToken();
   const totalVideos = useMemo(() => {
     return messages.reduce(
       (acc, m) => acc + (m.imageUrls?.length || 0),
@@ -43,8 +44,9 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
         top: 0,
         zIndex: 20,
         padding: "10px 12px",
-        background: "inherit",
-        backdropFilter: "blur(6px)",
+        background: token.colorBgBase,
+        // ปิดช่อง padding ของ scroll container เหนือ header ไม่ให้เห็นรูปเลื่อนผ่าน
+        boxShadow: `0 -16px 0 ${token.colorBgBase}`,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >

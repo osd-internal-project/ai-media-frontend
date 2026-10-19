@@ -1,7 +1,11 @@
 import React, { FC, useState, useRef, useEffect } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Card, Space, Typography, Button, Divider, Row, Col } from "antd";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import GenerationProgress, {
+  mediaRowStyle,
+  parseRatio,
+  useTileHeight,
+} from "../../../shared/generation-progress";
 import { Message, VideoMessage, isVideoLoading } from "./video.types";
 import { message as antdMessage } from "antd";
 import VideoItem from "./video-player";
@@ -43,6 +47,8 @@ const VideoResultItem: FC<Props> = ({
       (!message.imageUrls || message.imageUrls.length === 0));
 
   const { isMobile, isTablet } = useResponsive();
+  const tileHeight = useTileHeight();
+  const ratio = parseRatio(message.generateConfig?.ratio);
   const metaFontSize = isMobile ? 11 : isTablet ? 12 : 14;
   const promptFontSize = isMobile ? 13 : isTablet ? 14 : 16;
 
@@ -305,7 +311,17 @@ const VideoResultItem: FC<Props> = ({
       <Divider style={{ margin: "14px 0" }} />
 
       {/* LOADING */}
-      {isLoading && <AiImageLoader />}
+      {isLoading && (
+        <GenerationProgress
+          status={message.genneratedStatus}
+          stage={message.stage}
+          current={message.current}
+          total={message.total}
+          percentage={message.percentage}
+          createdAt={message.createdAt}
+          tiles={{ count: 1, ratio: ratio ?? 16 / 9 }}
+        />
+      )}
 
       {/* ERROR */}
       {isError && (
@@ -326,24 +342,15 @@ const VideoResultItem: FC<Props> = ({
       {/* VIDEOS */}
       {message.genneratedStatus === "SUCCESS" &&
         message.imageUrls?.length > 0 && (
-          <div
-            style={{
-              marginTop: 8,
-              display: "grid",
-              gridTemplateColumns: isMobile
-                ? "1fr"
-                : isTablet
-                ? "repeat(2, 1fr)"
-                : "repeat(4, 1fr)",
-              gap: 12,
-            }}
-          >
+          <div style={mediaRowStyle}>
             {message.imageUrls.map((video: VideoMessage, i) => (
               <VideoItem
                 key={video.id || `${message.taskId}-${i}`}
                 videoData={video}
                 taskId={message.taskId!}
                 messagePrompt={message.prompt}
+                height={tileHeight}
+                ratio={ratio}
                 onDownloadVideo={onDownloadVideo}
                 onShareVideo={(taskId, id, status) => {
                   onShareVideo(taskId, id, status);

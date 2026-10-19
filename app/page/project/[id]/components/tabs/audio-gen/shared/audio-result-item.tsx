@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { User } from "lucide-react";
 import useResponsive from "@/app/hooks/useResponsive";
-import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
+import GenerationProgress from "../../../shared/generation-progress";
 import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { Message, isAudioLoading } from "./audio.types";
 
@@ -128,7 +128,15 @@ const AudioResultItem: FC<Props> = ({
 
       <Divider style={{ margin: "14px 0" }} />
 
-      {isLoading && <AiImageLoader />}
+      {isLoading && (
+        <div style={{ maxWidth: 640 }}>
+          <GenerationProgress
+            status={message.genneratedStatus}
+            percentage={message.percentage}
+            createdAt={message.createdAt}
+          />
+        </div>
+      )}
 
       {isError && (
         <div>
@@ -153,6 +161,7 @@ const AudioResultItem: FC<Props> = ({
             gap={8}
             style={{
               padding: 12,
+              maxWidth: 640,
               borderRadius: 12,
               border: `1px solid ${semantic.colorBorder}`,
               background: semantic.colorBgContainer,

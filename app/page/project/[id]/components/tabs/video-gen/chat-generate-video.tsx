@@ -528,7 +528,8 @@ const ChatGenerateVideo: FC<Props> = ({
         setMessages((prev) =>
           prev.map((msg) =>
             msg.taskId === data.taskId
-              ? { ...msg, genneratedStatus: "PROCESSING", percentage: 10 }
+              ? // provider ไม่บอก % — ไม่ตั้งเลขค้าง ให้ loader แสดงแถบวิ่ง
+                { ...msg, genneratedStatus: "PROCESSING", stage: "generating" }
               : msg,
           ),
         );
@@ -624,7 +625,13 @@ const ChatGenerateVideo: FC<Props> = ({
       fetchCredit();
     };
 
-    const handleProgress = (data: { taskId: string; timestamp: string }) => {
+    const handleProgress = (data: {
+      taskId: string;
+      timestamp: string;
+      stage?: "preparing";
+      current?: number;
+      total?: number;
+    }) => {
       const found = messagesRef.current.find(
         (msg) => msg.taskId === data.taskId,
       );
@@ -632,7 +639,14 @@ const ChatGenerateVideo: FC<Props> = ({
         setMessages((prev) =>
           prev.map((msg) =>
             msg.taskId === data.taskId
-              ? { ...msg, genneratedStatus: "PROCESSING" }
+              ? {
+                  ...msg,
+                  genneratedStatus: "PROCESSING",
+                  // preparing = seedance2 กำลังแปลงรูปอ้างอิงเป็น asset; poll-check ไม่มี stage = generating
+                  stage: data.stage ?? "generating",
+                  current: data.current,
+                  total: data.total,
+                }
               : msg,
           ),
         );

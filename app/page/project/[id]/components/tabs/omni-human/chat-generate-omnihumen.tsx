@@ -578,7 +578,7 @@ const ChatGenerateOmnihumen: FC<
               ? {
                   ...msg,
                   genneratedStatus: "PROCESSING",
-                  percentage: 10,
+                  // provider ไม่บอก % — ไม่ตั้งเลขค้าง ให้ loader แสดงแถบวิ่ง
                 }
               : msg,
           ),

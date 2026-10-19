@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import { Loader2, Play, X } from "lucide-react";
+import { tileStyle } from "../../../shared/generation-progress";
 import { VideoMessage } from "./video.types";
 import VideoActionBar from "./action-bar";
 
@@ -11,6 +12,9 @@ interface VideoItemProps {
 
   taskId: string;
   messagePrompt?: string;
+  /** แถวสูงคงที่ — กว้างตาม ratio (ไม่ส่ง = ใช้สัดส่วนจริงของ thumbnail) */
+  height?: number;
+  ratio?: number;
 }
 
 const VideoItem = memo(
@@ -20,12 +24,15 @@ const VideoItem = memo(
     onShareVideo,
     taskId,
     messagePrompt,
+    height,
+    ratio,
   }: VideoItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [videoLoaded, setVideoLoaded] = useState(false);
     const [videoLoading, setVideoLoading] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [thumbLoaded, setThumbLoaded] = useState(false);
+    const [naturalRatio, setNaturalRatio] = useState<number>();
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -78,6 +85,11 @@ const VideoItem = memo(
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => setIsFullScreen(true)}
+          style={
+            height
+              ? tileStyle(height, ratio ?? naturalRatio ?? 16 / 9)
+              : undefined
+          }
         >
           {/* skeleton คลุมจนกว่า thumbnail จะโหลดเสร็จ (กัน progressive reveal) */}
           {!thumbLoaded && (
@@ -88,7 +100,11 @@ const VideoItem = memo(
           <img
             src={thumbnail}
             alt=""
-            onLoad={() => setThumbLoaded(true)}
+            onLoad={(e) => {
+              const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+              if (w && h) setNaturalRatio(w / h);
+              setThumbLoaded(true);
+            }}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
               isHovered && videoLoaded ? "opacity-0" : "opacity-100"
             }`}
