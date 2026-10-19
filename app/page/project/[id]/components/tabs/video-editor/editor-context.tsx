@@ -15,7 +15,6 @@ import {
 import { createEditorState, editorReducer, type EditorAction, type EditorState } from "./model/editor-reducer";
 import { DEFAULT_IMAGE_SECONDS, MAX_IMAGE_SECONDS, layerDuration, projectDuration } from "./model/timeline";
 import type { EditorProject, LayerKind, MediaKind, MediaSourceRef, TimelineItem } from "./model/types";
-import { canReadByRange } from "./media/support";
 import { mediaKindOfFile } from "./media/local-files";
 import { useSession } from "next-auth/react";
 import { downloadAsFile, resolveLibraryUrls, type ActivityMedia } from "./media/library";
@@ -63,8 +62,6 @@ export interface Selection {
   layerId: string;
   itemId: string;
 }
-
-type RangeAccess = "unknown" | "ok" | "blocked";
 
 interface EditorContextValue {
   state: EditorState;
@@ -139,7 +136,6 @@ export function EditorProvider({ projectId, children }: { projectId: string; chi
     objectUrls.current.set(source.fileKey, url);
     return url;
   }, []);
-  const rangeAccess = useRef<RangeAccess>("unknown");
   const projectRef = useRef(state.present);
   projectRef.current = state.present;
   const { data: session } = useSession();
@@ -296,16 +292,18 @@ export function EditorProvider({ projectId, children }: { projectId: string; chi
           return STRINGS.activityImageFailed;
         }
       }
-      // Videos are streamed by Range requests, which the bucket must allow.
-      if (rangeAccess.current === "unknown") {
-        rangeAccess.current = (await canReadByRange(entry.url)) ? "ok" : "blocked";
-      }
-      if (rangeAccess.current === "blocked") return STRINGS.libraryBlocked;
+      // Generated videos are small too; a local copy needs no Range/CORS support from the bucket.
+      let file: File;
       try {
-        const probe = await probeMedia(entry.url);
+        file = await downloadAsFile(entry.url, `${entry.name}.mp4`, "video/mp4");
+      } catch (error) {
+        console.error("[video-editor] activity video download failed", error);
+        return STRINGS.activityVideoFailed;
+      }
+      try {
+        const probe = await probeMedia(file);
         if (probe.duration <= 0 || !probe.hasVideo) return STRINGS.probeFailed;
-        libraryUrls.current.set(entry.galleryId, entry.url);
-        addItem("video", entry.name, { type: "gallery", galleryId: entry.galleryId }, probe.duration);
+        addItem("video", entry.name, { type: "local", fileKey: storeLocalFile(file) }, probe.duration);
         return null;
       } catch (error) {
         console.error("[video-editor] activity probe failed", error);

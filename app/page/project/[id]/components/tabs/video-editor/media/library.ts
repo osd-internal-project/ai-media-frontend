@@ -88,7 +88,8 @@ export async function resolveLibraryUrls(
  * bucket's current CORS rules. Throws when the request is blocked or fails.
  */
 export async function downloadAsFile(url: string, name: string, fallbackType: string): Promise<File> {
-  const res = await fetch(url);
+  // no-store: <video>/<img> cached this URL without CORS headers (bucket sends no `Vary: Origin`).
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`download failed (${res.status})`);
   const blob = await res.blob();
   return new File([blob], name, { type: blob.type || fallbackType });

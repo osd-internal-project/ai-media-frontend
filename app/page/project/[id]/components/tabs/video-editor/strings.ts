@@ -11,8 +11,7 @@ export const STRINGS = {
   noLibraryVideos: "No finished videos or images in this project yet.",
   activityImageFailed: "Couldn't download this image. Try again, or save it and import it from your device.",
   libraryLoadFailed: "Could not load All Activity. Try again.",
-  libraryBlocked:
-    "Videos from All Activity can't be opened in the editor yet. Download it and import it from your device instead.",
+  activityVideoFailed: "Couldn't download this video. Try again, or save it and import it from your device.",
   probeFailed: "This file can't be read. Try an MP4, MOV or WebM video, or an MP3, WAV, M4A, AAC or OGG audio file.",
   fileRejected: "Unsupported file type or file too large",
   noGap: "No free space on the music layer at that point.",
