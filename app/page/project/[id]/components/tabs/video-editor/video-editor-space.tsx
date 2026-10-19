@@ -13,7 +13,7 @@ import Inspector from "./ui/inspector";
 import MediaBin from "./ui/media-bin";
 import MobileToolbar from "./ui/mobile-toolbar";
 import PreviewFrame from "./ui/preview-frame";
-import Timeline from "./ui/timeline";
+import Timeline, { timelineHeight } from "./ui/timeline";
 import Unsupported from "./ui/unsupported";
 
 export default function VideoEditorSpace({ projectId }: { projectId: string }) {
@@ -33,11 +33,14 @@ function CollapseToggle({
   collapsed,
   onToggle,
   direction,
+  small = false,
   className,
 }: {
   collapsed: boolean;
   onToggle: () => void;
   direction: "left" | "down";
+  /** Fits inside the timeline ruler row. */
+  small?: boolean;
   className?: string;
 }) {
   const colors = useEditorColors();
@@ -58,21 +61,22 @@ function CollapseToggle({
         event.stopPropagation();
         onToggle();
       }}
-      className={`w-7 h-7 rounded-md grid place-items-center border-0 cursor-pointer transition-colors ${className ?? ""}`}
+      className={`${small ? "w-5 h-5 rounded" : "w-7 h-7 rounded-md"} grid place-items-center border-0 cursor-pointer transition-colors ${className ?? ""}`}
       style={{ background: colors.elevated, color: colors.textSecondary }}
     >
-      <Icon size={16} aria-hidden="true" />
+      <Icon size={small ? 13 : 16} aria-hidden="true" />
     </button>
   );
 }
 
 function EditorLayout({ projectId }: { projectId: string }) {
   const { isDesktop } = useResponsive();
-  const { ready } = useEditor();
+  const { ready, state } = useEditor();
   const colors = useEditorColors();
   const [mediaOpen, setMediaOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
-  const [binCollapsed, setBinCollapsed] = useState(false);
+  // Below 1280px the bin starts collapsed so the preview keeps most of the width.
+  const [binCollapsed, setBinCollapsed] = useState(() => window.matchMedia("(max-width: 1279px)").matches);
   const [timelineCollapsed, setTimelineCollapsed] = useState(false);
   const panel = { background: colors.panel, border: `1px solid ${colors.border}` };
 
@@ -102,10 +106,10 @@ function EditorLayout({ projectId }: { projectId: string }) {
   const timeline = (className: string) => (
     <section
       className={`relative shrink-0 overflow-hidden transition-[height] duration-200 ${className}`}
-      style={{ ...panel, height: timelineCollapsed ? 40 : isDesktop ? 216 : 196 }}
+      style={{ ...panel, height: (timelineCollapsed ? 28 : timelineHeight(state.present.layers)) + 2, maxHeight: "40vh" }}
     >
       {timelineCollapsed ? (
-        <div className="h-full flex items-center gap-2 pl-12 text-xs" style={{ color: colors.textSecondary }}>
+        <div className="h-full flex items-center gap-2 pl-9 text-xs" style={{ color: colors.textSecondary }}>
           {STRINGS.timeline}
         </div>
       ) : (
@@ -115,7 +119,8 @@ function EditorLayout({ projectId }: { projectId: string }) {
         collapsed={timelineCollapsed}
         onToggle={() => setTimelineCollapsed((value) => !value)}
         direction="down"
-        className="absolute left-1.5 top-1.5 z-50"
+        small
+        className={`absolute left-2.5 z-50 ${timelineCollapsed ? "top-1" : "top-0"}`}
       />
     </section>
   );
@@ -126,7 +131,9 @@ function EditorLayout({ projectId }: { projectId: string }) {
         {header}
         <div
           className="flex-1 min-h-0 grid gap-2 transition-[grid-template-columns] duration-200"
-          style={{ gridTemplateColumns: `${binCollapsed ? 44 : 280}px minmax(0, 1fr) 260px` }}
+          style={{
+            gridTemplateColumns: `${binCollapsed ? "44px" : "clamp(200px, 18vw, 280px)"} minmax(0, 1fr) clamp(220px, 17vw, 260px)`,
+          }}
         >
           <aside className="min-h-0 rounded-[14px] p-2 flex flex-col gap-2 overflow-hidden" style={panel}>
             <CollapseToggle

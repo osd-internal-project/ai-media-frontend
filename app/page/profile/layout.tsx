@@ -5,20 +5,11 @@ import { Menu } from "antd";
 import type { MenuProps } from "antd";
 import { CreditCard, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { canSeeBilling } from "@/app/utils/permissions";
 
-/** Left sub-menu items for the profile section. */
-const PROFILE_MENU: MenuProps["items"] = [
-  {
-    key: "/page/profile",
-    icon: <User size={16} />,
-    label: "Profile",
-  },
-  {
-    key: "/page/profile/billing",
-    icon: <CreditCard size={16} />,
-    label: "Billing Profiles",
-  },
-];
+const PROFILE_ITEM = { key: "/page/profile", icon: <User size={16} />, label: "Profile" };
+const BILLING_ITEM = { key: "/page/profile/billing", icon: <CreditCard size={16} />, label: "Billing Profiles" };
 
 interface ProfileLayoutProps {
   children: React.ReactNode;
@@ -31,6 +22,10 @@ interface ProfileLayoutProps {
 const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
+  // Billing Profiles is part of the billing surface, hidden until FEATURES.billing ships.
+  const showBilling = canSeeBilling(session?.user?.systemRole);
+  const menuItems: MenuProps["items"] = showBilling ? [PROFILE_ITEM, BILLING_ITEM] : [PROFILE_ITEM];
 
   // Pick the most specific matching menu key for the current route.
   const selectedKey = useMemo(() => {
@@ -44,7 +39,7 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({ children }) => {
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
-          items={PROFILE_MENU}
+          items={menuItems}
           onClick={({ key }) => router.push(key)}
           style={{ borderRadius: 12, height: "100%" }}
         />

@@ -49,6 +49,7 @@ const BILLING_ROUTE_PREFIXES = [
   "/page/payment",
   "/page/credit",
   "/page/organization/purchase",
+  "/page/profile/billing",
 ] as const;
 
 interface ClientLayoutProps {

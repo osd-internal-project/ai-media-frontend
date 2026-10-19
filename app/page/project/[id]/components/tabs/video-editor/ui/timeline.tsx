@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
@@ -34,11 +35,16 @@ const MIN_PPS = 8;
 const MAX_PPS = 240;
 const HEADER_WIDTH = 40;
 const HANDLE_WIDTH = 14;
-const RULER_HEIGHT = 28;
+const RULER_HEIGHT = 20;
 /** Visual gap between neighbouring clips (mockup), taken from each clip's edges. */
 const CLIP_INSET = 2;
-const ROW_HEIGHT: Record<LayerKind, number> = { video: 60, music: 44 };
+const ROW_HEIGHT: Record<LayerKind, number> = { video: 40, music: 28 };
+const ROW_GAP = 4;
+const BOTTOM_PADDING = 8;
 const RULER_STEPS = [0.5, 1, 2, 5, 10, 15, 30, 60, 120];
+/** Scrubbing within this many px of the scroller edge auto-scrolls the timeline. */
+const SCRUB_EDGE = 32;
+const SCRUB_SCROLL_STEP = 12;
 
 const clampPps = (value: number) => Math.min(MAX_PPS, Math.max(MIN_PPS, value));
 
@@ -100,7 +106,7 @@ function TrimHandle({
       onClick={(event) => event.stopPropagation()}
       onPointerDown={onPointerDown}
     >
-      <span className="w-0.5 h-5 rounded-sm" style={{ background: colors.bg }} />
+      <span className="w-0.5 h-4 rounded-sm" style={{ background: colors.bg }} />
     </div>
   );
 }
@@ -149,14 +155,14 @@ const Clip = memo(function Clip({ layerId, layerKind, item, pxPerSecond, selecte
           <Filmstrip item={item} pxPerSecond={pxPerSecond} width={width} separator={colors.bg} />
         )}
         <span
-          className={`absolute left-1.5 px-1.5 rounded text-[11px] leading-4 truncate max-w-[calc(100%-12px)] ${isMusic ? "top-1/2 -translate-y-1/2" : "top-1.5"}`}
+          className={`absolute left-1 px-1 rounded text-[10px] leading-3.5 truncate max-w-[calc(100%-8px)] ${isMusic ? "top-1/2 -translate-y-1/2" : "top-1"}`}
           style={{ background: `${colors.bg}cc`, color: colors.text }}
         >
           {item.name}
         </span>
         {selected && (
           <span
-            className="absolute right-1.5 bottom-1.5 px-1.5 rounded text-[11px] leading-4 tabular-nums"
+            className="absolute right-1 bottom-1 px-1 rounded text-[10px] leading-3.5 tabular-nums"
             style={{ background: `${colors.bg}cc`, color: colors.text }}
           >
             {formatTime(itemDuration(item))}
@@ -187,11 +193,11 @@ function Ruler({ width, pxPerSecond, color }: { width: number; pxPerSecond: numb
   const step = RULER_STEPS.find((candidate) => candidate * pxPerSecond >= 64) ?? 120;
   const count = Math.floor(width / (step * pxPerSecond)) + 1;
   return (
-    <div className="relative text-[11px] tabular-nums" style={{ height: RULER_HEIGHT, width, color }} aria-hidden="true">
+    <div className="relative text-[10px] tabular-nums" style={{ height: RULER_HEIGHT, width, color }} aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
         <span
           key={index}
-          className={`absolute top-1 ${index === 0 ? "" : "-translate-x-1/2"}`}
+          className={`absolute top-0.5 leading-4 ${index === 0 ? "" : "-translate-x-1/2"}`}
           style={{ left: index * step * pxPerSecond }}
         >
           {formatTime(index * step).replace(/\.0$/, "")}
@@ -199,6 +205,11 @@ function Ruler({ width, pxPerSecond, color }: { width: number; pxPerSecond: numb
       ))}
     </div>
   );
+}
+
+/** Height that fits the ruler and every track with no empty space below. */
+export function timelineHeight(layers: readonly { kind: LayerKind }[]): number {
+  return layers.reduce((total, layer) => total + ROW_HEIGHT[layer.kind] + ROW_GAP, RULER_HEIGHT) + BOTTOM_PADDING - ROW_GAP;
 }
 
 /** Media is added from the media bin (desktop) or the toolbar (mobile), never from here. */
@@ -308,6 +319,67 @@ export default function Timeline({ emptyMessage }: { emptyMessage: string }) {
 
   const select = useCallback((next: Selection) => setSelection(next), [setSelection]);
 
+  const timeAt = (clientX: number) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return 0;
+    const time = (clientX - scroller.getBoundingClientRect().left + scroller.scrollLeft - HEADER_WIDTH) / pxPerSecond;
+    return Math.min(projectDuration(project), Math.max(0, time));
+  };
+
+  // Pointer moves are coalesced into one playhead update per frame; the frame also auto-scrolls at the edges.
+  const [scrubbing, setScrubbing] = useState(false);
+  const scrubRef = useRef({ active: false, clientX: 0, frame: 0 });
+  const scrubTickRef = useRef<() => void>(() => {});
+  scrubTickRef.current = () => {
+    const scrub = scrubRef.current;
+    scrub.frame = 0;
+    const scroller = scrollerRef.current;
+    if (!scrub.active || !scroller) return;
+    const rect = scroller.getBoundingClientRect();
+    const edge =
+      scrub.clientX < rect.left + HEADER_WIDTH + SCRUB_EDGE ? -1 : scrub.clientX > rect.right - SCRUB_EDGE ? 1 : 0;
+    if (edge !== 0) scroller.scrollLeft += edge * SCRUB_SCROLL_STEP;
+    setPlayhead(timeAt(scrub.clientX));
+    if (edge !== 0) scrub.frame = requestAnimationFrame(() => scrubTickRef.current());
+  };
+  const requestScrubTick = () => {
+    if (scrubRef.current.frame === 0) scrubRef.current.frame = requestAnimationFrame(() => scrubTickRef.current());
+  };
+  const endScrub = () => {
+    const scrub = scrubRef.current;
+    if (!scrub.active) return;
+    scrub.active = false;
+    cancelAnimationFrame(scrub.frame);
+    scrub.frame = 0;
+    setScrubbing(false);
+  };
+  useEffect(() => () => cancelAnimationFrame(scrubRef.current.frame), []);
+
+  /** Spread onto the ruler and the playhead knob: press and drag moves the playhead live. */
+  const scrubHandlers = {
+    onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      event.stopPropagation();
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      // Scrubbing pauses, otherwise the playback clock would pull the playhead back.
+      setPlaying(false);
+      scrubRef.current = { active: true, clientX: event.clientX, frame: 0 };
+      setScrubbing(true);
+      setPlayhead(timeAt(event.clientX));
+    },
+    onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
+      if (!scrubRef.current.active) return;
+      scrubRef.current.clientX = event.clientX;
+      requestScrubTick();
+    },
+    onPointerUp: endScrub,
+    onPointerCancel: endScrub,
+    onLostPointerCapture: endScrub,
+    // The scrub already placed the playhead; keep the track's click-to-seek from running again.
+    onClick: (event: ReactMouseEvent) => event.stopPropagation(),
+  };
+
   return (
     <div className="relative h-full" style={{ background: colors.bg }}>
       <div
@@ -320,22 +392,23 @@ export default function Timeline({ emptyMessage }: { emptyMessage: string }) {
       >
         {/* Clicking empty track space moves the playhead; clips stop propagation. */}
         <div
-          className="relative pb-6"
-          style={{ width: width + HEADER_WIDTH + 80 }}
+          className="relative"
+          style={{ width: width + HEADER_WIDTH + 80, paddingBottom: BOTTOM_PADDING - ROW_GAP }}
           onClick={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            // Scrubbing pauses, otherwise the playback clock would pull the playhead back.
             setPlaying(false);
-            const time = (event.clientX - rect.left - HEADER_WIDTH) / pxPerSecond;
-            setPlayhead(Math.min(projectDuration(project), Math.max(0, time)));
+            setPlayhead(timeAt(event.clientX));
           }}
         >
-          <div style={{ paddingLeft: HEADER_WIDTH }}>
+          <div
+            className="select-none cursor-pointer"
+            style={{ paddingLeft: HEADER_WIDTH, touchAction: "none" }}
+            {...scrubHandlers}
+          >
             <Ruler width={width} pxPerSecond={pxPerSecond} color={colors.textSecondary} />
           </div>
           <DndContext sensors={sensors} modifiers={[restrictToHorizontalAxis]} onDragEnd={onDragEnd}>
             {project.layers.map((layer) => (
-              <div key={layer.id} className="relative mb-2.5" style={{ height: ROW_HEIGHT[layer.kind] }}>
+              <div key={layer.id} className="relative" style={{ height: ROW_HEIGHT[layer.kind], marginBottom: ROW_GAP }}>
                 <div
                   className="sticky left-0 z-30 h-full grid place-items-center"
                   style={{
@@ -346,9 +419,9 @@ export default function Timeline({ emptyMessage }: { emptyMessage: string }) {
                   }}
                 >
                   {layer.kind === "video" ? (
-                    <Film size={18} role="img" aria-label={STRINGS.video} />
+                    <Film size={14} role="img" aria-label={STRINGS.video} />
                   ) : (
-                    <Music size={18} role="img" aria-label={STRINGS.music} />
+                    <Music size={14} role="img" aria-label={STRINGS.music} />
                   )}
                 </div>
                 <div className="absolute top-0 h-full" style={{ left: HEADER_WIDTH, width }}>
@@ -373,24 +446,56 @@ export default function Timeline({ emptyMessage }: { emptyMessage: string }) {
             className="absolute bottom-0 w-0.5 pointer-events-none z-40"
             style={{ top: RULER_HEIGHT - 6, left: HEADER_WIDTH + playhead * pxPerSecond - 1, background: colors.text }}
           >
-            <span className="absolute top-0 -left-[5px] w-3 h-2 rounded-sm" style={{ background: colors.text }} />
+            {/* The line ignores the pointer so clips stay clickable; only the knob grabs it. */}
+            <span
+              role="slider"
+              aria-label={STRINGS.playhead}
+              aria-valuemin={0}
+              aria-valuemax={projectDuration(project)}
+              aria-valuenow={playhead}
+              aria-valuetext={formatTime(playhead)}
+              className="absolute -top-2 -left-2.25 w-5 h-5 grid place-items-center pointer-events-auto cursor-ew-resize"
+              style={{ touchAction: "none" }}
+              {...scrubHandlers}
+            >
+              <span
+                className="w-3 h-3 rounded-full transition-transform"
+                style={{
+                  background: colors.text,
+                  boxShadow: `0 0 0 2px ${colors.bg}`,
+                  transform: scrubbing ? "scale(1.25)" : undefined,
+                }}
+              />
+            </span>
+            {scrubbing && (
+              <span
+                className="absolute -top-2 left-3 px-1.5 rounded text-[11px] leading-5 tabular-nums whitespace-nowrap"
+                style={{ background: colors.text, color: colors.bg }}
+              >
+                {formatTime(playhead)}
+              </span>
+            )}
           </div>
         </div>
       </div>
-      <div className="absolute right-2 top-1 z-50 flex gap-1">
-        <Button size="small" type="text" aria-label={STRINGS.zoomOut} icon={<ZoomOut size={14} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value / 1.5))} />
-        <Button size="small" type="text" aria-label={STRINGS.zoomIn} icon={<ZoomIn size={14} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value * 1.5))} />
+      <div
+        className="absolute right-1 top-0 z-50 flex items-center gap-1 pl-2"
+        style={{ height: RULER_HEIGHT, background: colors.bg }}
+      >
+        {!isEmpty && (
+          <span className="hidden xl:inline text-[10px] pr-1 pointer-events-none" style={{ color: colors.textSecondary }}>
+            {STRINGS.timelineHint}
+          </span>
+        )}
+        <Button size="small" type="text" className="h-5! w-5! min-w-0!" aria-label={STRINGS.zoomOut} icon={<ZoomOut size={13} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value / 1.5))} />
+        <Button size="small" type="text" className="h-5! w-5! min-w-0!" aria-label={STRINGS.zoomIn} icon={<ZoomIn size={13} aria-hidden="true" />} onClick={() => setPxPerSecond((value) => clampPps(value * 1.5))} />
       </div>
-      {isEmpty ? (
+      {isEmpty && (
         <p
-          className="absolute inset-0 m-0 grid place-items-center px-12 text-center text-sm pointer-events-none"
+          className="absolute inset-0 m-0 grid place-items-center px-12 text-center text-xs pointer-events-none"
           style={{ paddingTop: RULER_HEIGHT, color: colors.textSecondary }}
         >
           {emptyMessage}
-        </p>
-      ) : (
-        <p className="absolute inset-x-0 bottom-1 m-0 text-center text-[11px] pointer-events-none" style={{ color: colors.textSecondary }}>
-          {STRINGS.timelineHint}
         </p>
       )}
     </div>

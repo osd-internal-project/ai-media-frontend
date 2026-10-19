@@ -23,6 +23,7 @@ export const STRINGS = {
   emptyTimelineDesktop: "Your timeline is empty. Add a video, image or music from the panel above.",
   emptyTimelineMobile: "Your timeline is empty. Tap Add media below to start.",
   timelineHint: "Drag a clip to move it, or drag its edges to trim.",
+  playhead: "Playhead",
   trimStart: "Trim start",
   trimEnd: "Trim end",
   zoomIn: "Zoom in",
