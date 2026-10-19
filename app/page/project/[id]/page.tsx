@@ -12,6 +12,7 @@ import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { axiosCore } from "@/app/lib/axios/axios";
 import HeaderGenerateImagePage from "./components/header-generate-image";
+import { ModelSelectContext } from "./components/tab-layout/model-select-card";
 import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
 import { useParams } from "next/navigation";
@@ -319,6 +320,11 @@ const GenerateImagePage: FC = () => {
     [filteredAIModels, activeKey, id],
   );
 
+  const modelSelectValue = useMemo(
+    () => ({ selectedAIModel, filteredAIModels, onAIModelChange }),
+    [selectedAIModel, filteredAIModels, onAIModelChange],
+  );
+
   const onPromptGuideToggle = useCallback(
     () => setPromptGuideOpenStatus((prev) => !prev),
     [],
@@ -387,9 +393,6 @@ const GenerateImagePage: FC = () => {
         setTeamView={setTeamView}
         getProject={getProject}
         activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
-        selectedAIModel={selectedAIModel}
-        filteredAIModels={filteredAIModels}
-        onAIModelChange={onAIModelChange}
         promptGuideOpenStatus={promptGuideOpenStatus}
         onPromptGuideToggle={onPromptGuideToggle}
         onSetPromptText={handleSetPromptText}
@@ -414,6 +417,7 @@ const GenerateImagePage: FC = () => {
             ))}
           </div>
         ) : (
+        <ModelSelectContext.Provider value={modelSelectValue}>
         <Tabs
           tabPosition="top"
           style={{
@@ -694,6 +698,7 @@ const GenerateImagePage: FC = () => {
               : []),
           ]}
         />
+        </ModelSelectContext.Provider>
         )}
       </div>
     </div>

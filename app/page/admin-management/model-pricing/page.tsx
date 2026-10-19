@@ -66,6 +66,8 @@ const ModelPricingManagementPage = () => {
         modelType: record.modelType,
         type: record.type,
         description: record.description,
+        provider: record.provider,
+        iconUrl: record.iconUrl,
         isDefault: record.isDefault,
         calculationType: calcType,
         creditFormula,
@@ -118,6 +120,8 @@ const ModelPricingManagementPage = () => {
         type: values.type,
         description: values.description,
         isDefault: values.isDefault || false,
+        provider: values.provider?.trim() || null,
+        iconUrl: values.iconUrl?.trim() || null,
         modelDetails: detailsJson,
       };
 
@@ -279,6 +283,23 @@ const ModelPricingManagementPage = () => {
           >
             <Input.TextArea rows={2} className="bg-[#2a2a2e] border-gray-700 text-white" />
           </Form.Item>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="provider"
+              label={<span className="text-gray-300">Provider (e.g. BytePlus)</span>}
+            >
+              <Input maxLength={50} className="bg-[#2a2a2e] border-gray-700 text-white" />
+            </Form.Item>
+
+            <Form.Item
+              name="iconUrl"
+              label={<span className="text-gray-300">Icon URL</span>}
+              rules={[{ pattern: /^(https?:\/\/|\/(?!\/))\S+$/, message: "Use https://... or a path like /providers/byteplus.png" }]}
+            >
+              <Input placeholder="/providers/byteplus.png" className="bg-[#2a2a2e] border-gray-700 text-white" />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="isDefault"

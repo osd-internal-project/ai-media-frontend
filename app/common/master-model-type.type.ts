@@ -11,4 +11,6 @@ export interface TMasterModelType {
   sendConfig?: {
     type: string;
   };
+  provider?: string | null;
+  iconUrl?: string | null;
 }

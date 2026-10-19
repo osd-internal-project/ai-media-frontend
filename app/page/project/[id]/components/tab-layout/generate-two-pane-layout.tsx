@@ -9,6 +9,7 @@ import { PictureOutlined, VideoCameraOutlined } from "@ant-design/icons";
 import { Sparkle } from "lucide-react";
 import { aiCaveColors } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
+import ModelSelectCard from "./model-select-card";
 
 type EmptyAction = {
   label: string;
@@ -239,10 +240,14 @@ useEffect(() => {
     >
       {/* LEFT PANE: Desktop = sidebar, Mobile = overlay+input */}
       {!isMobile && (
-        <Col flex={isTablet ? "260px" : "320px"} style={{ minHeight: 0, paddingInline: 0 }}>
+        <Col
+          flex={isTablet ? "0 0 clamp(240px, 30vw, 280px)" : "0 0 clamp(280px, 24vw, 360px)"}
+          style={{ minHeight: 0, height: "100%", paddingInline: 0, display: "flex", flexDirection: "column", gap: 12 }}
+        >
+          <ModelSelectCard semantic={semantic} isMobile={false} />
           <Card
             style={{
-              height: "100%",
+              flex: 1,
               minHeight: 0,
               overflow: "hidden",
               background: semantic.colorBgContainer,
@@ -345,6 +350,9 @@ useEffect(() => {
                     scrollBehavior: "auto",
                   }}
                 >
+                  <div style={{ marginBottom: 12, paddingRight: 36 }}>
+                    <ModelSelectCard semantic={semantic} isMobile />
+                  </div>
                   <PermissionGuard
                     roles={projectPermissions.useChat}
                     userRole={projectRole}
