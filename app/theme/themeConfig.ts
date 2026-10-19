@@ -158,6 +158,23 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
         itemSelectedColor: semantic.primary,
         inkBarColor: semantic.primary,
       },
+
+      Slider: {
+        railBg: semantic.border,
+        railHoverBg: semantic.border,
+        trackBg: semantic.primary,
+        trackHoverBg: semantic.primary,
+        handleColor: semantic.primary,
+        handleActiveColor: semantic.primary,
+        dotBorderColor: semantic.border,
+        dotActiveBorderColor: semantic.primary,
+      },
+
+      Segmented: {
+        trackBg: semantic.fieldBg,
+        itemSelectedBg: semantic.primary,
+        itemSelectedColor: brand.neutral100,
+      },
     },
     
   };

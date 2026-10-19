@@ -111,7 +111,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
         </Flex>
       ) : (
         <Upload
-          accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/ogg"
+          accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,.m4a,audio/aac,audio/ogg"
           showUploadList={false}
           maxCount={1}
           beforeUpload={(file) => {
@@ -323,15 +323,27 @@ export default function ChatAudioInput(props: AudioInputProps) {
                 <Flex vertical gap={2} key={key}>
                   <Flex justify="space-between" align="center">
                     <Typography.Text style={labelStyle}>{label}</Typography.Text>
-                    <Button
-                      type="link"
-                      size="small"
-                      style={{ padding: 0, fontSize: 12 }}
-                      disabled={rateValue[key] === 0}
-                      onClick={() => setRate[key](0)}
-                    >
-                      {rateValue[key] === 0 ? "Default" : `${rateValue[key]} · Reset`}
-                    </Button>
+                    {rateValue[key] === 0 ? (
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        Default
+                      </Typography.Text>
+                    ) : (
+                      <Flex align="center" gap={4}>
+                        <Typography.Text
+                          style={{ fontSize: 12, fontWeight: 600, color: semantic.colorPrimary }}
+                        >
+                          {rateValue[key]}
+                        </Typography.Text>
+                        <Button
+                          type="text"
+                          size="small"
+                          style={{ height: 22, padding: "0 6px", fontSize: 12 }}
+                          onClick={() => setRate[key](0)}
+                        >
+                          Reset
+                        </Button>
+                      </Flex>
+                    )}
                   </Flex>
                   <Slider
                     aria-label={label}

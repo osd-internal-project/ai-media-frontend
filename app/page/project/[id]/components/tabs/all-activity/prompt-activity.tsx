@@ -20,6 +20,7 @@ import {
 } from "antd";
 import dynamic from "next/dynamic";
 import { AudioLines, Eye } from "lucide-react";
+import AudioPlayer from "../../shared/audio-player";
 
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -680,13 +681,22 @@ const PromptActivity: FC<props> = ({
               </svg>
             </button>
             {previewItem.typeGenerate === "audio" ? (
-              <audio
-                src={previewItem.imageUrl}
-                controls
-                autoPlay
-                style={{ width: "min(480px, 90vw)" }}
+              <div
+                style={{
+                  width: "min(480px, 90vw)",
+                  padding: 16,
+                  borderRadius: 12,
+                  background: semantic.colorBgElevated,
+                }}
                 onClick={(e) => e.stopPropagation()}
-              />
+              >
+                <AudioPlayer
+                  autoPlay
+                  src={previewItem.imageUrl}
+                  seed={String(previewItem.id ?? previewItem.imageUrl)}
+                  ariaLabel={`Audio: ${previewItem.prompt ?? ""}`}
+                />
+              </div>
             ) : (
               <video
                 src={previewItem.imageUrl}

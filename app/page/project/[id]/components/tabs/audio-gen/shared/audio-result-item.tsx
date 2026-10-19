@@ -9,6 +9,7 @@ import {
 import { User } from "lucide-react";
 import useResponsive from "@/app/hooks/useResponsive";
 import GenerationProgress from "../../../shared/generation-progress";
+import AudioPlayer from "../../../shared/audio-player";
 import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { Message, isAudioLoading } from "./audio.types";
 
@@ -169,13 +170,13 @@ const AudioResultItem: FC<Props> = ({
             }}
           >
             <Flex gap={8} align="center">
-              <audio
-                controls
-                preload="metadata"
-                src={audio.imageUrl}
-                style={{ flex: 1, minWidth: 0 }}
-                aria-label={`Generated audio for "${message.prompt}"`}
-              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <AudioPlayer
+                  src={audio.imageUrl}
+                  seed={audio.id}
+                  ariaLabel={`Generated audio for "${message.prompt}"`}
+                />
+              </div>
               {audio.id && (
                 <Space size={4}>
                   <Button

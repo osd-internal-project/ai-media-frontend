@@ -22,6 +22,7 @@ import {
   Modal,
   Spin,
 } from "antd";
+import AudioPlayer from "../../shared/audio-player";
 import dynamic from "next/dynamic";
 import {
   AudioLines,
@@ -77,7 +78,7 @@ const PromptLibrary: FC<props> = ({
 
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const pageSize = 9;
+  const pageSize = 12;
 
   const [getData, setData] = useState<{ data: any[]; total: number }>({
     data: [],
@@ -263,19 +264,35 @@ const PromptLibrary: FC<props> = ({
       return (
         <Flex
           vertical
-          align="center"
-          justify="center"
+          justify="space-between"
           gap={12}
-          style={{ width: "100%", height: "100%", padding: 16 }}
+          style={{
+            width: "100%",
+            height: "100%",
+            padding: "44px 16px 16px",
+            background: `linear-gradient(180deg, ${semantic.colorPrimary}24 0%, transparent 70%)`,
+          }}
         >
-          <AudioLines size={40} style={{ color: semantic.colorPrimary }} />
-          <audio
-            controls
+          <Flex vertical gap={8}>
+            <AudioLines size={28} style={{ color: semantic.colorPrimary }} />
+            <Typography.Paragraph
+              ellipsis={{ rows: 3 }}
+              style={{
+                margin: 0,
+                fontSize: 13,
+                fontStyle: "italic",
+                color: semantic.colorTextSecondary,
+              }}
+            >
+              {record.prompt ? `"${record.prompt}"` : ""}
+            </Typography.Paragraph>
+          </Flex>
+          <AudioPlayer
+            compact
             preload="none"
             src={record.imageUrl}
-            style={{ width: "100%" }}
-            aria-label={`Audio: ${record.prompt ?? ""}`}
-            onClick={(e) => e.stopPropagation()}
+            seed={String(record.id ?? record.imageUrl)}
+            ariaLabel={`Audio: ${record.prompt ?? ""}`}
           />
         </Flex>
       );
@@ -335,7 +352,7 @@ const PromptLibrary: FC<props> = ({
           {/* GRID */}
           <Row gutter={[16, 16]}>
             {displayItems.map((item, idx) => (
-              <Col key={item.id} xs={24} md={12} lg={8}>
+              <Col key={item.id} xs={24} md={12} lg={8} xl={6}>
                 <Card
                   onClick={() => onSelectItem(item)}
                   styles={{ body: { padding: 0 } }}
@@ -604,13 +621,22 @@ const PromptLibrary: FC<props> = ({
               </svg>
             </button>
             {previewItem.typeGenerate === "audio" ? (
-              <audio
-                src={previewItem.imageUrl}
-                controls
-                autoPlay
-                style={{ width: "min(480px, 90vw)" }}
+              <div
+                style={{
+                  width: "min(480px, 90vw)",
+                  padding: 16,
+                  borderRadius: 12,
+                  background: semantic.colorBgElevated,
+                }}
                 onClick={(e) => e.stopPropagation()}
-              />
+              >
+                <AudioPlayer
+                  autoPlay
+                  src={previewItem.imageUrl}
+                  seed={String(previewItem.id ?? previewItem.imageUrl)}
+                  ariaLabel={`Audio: ${previewItem.prompt ?? ""}`}
+                />
+              </div>
             ) : (
               <video
                 src={previewItem.imageUrl}

@@ -81,14 +81,25 @@ const getPolicy = async (
   return policy;
 };
 
-/** อ่าน Code/Message จาก error ของ TOS (XML หรือ JSON) */
+/** ข้อความที่ user เห็นเมื่อ TOS/callback ล้ม — รายละเอียดทางเทคนิคไปอยู่ใน console */
+const UPLOAD_REJECTED_MESSAGE =
+  "This file can't be uploaded. Check that its type and size are supported, then try again.";
+const UPLOAD_FAILED_MESSAGE = "Upload failed. Please try again.";
+
+/** log Code/Message จาก error ของ TOS (XML หรือ JSON) แล้วคืนข้อความที่ user อ่านรู้เรื่อง */
 const tosErrorMessage = async (res: Response): Promise<string> => {
   const text = await res.text();
   const code = /"?Code"?\s*[:>]\s*"?([A-Za-z]+)/.exec(text)?.[1];
   const message = /"?Message"?\s*[:>]\s*"?([^"<]+)/.exec(text)?.[1];
-  return `TOS upload failed (${res.status}${code ? ` ${code}` : ""})${
-    message ? `: ${message}` : ""
-  }`;
+  console.error(
+    `TOS upload failed (${res.status}${code ? ` ${code}` : ""})${
+      message ? `: ${message}` : ""
+    }`,
+  );
+  // 203 = callback ของ worker ปฏิเสธ (ชนิด/ขนาดไฟล์ไม่ผ่าน), 403 = policy ไม่รับ content-type/ขนาด
+  return res.status === 203 || res.status === 403
+    ? UPLOAD_REJECTED_MESSAGE
+    : UPLOAD_FAILED_MESSAGE;
 };
 
 /**
@@ -143,7 +154,8 @@ const uploadViaPolicy = async (
   if (res.status !== 200) throw new Error(await tosErrorMessage(res));
   const data = (await res.json()) as Partial<UploadedFile>;
   if (!data.imagePath || !data.url) {
-    throw new Error("Upload callback returned no imagePath");
+    console.error("Upload callback returned no imagePath", data);
+    throw new Error(UPLOAD_FAILED_MESSAGE);
   }
   return {
     uid: data.uid ?? uid,
@@ -195,7 +207,7 @@ const uploadViaPresign = async (
       headers: { "Content-Type": file.type },
       body: file,
     });
-    if (!put.ok) throw new Error(`TOS upload failed (${put.status})`);
+    if (!put.ok) throw new Error(await tosErrorMessage(put));
     const res = await axiosInstance.post<Partial<UploadedFile>>(
       "/upload/confirm",
       { kind, uid: presign.uid },
@@ -219,7 +231,8 @@ const uploadViaPresign = async (
     throw toUploadError(error);
   }
   if (!data.imagePath || !data.url) {
-    throw new Error("Upload confirm returned no imagePath");
+    console.error("Upload confirm returned no imagePath", data);
+    throw new Error(UPLOAD_FAILED_MESSAGE);
   }
   return {
     uid: data.uid ?? presign.uid,
