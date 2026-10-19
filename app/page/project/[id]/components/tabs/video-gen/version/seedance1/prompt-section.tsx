@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Mentions, Typography } from "antd";
 import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
-import AssistantModal from "../../../../assistant/assistant-modal";
+import AssistantModal, {
+  SHOW_PROMPT_ASSISTANT,
+} from "../../../../assistant/assistant-modal";
 
 type Props = {
   semantic: Record<string, any>;
@@ -60,22 +62,24 @@ export default function PromptSection({
           {title}
         </Typography.Text>
 
-        <Button
-          size="small"
-          type="text"
-          onClick={handleAiAssistClick}
-          icon={<Wand2 size={12} />}
-          style={{
-            height: 24,
-            paddingInline: 8,
-            borderRadius: 6,
-            fontSize: 11,
-            color: semantic.colorPrimary,
-            background: `${semantic.colorPrimary}1A`,
-          }}
-        >
-          {"AI Assist"}
-        </Button>
+        {SHOW_PROMPT_ASSISTANT && (
+          <Button
+            size="small"
+            type="text"
+            onClick={handleAiAssistClick}
+            icon={<Wand2 size={12} />}
+            style={{
+              height: 24,
+              paddingInline: 8,
+              borderRadius: 6,
+              fontSize: 11,
+              color: semantic.colorPrimary,
+              background: `${semantic.colorPrimary}1A`,
+            }}
+          >
+            {"AI Assist"}
+          </Button>
+        )}
       </Flex>
 
       <Form.Item

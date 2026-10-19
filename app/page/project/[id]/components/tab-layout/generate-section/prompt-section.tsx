@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Input, Typography } from "antd";
 import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
-import AssistantModal from "../../assistant/assistant-modal";
+import AssistantModal, {
+  SHOW_PROMPT_ASSISTANT,
+} from "../../assistant/assistant-modal";
 
 const { TextArea } = Input;
 
@@ -65,7 +67,7 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {showAiAssist && (
+        {SHOW_PROMPT_ASSISTANT && showAiAssist && (
           <Button
             size="small"
             type="text"

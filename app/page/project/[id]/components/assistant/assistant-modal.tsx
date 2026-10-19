@@ -52,6 +52,9 @@ const ROLE_LABELS: Record<ChatGenerateType, string> = {
   dreamactor: "motion prompt",
 };
 
+// Prompt assistant is hidden for now; flip to true to bring the "AI Assist" buttons back.
+export const SHOW_PROMPT_ASSISTANT = false;
+
 const AssistantModal: React.FC<Props> = ({
   openAssistant,
   setOpenAssistant,
