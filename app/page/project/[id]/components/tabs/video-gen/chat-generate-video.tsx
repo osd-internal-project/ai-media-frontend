@@ -573,6 +573,7 @@ const ChatGenerateVideo: FC<Props> = ({
 
     const workerUploadSuccess = (data: {
       taskId: string;
+      galleryId?: string;
       videoUrl: string;
       thumbnailUrl: string;
       timestamp: string;
@@ -589,6 +590,7 @@ const ChatGenerateVideo: FC<Props> = ({
                   genneratedStatus: "SUCCESS",
                   imageUrls: [
                     {
+                      id: data.galleryId,
                       imageUrl: data.videoUrl,
                       thumbnailUrl: data.thumbnailUrl,
                     },

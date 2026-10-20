@@ -75,7 +75,6 @@ const VideoItem = memo(
     }, [isHovered, videoLoaded]);
 
     const thumbnail = videoData.thumbnailUrl || videoData.imageUrl;
-    const videoId = videoData.id || videoData.imageUrl;
 
     return (
       <>
@@ -140,36 +139,38 @@ const VideoItem = memo(
             </div>
           )}
 
-          {/* ACTION BAR */}
-          <div
-            className="image-actions"
-            style={{
-              position: "absolute",
-              bottom: 8,
-              right: 8,
-              opacity: isHovered ? 1 : 0,
-              transform: isHovered ? "translateY(0)" : "translateY(6px)",
-              transition: "all 0.2s ease",
-              pointerEvents: isHovered ? "auto" : "none",
-              zIndex: 30,
-            }}
-          >
-            <VideoActionBar
-              item={{
-                id: videoId,
-                status: videoData.status,
-                fileName: videoData.fileName,
+          {/* ACTION BAR — ซ่อนจนกว่าจะมี gallery id (ก่อน upload-success ยังโหลด/แชร์ไม่ได้) */}
+          {videoData.id && (
+            <div
+              className="image-actions"
+              style={{
+                position: "absolute",
+                bottom: 8,
+                right: 8,
+                opacity: isHovered ? 1 : 0,
+                transform: isHovered ? "translateY(0)" : "translateY(6px)",
+                transition: "all 0.2s ease",
+                pointerEvents: isHovered ? "auto" : "none",
+                zIndex: 30,
               }}
-              message={{
-                taskId,
-                prompt: messagePrompt,
-              }}
-              onToggleFavorite={onShareVideo}
-              onDownload={onDownloadVideo}
-              onDelete={() => {}}
-              messageApi={null}
-            />
-          </div>
+            >
+              <VideoActionBar
+                item={{
+                  id: videoData.id,
+                  status: videoData.status,
+                  fileName: videoData.fileName,
+                }}
+                message={{
+                  taskId,
+                  prompt: messagePrompt,
+                }}
+                onToggleFavorite={onShareVideo}
+                onDownload={onDownloadVideo}
+                onDelete={() => {}}
+                messageApi={null}
+              />
+            </div>
+          )}
         </div>
 
         {/* FULLSCREEN */}

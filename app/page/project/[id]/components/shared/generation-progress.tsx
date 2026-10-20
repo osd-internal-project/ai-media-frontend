@@ -71,6 +71,8 @@ interface Props {
   total?: number;
   percentage?: number;
   createdAt?: string;
+  /** งานนี้มีขั้น preparing (seedance2 + รูปอ้างอิง) — ใช้หลัง refresh ที่ไม่เห็น event แล้ว */
+  hasPreparing?: boolean;
   /** placeholder ตามจำนวน/สัดส่วนผลลัพธ์ที่รอ — ไม่ส่ง = แบบ compact (audio) */
   tiles?: { count: number; ratio: number };
 }
@@ -83,6 +85,7 @@ const GenerationProgress: React.FC<Props> = ({
   total,
   percentage,
   createdAt,
+  hasPreparing,
   tiles,
 }) => {
   const { token } = theme.useToken();
@@ -92,7 +95,7 @@ const GenerationProgress: React.FC<Props> = ({
   // ขั้น preparing มีเฉพาะงานที่มีรูปอ้างอิง (seedance2) — จำไว้หลังผ่านไปแล้ว
   const sawPreparing = useRef(false);
   if (active === "preparing") sawPreparing.current = true;
-  const steps: GenerationStage[] = sawPreparing.current
+  const steps: GenerationStage[] = hasPreparing || sawPreparing.current
     ? ["queued", "preparing", "generating", "saving"]
     : ["queued", "generating", "saving"];
   const activeIndex = steps.indexOf(active);

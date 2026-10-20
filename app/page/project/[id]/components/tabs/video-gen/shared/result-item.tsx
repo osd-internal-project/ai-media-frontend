@@ -320,6 +320,11 @@ const VideoResultItem: FC<Props> = ({
           total={message.total}
           percentage={message.percentage}
           createdAt={message.createdAt}
+          // worker แปลงรูปอ้างอิงเป็น asset เฉพาะ seedance2
+          hasPreparing={
+            (message.referenceImages?.length ?? 0) > 0 &&
+            /seedance-2/.test(message.generateConfig?.modelName ?? "")
+          }
           tiles={{ count: 1, ratio: ratio ?? 16 / 9 }}
         />
       )}
