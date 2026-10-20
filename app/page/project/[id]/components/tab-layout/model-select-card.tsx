@@ -138,6 +138,7 @@ export default function ModelSelectCard({ semantic, isMobile }: Props) {
 
   return (
     <Card
+      data-tour="model"
       size="small"
       style={{ background: semantic.colorBgContainer, borderColor: semantic.colorBorder, flexShrink: 0 }}
       styles={{ body: { padding: 12 } }}

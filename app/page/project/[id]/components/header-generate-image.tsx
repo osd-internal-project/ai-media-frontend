@@ -5,6 +5,8 @@ import type { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
+import GuideTourButton from "@/app/components/guide-tour/GuideTourButton";
+import { workPageGuide } from "@/app/components/guide-tour/tour-steps";
 
 export interface props {
   teamView?: boolean;
@@ -14,6 +16,7 @@ export interface props {
   promptGuideOpenStatus?: boolean;
   onPromptGuideToggle?: () => void;
   onSetPromptText?: (id: number) => void;
+  onChangeTab?: (key: string) => void;
 }
 
 const subtitleByTab: Record<string, string> = {
@@ -32,12 +35,14 @@ const HeaderGenerateImagePage: FC<props> = ({
   promptGuideOpenStatus,
   onPromptGuideToggle,
   onSetPromptText,
+  onChangeTab,
 }) => {
   const [open, setOpen] = useState(false);
   const [promptBuilderOpen, setPromptBuilderOpen] = useState(false);
   const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
   const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
+  const guide = useMemo(() => workPageGuide(activeKey ?? "image"), [activeKey]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -133,7 +138,7 @@ const HeaderGenerateImagePage: FC<props> = ({
           }`}
           style={{ marginTop: isMobile ? 6 : 0 }}
         >
-          <div >
+          <div data-tour="view-switch">
             {" "}
             <span
               className="font-medium"
@@ -150,6 +155,7 @@ const HeaderGenerateImagePage: FC<props> = ({
               onChange={setTeamView}
             />
           </div>
+          <GuideTourButton guide={guide} activeTab={activeKey} onSelectTab={onChangeTab} />
         </div>
       </div>
 

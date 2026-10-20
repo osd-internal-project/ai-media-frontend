@@ -224,6 +224,7 @@ export function PrivateHeader({
           <Button
             type="text"
             className="private-header-org-btn"
+            data-tour="org-switcher"
             style={{
               padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px",
               minWidth: isMobile ? 40 : undefined,

@@ -31,6 +31,8 @@ import UserServices from "@/app/services/users.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import { canCreateProjects } from "../../utils/permissions";
+import GuideTourButton from "@/app/components/guide-tour/GuideTourButton";
+import { PROJECT_LIST_GUIDE } from "@/app/components/guide-tour/tour-steps";
 import OrganizationServices from "@/app/services/organization.service";
 import {
   ICreditBalance,
@@ -415,16 +417,19 @@ const ProjectsPage = () => {
             chipBg={semantic.colorBgTextActive as string}
             chipText={semantic.colorTextSecondary as string}
             rightSlot={
-              canCreateProjects(organizationRole) ? (
-                <Button
-                  type="primary"
-                  size={"small"}
-                  icon={<PlusOutlined />}
-                  onClick={handleOpen}
-                >
-                  {isMobile ? "New" : "New Project"}
-                </Button>
-              ) : null
+              <Space size={8}>
+                <GuideTourButton guide={PROJECT_LIST_GUIDE} />
+                {canCreateProjects(organizationRole) ? (
+                  <Button
+                    type="primary"
+                    size={"small"}
+                    icon={<PlusOutlined />}
+                    onClick={handleOpen}
+                  >
+                    {isMobile ? "New" : "New Project"}
+                  </Button>
+                ) : null}
+              </Space>
             }
             compact
           />

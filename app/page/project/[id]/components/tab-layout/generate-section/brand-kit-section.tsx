@@ -148,6 +148,7 @@ export default function BrandKitSection({
     <Flex
       vertical
       gap={8}
+      data-tour="brand"
       style={{ width: "100%" }}
     >
       <Flex align="center" justify="space-between">

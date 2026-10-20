@@ -332,6 +332,7 @@ export default function ChatImageInput({
           }}
         >
           <Card
+            data-tour="quota"
             size="small"
             style={{
               borderRadius: 12,
@@ -351,6 +352,7 @@ export default function ChatImageInput({
           <Button
             block
             type="primary"
+            data-tour="generate"
             htmlType="submit"
             disabled={submitting}
             style={{

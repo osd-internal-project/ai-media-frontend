@@ -612,6 +612,7 @@ const PromptActivity: FC<props> = ({
           </div>
 
           <div
+            data-tour="activity-table"
             style={{
               border: `1px solid ${semantic.colorBorder}`,
               borderRadius: 12,

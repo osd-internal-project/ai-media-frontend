@@ -224,7 +224,7 @@ export default function UploadSection({
   }
 
   return (
-    <Flex vertical gap={8} className={className}>
+    <Flex vertical gap={8} className={className} data-tour="upload">
       <Typography.Text
         style={{
           fontSize: 11,

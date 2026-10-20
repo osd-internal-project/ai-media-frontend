@@ -485,7 +485,7 @@ useEffect(() => {
         </>
       )}
 
-      <Col flex="auto" style={{ minHeight: 0, paddingInline: 0 }}>
+      <Col flex="auto" data-tour="result" style={{ minHeight: 0, paddingInline: 0 }}>
         <Card
           variant="borderless"
           style={{
@@ -569,13 +569,13 @@ useEffect(() => {
               </Flex>
             ) : (
               <>
-                {/* โหลดประวัติ: ห้ามแทน list ด้วย spinner (unmount = รูปโหลดใหม่ทั้งหน้า) — height 0 จึงไม่ดัน content */}
-                {isFetchingHistory && hasMore && (
-                  <div style={{ position: "sticky", top: 0, height: 0, zIndex: 2, pointerEvents: "none" }}>
-                    <Flex justify="center" style={{ paddingTop: 8 }}>
+                {/* โหลดประวัติ: ห้ามแทน list ด้วย spinner (unmount = รูปโหลดใหม่ทั้งหน้า) — ช่องสูงคงที่ตลอด spinner ขึ้น/หายจึงไม่ดัน list */}
+                {messagesLength > 0 && (
+                  <Flex justify="center" align="center" style={{ height: 40 }}>
+                    {isFetchingHistory && hasMore && (
                       <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
-                    </Flex>
-                  </div>
+                    )}
+                  </Flex>
                 )}
                 {rightContent}
                 <div ref={bottomRef} />

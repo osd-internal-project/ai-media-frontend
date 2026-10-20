@@ -54,7 +54,7 @@ export default function PromptSection({
     setOpenAssistant(true);
   };
   return (
-    <Flex vertical gap={8}>
+    <Flex vertical gap={8} data-tour="prompt">
       <Flex align="center" justify="space-between">
         <Typography.Text
           style={{

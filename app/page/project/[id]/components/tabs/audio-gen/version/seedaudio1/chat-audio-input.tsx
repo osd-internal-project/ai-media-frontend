@@ -164,7 +164,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             paddingBlock: 12,
           }}
         >
-          <Card size="small" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="voice" style={cardStyle} styles={{ body: { padding: 12 } }}>
             <Flex vertical gap={10}>
               <Flex justify="space-between" align="center">
                 <Typography.Text strong style={{ fontSize: 13 }}>
@@ -226,7 +226,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             </Flex>
           </Card>
 
-          <Card size="small" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="ref-image" style={cardStyle} styles={{ body: { padding: 12 } }}>
             <Flex vertical gap={8}>
               <Typography.Text strong style={{ fontSize: 13 }}>
                 Reference image
@@ -288,7 +288,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             projectId={projectId}
           />
 
-          <Card size="small" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="output" style={cardStyle} styles={{ body: { padding: 12 } }}>
             <Flex vertical gap={12}>
               <Typography.Text strong style={{ fontSize: 13 }}>
                 Output
@@ -380,6 +380,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
           }}
         >
           <Card
+            data-tour="quota"
             size="small"
             style={{
               borderRadius: 12,
@@ -401,6 +402,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
           <Button
             block
             type="primary"
+            data-tour="generate"
             htmlType="submit"
             disabled={submitting || isLoadingUpload}
             style={{

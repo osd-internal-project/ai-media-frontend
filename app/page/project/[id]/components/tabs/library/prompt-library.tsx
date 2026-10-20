@@ -341,7 +341,7 @@ const PromptLibrary: FC<props> = ({
         <Flex vertical gap={16}>
           {/* HEADER */}
           <Flex justify="space-between" align="center">
-            <div>
+            <div data-tour="library-head">
               <Typography.Title level={4} style={{ margin: 0 }}>
                 Library
               </Typography.Title>
@@ -350,7 +350,7 @@ const PromptLibrary: FC<props> = ({
           </Flex>
 
           {/* GRID */}
-          <Row gutter={[16, 16]}>
+          <Row gutter={[16, 16]} data-tour="library-grid">
             {displayItems.map((item, idx) => (
               <Col key={item.id} xs={24} md={12} lg={8} xl={6}>
                 <Card

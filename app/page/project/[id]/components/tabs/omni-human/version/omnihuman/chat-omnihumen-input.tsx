@@ -428,6 +428,7 @@ export default function ChatOmnihumenInput({
         </Flex>
 
         <Card
+          data-tour="quota"
           size="small"
           style={{
             borderRadius: 12,
@@ -447,6 +448,7 @@ export default function ChatOmnihumenInput({
         <Button
           block
           type="primary"
+          data-tour="generate"
           htmlType="submit"
           disabled={submitting}
           style={{

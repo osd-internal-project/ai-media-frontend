@@ -25,6 +25,7 @@ export default function PromptTemplateSection({
   return (
     <>
       <Button
+        data-tour="template"
         block
         icon={<Presentation size={14} />}
         onClick={handleOpenModal}

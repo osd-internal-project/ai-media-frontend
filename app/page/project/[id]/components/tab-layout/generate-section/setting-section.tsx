@@ -126,7 +126,7 @@ export default function SettingSection({
   };
 
   return (
-    <Flex vertical gap={8} style={{ minWidth: 0, maxWidth: '100%', padding: 2 }}>
+    <Flex vertical gap={8} data-tour="settings" style={{ minWidth: 0, maxWidth: '100%', padding: 2 }}>
       <Button
         type="text"
         onClick={() => setShowSettings((previous) => !previous)}

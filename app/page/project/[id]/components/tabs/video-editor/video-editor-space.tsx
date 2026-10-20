@@ -105,6 +105,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
   );
   const timeline = (className: string) => (
     <section
+      data-tour="ve-timeline"
       className={`relative shrink-0 overflow-hidden transition-[height] duration-200 ${className}`}
       style={{ ...panel, height: (timelineCollapsed ? 28 : timelineHeight(state.present.layers)) + 2, maxHeight: "40vh" }}
     >
@@ -135,7 +136,7 @@ function EditorLayout({ projectId }: { projectId: string }) {
             gridTemplateColumns: `${binCollapsed ? "44px" : "clamp(200px, 18vw, 280px)"} minmax(0, 1fr) clamp(220px, 17vw, 260px)`,
           }}
         >
-          <aside className="min-h-0 rounded-[14px] p-2 flex flex-col gap-2 overflow-hidden" style={panel}>
+          <aside data-tour="ve-bin" className="min-h-0 rounded-[14px] p-2 flex flex-col gap-2 overflow-hidden" style={panel}>
             <CollapseToggle
               collapsed={binCollapsed}
               onToggle={() => setBinCollapsed((value) => !value)}
@@ -148,10 +149,10 @@ function EditorLayout({ projectId }: { projectId: string }) {
               </div>
             )}
           </aside>
-          <section className="min-h-0 rounded-[14px] overflow-hidden" style={panel}>
+          <section data-tour="ve-preview" className="min-h-0 rounded-[14px] overflow-hidden" style={panel}>
             <PreviewFrame />
           </section>
-          <aside className="min-h-0 overflow-y-auto rounded-[14px] p-3" style={panel}>
+          <aside data-tour="ve-inspector" className="min-h-0 overflow-y-auto rounded-[14px] p-3" style={panel}>
             <Inspector />
           </aside>
         </div>

@@ -426,6 +426,7 @@ export default function ChatDreamactorInput({
         </Flex>
 
         <Card
+          data-tour="quota"
           size="small"
           style={{
             borderRadius: 12,
@@ -445,6 +446,7 @@ export default function ChatDreamactorInput({
         <Button
           block
           type="primary"
+          data-tour="generate"
           htmlType="submit"
           disabled={submitting}
           style={{

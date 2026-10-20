@@ -60,7 +60,7 @@ export default function EditorHeader({
         onClick={onToggleFullscreen}
         icon={fullscreen ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}
       />
-      <Button type="primary" shape="round" disabled={isEmpty} onClick={() => setExportOpen(true)}>
+      <Button data-tour="ve-export" type="primary" shape="round" disabled={isEmpty} onClick={() => setExportOpen(true)}>
         {STRINGS.export}
       </Button>
       {isDesktop ? (

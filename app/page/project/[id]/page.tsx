@@ -6,7 +6,7 @@ import React, {
   useState,
   type FC,
 } from "react";
-import { Skeleton, Tabs, Typography } from "antd";
+import { Skeleton, Spin, Tabs, Typography } from "antd";
 import "./styles/styles.css";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
@@ -25,26 +25,34 @@ import {
   MessageOutlined,
   PlaySquareOutlined,
 } from "@ant-design/icons";
-import PromptLibrary from "./components/tabs/library/prompt-library";
-import PromptActivity from "./components/tabs/all-activity/prompt-activity";
+import dynamic from "next/dynamic";
 import ImageFormRenderer from "./components/tabs/image-gen/image-form-renderer";
-import OmnihumenFormRenderer from "./components/tabs/omni-human/omnihumen-form-renderer";
-import DreamactorFormRenderer from "./components/tabs/dream-actor/dreamactor-form-renderer";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
-import OrganizationServices from "@/app/services/organization.service";
-import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
-import AudioFormRenderer from "./components/tabs/audio-gen/audio-form-renderer";
-import WorkflowFormRenderer from "./components/tabs/workflow/workflow-form-renderer";
 import { AudioLines, Clapperboard, Edit2, Image, Paintbrush, Share2, Workflow } from "lucide-react";
-import EditorSpace from "./components/tabs/editor/editor-space";
 import VideoEditorTab from "./components/tabs/video-editor/video-editor-tab";
 import { STRINGS as VIDEO_EDITOR_STRINGS } from "./components/tabs/video-editor/strings";
-import PublicSocial from "./components/tabs/public-social/public-social";
 import { FEATURES } from "@/app/config/features";
+import { useOrganization } from "@/app/context/OrganizationContext";
+
+// Only the default Image tab ships with the page; the rest (fabric, xyflow, …) load on first open.
+const tabLoading = () => (
+  <div className="h-full w-full grid place-items-center">
+    <Spin />
+  </div>
+);
+const VideoFormRenderer = dynamic(() => import("./components/tabs/video-gen/video-form-renderer"), { ssr: false, loading: tabLoading });
+const OmnihumenFormRenderer = dynamic(() => import("./components/tabs/omni-human/omnihumen-form-renderer"), { ssr: false, loading: tabLoading });
+const DreamactorFormRenderer = dynamic(() => import("./components/tabs/dream-actor/dreamactor-form-renderer"), { ssr: false, loading: tabLoading });
+const AudioFormRenderer = dynamic(() => import("./components/tabs/audio-gen/audio-form-renderer"), { ssr: false, loading: tabLoading });
+const WorkflowFormRenderer = dynamic(() => import("./components/tabs/workflow/workflow-form-renderer"), { ssr: false, loading: tabLoading });
+const PromptLibrary = dynamic(() => import("./components/tabs/library/prompt-library"), { ssr: false, loading: tabLoading });
+const PromptActivity = dynamic(() => import("./components/tabs/all-activity/prompt-activity"), { ssr: false, loading: tabLoading });
+const EditorSpace = dynamic(() => import("./components/tabs/editor/editor-space"), { ssr: false, loading: tabLoading });
+const PublicSocial = dynamic(() => import("./components/tabs/public-social/public-social"), { ssr: false, loading: tabLoading });
 
 type GenerateTabKey =
   | "image"
@@ -82,7 +90,6 @@ const GenerateImagePage: FC = () => {
   const { data: session } = useSession();
   const params = useParams();
   const { id } = params as { id: string };
-  const organizationId = session?.user?.organizationId;
 
   const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
@@ -91,10 +98,6 @@ const GenerateImagePage: FC = () => {
   const projectService = useMemo(() => ProjectService(axiosCore), []);
   const masterModelTypeServices = useMemo(
     () => MasterModelTypeServices(axiosCore),
-    [],
-  );
-  const organizationServices = useMemo(
-    () => OrganizationServices(axiosUser),
     [],
   );
   const userService = useMemo(() => UserServices(axiosUser), []);
@@ -106,11 +109,8 @@ const GenerateImagePage: FC = () => {
   const [, setLoadingData] = useState<boolean>(true);
   const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
   const [teamView, setTeamView] = useState<boolean>(true);
-  const [accessCode, setAccessCode] = useState<string[]>([]);
-  // Empty accessCode means "no restriction", so tabs must wait for the fetch to settle.
-  const [accessStatus, setAccessStatus] = useState<
-    "loading" | "ready" | "error"
-  >("loading");
+  // Loaded once by PrivateLayout; undefined while loading, [] means "no restriction".
+  const { accessCodes } = useOrganization();
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -138,8 +138,8 @@ const GenerateImagePage: FC = () => {
 
   // Memoized access code checks — only recomputed when accessCode changes
   const normalizedAccessCodes = useMemo(
-    () => accessCode.map((c) => c.toLowerCase().trim()),
-    [accessCode],
+    () => (accessCodes ?? []).map((c) => c.toLowerCase().trim()),
+    [accessCodes],
   );
   const {
     canAccessImage,
@@ -152,7 +152,7 @@ const GenerateImagePage: FC = () => {
     canAccessWorkflow,
     canAccessSocial,
   } = useMemo(() => {
-    if (accessStatus !== "ready") {
+    if (accessCodes === undefined) {
       return {
         canAccessImage: false,
         canAccessVideo: false,
@@ -191,7 +191,7 @@ const GenerateImagePage: FC = () => {
         FEATURES.social &&
         (!has || normalizedAccessCodes.some((c) => c.includes("social"))),
     };
-  }, [normalizedAccessCodes, accessStatus]);
+  }, [normalizedAccessCodes, accessCodes]);
 
   // Memoized tab icon colours — only changes with theme
   const tabIconColorByType = useMemo<Record<GenerateTabKey, string>>(
@@ -234,39 +234,18 @@ const GenerateImagePage: FC = () => {
     }
   }, [params.id, projectService, masterModelTypeServices]);
 
-  // Fetch project role and org access codes in parallel
-  const fetchRoleAndAccess = useCallback(async () => {
+  // Project role only — tab access comes from OrganizationContext and does not wait on this.
+  const fetchRole = useCallback(async () => {
     if (!session?.user?.id || !id) return;
-    let accessReady = false;
     try {
-      const [userDetails, code] = await Promise.all([
-        userService.findDetailByToken(session.user.id),
-        organizationId
-          ? organizationServices.findAccessCodeByOrganizationId(organizationId)
-          : Promise.resolve(null),
-      ]);
-      if (code) setAccessCode(Array.isArray(code) ? code : []);
-      setAccessStatus("ready");
-      accessReady = true;
+      const userDetails = await userService.findDetailByToken(session.user.id);
       const actualUserId = userDetails?.userId || session.user.id;
       const userRole = await projectService.checkUserRole(id, actualUserId);
       setProjectRole(userRole);
     } catch (error) {
-      console.error("Failed to fetch role/access:", error);
-      // Unknown access → show only the always-available tabs.
-      if (!accessReady) {
-        setAccessStatus("error");
-        setActiveKey("library");
-      }
+      console.error("Failed to fetch project role:", error);
     }
-  }, [
-    session?.user?.id,
-    id,
-    organizationId,
-    userService,
-    organizationServices,
-    projectService,
-  ]);
+  }, [session?.user?.id, id, userService, projectService]);
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -275,8 +254,8 @@ const GenerateImagePage: FC = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetchRoleAndAccess();
-  }, [session?.user?.id, id, organizationId]); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchRole();
+  }, [session?.user?.id, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync filteredAIModels and selectedAIModel whenever aiModels or tab changes
   useEffect(() => {
@@ -396,10 +375,12 @@ const GenerateImagePage: FC = () => {
         promptGuideOpenStatus={promptGuideOpenStatus}
         onPromptGuideToggle={onPromptGuideToggle}
         onSetPromptText={handleSetPromptText}
+        // keys come from the rendered tab nodes, which are GenerateTabKey values
+        onChangeTab={(key) => onChangeTab(key as GenerateTabKey)}
       />
 
       <div className="flex-1 min-h-0 w-full overflow-hidden">
-        {accessStatus === "loading" ? (
+        {accessCodes === undefined ? (
           <div
             style={{
               display: "flex",
@@ -640,7 +621,6 @@ const GenerateImagePage: FC = () => {
               ? [
                   {
                     disabled: disableTab,
-                    forceRender: true,
                     key: "editor",
                     label: renderTabLabel(
                       "editor",

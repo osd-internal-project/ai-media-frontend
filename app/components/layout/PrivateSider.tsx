@@ -113,6 +113,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
       {organizationId && (
         <div
           className="private-sider-menu-scroll"
+          data-tour="sider-menu"
           style={{
             flex: 1,
             minHeight: 0,
