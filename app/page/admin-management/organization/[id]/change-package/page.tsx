@@ -59,7 +59,10 @@ const ChangePackagePage = () => {
         planService.findAllFormatted(),
         subscriptionService.findByOrganizationId(organizationId),
       ]);
-      setPlans(data);
+      // Inactive packages are hidden here, except the org's current one so its "current" marker stays.
+      setPlans(
+        data.filter((p: TPlan) => p.status || p.id === subData?.planId),
+      );
 
       if (subData && subData.planId) {
         const cPlan = data.find((p: TPlan) => p.id === subData.planId) || null;

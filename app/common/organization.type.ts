@@ -28,12 +28,18 @@ export interface IOrganizationSubscription {
   currentPeriodStart: string | Date;
   currentPeriodEnd: string | Date;
   nextBillingDate: string | Date;
-  status: string;
+  status: SubscriptionStatus | string;
+  autoRenew: boolean;
+  nextPlanId?: string | null;
+  nextPlanPriceId?: string | null;
   period: string;
   periodCount: number;
   periodCurrent: number;
   updatedAt: string | Date;
 }
+
+export type SubscriptionStatus = "active" | "pending_cancel" | "past_due" | "expired";
+export type SubscriptionCancelMode = "end_of_period" | "immediate";
 
 export interface ICreditBalance {
   id: string;

@@ -24,6 +24,10 @@ export default function ChangePackageDetailPage() {
 
   const planService = useMemo(() => PlanServices(axiosCore), []);
   const organizationService = useMemo(() => OrganizationService(axiosUser), []);
+  const subscriptionService = useMemo(
+    () => OrganizationSubscriptionServices(axiosUser),
+    [],
+  );
 
   useEffect(() => {
     const fetchRequiredData = async () => {
@@ -54,7 +58,7 @@ export default function ChangePackageDetailPage() {
   }, [planService, searchParams, organizationId, router, messageApi]);
 
   const onConfirm = async () => {
-    if (!planPrice || !planPrice.plan) {
+    if (!planPrice?.id || !planPrice.plan) {
       messageApi.error("Please select a plan first");
       return;
     }
@@ -62,11 +66,7 @@ export default function ChangePackageDetailPage() {
     setLoading(true);
 
     try {
-      // In backend there are upgrade/downgrade routes. 
-      // We will assume "upgrade" for now or use the specific change subscription endpoint.
-      await axiosUser.post(`/organization-subscription/upgrade/${organizationId}`, {
-         priceId: planPrice.id
-      });
+      await subscriptionService.adminChange(organizationId, planPrice.id);
       messageApi.success("Package changed successfully!");
       setTimeout(() => {
         router.push(`/page/admin-management/organization/${organizationId}`);

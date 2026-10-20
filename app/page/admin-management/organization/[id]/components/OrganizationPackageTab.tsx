@@ -10,16 +10,35 @@ import {
   Popconfirm,
   message,
   Space,
+  Dropdown,
+  Modal,
+  Tooltip,
 } from "antd";
+import type { MenuProps } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { isAxiosError } from "axios";
 import { axiosUser } from "@/app/lib/axios/axios";
 import PackageTransactionServices from "@/app/services/package-transaction.service";
 import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
 import { formatNumber } from "@/app/utils/format";
-import { IPackageTransaction } from "@/app/common/organization.type";
+import {
+  IOrganizationSubscription,
+  IPackageTransaction,
+  SubscriptionCancelMode,
+} from "@/app/common/organization.type";
 import { usePathname, useRouter } from "next/navigation";
 
 const { Text } = Typography;
+
+const STATUS_TAGS: Record<string, { color: string; label: string }> = {
+  active: { color: "green", label: "ACTIVE" },
+  pending_cancel: { color: "orange", label: "CANCELS AT CYCLE END" },
+  past_due: { color: "red", label: "PAST DUE" },
+  expired: { color: "default", label: "EXPIRED" },
+};
+
+const formatDate = (value?: string | Date | null) =>
+  value ? new Date(value).toLocaleDateString() : "-";
 
 interface OrganizationPackageTabProps {
   organizationId: string;
@@ -32,7 +51,8 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] =
+    useState<IOrganizationSubscription | null>(null);
 
   const transactionService = PackageTransactionServices(axiosUser);
   const subscriptionService = OrganizationSubscriptionServices(axiosUser);
@@ -46,7 +66,7 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
       // console.log(transData)
       const subData =
         await subscriptionService.findByOrganizationId(organizationId);
-      setSubscription(subData);
+      setSubscription(subData ?? null);
     } catch (error) {
       console.error("Failed to fetch package data:", error);
     } finally {
@@ -54,19 +74,60 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
     }
   }, [organizationId]);
 
-  const handleRenew = async () => {
+  const runAction = async (
+    action: () => Promise<unknown>,
+    successText: string,
+  ) => {
     try {
       setLoading(true);
-      await axiosUser.post(
-        `/organization-subscription/renew/${organizationId}`,
-      );
-      message.success("Subscription updated/renewed successfully");
+      await action();
+      message.success(successText);
       await fetchData();
     } catch (error) {
-      console.error("Failed to renew subscription:", error);
-      message.error("Failed to renew subscription");
+      console.error("Subscription action failed:", error);
+      const apiMessage = isAxiosError(error)
+        ? error.response?.data?.message
+        : undefined;
+      message.error(
+        typeof apiMessage === "string" ? apiMessage : "Subscription action failed",
+      );
       setLoading(false); // only needed on error, otherwise fetchData handles it
     }
+  };
+
+  const status = subscription?.status;
+  const lapsed = status === "expired" || status === "past_due";
+  const statusTag = STATUS_TAGS[status ?? ""] ?? {
+    color: "default",
+    label: (status ?? "unknown").toUpperCase(),
+  };
+  const renewDescription = lapsed
+    ? "Start a new cycle today and refill this cycle's credit."
+    : "Extend the subscription by one billing cycle.";
+
+  const cancelItems: MenuProps["items"] = [
+    { key: "end_of_period", label: "Cancel at end of cycle" },
+    { key: "immediate", label: "Cancel immediately", danger: true },
+  ];
+  const handleCancel = (mode: SubscriptionCancelMode) => {
+    Modal.confirm({
+      title:
+        mode === "immediate"
+          ? "Cancel the subscription now?"
+          : "Cancel at the end of this cycle?",
+      content:
+        mode === "immediate"
+          ? "The subscription expires now and this cycle's credit becomes 0. On-top credit is kept."
+          : "The organization keeps its credit until the cycle ends, then the subscription expires.",
+      okText: "Cancel subscription",
+      okButtonProps: { danger: true },
+      cancelText: "Keep",
+      onOk: () =>
+        runAction(
+          () => subscriptionService.adminCancel(organizationId, mode),
+          "Subscription cancelled",
+        ),
+    });
   };
 
   useEffect(() => {
@@ -135,46 +196,90 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
             title="Current Subscription"
             size="small"
             extra={
-              <Space>
-                {
-                  <Button
-                    type="primary"
-                    onClick={() => router.push(`${pathname}/change-package`)}
-                  >
-                    Change Plan
-                  </Button>
-                }
-                {subscription ? (
+              subscription ? (
+                <Space wrap>
+                  <Tooltip title={status === "expired" ? "Renew first" : undefined}>
+                    <Button
+                      type="primary"
+                      disabled={status === "expired"}
+                      onClick={() => router.push(`${pathname}/change-package`)}
+                    >
+                      Change Plan
+                    </Button>
+                  </Tooltip>
                   <Popconfirm
                     title="Renew Subscription"
-                    description="Are you sure you want to renew this subscription for the next billing cycle?"
-                    onConfirm={handleRenew}
-                    okText="Yes"
+                    description={renewDescription}
+                    onConfirm={() =>
+                      runAction(
+                        () => subscriptionService.adminRenew(organizationId),
+                        "Subscription renewed",
+                      )
+                    }
+                    okText="Renew"
                     cancelText="No"
                   >
                     <Button type="primary">Renew Subscription</Button>
                   </Popconfirm>
-                ) : null}
-              </Space>
+                  {status === "pending_cancel" ? (
+                    <Popconfirm
+                      title="Resume Subscription"
+                      description="Undo the cancellation and keep renewing automatically."
+                      onConfirm={() =>
+                        runAction(
+                          () => subscriptionService.adminResume(organizationId),
+                          "Subscription resumed",
+                        )
+                      }
+                      okText="Resume"
+                      cancelText="No"
+                    >
+                      <Button>Resume</Button>
+                    </Popconfirm>
+                  ) : null}
+                  {status !== "expired" && status !== "pending_cancel" ? (
+                    <Dropdown
+                      trigger={["click"]}
+                      menu={{
+                        items: cancelItems,
+                        onClick: ({ key }) =>
+                          handleCancel(key as SubscriptionCancelMode), // keys come from cancelItems
+                      }}
+                    >
+                      <Button danger>Cancel Subscription</Button>
+                    </Dropdown>
+                  ) : null}
+                </Space>
+              ) : null
             }
           >
             {subscription ? (
               <Descriptions bordered column={2}>
                 <Descriptions.Item label="Plan Name">
-                  <Text strong>{subscription.plan?.name}</Text>
+                  <Text strong>{subscription.planName}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  <Tag color="green">ACTIVE</Tag>
+                  <Tag color={statusTag.color}>{statusTag.label}</Tag>
+                  {status === "pending_cancel" ? (
+                    <Text type="secondary">
+                      Ends {formatDate(subscription.currentPeriodEnd)}
+                    </Text>
+                  ) : null}
                 </Descriptions.Item>
-                <Descriptions.Item label="Starts At">
-                  {new Date(
-                    subscription.currentPeriodStart || subscription.startDate,
-                  ).toLocaleDateString()}
+                <Descriptions.Item label="Current Cycle">
+                  {formatDate(subscription.currentPeriodStart)} –{" "}
+                  {formatDate(subscription.currentPeriodEnd)}
                 </Descriptions.Item>
-                <Descriptions.Item label="Expires At">
-                  {new Date(
-                    subscription.currentPeriodEnd || subscription.endDate,
-                  ).toLocaleDateString()}
+                <Descriptions.Item label="Next Billing">
+                  {formatDate(subscription.nextBillingDate)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Auto Renew">
+                  <Tag color={subscription.autoRenew ? "green" : "default"}>
+                    {subscription.autoRenew ? "ON" : "OFF"}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Billing Period">
+                  {subscription.periodCount || 1} month(s)
                 </Descriptions.Item>
                 <Descriptions.Item label="Monthly Credits">
                   {formatNumber(subscription.creditAllowance)}
