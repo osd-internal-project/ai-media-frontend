@@ -490,6 +490,7 @@ const ChatGenerateImage: FC<
     // 5. Event เมื่อ task เสร็จสมบูรณ์
     const handleTaskComplete = (data: {
       taskId: string;
+      galleryId?: string;
       success: boolean;
       imageCount: number;
       images: string[];
@@ -499,6 +500,7 @@ const ChatGenerateImage: FC<
         userId: string;
         prompt: string;
         imageUrl: string[];
+        resultUrl?: string[];
         typeGenerate: string;
         genneratedStatus: string;
         status: boolean;
@@ -530,9 +532,11 @@ const ChatGenerateImage: FC<
               return {
                 ...msg,
                 genneratedStatus: "SUCCESS",
-                imageUrls: data.data.imageUrl.map((img) => ({
-                  id: img,
+                // id = gallery row (ทุกรูปในงานเดียวกัน), fileName เลือกรูปตอน download
+                imageUrls: data.data.imageUrl.map((img, i) => ({
+                  id: data.galleryId ?? "",
                   imageUrl: img,
+                  fileName: data.data.resultUrl?.[i],
                   status: false,
                 })),
               };

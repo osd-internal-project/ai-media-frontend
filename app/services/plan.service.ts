@@ -76,6 +76,12 @@ const PlanServices = (axiosInstance: AxiosInstance) => {
         .then((res) => res.data);
     },
 
+    updateStatus: async (id: string, status: boolean): Promise<TPlan> => {
+      return await axiosInstance
+        .patch(`${basePlansUrl}/${id}/status`, { status })
+        .then((res) => res.data);
+    },
+
     delete: async (id: string): Promise<boolean> => {
       return await axiosInstance
         .delete(`${basePlansUrl}/${id}`)

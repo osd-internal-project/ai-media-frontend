@@ -48,9 +48,7 @@ const PlanGridView: FC<PlanGridViewProps> = ({
   // 1. Handler สำหรับอัปเดต status
 const handleStatusChange = async (planId: string, checked: boolean) => {
   try {
-    const plan = filteredData.find((p) => p.id === planId);
-    if (!plan) return;
-    await planService.update(planId, { ...plan, status: checked });
+    await planService.updateStatus(planId, checked);
     message.success("Status updated");
     if (onRefresh) onRefresh();
   } catch (e) {

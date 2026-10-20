@@ -512,28 +512,31 @@ const ResultItem: FC<Props> = ({
                       </div>
                     )}
 
-                  <ActionBar
-                    item={imgUrl}
-                    message={message}
-                    onToggleFavorite={onShareImage}
-                    onDownload={onDownloadImage}
-                    onDelete={(taskId, id) => {
-                      setMessages((prev) =>
-                        prev.map((msg) => {
-                          if (msg.taskId === taskId) {
-                            return {
-                              ...msg,
-                              imageUrls: msg.imageUrls.filter(
-                                (img) => img.id !== id,
-                              ),
-                            };
-                          }
-                          return msg;
-                        }),
-                      );
-                    }}
-                    messageApi={messageApi}
-                  />
+                  {/* ซ่อนจนกว่าจะมี gallery id — ไม่งั้น download ได้ 404 */}
+                  {imgUrl.id && (
+                    <ActionBar
+                      item={imgUrl}
+                      message={message}
+                      onToggleFavorite={onShareImage}
+                      onDownload={onDownloadImage}
+                      onDelete={(taskId, id) => {
+                        setMessages((prev) =>
+                          prev.map((msg) => {
+                            if (msg.taskId === taskId) {
+                              return {
+                                ...msg,
+                                imageUrls: msg.imageUrls.filter(
+                                  (img) => img.id !== id,
+                                ),
+                              };
+                            }
+                            return msg;
+                          }),
+                        );
+                      }}
+                      messageApi={messageApi}
+                    />
+                  )}
                 </div>
               ))}
             </Image.PreviewGroup>
