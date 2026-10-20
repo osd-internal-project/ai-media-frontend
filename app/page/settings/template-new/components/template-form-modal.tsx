@@ -275,7 +275,8 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
         promptGuideTypeId: type.id,
         generateType: values.generateType,
         description: values.description,
-        model: values.model,
+        // allowClear ให้ undefined ซึ่ง JSON ตัดทิ้ง — ส่ง "" เพื่อให้ล้าง model เดิมได้จริง
+        model: values.model ?? "",
         status: values.status ?? true,
       });
 
@@ -500,6 +501,7 @@ const TemplateFormModal: FC<TemplateFormModalProps> = ({
                 <Select
                   size={isMobile ? "middle" : "large"}
                   placeholder="Select model"
+                  allowClear
                   options={modelOptions}
                   disabled={modelOptions.length === 0}
                 />

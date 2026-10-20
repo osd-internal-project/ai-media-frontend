@@ -21,6 +21,7 @@ import {
   Modal,
   Row,
   Space,
+  Tag,
   Typography,
   Upload,
   UploadFile,
@@ -41,6 +42,7 @@ import CustomTab from "./customtab";
 import TemplateFormModal from "./template-form-modal";
 import TemplateItem from "./template-item";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { mentionLabels } from "@/app/utils/prompt-guide-media";
 
 export interface props {
   searchQuery: string;
@@ -72,6 +74,10 @@ export interface props {
     info: UploadChangeParam,
     index: string,
   ) => void;
+  resultFiles: UploadFile[];
+  isLoadingResult: boolean;
+  handleResultUploadChange: (info: UploadChangeParam) => void;
+  onRemoveResult: (file: UploadFile) => void;
 }
 
 type FlatTemplate = TPromptGuide & {
@@ -104,6 +110,10 @@ const PromptGuideComponent: FC<props> = ({
   isLoadingFirstFrame,
   isLoadingLastFrame,
   handleVideoImageUploadChange,
+  resultFiles,
+  isLoadingResult,
+  handleResultUploadChange,
+  onRemoveResult,
 }): ReactElement => {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -155,6 +165,33 @@ const PromptGuideComponent: FC<props> = ({
     setIsEditModalOpen(true);
   };
 
+  const refLabels = mentionLabels(files);
+  // ป้าย @image1/@video1 ตรงกับชื่อที่ใช้อ้างใน prompt หลังผู้ใช้กด Use
+  const renderRefItem = (originNode: ReactElement, file: UploadFile) => {
+    const label = refLabels[files.findIndex((f) => f.uid === file.uid)];
+    return (
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        {originNode}
+        {label && (
+          <Tag
+            color="processing"
+            style={{
+              position: "absolute",
+              top: 4,
+              left: 4,
+              margin: 0,
+              fontSize: 10,
+              lineHeight: "16px",
+              pointerEvents: "none",
+            }}
+          >
+            @{label}
+          </Tag>
+        )}
+      </div>
+    );
+  };
+
   const renderVideoUpload = () => (
     <Upload
       accept="image/*,video/*,audio/*"
@@ -163,6 +200,7 @@ const PromptGuideComponent: FC<props> = ({
       onChange={handleUploadChange}
       beforeUpload={beforeUpload}
       onRemove={onRemoveFile}
+      itemRender={renderRefItem}
       multiple
       maxCount={3}
       showUploadList
@@ -184,6 +222,7 @@ const PromptGuideComponent: FC<props> = ({
       onChange={handleUploadChange}
       beforeUpload={beforeUpload}
       onRemove={onRemoveFile}
+      itemRender={renderRefItem}
       multiple
       maxCount={3}
       showUploadList
@@ -256,6 +295,32 @@ const PromptGuideComponent: FC<props> = ({
         )}
       </Upload>
     </div>
+  );
+
+  const renderResultUpload = () => (
+    <Form.Item
+      label="Result (showcase)"
+      extra="แสดงเป็นภาพหลักของ template ให้ผู้ใช้เห็น — ไม่ถูกแนบไปตอนผู้ใช้กด Use"
+    >
+      <Upload
+        accept="image/*,video/*"
+        listType="picture-card"
+        fileList={resultFiles}
+        onChange={handleResultUploadChange}
+        beforeUpload={() => false}
+        onRemove={onRemoveResult}
+        maxCount={2}
+        showUploadList
+        disabled={isLoadingResult}
+      >
+        {resultFiles.length >= 2 ? null : (
+          <div className="flex flex-col items-center text-sm">
+            {isLoadingResult ? <LoadingOutlined /> : <Sparkles />}
+            <div>Result</div>
+          </div>
+        )}
+      </Upload>
+    </Form.Item>
   );
 
   const renderFileEditor = () => {
@@ -452,6 +517,7 @@ const PromptGuideComponent: FC<props> = ({
           initialValues={{
             id: selectedPromptGuide.id,
             title: selectedPromptGuide.title || "",
+            description: selectedPromptGuide.description || "",
             textPrompt: selectedPromptGuide.textPrompt || "",
             status: selectedPromptGuide.status,
             generateType: selectedPromptGuide.generateType,
@@ -472,7 +538,10 @@ const PromptGuideComponent: FC<props> = ({
               : undefined
           }
           extraContent={
-            <Form.Item label="Files">{renderFileEditor()}</Form.Item>
+            <>
+              <Form.Item label="Reference files">{renderFileEditor()}</Form.Item>
+              {renderResultUpload()}
+            </>
           }
         />
       ) : (

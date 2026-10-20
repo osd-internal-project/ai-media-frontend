@@ -1,5 +1,8 @@
 import { AxiosInstance } from "axios";
-import type { TPromptGuide } from "../common/prompt-guide.type";
+import type {
+  TPromptGuide,
+  TPromptGuideMedia,
+} from "../common/prompt-guide.type";
 
 const PromptGuideServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/prompt-guide";
@@ -97,6 +100,14 @@ const PromptGuideServices = (axiosInstance: AxiosInstance) => {
           console.log(err);
           return;
         });
+    },
+    getPromptGuideResults: async (
+      promptGuideId: string,
+    ): Promise<TPromptGuideMedia[]> => {
+      const res = await axiosInstance.get<TPromptGuideMedia[]>(
+        `${baseUrl}/${promptGuideId}/results`,
+      );
+      return res.data;
     },
   };
 };

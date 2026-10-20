@@ -129,6 +129,36 @@ const TemplateSettingPage: FC = (): ReactElement => {
     { name: string; status: string; uid: string; url: string }[]
   >([]);
 
+  // ผลลัพธ์ตัวอย่าง (showcase) — แยกจาก refImage เพราะไม่ถูกแนบตอนผู้ใช้กด Use
+  const [resultFiles, setResultFiles] = useState<UploadFile[]>([]);
+  const [resultUids, setResultUids] = useState<string[]>([]);
+  const [isLoadingResult, setIsLoadingResult] = useState<boolean>(false);
+
+  const fetchPromptGuideResults = async (id: number) => {
+    setResultUids([]);
+    setResultFiles([]);
+    setIsLoadingResult(true);
+    try {
+      const results = await promptguideServices.getPromptGuideResults(
+        String(id),
+      );
+      setResultUids(results.map((media) => media.uid));
+      setResultFiles(
+        results.map((media) => ({
+          uid: media.uid,
+          name: media.name,
+          status: "done" as const,
+          url: media.url,
+        })),
+      );
+    } catch (error) {
+      openNotificationWithIcon("error", "Failed to load result media");
+      console.error("Error fetching prompt guide results:", error);
+    } finally {
+      setIsLoadingResult(false);
+    }
+  };
+
   const fetchPromptGuideImages = async (
     id: number,
     templateType: TGenerateType | "all",
@@ -196,6 +226,8 @@ const TemplateSettingPage: FC = (): ReactElement => {
     setFiles([]);
     setFirstFrame([]);
     setLastFrame([]);
+    setResultUids([]);
+    setResultFiles([]);
 
     if (organizationId) {
       // console.log(organizationId);
@@ -232,7 +264,10 @@ const TemplateSettingPage: FC = (): ReactElement => {
   const onSelectPromptGuide = async (id: number) => {
     const promptGuide = await promptguideServices.findById(String(id));
     setSelectedPromptGuide(promptGuide);
-    await fetchPromptGuideImages(id, promptGuide?.generateType ?? generateType);
+    await Promise.all([
+      fetchPromptGuideImages(id, promptGuide?.generateType ?? generateType),
+      fetchPromptGuideResults(id),
+    ]);
     promptGuideForm.setFieldsValue(promptGuide);
   };
 
@@ -241,6 +276,7 @@ const TemplateSettingPage: FC = (): ReactElement => {
       ...values,
       organizationId,
       promptGuideImages: refImage.map((image) => image.uid),
+      promptGuideResults: resultUids,
     });
 
     if (!updatePromptGuide) {
@@ -392,6 +428,57 @@ const TemplateSettingPage: FC = (): ReactElement => {
     return false;
   };
 
+  const handleResultUploadChange: UploadProps["onChange"] = async ({
+    file,
+    fileList: newFileList,
+  }) => {
+    if (file.status === "removed") {
+      setResultFiles(newFileList);
+      return;
+    }
+    if (!selectedPromptGuide?.id) {
+      message.warning("Please select a prompt guide");
+      return;
+    }
+    const fileToUpload = file.originFileObj || file;
+    if (!(fileToUpload instanceof Blob)) return;
+    setIsLoadingResult(true);
+    try {
+      // เช็ก 300px เฉพาะรูป — ผลลัพธ์ของ video template เป็นไฟล์วิดีโอ
+      if (fileToUpload.type.startsWith("image/")) {
+        const size = await readImageSize(fileToUpload);
+        if (size && Math.min(size.width, size.height) < 300) {
+          throw new Error(
+            "Image size is too small, minimum side length must not be less than 300 px",
+          );
+        }
+      }
+      const formData = new FormData();
+      formData.append("userId", userId ? userId : "");
+      formData.append("index", newFileList.length.toString());
+      formData.append("promptGuideId", String(selectedPromptGuide.id));
+      formData.append("generateType", editingType);
+      formData.append("organizationId", organizationId || "");
+      formData.append("uid", file.uid);
+      formData.append("file", fileToUpload);
+      const result = await uploadsServices.uploadPromptGuideImage(formData);
+      setResultUids((prev) => [...prev, result.uid]);
+      setResultFiles(newFileList);
+    } catch (error) {
+      openNotificationWithIcon(
+        "error",
+        error instanceof Error ? error.message : "Upload failed",
+      );
+    } finally {
+      setIsLoadingResult(false);
+    }
+  };
+
+  const onRemoveResult = (file: UploadFile) => {
+    setResultUids((prev) => prev.filter((uid) => uid !== file.uid));
+    uploadsServices.removePromptGuideImage(file.uid);
+  };
+
   // Last Frame Upload Handler (index 2)
   const handleVideoImageUploadChange = async (
     { file, fileList: newFileList }: UploadChangeParam<UploadFile>,
@@ -525,6 +612,10 @@ const TemplateSettingPage: FC = (): ReactElement => {
           isLoadingFirstFrame={isLoadingFirstFrame}
           isLoadingLastFrame={isLoadingLastFrame}
           handleVideoImageUploadChange={handleVideoImageUploadChange}
+          resultFiles={resultFiles}
+          isLoadingResult={isLoadingResult}
+          handleResultUploadChange={handleResultUploadChange}
+          onRemoveResult={onRemoveResult}
         />
       </Spin>
     </div>

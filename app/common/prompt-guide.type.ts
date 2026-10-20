@@ -11,6 +11,14 @@ export type TPromptType = {
 export type TPromptGuideTemplate = TPromptType & {
   promptGuides?: TPromptGuide[];
 };
+export type TPromptGuideMedia = {
+  imagePath: string;
+  uid: string;
+  name: string;
+  url: string;
+  status: string;
+  index: number;
+};
 export type TPromptGuide = {
   id?: number;
   title?: string;
@@ -24,14 +32,10 @@ export type TPromptGuide = {
   updatedAt?: string | Date;
   generateType: TGenerateType;
   promptGuideImages?: string[];
-  images?: {
-    imagePath: string;
-    uid: string;
-    name: string;
-    url: string;
-    status: string;
-    index: number;
-  }[];
+  /** uid ของผลลัพธ์ตัวอย่าง — แสดงเป็น showcase ไม่ถูกแนบตอน Use Template */
+  promptGuideResults?: string[];
+  images?: TPromptGuideMedia[];
+  results?: TPromptGuideMedia[];
   model?:string
   promptGuideType?: TPromptType;
 };

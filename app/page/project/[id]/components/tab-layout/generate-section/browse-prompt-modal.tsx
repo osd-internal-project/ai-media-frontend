@@ -19,8 +19,12 @@ import { axiosCore } from "@/app/lib/axios/axios";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useRouter } from "next/navigation";
+import { isAudio, isVideo, mentionLabels } from "@/app/utils/prompt-guide-media";
 
 const { Title, Text, Paragraph } = Typography;
+
+/** omnihumen/dreamactor ใช้ช่องตายตัว ไม่มีการอ้าง @imageN ใน prompt */
+const MENTION_TYPES = new Set(["image", "video"]);
 
 interface Props {
   open: boolean;
@@ -31,13 +35,6 @@ interface Props {
   modalZIndex?: number;
 }
 
-function isAudio(url: string) {
-  return /\.(mp3|wav|ogg|aac|flac|m4a)(\?|$)/i.test(url);
-}
-
-function isVideo(url: string) {
-  return /\.(mp4|webm|mov|qt)(\?|$)/i.test(url);
-}
 
 function MediaThumb({
   url,
@@ -81,6 +78,60 @@ function MediaThumb({
         objectFit: "cover",
       }}
     />
+  );
+}
+
+/** ผลลัพธ์เต็มกรอบ + reference เป็น thumbnail เล็ก (เฉพาะแสดงผล — Use แนบแค่ reference) */
+function ResultPreview({ guide }: { guide: TPromptGuide }) {
+  const result = guide.results?.[0];
+  if (!result) return null;
+  const refs = guide.images ?? [];
+  const labels = MENTION_TYPES.has(guide.generateType)
+    ? mentionLabels(refs)
+    : [];
+  return (
+    <>
+      <MediaThumb url={result.url} alt={guide.title || "Result"} />
+      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent" />
+      <Tag
+        style={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          margin: 0,
+          background: "rgba(0, 0, 0, 0.55)",
+          color: "white",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          borderRadius: 6,
+          fontSize: 10,
+        }}
+      >
+        Result
+      </Tag>
+      {refs.length > 0 && (
+        <div className="absolute bottom-2 left-2 flex items-end gap-1.5">
+          <span
+            style={{ fontSize: 10, color: "rgba(255, 255, 255, 0.6)" }}
+            className="mr-0.5"
+          >
+            Reference
+          </span>
+          {refs.slice(0, 4).map((ref, i) => (
+            <div
+              key={ref.uid}
+              className="relative h-10 w-10 overflow-hidden rounded-md border border-white/25"
+            >
+              <MediaThumb url={ref.url} alt={labels[i] ?? ref.name} />
+              {labels[i] && (
+                <span className="absolute inset-x-0 bottom-0 bg-black/65 text-center text-[9px] leading-3 text-white">
+                  @{labels[i]}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -310,13 +361,15 @@ export default function BrowsePromptModal({
                     style={{
                       background: "rgba(0, 0, 0, 0.4)",
                       borderRadius: 12,
-                      aspectRatio: "3/2",
+                      aspectRatio: guide.results?.length ? "16/9" : "3/2",
                       position: "relative",
                       overflow: "hidden",
                       border: "1px solid rgba(255, 255, 255, 0.04)",
                     }}
                   >
-                    {guide.images && guide.images.length > 0 ? (
+                    {guide.results && guide.results.length > 0 ? (
+                      <ResultPreview guide={guide} />
+                    ) : guide.images && guide.images.length > 0 ? (
                       <>
                         {/* 1 image: Show full */}
                         {guide.images.length === 1 && (
