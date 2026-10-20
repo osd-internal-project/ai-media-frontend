@@ -132,6 +132,8 @@ export interface IGenerationSeriesPoint {
   omnihuman: number;
   dreamactor: number;
   audio: number;
+  /** NULL / unrecognised `type_generate` rows. */
+  other: number;
 }
 
 /** A single generation as shown in the Recent Generations panel. */
@@ -163,4 +165,49 @@ export interface IDashboardGeneratedPerMonthAndType {
   video: number;
   omnihuman: number;
   dreamactor: number;
+}
+/** One row of the paginated generation-logs endpoint. */
+export interface IGenerationLog extends IRecentGeneration {
+  status: string | null;
+  galleryId: string | null;
+  resolution: string | null;
+  ratio: string | null;
+}
+
+export interface IGenerationLogPage {
+  data: IGenerationLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Status filter for generation logs; `all` disables it. Server default is `success`. */
+export type GenerationLogStatus = "success" | "pending" | "failed" | "all";
+
+/** One generation with presigned media (core `GET /logs/detail/:logId`). */
+export interface IGenerationLogDetail {
+  id: string;
+  taskId: string | null;
+  /** Raw stored literal; use `type` for display. */
+  typeGenerate: string | null;
+  /** Canonical key, or null for NULL / unrecognised types. */
+  type: GenerationTypeKey | null;
+  status: string | null;
+  prompt: string;
+  usedCredit: number;
+  usedImage: number;
+  resolution: string | null;
+  ratio: string | null;
+  generateAudio: boolean | null;
+  generateConfig: unknown;
+  createdAt: string;
+  projectId: string;
+  projectName: string | null;
+  userId: string;
+  userFullname: string | null;
+  galleryId: string | null;
+  genneratedStatus: string | null;
+  resultUrl: string[];
+  thumbnailUrl: string | null;
+  referenceImages: string[];
 }

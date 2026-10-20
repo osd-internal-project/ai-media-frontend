@@ -2,27 +2,32 @@ import { IGenerationSeriesPoint } from "@/app/common/dashbaord";
 import React, { useMemo, useState } from "react";
 import useResponsive from "@/app/hooks/useResponsive";
 import {
-  GENERATION_TYPE_KEYS,
-  GENERATION_TYPE_LABEL,
-  type GenerationTypeKey,
+  GENERATION_SERIES_KEYS,
+  GENERATION_SERIES_LABEL,
+  type GenerationSeriesKey,
 } from "@/app/common/generation-type";
 
 /** Dash pattern per series, so overlapping lines stay distinguishable. */
-const STROKE_DASH: Readonly<Record<GenerationTypeKey, string | undefined>> = {
+const STROKE_DASH: Readonly<Record<GenerationSeriesKey, string | undefined>> = {
   image: undefined,
   video: undefined,
   omnihuman: "6 4",
   dreamactor: "2 4",
   audio: "8 3 2 3",
+  other: "1 3",
 };
+
+/** Most x-axis labels drawn before they start colliding; the rest are skipped. */
+const MAX_X_LABELS_DESKTOP = 12;
+const MAX_X_LABELS_MOBILE = 5;
 
 type GenerationTrendChartProps = {
   data: IGenerationSeriesPoint[];
   /** Which series to draw. Driven by the type multi-select in the filter bar. */
-  visibleTypes: GenerationTypeKey[];
+  visibleTypes: GenerationSeriesKey[];
   colors: {
-    /** Colour per generation type, shared with the legend so they cannot disagree. */
-    types: Record<GenerationTypeKey, string>;
+    /** Colour per series, shared with the legend so they cannot disagree. */
+    types: Record<GenerationSeriesKey, string>;
     axis: string;
     grid: string;
     tooltipBg: string;
@@ -41,6 +46,10 @@ const svgPoint = (point: Point) => `${point.x},${point.y}`;
 const smoothLinePath = (points: Point[]) => {
   if (points.length < 2) {
     return points.length ? `M${svgPoint(points[0])}` : "";
+  }
+  // A spline through two points is just a line; draw it straight.
+  if (points.length === 2) {
+    return `M${svgPoint(points[0])} L${svgPoint(points[1])}`;
   }
 
   let path = `M${svgPoint(points[0])}`;
@@ -90,7 +99,7 @@ export default function GenerationTrendChart({
   const { isMobile } = useResponsive();
 
   // Keep the canonical display order regardless of the order the user picked them in.
-  const activeTypes = GENERATION_TYPE_KEYS.filter((key) =>
+  const activeTypes = GENERATION_SERIES_KEYS.filter((key) =>
     visibleTypes.includes(key),
   );
 
@@ -110,59 +119,41 @@ export default function GenerationTrendChart({
   const chartHeight = height - padding.top - padding.bottom;
 
 
-  // Find the first index where any visible series has a non-zero value
-  const firstActiveIndex = data.findIndex((item) =>
-    activeTypes.some((key) => item[key] > 0),
-  );
-  // Show only from firstActiveIndex-2 (or 0 if not enough), and always start at 0 if firstActiveIndex is 0 or negative
-  const displayStartIndex = Math.max(0, firstActiveIndex > 2 ? firstActiveIndex - 2 : firstActiveIndex);
-  const displayData = data.slice(displayStartIndex);
+  // Every bucket is drawn: trimming leading empty buckets made a 3-month range show 2 points.
+  const displayData = data;
 
+  const allValues = displayData
+    .flatMap((item) => activeTypes.map((key) => item[key]))
+    .filter((value) => Number.isFinite(value));
 
-  const allValues = displayData.flatMap((item) =>
-    activeTypes.map((key) => item[key]),
-  );
-
-  // ตรวจสอบว่ามีข้อมูลขยับหรือไม่ (มีค่า > 0)
   const hasActiveData = allValues.some((v) => v > 0);
 
-  let yMin = Math.min(...allValues);
-  let yMax = Math.max(...allValues);
+  // Counts and credits are never negative, so the axis always starts at 0.
+  const yMin = 0;
+  const dataMax = allValues.length ? Math.max(...allValues) : 0;
 
-  if (!isFinite(yMin)) yMin = 0;
-  if (!isFinite(yMax)) yMax = 1;
-
-  const yRange = Math.max(yMax - yMin, 10);
-
-  yMin = Math.max(0, yMin - yRange * 0.15);
-  yMax = yMax + yRange * 0.18;
-
-  const niceTicks = (min: number, max: number, count: number) => {
-    if (max === min) return [min];
-
-    const rawStep = (max - min) / (count - 1);
+  const niceTicks = (max: number, count: number) => {
+    const rawStep = Math.max(max, 1) / (count - 1);
     const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const normalized = rawStep / magnitude;
 
     let step = magnitude;
-
     if (normalized > 5) step = 10 * magnitude;
     else if (normalized > 2) step = 5 * magnitude;
     else if (normalized > 1) step = 2 * magnitude;
+    // Generation counts are whole numbers; a 0.5 tick would be meaningless.
+    step = Math.max(1, step);
 
-    const ticks: number[] = [];
-    const start = Math.floor(min / step) * step;
-    const end = Math.ceil(max / step) * step;
-
-    for (let value = start; value <= end; value += step) {
-      ticks.push(value);
+    const ticks: number[] = [0];
+    while (ticks[ticks.length - 1] < max || ticks.length < 2) {
+      ticks.push(ticks[ticks.length - 1] + step);
     }
-
     return ticks;
   };
 
-
-  const yTicks = niceTicks(yMin, yMax, 5);
+  const yTicks = niceTicks(dataMax, 5);
+  // Top tick is always >= the largest value, so no point can sit above the axis.
+  const yMax = yTicks[yTicks.length - 1];
 
   const xDomain = Math.max(displayData.length - 1, 1);
   const sidePad = 10;
@@ -185,8 +176,10 @@ export default function GenerationTrendChart({
   const hoverItem = hoveredIndex !== null ? displayData[hoveredIndex] : null;
   const hoverX = hoveredIndex !== null ? toX(hoveredIndex) : 0;
 
-  // Find the first label index for x-axis (relative to displayData)
-  const firstLabelIndex = 0; // always the first of displayData
+  const maxLabels = isMobile ? MAX_X_LABELS_MOBILE : MAX_X_LABELS_DESKTOP;
+  const labelEvery = Math.max(1, Math.ceil(displayData.length / maxLabels));
+  const showLabel = (index: number) =>
+    index % labelEvery === 0 || index === displayData.length - 1;
 
 
   const tooltipX = useMemo(() => {
@@ -200,7 +193,7 @@ export default function GenerationTrendChart({
   const series = activeTypes.map((key) => ({
     key,
     color: colors.types[key],
-    label: GENERATION_TYPE_LABEL[key],
+    label: GENERATION_SERIES_LABEL[key],
     values: displayData.map((item) => item[key]),
     points: displayData.map((item, index) => ({
       x: toX(index),
@@ -244,6 +237,15 @@ export default function GenerationTrendChart({
             <stop offset="100%" stopColor={item.color} stopOpacity="0" />
           </linearGradient>
         ))}
+
+        <clipPath id="trendPlotArea">
+          <rect
+            x={padding.left}
+            y={padding.top - 8}
+            width={chartWidth}
+            height={chartHeight + 16}
+          />
+        </clipPath>
 
         <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow
@@ -291,13 +293,12 @@ export default function GenerationTrendChart({
       />
 
 
-      {/* แสดงเส้นโค้งและ area เฉพาะ series ที่มีค่าขยับ (ไม่ใช่ [0,0,0,...]) */}
       {hasActiveData && (
-        <>
+        <g clipPath="url(#trendPlotArea)">
           {series.map((item) => {
             // ไม่วาดถ้าค่าทุกจุดเป็น 0 หรือค่าทุกจุดเท่ากันหมด (กรณี flat line)
-            const allEqual = item.values.every((v) => v === item.values[0]);
-            if (allEqual) return null;
+            // An all-zero series would sit on the baseline and hide the axis line.
+            if (item.values.every((v) => v === 0)) return null;
             return (
               <path
                 key={`${item.key}-area`}
@@ -307,8 +308,8 @@ export default function GenerationTrendChart({
             );
           })}
           {series.map((item) => {
-            const allEqual = item.values.every((v) => v === item.values[0]);
-            if (allEqual) return null;
+            // An all-zero series would sit on the baseline and hide the axis line.
+            if (item.values.every((v) => v === 0)) return null;
             return (
               <path
                 key={`${item.key}-line`}
@@ -323,7 +324,7 @@ export default function GenerationTrendChart({
               />
             );
           })}
-        </>
+        </g>
       )}
 
      
@@ -341,17 +342,18 @@ export default function GenerationTrendChart({
             onTouchStart={() => setHoveredIndex(index)}
             onTouchEnd={() => setHoveredIndex(null)}
           />
-          <text
-            x={toX(index)}
-            y={height - (isMobile ? 10 : 18)}
-            textAnchor="middle"
-            fontSize={isMobile ? 9 : 11}
-            fill={colors.axis}
-            opacity={0.85}
-            fontWeight={index === firstLabelIndex ? 700 : 400}
-          >
-            {item.bucket}
-          </text>
+          {showLabel(index) && (
+            <text
+              x={toX(index)}
+              y={height - (isMobile ? 10 : 18)}
+              textAnchor="middle"
+              fontSize={isMobile ? 9 : 11}
+              fill={colors.axis}
+              opacity={0.85}
+            >
+              {item.bucket}
+            </text>
+          )}
         </g>
       ))}
 

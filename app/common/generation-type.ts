@@ -76,3 +76,23 @@ export const isGenerationTypeKey = (
  */
 export const generationTypeLabel = (value: unknown): string =>
   isGenerationTypeKey(value) ? GENERATION_TYPE_LABEL[value] : "Unknown";
+
+/**
+ * Chart series keys: every type plus `other`, the server's bucket for NULL / unrecognised
+ * `type_generate` rows. Display-only — `other` is never a filter option.
+ */
+export const GENERATION_SERIES_KEYS = [...GENERATION_TYPE_KEYS, "other"] as const;
+
+export type GenerationSeriesKey = (typeof GENERATION_SERIES_KEYS)[number];
+
+export const GENERATION_SERIES_LABEL: Readonly<
+  Record<GenerationSeriesKey, string>
+> = { ...GENERATION_TYPE_LABEL, other: "Other" };
+
+/** Series colours: the type colours plus a muted one for `other`. */
+export const generationSeriesColors = (
+  token: GlobalToken,
+): Record<GenerationSeriesKey, string> => ({
+  ...generationTypeColors(token),
+  other: token.colorTextQuaternary,
+});

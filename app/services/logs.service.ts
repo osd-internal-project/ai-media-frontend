@@ -1,8 +1,20 @@
 import { AxiosInstance } from "axios";
+import type { IGenerationLogDetail } from "../common/dashbaord";
 
 const LogsServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/logs";
   return {
+    // Rejects on failure so the log drawer can show a retry instead of an empty result.
+    findDetail: async (
+      logId: string,
+      organizationId: string,
+    ): Promise<IGenerationLogDetail> => {
+      const res = await axiosInstance.get<IGenerationLogDetail>(
+        `${baseUrl}/detail/${logId}`,
+        { params: { organizationId } },
+      );
+      return res.data;
+    },
     findAll: async () => {
       return await axiosInstance
         .get(`${baseUrl}`)

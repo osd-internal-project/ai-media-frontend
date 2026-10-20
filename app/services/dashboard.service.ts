@@ -9,7 +9,10 @@ import {
   IDashboardUser,
   IGenerationSeriesPoint,
   IRecentGeneration,
+  IGenerationLogPage,
+  GenerationLogStatus,
 } from "../common/dashbaord";
+import type { GenerationSeriesKey } from "../common/generation-type";
 
 /** Query filter accepted by every Overview dashboard endpoint. */
 export interface IDashboardFilterParams {
@@ -43,11 +46,40 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
       organizationId: string,
       params: IDashboardFilterParams,
     ): Promise<IGenerationSeriesPoint[]> => {
-      const res = await axiosInstance.get(
+      const res = await axiosInstance.get<Record<string, unknown>[]>(
         `${baseUrl}/generation-series/${organizationId}`,
         { params },
       );
-      return res.data ?? [];
+      // Coerce every series to a number: a key missing from an older report build used to
+      // reach the chart as undefined, turn its y-scale into NaN and push lines off the axis.
+      return (res.data ?? []).map((row) => {
+        const num = (key: GenerationSeriesKey) => Number(row[key]) || 0;
+        return {
+          bucket: String(row.bucket ?? ""),
+          image: num("image"),
+          video: num("video"),
+          omnihuman: num("omnihuman"),
+          dreamactor: num("dreamactor"),
+          audio: num("audio"),
+          other: num("other"),
+        };
+      });
+    },
+    findGenerationLogs: async (
+      organizationId: string,
+      params: IDashboardFilterParams & {
+        userId?: string;
+        type?: string;
+        status?: GenerationLogStatus;
+        page?: number;
+        pageSize?: number;
+      },
+    ): Promise<IGenerationLogPage> => {
+      const res = await axiosInstance.get<IGenerationLogPage>(
+        `${baseUrl}/generation-logs/${organizationId}`,
+        { params },
+      );
+      return res.data;
     },
     findRecentGenerations: async (
       organizationId: string,

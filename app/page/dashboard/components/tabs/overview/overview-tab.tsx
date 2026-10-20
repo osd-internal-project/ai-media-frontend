@@ -4,13 +4,14 @@ import { BarChart3, FolderOpen, PieChart, TrendingUp } from "lucide-react";
 import type { OverviewTabProps } from "../types";
 import GenerationTrendChart from "./generation-trend-chart";
 import ByTypeChart from "./by-type-chart";
-import RecentGenerations from "./recent-generations";
+import GenerationLogsPanel from "../../logs/generation-logs-panel";
 import OverviewEmptyState from "./overview-empty-state";
 import OverviewFilters from "./overview-filters";
 import {
-  GENERATION_TYPE_KEYS,
-  GENERATION_TYPE_LABEL,
-  generationTypeColors,
+  GENERATION_SERIES_KEYS,
+  GENERATION_SERIES_LABEL,
+  generationSeriesColors,
+  type GenerationSeriesKey,
 } from "@/app/common/generation-type";
 import { formatNumber } from "@/app/utils/format";
 
@@ -26,12 +27,16 @@ export default function OverviewTab({
   generationCount,
   generationSeries,
   generationByType,
-  recentGenerations,
+  organizationId,
+  logScope,
   onCreateProject,
-  onStartGenerating,
 }: OverviewTabProps) {
   const { token } = theme.useToken();
-  const typeColors = generationTypeColors(token);
+  const typeColors = generationSeriesColors(token);
+  // "Other" has no filter option, so it shows only when no type filter is applied.
+  const visibleSeries: GenerationSeriesKey[] = filters.types.length
+    ? visibleTypes
+    : [...visibleTypes, "other"];
   const metricLabel = filters.metric === "credit" ? "credits" : "generations";
 
   // Distinguish "nothing happened" from "things happened but cost nothing", so the charts
@@ -141,7 +146,7 @@ export default function OverviewTab({
               <Space direction="vertical" style={{ width: "100%" }} size={12}>
                 <GenerationTrendChart
                   data={generationSeries}
-                  visibleTypes={visibleTypes}
+                  visibleTypes={visibleSeries}
                   colors={{
                     types: typeColors,
                     axis: token.colorTextSecondary,
@@ -152,8 +157,8 @@ export default function OverviewTab({
                   }}
                 />
                 <Space size={14} wrap>
-                  {GENERATION_TYPE_KEYS.map((key) => {
-                    const isVisible = visibleTypes.includes(key);
+                  {GENERATION_SERIES_KEYS.map((key) => {
+                    const isVisible = visibleSeries.includes(key);
                     return (
                       <Space size={6} key={key}>
                         <span
@@ -171,7 +176,7 @@ export default function OverviewTab({
                           delete={!isVisible}
                           style={{ fontSize: 12 }}
                         >
-                          {GENERATION_TYPE_LABEL[key]}
+                          {GENERATION_SERIES_LABEL[key]}
                         </Typography.Text>
                       </Space>
                     );
@@ -245,11 +250,7 @@ export default function OverviewTab({
         </Col>
 
         <Col xs={24} lg={24} className="flex">
-          <RecentGenerations
-            items={recentGenerations}
-            loading={loading}
-            onStartGenerating={onStartGenerating}
-          />
+          <GenerationLogsPanel organizationId={organizationId} scope={logScope} />
         </Col>
       </Row>
     </Space>

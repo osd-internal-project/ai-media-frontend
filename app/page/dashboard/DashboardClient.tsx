@@ -11,6 +11,7 @@ import {
   Avatar,
   Button,
   Col,
+  Drawer,
   Form,
   InputNumber,
   Layout,
@@ -32,12 +33,11 @@ import { useSession } from "next-auth/react";
 import type {
   IDashboardOverviewSummary,
   IGenerationSeriesPoint,
-  IRecentGeneration,
 } from "@/app/common/dashbaord";
 import {
-  GENERATION_TYPE_KEYS,
-  GENERATION_TYPE_LABEL,
-  generationTypeColors,
+  GENERATION_SERIES_KEYS,
+  GENERATION_SERIES_LABEL,
+  generationSeriesColors,
 } from "@/app/common/generation-type";
 import ProjectService from "@/app/services/project.service";
 import type { IProject } from "@/app/common/project.type";
@@ -52,6 +52,7 @@ import ProjectsTab from "./components/tabs/project/project-tab";
 import DashboardCustomTab from "./components/customtab";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import RedeemCouponModal from "./components/redeem-coupon-modal";
+import GenerationLogsPanel from "./components/logs/generation-logs-panel";
 import CouponService from "@/app/services/coupon.service";
 import CreditBalanceServices from "@/app/services/credit-balance.service";
 import { ICouponCodeUsage } from "@/app/common/coupon.type";
@@ -102,6 +103,12 @@ const DashboardClient: FC = () => {
   );
   const [quotaCredit, setQuotaCredit] = useState<number>(0);
   const [quotaImage, setQuotaImage] = useState<number>(0);
+  /** Project or user whose logs are open in the side drawer. */
+  const [logsTarget, setLogsTarget] = useState<{
+    kind: "project" | "user";
+    id: string;
+    name: string;
+  } | null>(null);
   const [quotaOverrides, setQuotaOverrides] = useState<
     Record<string, QuotaOverride>
   >({});
@@ -111,9 +118,6 @@ const DashboardClient: FC = () => {
     useState<IDashboardOverviewSummary>();
   const [generationSeries, setGenerationSeries] = useState<
     IGenerationSeriesPoint[]
-  >([]);
-  const [recentGenerations, setRecentGenerations] = useState<
-    IRecentGeneration[]
   >([]);
 
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -126,10 +130,10 @@ const DashboardClient: FC = () => {
   }>({ data: [], total: 0 });
 
   /**
-   * Query parameters shared by all three Overview requests.
+   * Query parameters shared by the Overview requests.
    *
-   * Passing one object to every endpoint is what keeps the stat cards, the trend chart and
-   * the recent-generations list describing the same set of generations.
+   * Passing one object to every endpoint (and the same range to the logs panel) is what keeps
+   * the stat cards, the trend chart and the generation logs describing the same generations.
    */
   const queryParams = useMemo<IDashboardFilterParams>(
     () => ({
@@ -137,9 +141,17 @@ const DashboardClient: FC = () => {
       to: dateRange.to,
       projectId: filters.projectId ?? undefined,
       metric: filters.metric,
-      limit: 10,
     }),
     [dateRange.from, dateRange.to, filters.projectId, filters.metric],
+  );
+
+  const logScope = useMemo(
+    () => ({
+      from: dateRange.from,
+      to: dateRange.to,
+      projectId: filters.projectId ?? undefined,
+    }),
+    [dateRange.from, dateRange.to, filters.projectId],
   );
 
   const fetchRedeemCoupon = useCallback(async () => {
@@ -166,7 +178,7 @@ const DashboardClient: FC = () => {
       try {
         // Projects come from the core service and are the source for the Projects/Users tab
         // badges AND the matching Overview stat cards, so the two cannot drift apart.
-        const [resProjects, summary, series, recent] = await Promise.all([
+        const [resProjects, summary, series] = await Promise.all([
           projectServices.findByOrganizationId(
             organizationId,
             session.user.id,
@@ -174,14 +186,12 @@ const DashboardClient: FC = () => {
           ),
           dashboardServices.findOverviewSummary(organizationId, queryParams),
           dashboardServices.findGenerationSeries(organizationId, queryParams),
-          dashboardServices.findRecentGenerations(organizationId, queryParams),
         ]);
 
         if (cancelled) return;
         setProjects(resProjects || []);
         setOverviewSummary(summary);
         setGenerationSeries(series);
-        setRecentGenerations(recent);
       } catch (error: unknown) {
         if (cancelled) return;
         // Surfaced instead of swallowed: a failing report service used to be
@@ -318,9 +328,9 @@ const DashboardClient: FC = () => {
    * whenever that month was absent from the response.
    */
   const generationByType = useMemo<ByTypeItem[]>(() => {
-    const colors = generationTypeColors(token);
-    return GENERATION_TYPE_KEYS.map((key) => ({
-      name: GENERATION_TYPE_LABEL[key],
+    const colors = generationSeriesColors(token);
+    return GENERATION_SERIES_KEYS.map((key) => ({
+      name: GENERATION_SERIES_LABEL[key],
       value: generationSeries.reduce(
         (sum, point) => sum + Number(point[key] || 0),
         0,
@@ -444,11 +454,16 @@ const DashboardClient: FC = () => {
     {
       title: "Action",
       key: "action",
-      // render: (_: unknown, record: DashboardUserRow) => (
-      //   <Button size="small" onClick={() => openQuotaModal(record)}>
-      //     Manage Quota
-      //   </Button>
-      // ),
+      render: (_: unknown, record: DashboardUserRow) => (
+        <Button
+          size="small"
+          onClick={() =>
+            setLogsTarget({ kind: "user", id: record.userId, name: record.fullname })
+          }
+        >
+          View logs
+        </Button>
+      ),
     },
   ];
 
@@ -523,6 +538,20 @@ const DashboardClient: FC = () => {
           <Tag>Inactive</Tag>
         ),
     },
+    {
+      title: "Action",
+      key: "action",
+      render: (_: unknown, record: IProject) => (
+        <Button
+          size="small"
+          onClick={() =>
+            setLogsTarget({ kind: "project", id: record.id, name: record.name })
+          }
+        >
+          View logs
+        </Button>
+      ),
+    },
   ];
 
   const activeProjectCount = useMemo(
@@ -575,13 +604,13 @@ const DashboardClient: FC = () => {
     {
       label: "Generations",
       value: formatCompactNumber(overviewSummary?.generationCount ?? 0),
-      sub: `${formatCompactNumber(overviewSummary?.rangeUsedImage ?? 0)} images in range`,
+      sub: `${formatCompactNumber(overviewSummary?.rangeUsedCredit ?? 0)} credits used in range`,
       icon: <Sparkles size={16} color={token.colorSuccess} />,
       iconBg: token.colorSuccessBg,
       iconColor: token.colorSuccess,
     },
     {
-      label: "Token Usage",
+      label: "Credit Usage",
       value: `${formatCompactNumber(quotaUsed)} / ${formatCompactNumber(quotaTotal)}`,
       sub:
         quotaTotal > 0
@@ -749,9 +778,9 @@ const DashboardClient: FC = () => {
               generationCount={overviewSummary?.generationCount ?? 0}
               generationSeries={generationSeries}
               generationByType={generationByType}
-              recentGenerations={recentGenerations}
+              organizationId={organizationId ?? undefined}
+              logScope={logScope}
               onCreateProject={() => router.push("/page/project")}
-              onStartGenerating={() => router.push("/page/project")}
             />
           )}
           {filters.tab === "users" && (
@@ -860,6 +889,39 @@ const DashboardClient: FC = () => {
           </Space>
         )}
       </Modal>
+      <Drawer
+        open={Boolean(logsTarget)}
+        onClose={() => setLogsTarget(null)}
+        width="min(880px, 100vw)"
+        destroyOnClose
+        title={
+          logsTarget ? (
+            <div>
+              <div>{logsTarget.name}</div>
+              <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
+                Generation logs · {dayjs(dateRange.from).format("D MMM YYYY")} –{" "}
+                {dayjs(dateRange.to).format("D MMM YYYY")}
+              </Typography.Text>
+            </div>
+          ) : null
+        }
+      >
+        {logsTarget && (
+          <GenerationLogsPanel
+            bare
+            organizationId={organizationId ?? undefined}
+            scope={{
+              from: dateRange.from,
+              to: dateRange.to,
+              ...(logsTarget.kind === "project"
+                ? { projectId: logsTarget.id }
+                : { userId: logsTarget.id }),
+            }}
+            hideProject={logsTarget.kind === "project"}
+            hideUser={logsTarget.kind === "user"}
+          />
+        )}
+      </Drawer>
       <RedeemCouponModal
         onTopCreditBalance={onTopCreditBalance}
         couponCodeUsage={couponCodeUsage}

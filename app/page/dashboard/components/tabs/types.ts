@@ -2,8 +2,8 @@ import {
   IDashboardCreditPerMonthAndType,
   IDashboardGeneratedPerMonthAndType,
   IGenerationSeriesPoint,
-  IRecentGeneration,
 } from "@/app/common/dashbaord";
+import type { GenerationLogScope } from "../logs/use-generation-logs";
 import type { GenerationTypeKey } from "@/app/common/generation-type";
 import type { IProject } from "@/app/common/project.type";
 import type { DashboardFilters } from "../../hooks/use-dashboard-filters";
@@ -96,9 +96,10 @@ export type OverviewTabProps = {
   generationSeries: IGenerationSeriesPoint[];
   /** Donut slices, summed from `generationSeries` so the two can never disagree. */
   generationByType: ByTypeItem[];
-  recentGenerations: IRecentGeneration[];
+  organizationId: string | undefined;
+  /** Same range / project scope as the cards, so the log total matches "Generations". */
+  logScope: GenerationLogScope;
   onCreateProject?: () => void;
-  onStartGenerating?: () => void;
 };
 
 export type ByTypeItem = {
