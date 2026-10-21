@@ -44,16 +44,13 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return;
         });
     },
-    update: async (id: string, value: Partial<IProject>) => {
-      return await axiosInstance
-        .patch(`${baseUrl}/${id}`, value)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+    // rethrows so callers can show the backend's validation message
+    update: async (
+      id: string,
+      value: Partial<IProject> & { userId?: string },
+    ) => {
+      const res = await axiosInstance.patch(`${baseUrl}/${id}`, value);
+      return res.data;
     },
     deleteProject: async (id: string) => {
       return await axiosInstance

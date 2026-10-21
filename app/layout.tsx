@@ -1,5 +1,6 @@
+import { cookies } from "next/headers";
 import SessionProvider from "./components/SessionProvider";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider, type ThemeMode } from "./components/ThemeProvider";
 import "./globals.css";
 export const metadata = {
   title: "AI CAVE",
@@ -10,15 +11,19 @@ export const metadata = {
   // },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read on the server so the first paint already uses the saved theme.
+  const initialMode: ThemeMode =
+    (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
+
   return (
-    <html lang="en">
+    <html lang="en" className={`theme-${initialMode}`}>
       <body>
-        <ThemeProvider>
+        <ThemeProvider initialMode={initialMode}>
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>
       </body>

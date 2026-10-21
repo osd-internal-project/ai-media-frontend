@@ -1,5 +1,7 @@
 import React, { FC, useMemo } from "react";
 import { Flex, Space, Typography, Tag, Button, theme } from "antd";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getCanvasBg } from "@/app/theme/themeConfig";
 
 interface Message {
   imageUrls?: { id: string }[];
@@ -12,6 +14,7 @@ interface ResultHeaderProps {
 
 const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
   const { token } = theme.useToken();
+  const { mode } = useThemeMode();
   const totalImages = useMemo(() => {
     return messages.reduce(
       (acc, m) => acc + (m.imageUrls?.length || 0),
@@ -26,9 +29,9 @@ const ResultHeader: FC<ResultHeaderProps> = ({ messages, onClear }) => {
         top: 0,
         zIndex: 20,
         padding: "8px 12px",
-        background: token.colorBgBase,
+        background: getCanvasBg(mode),
         // ปิดช่อง padding ของ scroll container เหนือ header ไม่ให้เห็นรูปเลื่อนผ่าน
-        boxShadow: `0 -16px 0 ${token.colorBgBase}`,
+        boxShadow: `0 -16px 0 ${getCanvasBg(mode)}`,
       }}
     >
       <Flex justify="space-between" align="center">

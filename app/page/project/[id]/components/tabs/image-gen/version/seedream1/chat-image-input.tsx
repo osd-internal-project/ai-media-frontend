@@ -280,7 +280,7 @@ export default function ChatImageInput({
           <PromptSection
             generateType="image"
             semantic={semantic}
-            placeholder="Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."
+            placeholder={"Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."}
             required={true}
             projectId={projectId}
             maxLength={PROMPT_MAX_LENGTH}

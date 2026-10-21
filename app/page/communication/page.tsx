@@ -21,7 +21,7 @@ import ProjectService from "@/app/services/project.service";
 import { CommunityPostDetail } from "@/app/common/community-post.type";
 import { useOrgIdentity } from "@/app/hooks/useOrgIdentity";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import PostCardGrid from "./components/post-card-grid";
 import ApprovalQueue from "./components/approval-queue";
@@ -154,7 +154,7 @@ const CommunicationPage: React.FC = () => {
   }
 
   return (
-    <Flex vertical style={{ height: "100%", background: semantic.colorBgBase }}>
+    <Flex vertical style={{ height: "100%", background: getCanvasBg(mode) }}>
       <PageSubHeader
         title="Communication"
         subtitle="Publish work from your projects to the public AI CAVE community page"

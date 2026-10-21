@@ -136,10 +136,11 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
 
                       <Typography.Text
                         style={{
+                          // Text tokens are light-only; dark falls back to the seed colour.
                           color:
                             project.status === "deleted"
-                              ? semantic.colorError
-                              : semantic.colorSuccess,
+                              ? (semantic.colorErrorText ?? semantic.colorError)
+                              : (semantic.colorSuccessText ?? semantic.colorSuccess),
                           fontWeight: 600,
                           fontSize: isMobile ? 11 : 12,
                           lineHeight: 1.15,
@@ -152,7 +153,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                               ? semantic.colorError
                               : semantic.colorSuccess
                           }
-                          style={{ marginLeft: 8 }}
+                          style={{ marginLeft: 8, marginRight: 4 }}
                         />
                         {project.status === "deleted" ? "Deleted" : "Active"}
                       </Typography.Text>

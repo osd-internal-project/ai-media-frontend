@@ -32,13 +32,17 @@ export const aiCaveColors = {
   neutral200: "#F2F4F5",
   neutral150: "#FAFBFD",
   neutral100: "#FFFFFF",
-  // Light theme: cool primary-tinted canvas so white surfaces stand off it without borders.
-  lightCanvas: "#F4F4F9",
-  lightRaised: "#ECECF5",
-  lightBorder: "#E3E3EE",
-  lightInk: "#1C1D2B",
-  lightInkSecondary: "#5E6275",
-  lightInkTertiary: "#8A8EA3",
+  // Light theme mirrors dark's slate ramp (hue ~212°); no #FFFFFF surface, to cut glare.
+  lightCanvas: "#E4E7EB",
+  lightSurface: "#F0F2F4",
+  lightField: "#F8F9FA",
+  lightRaised: "#E4E7EB",
+  lightBorder: "#C2C9D2",
+  lightControlBorder: "#7D8A9B",
+  lightInk: "#191C20",
+  lightInkSecondary: "#55606E",
+  lightInkTertiary: "#626D7D",
+  lightPrimaryText: "#544FC0",
 };
 
 const brand = aiCaveColors;
@@ -50,10 +54,14 @@ const getSemantic = (mode: "light" | "dark") => {
   const isDark = mode === "dark";
 
   return {
-    bgBase: isDark ? brand.neutral900 : brand.neutral100,
-    bgContainer: isDark ? brand.neutral800 : brand.neutral100,
+    bgBase: isDark ? brand.neutral900 : brand.lightSurface,
+    bgContainer: isDark ? brand.neutral800 : brand.lightSurface,
     bgElevated: isDark ? brand.neutral700 : brand.lightRaised,
-    fieldBg: isDark ? brand.neutral700 : brand.neutral100,
+    fieldBg: isDark ? brand.neutral700 : brand.lightField,
+    // Popovers/modals sit above cards, so light lifts them to the field tone.
+    bgOverlay: isDark ? brand.neutral800 : brand.lightField,
+    controlBorder: isDark ? brand.neutral600 : brand.lightControlBorder,
+    primaryText: isDark ? brand.primary : brand.lightPrimaryText,
     primaryLight: isDark ? brand.primaryDark : brand.primaryLight,
     colorBgTextActive: isDark ? brand.neutral700 : brand.neutral300,
     textBase: isDark ? brand.neutral200 : brand.lightInk,
@@ -101,12 +109,22 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
         ? {}
         : {
             colorBgLayout: brand.lightCanvas,
+            colorBgElevated: brand.lightField,
             colorTextTertiary: brand.lightInkTertiary,
             colorTextPlaceholder: brand.lightInkTertiary,
             colorBorderSecondary: brand.lightBorder,
             // Neutral meter track: a primary-tinted track read as "full" at 0%.
-            colorFillSecondary: brand.lightRaised,
-            boxShadowTertiary: "0 1px 2px rgba(28, 29, 43, 0.06)",
+            colorFillSecondary: brand.neutral350,
+            boxShadowTertiary: "0 1px 2px rgba(25, 28, 32, 0.06)",
+            // #6F6ADE is 4.1:1 on the slate surface; links/active text need ≥4.5.
+            colorLink: brand.lightPrimaryText,
+            colorPrimaryText: brand.lightPrimaryText,
+            // Seed status colours read under 4.5:1 as small text.
+            colorSuccessText: "#15703A",
+            colorErrorText: "#B42318",
+            colorWarningText: "#9A4A0B",
+            // Derived info text is the mint seed (#0FEAB6), unreadable on slate.
+            colorInfoText: "#08705C",
           }),
 
       borderRadius: 10,
@@ -129,21 +147,21 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
 
       Input: {
         colorBgContainer: semantic.fieldBg,
-        colorBorder: semantic.border,
+        colorBorder: semantic.controlBorder,
         activeBorderColor: semantic.primary,
         hoverBorderColor: semantic.primary,
       },
 
       InputNumber: {
         colorBgContainer: semantic.fieldBg,
-        colorBorder: semantic.border,
+        colorBorder: semantic.controlBorder,
         activeBorderColor: semantic.primary,
         hoverBorderColor: semantic.primary,
       },
 
       Select: {
         colorBgContainer: semantic.fieldBg,
-        colorBorder: semantic.border,
+        colorBorder: semantic.controlBorder,
         activeBorderColor: semantic.primary,
         hoverBorderColor: semantic.primary,
       },
@@ -166,16 +184,16 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
       },
 
       Modal: {
-        contentBg: semantic.bgContainer,
+        contentBg: semantic.bgOverlay,
         headerBg: "transparent",
       },
 
       Drawer: {
-        colorBgElevated: semantic.bgContainer,
+        colorBgElevated: semantic.bgOverlay,
       },
 
       Tabs: {
-        itemSelectedColor: semantic.primary,
+        itemSelectedColor: semantic.primaryText,
         inkBarColor: semantic.primary,
       },
 
@@ -190,7 +208,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
         dotActiveBorderColor: semantic.primary,
       },
 
-      ...(isDark ? {} : { Progress: { remainingColor: brand.lightRaised } }),
+      ...(isDark ? {} : { Progress: { remainingColor: brand.neutral350 } }),
 
       Segmented: {
         trackBg: semantic.fieldBg,
@@ -201,3 +219,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
     
   };
 };
+
+/** Page canvas behind white panels; dark keeps its previous `colorBgBase`. */
+export const getCanvasBg = (mode: "light" | "dark") =>
+  mode === "dark" ? brand.neutral900 : brand.lightCanvas;

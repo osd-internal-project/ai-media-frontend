@@ -16,7 +16,7 @@ import GenerateServices from "@/app/services/generate.service";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import ResultHeader from "../video-gen/shared/result-header";
@@ -695,7 +695,7 @@ const ChatGenerateAudio: FC<Props> = ({
   return (
     <Flex
       vertical
-      style={{ height: "100%", minHeight: 0, background: semantic.colorBgBase }}
+      style={{ height: "100%", minHeight: 0, background: getCanvasBg(mode) }}
     >
       {contextHolder}
       {contextHolderNoti}

@@ -76,8 +76,8 @@ const HeaderGenerateImagePage: FC<props> = ({
             borderRadius: 999,
             color:
               (getProject?.status || "").toLowerCase() === "deleted"
-                ? semantic.colorError
-                : semantic.colorSuccess,
+                ? (semantic.colorErrorText ?? semantic.colorError)
+                : (semantic.colorSuccessText ?? semantic.colorSuccess),
             backgroundColor: semantic.colorBgTextActive,
             fontWeight: 600,
             fontSize: isMobile ? 11 : 12,

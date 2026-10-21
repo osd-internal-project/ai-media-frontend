@@ -360,7 +360,7 @@ export default function ChatOmnihumenInput({
           <PromptSection
             generateType="omnihumen"
             semantic={semantic}
-            placeholder="Describe what you want to human video...\n\nBe specific about style, lighting, mood, and details for best results."
+            placeholder={"Describe what you want to human video...\n\nBe specific about style, lighting, mood, and details for best results."}
             rows={5}
             maxLength={2000}
             required={false}

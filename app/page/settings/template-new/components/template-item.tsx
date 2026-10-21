@@ -28,6 +28,10 @@ const getTypeBadgeStyle = (
 		colorSuccess?: string;
 		colorWarning?: string;
 		colorInfo?: string;
+		colorPrimaryText?: string;
+		colorSuccessText?: string;
+		colorWarningText?: string;
+		colorInfoText?: string;
 	},
 ) => {
 	const primary = semantic.colorPrimary || "#1677ff";
@@ -35,9 +39,10 @@ const getTypeBadgeStyle = (
 	const warning = semantic.colorWarning || "#d46b08";
 	const info = semantic.colorInfo || "#1677ff";
 
+	// Text tokens are light-only (seed hues fail 4.5:1 there); dark falls back to the seed.
 	if (type === "video") {
 		return {
-			color: primary,
+			color: semantic.colorPrimaryText ?? primary,
 			background: `${primary}1A`,
 			borderColor: `${primary}33`,
 		};
@@ -45,7 +50,7 @@ const getTypeBadgeStyle = (
 
 	if (type === "omnihumen") {
 		return {
-			color: success,
+			color: semantic.colorSuccessText ?? success,
 			background: `${success}1A`,
 			borderColor: `${success}33`,
 		};
@@ -53,14 +58,14 @@ const getTypeBadgeStyle = (
 
 	if (type === "dreamactor") {
 		return {
-			color: warning,
+			color: semantic.colorWarningText ?? warning,
 			background: `${warning}1A`,
 			borderColor: `${warning}33`,
 		};
 	}
 
 	return {
-		color: info,
+		color: semantic.colorInfoText ?? info,
 		background: `${info}1A`,
 		borderColor: `${info}33`,
 	};
@@ -162,7 +167,6 @@ const TemplateItem: FC<TemplateItemProps> = ({
 						<Space wrap>
 							{canManage && (
 								<Button
-									type="primary"
 									size={isMobile ? "small" : "middle"}
 									icon={<EditOutlined />}
 									onClick={onEdit}
@@ -187,7 +191,7 @@ const TemplateItem: FC<TemplateItemProps> = ({
 									marginInlineEnd: 0,
 									borderColor: semantic.colorPrimaryBorder,
 									background: semantic.colorPrimaryBg,
-									color: semantic.colorPrimary,
+									color: semantic.colorPrimaryText ?? semantic.colorPrimary,
 								}}
 							>
 								Use

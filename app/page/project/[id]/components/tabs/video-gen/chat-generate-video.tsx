@@ -28,7 +28,7 @@ import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import VideoResultItem from "./shared/result-item";
 import ResultHeader from "./shared/result-header";
@@ -1296,7 +1296,7 @@ const ChatGenerateVideo: FC<Props> = ({
   return (
     <Flex
       vertical
-      style={{ height: "100%", minHeight: 0, background: semantic.colorBgBase }}
+      style={{ height: "100%", minHeight: 0, background: getCanvasBg(mode) }}
     >
       {contextHolder}
       {contextHolderNoti}

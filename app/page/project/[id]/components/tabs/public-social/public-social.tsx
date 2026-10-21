@@ -21,7 +21,7 @@ import {
   SocialAccount,
 } from "@/app/common/activity-share.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import { usePublicSocial } from "./usePublicSocial";
 import ShareTaskList from "./share-task-list";
 import ApprovalQueue from "./approval-queue";
@@ -173,7 +173,7 @@ const PublicSocial: React.FC<PublicSocialProps> = ({
   return (
     <div
       className="h-full overflow-auto"
-      style={{ background: semantic.colorBgBase, padding: 16 }}
+      style={{ background: getCanvasBg(mode), padding: 16 }}
     >
       <Flex justify="space-between" align="center" wrap gap={12}>
         <Segmented

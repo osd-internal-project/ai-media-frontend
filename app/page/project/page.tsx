@@ -283,6 +283,7 @@ const ProjectsPage = () => {
             try {
               await projectService.update(project.id, {
                 status: "inactive" as any,
+                userId: session?.user?.id,
               });
               messageApi.success("Project archived successfully");
               fetchProjects();
@@ -296,7 +297,7 @@ const ProjectsPage = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editForm, modal, projectService, messageApi],
+    [editForm, modal, projectService, messageApi, session?.user?.id],
   );
 
   const onFinishAdd = useCallback(
@@ -360,24 +361,27 @@ const ProjectsPage = () => {
           messageApi.error("Max credit is too high");
           return;
         }
-        const updateResponse = await projectService.update(values.id, {
+        await projectService.update(values.id, {
           ...values,
+          userId: session?.user?.id,
           members: projectMembers.filter((m) => m.userId),
         });
-        if (updateResponse) {
-          messageApi.success("Project updated successfully");
-        }
+        messageApi.success("Project updated successfully");
         setOpenEdit(false);
         setProjectMembers([]);
         await Promise.all([fetchProjects(), fetchOrgData()]);
-      } catch {
-        messageApi.error("Failed to update project");
+      } catch (error: any) {
+        const message = error?.response?.data?.message;
+        messageApi.error(
+          (Array.isArray(message) ? message[0] : message) ||
+            "Failed to update project",
+        );
       } finally {
         setLoading(false);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [organization, projectMembers, projectService, messageApi],
+    [organization, projectMembers, projectService, messageApi, session?.user?.id],
   );
 
   const contentViewportHeight = isMobile

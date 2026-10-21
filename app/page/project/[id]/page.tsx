@@ -28,7 +28,7 @@ import {
 import dynamic from "next/dynamic";
 import ImageFormRenderer from "./components/tabs/image-gen/image-form-renderer";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
@@ -365,7 +365,7 @@ const GenerateImagePage: FC = () => {
   return (
     <div
       className="h-full min-h-0 flex flex-col overflow-hidden"
-      style={{ backgroundColor: semantic.colorBgBase }}
+      style={{ backgroundColor: getCanvasBg(mode) }}
     >
       <HeaderGenerateImagePage
         teamView={teamView}
@@ -405,7 +405,8 @@ const GenerateImagePage: FC = () => {
             flex: 1,
             height: "100%",
             width: "100%",
-            background: semantic.colorBgContainer,
+            // Light: panels sit on the canvas; dark keeps its container surface.
+            background: mode === "dark" ? semantic.colorBgContainer : getCanvasBg(mode),
             borderTop: `1px solid ${semantic.colorBorder}`,
             minHeight: 0,
             overflow: "hidden",
@@ -416,6 +417,7 @@ const GenerateImagePage: FC = () => {
           tabBarGutter={isMobile ? 6 : isTablet ? 8 : 12}
           tabBarStyle={{
             margin: 0,
+            background: semantic.colorBgContainer,
             paddingInline: isMobile ? 8 : isTablet ? 10 : 14,
             overflowX: "auto",
             overflowY: "hidden",

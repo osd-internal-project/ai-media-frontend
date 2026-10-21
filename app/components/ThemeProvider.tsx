@@ -18,8 +18,14 @@ export function useThemeMode() {
   return ctx;
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>("dark");
+export function ThemeProvider({
+  children,
+  initialMode = "dark",
+}: {
+  children: ReactNode;
+  initialMode?: ThemeMode;
+}) {
+  const [mode, setMode] = useState<ThemeMode>(initialMode);
 
   const toggleMode = () => setMode((m) => (m === "dark" ? "light" : "dark"));
 
@@ -31,6 +37,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     root.classList.remove("theme-light", "theme-dark");
     root.classList.add(`theme-${mode}`);
+    // Persist for the server-side read in app/layout.tsx.
+    document.cookie = `theme=${mode}; path=/; max-age=31536000; SameSite=Lax`;
   }, [mode]);
 
   return (

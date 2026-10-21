@@ -31,7 +31,7 @@ import ColorTab from "./components/tabs/color/color-tab";
 import type { TBrandKitDetail } from "@/app/common/brand-kit";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
 import { Divide, Palette } from "lucide-react";
 import TypographyTab from "./components/tabs/typography/typography-tab";
 import LogoTab from "./components/tabs/logo/logo-tab";
@@ -530,7 +530,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
         minHeight: 0,
         overflowX: "hidden",
         overflowY: "hidden",
-        background: semantic.colorBgBase,
+        background: getCanvasBg(mode),
       }}
     >
       {/* Mobile Sidebar Overlay */}
@@ -814,7 +814,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            background: semantic.colorBgBase,
+            background: getCanvasBg(mode),
           }}
         >
           {brandKits.length === 0 ? (
