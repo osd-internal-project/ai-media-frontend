@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import BrandKitServices from "@/app/services/brand-kit.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Flex, Typography, Switch } from "antd";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { aiCaveColors } from "@/app/theme/themeConfig";
 import { useSession } from "next-auth/react";
 import {
   BgColorsOutlined,
@@ -131,14 +133,49 @@ export default function BrandKitSection({
     if (typeof onActiveChange === 'function') onActiveChange(active);
   }, [active]);
 
+  const { mode } = useThemeMode();
+  // Dark keeps the original hand-tuned values; light reads theme tokens.
+  const c =
+    mode === "dark"
+      ? {
+          dotRing: "rgba(255,255,255,0.14)",
+          label: "#8B93A7",
+          accentBg: "rgba(111, 106, 222, 0.12)",
+          accentBorder: "rgba(111, 106, 222, 0.24)",
+          accent: "#8B7CFF",
+          title: "#FFFFFF",
+          text2: "#9CA3AF",
+          boxBorder: "rgba(111, 106, 222, 0.28)",
+          boxBorderIdle: "rgba(111, 106, 222, 0.18)",
+          boxBg: "rgba(38, 45, 68, 0.72)",
+          boxText: "#B6BED1",
+          prompt: "#7E7BFF",
+          avoid: "#A1A1AA",
+        }
+      : {
+          dotRing: semantic.colorBorder,
+          label: semantic.colorTextSecondary,
+          accentBg: semantic.colorPrimaryBg,
+          accentBorder: semantic.colorPrimaryBg,
+          accent: semantic.colorPrimary,
+          title: semantic.colorTextBase,
+          text2: semantic.colorTextSecondary,
+          boxBorder: semantic.colorPrimaryBg,
+          boxBorderIdle: semantic.colorBorder,
+          boxBg: semantic.colorBgLayout,
+          boxText: semantic.colorTextSecondary,
+          prompt: aiCaveColors.primaryDark,
+          avoid: semantic.colorTextSecondary,
+        };
+
   const colorDotStyle = (color: string): React.CSSProperties => ({
     width: 18,
     height: 18,
     borderRadius: "50%",
     background: color,
     border:
-      color === "#F8FAFC"
-        ? "1px solid rgba(255,255,255,0.14)"
+      color === "#F8FAFC" || mode !== "dark"
+        ? `1px solid ${c.dotRing}`
         : "none",
     boxShadow: "0 0 0 2px rgba(255,255,255,0.02)",
     flexShrink: 0,
@@ -157,7 +194,7 @@ export default function BrandKitSection({
             fontSize: 12,
             fontWeight: 700,
             letterSpacing: 1.2,
-            color: "#8B93A7",
+            color: c.label,
             textTransform: "uppercase",
           }}
         >
@@ -186,14 +223,14 @@ export default function BrandKitSection({
                 width: 28,
                 height: 28,
                 borderRadius: 999,
-                background: "rgba(111, 106, 222, 0.12)",
-                border: "1px solid rgba(111, 106, 222, 0.24)",
+                background: c.accentBg,
+                border: `1px solid ${c.accentBorder}`,
                 flexShrink: 0,
               }}
             >
               <BulbOutlined
                 style={{
-                  color: "#8B7CFF",
+                  color: c.accent,
                   fontSize: 14,
                 }}
               />
@@ -208,7 +245,7 @@ export default function BrandKitSection({
             <Text
               ellipsis
               style={{
-                color: "#FFFFFF",
+                color: c.title,
                 fontSize: 14,
                 fontWeight: 600,
                 minWidth: 0,
@@ -220,7 +257,7 @@ export default function BrandKitSection({
 
           <StarFilled
             style={{
-              color: "#8B7CFF",
+              color: c.accent,
               fontSize: 14,
               flexShrink: 0,
             }}
@@ -232,7 +269,7 @@ export default function BrandKitSection({
             <Flex vertical gap={8}>
               <Text
                 style={{
-                  color: "#9CA3AF",
+                  color: c.text2,
                   fontSize: 12,
                   fontWeight: 500,
                 }}
@@ -249,8 +286,8 @@ export default function BrandKitSection({
             <div
               style={{
                 borderRadius: 12,
-                border: "1px solid rgba(111, 106, 222, 0.28)",
-                background: "rgba(38, 45, 68, 0.72)",
+                border: `1px solid ${c.boxBorder}`,
+                background: c.boxBg,
                 padding: "10px 12px",
               }}
             >
@@ -258,13 +295,13 @@ export default function BrandKitSection({
                 <Flex align="center" gap={6}>
                   <BgColorsOutlined
                     style={{
-                      color: "#9CA3AF",
+                      color: c.text2,
                       fontSize: 11,
                     }}
                   />
                   <Text
                     style={{
-                      color: "#B6BED1",
+                      color: c.boxText,
                       fontSize: 11,
                       fontWeight: 500,
                     }}
@@ -274,7 +311,7 @@ export default function BrandKitSection({
                 </Flex>
                 <Text
                   style={{
-                    color: "#7E7BFF",
+                    color: c.prompt,
                     fontSize: 11,
                     lineHeight: 1.6,
                     fontFamily:
@@ -290,7 +327,7 @@ export default function BrandKitSection({
             <Text
               ellipsis
               style={{
-                color: "#A1A1AA",
+                color: c.avoid,
                 fontSize: 11,
               }}
             >
@@ -307,14 +344,14 @@ export default function BrandKitSection({
               maxHeight: 40,
               opacity: 0.7,
               overflow: 'hidden',
-              background: 'rgba(38, 45, 68, 0.72)',
+              background: c.boxBg,
               borderRadius: 8,
-              border: '1px solid rgba(111, 106, 222, 0.18)',
+              border: `1px solid ${c.boxBorderIdle}`,
               padding: '0 12px',
               width: '100%',
             }}
           >
-            <Text style={{ color: '#B6BED1', fontSize: 13, fontWeight: 500 }}>
+            <Text style={{ color: c.boxText, fontSize: 13, fontWeight: 500 }}>
               Enable to inject brand CI into every generation
             </Text>
           </Flex>

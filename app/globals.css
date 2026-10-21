@@ -291,3 +291,86 @@ html {
     #0DCFA0 100%
   );
 }
+/* =========================
+   Legacy dark-only screens (admin / organization)
+   Dark keeps each screen's original literal; light maps to the
+   light tokens in app/theme/themeConfig.ts (lightInk, lightInkSecondary,
+   lightBorder, lightCanvas, lightRaised) — keep them in sync.
+========================= */
+:root {
+  --legacy-ink: --theme(--color-white);
+  --legacy-gray-300: --theme(--color-gray-300);
+  --legacy-gray-400: --theme(--color-gray-400);
+  --legacy-gray-500: --theme(--color-gray-500);
+  --legacy-9b9c9e: #9B9C9E;
+  --legacy-99a1af: #99a1af;
+  --legacy-666: #666;
+
+  --legacy-line-gray-600: --theme(--color-gray-600);
+  --legacy-line-gray-700: --theme(--color-gray-700);
+  --legacy-line-gray-800: --theme(--color-gray-800);
+  --legacy-line-4a4a4a: #4a4a4a;
+  --legacy-line-3a3a3a: #3a3a3a;
+  --legacy-line-3f3f46: #3f3f46;
+  --legacy-line-303030: #303030;
+  --legacy-line-374151: #374151;
+  --legacy-line-white-10: rgb(255 255 255 / 0.1);
+
+  --legacy-surface-black: --theme(--color-black);
+  --legacy-surface-0f0f0f: #0f0f0f;
+  --legacy-surface-18181b: #18181b;
+  --legacy-surface-1a1a1a: #1a1a1a;
+  --legacy-surface-1c1c1e: #1c1c1e;
+  --legacy-surface-1f1f1f: #1f1f1f;
+  --legacy-surface-1f2937: #1f2937;
+  --legacy-surface-16213e: #16213e;
+  --legacy-surface-gray-800: --theme(--color-gray-800);
+
+  --legacy-panel-27272a: #27272a;
+  --legacy-panel-2a2a2a: #2a2a2a;
+  --legacy-panel-2a2a2e: #2a2a2e;
+  --legacy-panel-gray-700: --theme(--color-gray-700);
+  --legacy-panel-white-5: rgb(255 255 255 / 0.05);
+
+  --legacy-hover-gray-700: --theme(--color-gray-700);
+  --legacy-hover-black: --theme(--color-black);
+}
+
+.theme-light {
+  --legacy-ink: #1C1D2B;
+  --legacy-gray-300: #5E6275;
+  --legacy-gray-400: #5E6275;
+  --legacy-gray-500: #5E6275;
+  --legacy-9b9c9e: #5E6275;
+  --legacy-99a1af: #5E6275;
+  --legacy-666: #5E6275;
+
+  --legacy-line-gray-600: #E3E3EE;
+  --legacy-line-gray-700: #E3E3EE;
+  --legacy-line-gray-800: #E3E3EE;
+  --legacy-line-4a4a4a: #E3E3EE;
+  --legacy-line-3a3a3a: #E3E3EE;
+  --legacy-line-3f3f46: #E3E3EE;
+  --legacy-line-303030: #E3E3EE;
+  --legacy-line-374151: #E3E3EE;
+  --legacy-line-white-10: #E3E3EE;
+
+  --legacy-surface-black: #FFFFFF;
+  --legacy-surface-0f0f0f: #FFFFFF;
+  --legacy-surface-18181b: #FFFFFF;
+  --legacy-surface-1a1a1a: #FFFFFF;
+  --legacy-surface-1c1c1e: #FFFFFF;
+  --legacy-surface-1f1f1f: #FFFFFF;
+  --legacy-surface-1f2937: #FFFFFF;
+  --legacy-surface-16213e: #FFFFFF;
+  --legacy-surface-gray-800: #FFFFFF;
+
+  --legacy-panel-27272a: #F4F4F9;
+  --legacy-panel-2a2a2a: #F4F4F9;
+  --legacy-panel-2a2a2e: #F4F4F9;
+  --legacy-panel-gray-700: #F4F4F9;
+  --legacy-panel-white-5: #F4F4F9;
+
+  --legacy-hover-gray-700: #ECECF5;
+  --legacy-hover-black: #ECECF5;
+}

@@ -17,7 +17,7 @@ import { TPromptGuide } from "@/app/common/prompt-guide.type";
 import PromptGuideServices from "@/app/services/prompt-guide.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { useRouter } from "next/navigation";
 import { isAudio, isVideo, mentionLabels } from "@/app/utils/prompt-guide-media";
 
@@ -148,6 +148,61 @@ export default function BrowsePromptModal({
   const [searchQuery, setSearchQuery] = useState("");
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
+  // Dark keeps the original hand-tuned values; light reads theme tokens.
+  const c =
+    mode === "dark"
+      ? {
+          surface: "#121214",
+          border: "rgba(255, 255, 255, 0.08)",
+          divider: "rgba(255, 255, 255, 0.06)",
+          headerBg: "linear-gradient(to bottom, rgba(255,255,255,0.02), transparent)",
+          text: "white",
+          text2: "rgba(255, 255, 255, 0.45)",
+          text3: "rgba(255, 255, 255, 0.35)",
+          text4: "rgba(255, 255, 255, 0.25)",
+          text5: "rgba(255, 255, 255, 0.2)",
+          promptText: "rgba(255, 255, 255, 0.7)",
+          field: "rgba(255, 255, 255, 0.03)",
+          card: "rgba(255, 255, 255, 0.02)",
+          cardBorder: "rgba(255, 255, 255, 0.05)",
+          cardHover: "rgba(255, 255, 255, 0.04)",
+          cardHoverBorder: "rgba(255, 255, 255, 0.1)",
+          well: "rgba(0, 0, 0, 0.4)",
+          promptBox: "rgba(0, 0, 0, 0.2)",
+          wellBorder: "rgba(255, 255, 255, 0.04)",
+          emptyIcon: "rgba(255, 255, 255, 0.1)",
+          accentBg: "rgba(99, 102, 241, 0.1)",
+          accent: "#818cf8",
+          accentBorder: "rgba(99, 102, 241, 0.2)",
+          accentSolid: "#6366f1",
+          scrollThumb: "rgba(255, 255, 255, 0.05)",
+        }
+      : {
+          surface: semantic.colorBgContainer,
+          border: semantic.colorBorder,
+          divider: semantic.colorBorder,
+          headerBg: semantic.colorBgContainer,
+          text: semantic.colorTextBase,
+          text2: semantic.colorTextSecondary,
+          text3: semantic.colorTextSecondary,
+          text4: semantic.colorTextTertiary,
+          text5: semantic.colorTextTertiary,
+          promptText: semantic.colorTextSecondary,
+          field: semantic.colorBgContainer,
+          card: semantic.colorBgContainer,
+          cardBorder: semantic.colorBorder,
+          cardHover: semantic.colorBgLayout,
+          cardHoverBorder: semantic.colorPrimary,
+          well: semantic.colorFillSecondary,
+          promptBox: semantic.colorBgLayout,
+          wellBorder: semantic.colorBorder,
+          emptyIcon: semantic.colorTextTertiary,
+          accentBg: semantic.colorPrimaryBg,
+          accent: aiCaveColors.primaryDark,
+          accentBorder: semantic.colorPrimaryBg,
+          accentSolid: semantic.colorPrimary,
+          scrollThumb: semantic.colorBorder,
+        };
   const router = useRouter();
 
   const promptGuideService = PromptGuideServices(axiosCore);
@@ -191,14 +246,14 @@ export default function BrowsePromptModal({
       footer={null}
       width={1200}
       centered
-      closeIcon={<X size={20} style={{ color: "rgba(255, 255, 255, 0.45)" }} />}
+      closeIcon={<X size={20} style={{ color: c.text2 }} />}
       zIndex={modalZIndex}
       styles={{
         content: {
-          background: "#121214",
+          background: c.surface,
           padding: 0,
           borderRadius: 24,
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: `1px solid ${c.border}`,
           overflow: "hidden",
         },
         mask: {
@@ -212,9 +267,8 @@ export default function BrowsePromptModal({
         <div
           style={{
             padding: "32px 40px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-            background:
-              "linear-gradient(to bottom, rgba(255,255,255,0.02), transparent)",
+            borderBottom: `1px solid ${c.divider}`,
+            background: c.headerBg,
           }}
         >
           <Flex
@@ -226,7 +280,7 @@ export default function BrowsePromptModal({
               <Title
                 level={4}
                 style={{
-                  color: "white",
+                  color: c.text,
                   margin: 0,
                   fontWeight: 700,
                   letterSpacing: "-0.01em",
@@ -235,7 +289,7 @@ export default function BrowsePromptModal({
                 Prompt Guide Templates
               </Title>
               <Text
-                style={{ color: "rgba(255, 255, 255, 0.45)", fontSize: 13 }}
+                style={{ color: c.text2, fontSize: 13 }}
               >
                 Click any template to instantly apply it — or create your own
               </Text>
@@ -247,7 +301,7 @@ export default function BrowsePromptModal({
             prefix={
               <Search
                 size={18}
-                style={{ color: "rgba(255, 255, 255, 0.25)", marginRight: 8 }}
+                style={{ color: c.text4, marginRight: 8 }}
               />
             }
             placeholder="Search by name, description, or prompt content..."
@@ -255,10 +309,10 @@ export default function BrowsePromptModal({
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               height: 48,
-              background: "rgba(255, 255, 255, 0.03)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
+              background: c.field,
+              border: `1px solid ${c.border}`,
               borderRadius: 12,
-              color: "white",
+              color: c.text,
               fontSize: 14,
             }}
             className="custom-search-input"
@@ -267,7 +321,7 @@ export default function BrowsePromptModal({
           <div
             style={{
               marginTop: 20,
-              color: "rgba(255, 255, 255, 0.35)",
+              color: c.text3,
               fontSize: 12,
               fontWeight: 500,
             }}
@@ -297,8 +351,8 @@ export default function BrowsePromptModal({
                 <div
                   key={guide.id}
                   style={{
-                    background: "rgba(255, 255, 255, 0.02)",
-                    border: "1px solid rgba(255, 255, 255, 0.05)",
+                    background: c.card,
+                    border: `1px solid ${c.cardBorder}`,
                     borderRadius: 20,
                     padding: 24,
                     display: "flex",
@@ -312,9 +366,9 @@ export default function BrowsePromptModal({
                     <Tag
                       style={{
                         margin: 0,
-                        background: "rgba(99, 102, 241, 0.1)",
-                        color: "#818cf8",
-                        border: "1px solid rgba(99, 102, 241, 0.2)",
+                        background: c.accentBg,
+                        color: c.accent,
+                        border: `1px solid ${c.accentBorder}`,
                         borderRadius: 6,
                         display: "flex",
                         alignItems: "center",
@@ -328,7 +382,7 @@ export default function BrowsePromptModal({
                     {guide.model && (
                       <Text
                         style={{
-                          color: "rgba(255, 255, 255, 0.2)",
+                          color: c.text5,
                           fontSize: 10,
                           fontFamily: "monospace",
                         }}
@@ -341,13 +395,13 @@ export default function BrowsePromptModal({
                   <Flex vertical gap={4}>
                     <Title
                       level={5}
-                      style={{ color: "white", margin: 0, fontWeight: 700 }}
+                      style={{ color: c.text, margin: 0, fontWeight: 700 }}
                     >
                       {guide.title}
                     </Title>
                     <Paragraph
                       style={{
-                        color: "rgba(255, 255, 255, 0.45)",
+                        color: c.text2,
                         margin: 0,
                         fontSize: 12,
                       }}
@@ -359,12 +413,12 @@ export default function BrowsePromptModal({
 
                   <div
                     style={{
-                      background: "rgba(0, 0, 0, 0.4)",
+                      background: c.well,
                       borderRadius: 12,
                       aspectRatio: guide.results?.length ? "16/9" : "3/2",
                       position: "relative",
                       overflow: "hidden",
-                      border: "1px solid rgba(255, 255, 255, 0.04)",
+                      border: `1px solid ${c.wellBorder}`,
                     }}
                   >
                     {guide.results && guide.results.length > 0 ? (
@@ -426,24 +480,24 @@ export default function BrowsePromptModal({
                       </>
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                        <ImageIcon size={32} style={{ color: "rgba(255, 255, 255, 0.1)" }} />
-                        <Text style={{ color: "rgba(255, 255, 255, 0.2)", fontSize: 10 }}>No Preview</Text>
+                        <ImageIcon size={32} style={{ color: c.emptyIcon }} />
+                        <Text style={{ color: c.text5, fontSize: 10 }}>No Preview</Text>
                       </div>
                     )}
                   </div>
 
                   <div
                     style={{
-                      background: "rgba(0, 0, 0, 0.2)",
+                      background: c.promptBox,
                       borderRadius: 12,
                       padding: 16,
-                      border: "1px solid rgba(255, 255, 255, 0.04)",
+                      border: `1px solid ${c.wellBorder}`,
                       flex: 1,
                     }}
                   >
                     <Paragraph
                       style={{
-                        color: "rgba(255, 255, 255, 0.7)",
+                        color: c.promptText,
                         margin: 0,
                         fontSize: 12,
                         lineHeight: 1.6,
@@ -460,9 +514,9 @@ export default function BrowsePromptModal({
                     block
                     onClick={() => onUseTemplate(guide)}
                     style={{
-                      background: "rgba(99, 102, 241, 0.1)",
-                      color: "#818cf8",
-                      border: "1px solid rgba(99, 102, 241, 0.2)",
+                      background: c.accentBg,
+                      color: c.accent,
+                      border: `1px solid ${c.accentBorder}`,
                       borderRadius: 12,
                       height: 44,
                       fontWeight: 600,
@@ -483,7 +537,7 @@ export default function BrowsePromptModal({
             <Flex align="center" justify="center" style={{ height: "100%" }}>
               <Empty
                 description={
-                  <Text style={{ color: "rgba(255,255,255,0.2)" }}>
+                  <Text style={{ color: c.text5 }}>
                     No templates found
                   </Text>
                 }
@@ -502,22 +556,22 @@ export default function BrowsePromptModal({
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.05);
+          background: ${c.scrollThumb};
           border-radius: 10px;
         }
         .guide-card:hover {
-          background: rgba(255, 255, 255, 0.04) !important;
-          border-color: rgba(255, 255, 255, 0.1) !important;
+          background: ${c.cardHover} !important;
+          border-color: ${c.cardHoverBorder} !important;
           transform: translateY(-2px);
         }
         .use-template-btn:hover {
-          background: #6366f1 !important;
+          background: ${c.accentSolid} !important;
           color: white !important;
-          border-color: #6366f1 !important;
+          border-color: ${c.accentSolid} !important;
           box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
         }
         .custom-search-input input::placeholder {
-          color: rgba(255, 255, 255, 0.2) !important;
+          color: ${c.text5} !important;
         }
       `}</style>
     </Modal>

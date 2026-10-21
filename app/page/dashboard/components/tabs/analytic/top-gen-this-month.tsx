@@ -1,6 +1,8 @@
 import React from "react";
 import { Avatar, Progress, Space, Typography } from "antd";
 import type { DashboardUserRow } from "../types";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 
 type TopGenThisMonthProps = {
 	users: DashboardUserRow[];
@@ -12,11 +14,13 @@ type TopGenThisMonthProps = {
 };
 
 export default function TopGenThisMonth({ users, colors }: TopGenThisMonthProps) {
+	const { mode } = useThemeMode();
+	const rankColor = getThemeConfig(mode).token?.colorTextSecondary;
 	return (
 		<Space direction="vertical" style={{ width: "100%" }} size={10}>
 			{users.map((user, index) => (
 				<div key={user.userId} className="flex items-center gap-3">
-					<span style={{ width: 16, fontSize: 12, color: "#8C99A9" }}>{index + 1}</span>
+					<span style={{ width: 16, fontSize: 12, color: rankColor }}>{index + 1}</span>
 					<Avatar
 						size={24}
 						style={{ backgroundColor: colors.primaryBg, color: colors.primary }}

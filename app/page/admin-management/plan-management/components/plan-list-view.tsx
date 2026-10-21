@@ -31,7 +31,7 @@ const PlanListView: FC<PlanListViewProps> = ({ loading, filteredData, handleDele
           render: (text, record) => (
             <Space direction="vertical" size={0}>
               <div className="flex items-center gap-2">
-                <Text className="text-white font-medium">{text}</Text>
+                <Text className="text-[var(--legacy-ink)] font-medium">{text}</Text>
               </div>
               <Text type="secondary" className="text-xs">
                 {record.id}
@@ -45,7 +45,7 @@ const PlanListView: FC<PlanListViewProps> = ({ loading, filteredData, handleDele
           key: "monthlyPrice",
           width: 150,
           render: (price) => (
-            <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
+            <Text className="text-[var(--legacy-ink)]">${price?.toLocaleString() || "0.00"}</Text>
           ),
         },
         {
@@ -54,7 +54,7 @@ const PlanListView: FC<PlanListViewProps> = ({ loading, filteredData, handleDele
           key: "annualPrice",
           width: 150,
           render: (price) => (
-            <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
+            <Text className="text-[var(--legacy-ink)]">${price?.toLocaleString() || "0.00"}</Text>
           ),
         },
         {

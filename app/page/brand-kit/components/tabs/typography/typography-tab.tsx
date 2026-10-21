@@ -143,7 +143,7 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
   return (
     <div className="typo-tab-shell">
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Text style={{ color: "#94a3b8", fontSize: isMobile ? 12 : 13 }}>{fonts.length} fonts configured</Text>
+        <Text style={{ color: mode === "dark" ? "#94a3b8" : semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>{fonts.length} fonts configured</Text>
         <Button className="typo-tab-action" type="default" size={isMobile ? "small" : "middle"} icon={<PlusOutlined />} onClick={handleAddFont}>
           {isMobile ? "Add" : "Add Font"}
         </Button>

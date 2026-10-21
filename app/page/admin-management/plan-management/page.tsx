@@ -219,14 +219,14 @@ export default function PlanManagementPage() {
           <h1 className="text-2xl font-bold mb-2">
             Pricing Plan Management
           </h1>
-          <p className="text-gray-400">
+          <p className="text-[var(--legacy-gray-400)]">
             Manage subscription plans and features
           </p>
         </div>
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            className=" border-gray-700! hover:bg-gray-700!"
+            className=" border-[var(--legacy-line-gray-700)]! hover:bg-[var(--legacy-hover-gray-700)]!"
             onClick={fetchData}
             loading={loading}
           />
@@ -299,7 +299,7 @@ export default function PlanManagementPage() {
       <div className=" p-4 rounded-lg mb-4">
         <Input
           placeholder="Search plans by name or description..."
-          prefix={<SearchOutlined className="text-gray-500" />}
+          prefix={<SearchOutlined className="text-[var(--legacy-gray-500)]" />}
           className="w-full "
      
           value={searchText}

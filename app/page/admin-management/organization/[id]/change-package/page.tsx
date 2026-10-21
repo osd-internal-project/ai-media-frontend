@@ -97,9 +97,9 @@ const ChangePackagePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--legacy-surface-0f0f0f)] text-[var(--legacy-ink)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--legacy-ink)] mx-auto mb-4"></div>
           <p>Loading plans...</p>
         </div>
       </div>
@@ -107,7 +107,7 @@ const ChangePackagePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen bg-[var(--legacy-surface-0f0f0f)] text-[var(--legacy-ink)]">
       <div ref={pricingRef} className="container mx-auto px-4 py-8">
         {/* Header */}
         <div>

@@ -11,8 +11,8 @@ export const UsersSummaryPage: FC<props> = ({ getSummary }): ReactElement => {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Card styles={{body:{padding: "8px 16px"}}}>
         <div className="grid grid-cols-2 justify-between">
-          <div className="col col-span-1 text-[16px] text-[#9B9C9E]">{`Total Users`}</div>
-          <div className="col col-span-1 flex justify-end text-[#9B9C9E]">
+          <div className="col col-span-1 text-[16px] text-[var(--legacy-9b9c9e)]">{`Total Users`}</div>
+          <div className="col col-span-1 flex justify-end text-[var(--legacy-9b9c9e)]">
             <UsergroupAddOutlined className="text-[24px] " />
           </div>
         </div>
@@ -20,17 +20,17 @@ export const UsersSummaryPage: FC<props> = ({ getSummary }): ReactElement => {
       </Card>
       <Card styles={{body:{padding: "8px 16px"}}}>
         <div className="grid grid-cols-2 justify-between">
-          <div className="col col-span-1 text-[16px] text-[#9B9C9E]">{`Active Users`}</div>
-          <div className="col col-span-1 flex justify-end text-[#9B9C9E]">
-            <FieldTimeOutlined className="text-[24px] text-[#9B9C9E]" />
+          <div className="col col-span-1 text-[16px] text-[var(--legacy-9b9c9e)]">{`Active Users`}</div>
+          <div className="col col-span-1 flex justify-end text-[var(--legacy-9b9c9e)]">
+            <FieldTimeOutlined className="text-[24px] text-[var(--legacy-9b9c9e)]" />
           </div>
         </div>
         <div className="text-[28px] text-[#4AC97E]">{`${getSummary.active}`}</div>
       </Card>
       <Card styles={{body:{padding: "8px 16px"}}}>
         <div className="grid grid-cols-2 justify-between">
-          <div className="col col-span-1 text-[16px] text-[#9B9C9E]">{`Unabled`}</div>
-          <div className="col col-span-1 flex justify-end text-[#9B9C9E] ">
+          <div className="col col-span-1 text-[16px] text-[var(--legacy-9b9c9e)]">{`Unabled`}</div>
+          <div className="col col-span-1 flex justify-end text-[var(--legacy-9b9c9e)] ">
             <UserDeleteOutlined className="text-[24px] " />
           </div>
         </div>
@@ -38,8 +38,8 @@ export const UsersSummaryPage: FC<props> = ({ getSummary }): ReactElement => {
       </Card>
       <Card styles={{body:{padding:"8px 16px"}}}>
         <div className="grid grid-cols-2 justify-between">
-          <div className="col col-span-1 text-[16px] text-[#9B9C9E]">{`User group`}</div>
-          <div className="col col-span-1 flex justify-end text-[#9B9C9E]">
+          <div className="col col-span-1 text-[16px] text-[var(--legacy-9b9c9e)]">{`User group`}</div>
+          <div className="col col-span-1 flex justify-end text-[var(--legacy-9b9c9e)]">
             <UsergroupAddOutlined className="text-[24px] " />
           </div>
         </div>

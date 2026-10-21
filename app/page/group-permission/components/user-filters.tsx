@@ -20,14 +20,14 @@ const UserFiltersPage: FC<props> = ({ onSearch, onRefresh, handleManage, formman
       <div className="flex items-center justify-between gap-2">
         <Input
           placeholder="Search"
-          prefix={<SearchOutlined className="text-gray-500" />}
-          className="w-10  text-white "
-          style={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "white" }}
+          prefix={<SearchOutlined className="text-[var(--legacy-gray-500)]" />}
+          className="w-10  text-[var(--legacy-ink)] "
+          style={{ backgroundColor: "var(--legacy-surface-1f2937)", borderColor: "var(--legacy-line-374151)", color: "var(--legacy-ink)" }}
         />
         <Space>
-          <Button icon={<ReloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" onClick={onRefresh} />
-          <Button icon={<DownloadOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-7000" />
-          <Button icon={<SettingOutlined />} className="!bg-gray-800 !border-gray-700 !text-white !hover:bg-gray-700" />
+          <Button icon={<ReloadOutlined />} className="!bg-[var(--legacy-surface-gray-800)] !border-[var(--legacy-line-gray-700)] !text-[var(--legacy-ink)] !hover:bg-[var(--legacy-hover-gray-700)]" onClick={onRefresh} />
+          <Button icon={<DownloadOutlined />} className="!bg-[var(--legacy-surface-gray-800)] !border-[var(--legacy-line-gray-700)] !text-[var(--legacy-ink)] !hover:bg-gray-7000" />
+          <Button icon={<SettingOutlined />} className="!bg-[var(--legacy-surface-gray-800)] !border-[var(--legacy-line-gray-700)] !text-[var(--legacy-ink)] !hover:bg-[var(--legacy-hover-gray-700)]" />
           <Button type="primary" icon={<PlusOutlined />} className="!bg-indigo-600 hover:!bg-indigo-700" onClick={() => handleManage("create")}>
             Create New User
           </Button>

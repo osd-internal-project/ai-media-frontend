@@ -265,7 +265,7 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                   placement="bottomRight"
                 >
                   <Button
-                    className="!h-auto flex items-center text-gray-400 hover:text-white hover:bg-gray-700 !px-2 !py-2 sm:!px-3 sm:!py-2"
+                    className="!h-auto flex items-center text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)] hover:bg-[var(--legacy-hover-gray-700)] !px-2 !py-2 sm:!px-3 sm:!py-2"
                     type="text"
                     icon={<MoreOutlined style={{ fontSize: 18 }} />}
                     onClick={(e) => e.stopPropagation()}

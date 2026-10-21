@@ -108,7 +108,7 @@ const AdminCustomersPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Customers</h2>
+      <h2 className="text-xl font-semibold text-[var(--legacy-ink)]">Customers</h2>
       <Card size="small">
         <Input.Search
           allowClear

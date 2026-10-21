@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Tooltip } from "antd";
 import Image from "next/image";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { GenerateConfig } from "../chat-generate-image";
 
 type Props = {
@@ -9,6 +11,18 @@ type Props = {
 
 export default function ImageSmartReference({ referenceImages }: Props) {
   const [isMobile, setIsMobile] = useState(false);
+  const { mode } = useThemeMode();
+  const semantic = getThemeConfig(mode).token ?? {};
+  // Dark keeps the original hand-tuned values; light reads theme tokens.
+  const c =
+    mode === "dark"
+      ? { box: "#1e1e21", boxBorder: "rgba(255,255,255,0.05)", tile: "#374151", tileText: "#9CA3AF" }
+      : {
+          box: semantic.colorBgLayout,
+          boxBorder: semantic.colorBorder,
+          tile: semantic.colorFillSecondary,
+          tileText: semantic.colorTextSecondary,
+        };
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
@@ -39,7 +53,10 @@ export default function ImageSmartReference({ referenceImages }: Props) {
 
   return (
     <>
-      <div className="my-1  p-1 bg-[#1e1e21] rounded-lg border border-white/5">
+      <div
+        className="my-1  p-1 rounded-lg border"
+        style={{ background: c.box, borderColor: c.boxBorder }}
+      >
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0 flex items-center gap-1">
             {referenceImages && referenceImages.length > 0 ? (
@@ -83,7 +100,10 @@ export default function ImageSmartReference({ referenceImages }: Props) {
                 </Tooltip>
               ))
             ) : (
-              <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
+              <div
+                className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 flex items-center justify-center"
+                style={{ background: c.tile }}
+              >
                 <svg
                   width="16"
                   height="16"
@@ -93,13 +113,13 @@ export default function ImageSmartReference({ referenceImages }: Props) {
                 >
                   <path
                     d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6Z"
-                    stroke="#9CA3AF"
+                    stroke={c.tileText}
                     strokeWidth="1.5"
                     fill="none"
                   />
                   <path
                     d="M4 15L8 11L12 15L16 11L20 15"
-                    stroke="#9CA3AF"
+                    stroke={c.tileText}
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -109,7 +129,7 @@ export default function ImageSmartReference({ referenceImages }: Props) {
                     cx="8.5"
                     cy="8.5"
                     r="1.5"
-                    stroke="#9CA3AF"
+                    stroke={c.tileText}
                     strokeWidth="1.5"
                     fill="none"
                   />
@@ -117,8 +137,11 @@ export default function ImageSmartReference({ referenceImages }: Props) {
               </div>
             )}
             {referenceImages && referenceImages.length > 3 && (
-              <div className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 bg-gray-700 flex items-center justify-center">
-                <span className="text-xs text-gray-400">
+              <div
+                className="relative w-8 h-8 rounded-md overflow-hidden border border-white/20 flex items-center justify-center"
+                style={{ background: c.tile }}
+              >
+                <span className="text-xs" style={{ color: c.tileText }}>
                   +{referenceImages.length - 3}
                 </span>
               </div>

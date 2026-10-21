@@ -90,14 +90,18 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   );
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
   const [creditAllowance, setCreditAllowance] = useState<number>(0);
+  // event orgs get credit outside the plan: creditAllowance is 0, the credit sits in currentCycleBalance
+  const orgPool = Math.max(
+    organizationSubscription?.creditAllowance || 0,
+    creditBalance?.currentCycleBalance || 0,
+  );
   const maxCredit =
     mode === "edit"
-      ? (organizationSubscription?.creditAllowance || 0) +
+      ? orgPool +
         (selectedProject?.limitCreditAllowance || 0) +
         (creditBalance?.onTopBalance || 0) -
         assignedCredit
-      : (organizationSubscription?.creditAllowance || 0) +
-        (creditBalance?.onTopBalance || 0);
+      : orgPool + (creditBalance?.onTopBalance || 0);
   // const maxImage =
   //   mode === "edit"
   //     ? (organization?.remainImageAmount || 0) +

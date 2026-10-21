@@ -32,6 +32,13 @@ export const aiCaveColors = {
   neutral200: "#F2F4F5",
   neutral150: "#FAFBFD",
   neutral100: "#FFFFFF",
+  // Light theme: cool primary-tinted canvas so white surfaces stand off it without borders.
+  lightCanvas: "#F4F4F9",
+  lightRaised: "#ECECF5",
+  lightBorder: "#E3E3EE",
+  lightInk: "#1C1D2B",
+  lightInkSecondary: "#5E6275",
+  lightInkTertiary: "#8A8EA3",
 };
 
 const brand = aiCaveColors;
@@ -45,14 +52,14 @@ const getSemantic = (mode: "light" | "dark") => {
   return {
     bgBase: isDark ? brand.neutral900 : brand.neutral100,
     bgContainer: isDark ? brand.neutral800 : brand.neutral100,
-    bgElevated: isDark ? brand.neutral700 : brand.neutral200,
-    fieldBg: isDark ? brand.neutral700 : brand.neutral150,
+    bgElevated: isDark ? brand.neutral700 : brand.lightRaised,
+    fieldBg: isDark ? brand.neutral700 : brand.neutral100,
     primaryLight: isDark ? brand.primaryDark : brand.primaryLight,
     colorBgTextActive: isDark ? brand.neutral700 : brand.neutral300,
-    textBase: isDark ? brand.neutral200 : brand.neutral900,
-    textSecondary: brand.neutral500,
+    textBase: isDark ? brand.neutral200 : brand.lightInk,
+    textSecondary: isDark ? brand.neutral500 : brand.lightInkSecondary,
 
-    border: isDark ? brand.neutral600 : brand.neutral350,
+    border: isDark ? brand.neutral600 : brand.lightBorder,
 
     primary: brand.primary,
     secondary: brand.secondary,
@@ -88,6 +95,19 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
 
       colorTextBase: semantic.textBase,
       colorTextSecondary: semantic.textSecondary,
+
+      // Light-only: dark keeps antd's derived values.
+      ...(isDark
+        ? {}
+        : {
+            colorBgLayout: brand.lightCanvas,
+            colorTextTertiary: brand.lightInkTertiary,
+            colorTextPlaceholder: brand.lightInkTertiary,
+            colorBorderSecondary: brand.lightBorder,
+            // Neutral meter track: a primary-tinted track read as "full" at 0%.
+            colorFillSecondary: brand.lightRaised,
+            boxShadowTertiary: "0 1px 2px rgba(28, 29, 43, 0.06)",
+          }),
 
       borderRadius: 10,
       fontFamily:
@@ -134,7 +154,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
       },
 
       Layout: {
-        bodyBg: semantic.bgBase,
+        bodyBg: isDark ? semantic.bgBase : brand.lightCanvas,
         headerBg: semantic.bgContainer,
         siderBg: semantic.bgContainer,
       },
@@ -169,6 +189,8 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
         dotBorderColor: semantic.border,
         dotActiveBorderColor: semantic.primary,
       },
+
+      ...(isDark ? {} : { Progress: { remainingColor: brand.lightRaised } }),
 
       Segmented: {
         trackBg: semantic.fieldBg,

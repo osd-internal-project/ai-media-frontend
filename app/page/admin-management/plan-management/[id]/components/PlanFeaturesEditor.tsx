@@ -76,7 +76,7 @@ export const PlanFeaturesEditor: React.FC<PlanFeaturesEditorProps> = ({
       key: "sort",
       width: 40,
       render: () => (
-        <DragOutlined style={{ cursor: "grab", color: "#666" }} />
+        <DragOutlined style={{ cursor: "grab", color: "var(--legacy-666)" }} />
       ),
     },
     {
@@ -183,7 +183,7 @@ export const PlanFeaturesEditor: React.FC<PlanFeaturesEditorProps> = ({
           Add Feature
         </Button>
       }
-      className="mt-6 bg-[#1a1a1a] border-[#303030]"
+      className="mt-6 bg-[var(--legacy-surface-1a1a1a)] border-[var(--legacy-line-303030)]"
     >
       <Table
         dataSource={features}

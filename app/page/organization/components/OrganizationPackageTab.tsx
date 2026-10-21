@@ -258,14 +258,14 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
                 transactions.map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="rounded-xl border border-white/10 bg-white/5 p-4"
+                    className="rounded-xl border border-[var(--legacy-line-white-10)] bg-[var(--legacy-panel-white-5)] p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="truncate font-medium text-white">
+                        <div className="truncate font-medium text-[var(--legacy-ink)]">
                           {transaction.planName || "-"}
                         </div>
-                        <div className="mt-1 text-sm text-gray-400">
+                        <div className="mt-1 text-sm text-[var(--legacy-gray-400)]">
                           {transaction.createdAt
                             ? new Date(transaction.createdAt).toLocaleString()
                             : "-"}
@@ -278,16 +278,16 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
 
                     <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
                       <div>
-                        <div className="text-gray-400">Cycle Range</div>
-                        <div className="mt-1 break-words text-white">
+                        <div className="text-[var(--legacy-gray-400)]">Cycle Range</div>
+                        <div className="mt-1 break-words text-[var(--legacy-ink)]">
                           {transaction.billingPeriodStart && transaction.billingPeriodEnd
                             ? `${new Date(transaction.billingPeriodStart).toLocaleDateString()} - ${new Date(transaction.billingPeriodEnd).toLocaleDateString()}`
                             : "-"}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-400">Price</div>
-                        <div className="mt-1 text-white">
+                        <div className="text-[var(--legacy-gray-400)]">Price</div>
+                        <div className="mt-1 text-[var(--legacy-ink)]">
                           {transaction.currency || ""} {formatNumber(Number(transaction.amountPaid || 0))}
                         </div>
                       </div>
@@ -317,7 +317,7 @@ const OrganizationPackageTab: React.FC<OrganizationPackageTabProps> = ({
           {plans.map((plan) =>
             (plan.prices || []).map((price) => (
               <Radio key={price.id} value={price.id} className="!flex">
-                <span className="text-white">
+                <span className="text-[var(--legacy-ink)]">
                   {plan.name} — {price.interval} ·{" "}
                   {price.currency} {formatNumber(Number(price.price))}
                 </span>

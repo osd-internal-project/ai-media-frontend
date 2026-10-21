@@ -330,7 +330,7 @@ export function PrivateHeader({
                   percent={tokenPercentage}
                   showInfo={false}
                   strokeColor={semantic.colorPrimary}
-                  trailColor={semantic.colorPrimaryBg}
+                  trailColor={semantic.colorFillSecondary ?? semantic.colorPrimaryBg}
                   size="small"
                   style={{ width: 100, marginBottom: 0 }}
                 />

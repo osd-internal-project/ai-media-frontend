@@ -267,7 +267,7 @@ return (
                   <Text
                     style={{
                       fontSize: 12,
-                      color: "#94a3b8",
+                      color: mode === "dark" ? "#94a3b8" : semantic.colorTextSecondary,
                     }}
                   >
                     {item.value}%

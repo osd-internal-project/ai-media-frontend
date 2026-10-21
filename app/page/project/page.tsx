@@ -663,11 +663,11 @@ const ProjectsPage = () => {
         >
           <Divider style={{ margin: 0 }} />
           {loading ? (
-            <div className="text-center text-gray-400">Loading ...</div>
+            <div className="text-center text-[var(--legacy-gray-400)]">Loading ...</div>
           ) : projects.length === 0 ? (
             <div className="text-center py-12">
               <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
-              <h3 className="text-xl text-gray-400 mb-2">No project yet</h3>
+              <h3 className="text-xl text-[var(--legacy-gray-400)] mb-2">No project yet</h3>
             </div>
           ) : viewType === "grid" ? (
             <ProjectGridView

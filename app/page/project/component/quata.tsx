@@ -55,6 +55,7 @@ const Quata: React.FC<QuataProps> = ({
   const colorTextSecondary = semantic?.colorTextSecondary ?? "#94a3b8";
   const colorPrimary = semantic?.colorPrimary ?? "#5b6bf9";
   const colorTrail =
+    semantic?.colorFillSecondary ??
     semantic?.colorPrimaryBg ??
     semantic?.colorBorder ??
     "rgba(148,163,184,.25)";

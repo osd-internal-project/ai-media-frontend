@@ -111,7 +111,7 @@ const AdminInvoicesPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Invoices</h2>
+      <h2 className="text-xl font-semibold text-[var(--legacy-ink)]">Invoices</h2>
       <Card size="small">
         <Space wrap className="mb-4">
           <Input.Search

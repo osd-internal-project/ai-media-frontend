@@ -3,6 +3,8 @@
 import React from "react";
 import { Form, Input, Select, Typography } from "antd";
 import type { FormInstance } from "antd/es/form";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 
 type BrandKitFormProps = {
   form: FormInstance;
@@ -13,9 +15,14 @@ export default function BrandKitForm({
   form,
   mode = 'create',
 }: BrandKitFormProps) {
+  const { mode: themeMode } = useThemeMode();
+  const hintColor =
+    themeMode === "dark"
+      ? "#9ca3af"
+      : getThemeConfig(themeMode).token?.colorTextSecondary;
   return (
     <>
-      <Typography.Text style={{ color: "#9ca3af", marginBottom: 12, display: "block" }}>
+      <Typography.Text style={{ color: hintColor, marginBottom: 12, display: "block" }}>
         {mode === 'edit'
           ? 'Edit your brand kit information.'
           : 'Create a new brand kit to store your brand identity and CI.'}

@@ -74,9 +74,9 @@ const PackagePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--legacy-surface-0f0f0f)] text-[var(--legacy-ink)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--legacy-ink)] mx-auto mb-4"></div>
           <p>Loading plans...</p>
         </div>
       </div>
@@ -84,7 +84,7 @@ const PackagePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen bg-[var(--legacy-surface-0f0f0f)] text-[var(--legacy-ink)]">
       {/* Content */}
       {/* What is AI Cave Section */}
 
@@ -105,13 +105,13 @@ const PackagePage = () => {
           />
         </div>
         {/* <div className="text-center mb-8">
-          <div className="inline-flex bg-gray-800 rounded-lg p-1 mb-6">
+          <div className="inline-flex bg-[var(--legacy-surface-gray-800)] rounded-lg p-1 mb-6">
             <button
               onClick={() => setBillingPeriod("monthly")}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === "monthly"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-[var(--legacy-panel-gray-700)] text-[var(--legacy-ink)]"
+                  : "text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)]"
               }`}
             >
               MONTHLY
@@ -120,8 +120,8 @@ const PackagePage = () => {
               onClick={() => setBillingPeriod("annually")}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
                 billingPeriod === "annually"
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-[var(--legacy-panel-gray-700)] text-[var(--legacy-ink)]"
+                  : "text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)]"
               }`}
             >
               ANNUALLY

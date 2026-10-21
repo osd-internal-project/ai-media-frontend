@@ -113,14 +113,14 @@ export default function CreateOrganizationPage() {
               type="text"
               icon={<ArrowLeft className="w-4 h-4" />}
               onClick={handleCancel}
-              className="mb-4 text-gray-400 hover:text-white"
+              className="mb-4 text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)]"
             >
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-[var(--legacy-ink)] mb-2">
               Create Organization
             </h1>
-            <p className="text-gray-400">
+            <p className="text-[var(--legacy-gray-400)]">
               Set up a new team organization with custom package allocations
             </p>
           </div>
@@ -128,33 +128,33 @@ export default function CreateOrganizationPage() {
             className="shadow-lg"
             styles={{
               body: {
-                backgroundColor: "#18181b",
+                backgroundColor: "var(--legacy-surface-18181b)",
                 padding: "32px",
               },
             }}
           >
             {/* Selected Plan Details */}
             {selectedPlan?.detailJson && (
-              <div className="mb-6 p-4 bg-[#27272a] rounded-lg border border-[#3f3f46]">
-                <h3 className="text-white font-medium mb-3">
+              <div className="mb-6 p-4 bg-[var(--legacy-panel-27272a)] rounded-lg border border-[var(--legacy-line-3f3f46)]">
+                <h3 className="text-[var(--legacy-ink)] font-medium mb-3">
                   Selected Plan: {selectedPlan.name}
                 </h3>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-400">Max Users</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Max Users</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {selectedPlan.detailJson.maxUserAccess}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Package Tokens</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Package Tokens</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {selectedPlan.detailJson.packageTokenAmount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Package Images</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Package Images</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {selectedPlan.detailJson.packageImageAmount}
                     </p>
                   </div>
@@ -174,7 +174,7 @@ export default function CreateOrganizationPage() {
             >
               <Form.Item
                 label={
-                  <span className="text-white font-medium">
+                  <span className="text-[var(--legacy-ink)] font-medium">
                     Organization Name
                   </span>
                 }
@@ -193,13 +193,13 @@ export default function CreateOrganizationPage() {
                 <Input
                   placeholder="Enter organization name"
                   size="middle"
-                  className="bg-[#27272a] border-[#3f3f46] text-white"
+                  className="bg-[var(--legacy-panel-27272a)] border-[var(--legacy-line-3f3f46)] text-[var(--legacy-ink)]"
                 />
               </Form.Item>
 
               <Form.Item
                 label={
-                  <span className="text-white font-medium">Description</span>
+                  <span className="text-[var(--legacy-ink)] font-medium">Description</span>
                 }
                 name="description"
               >
@@ -207,12 +207,12 @@ export default function CreateOrganizationPage() {
                   rows={3}
                   size="middle"
                   placeholder="Optional description"
-                  className="bg-[#27272a] border-[#3f3f46] text-white"
+                  className="bg-[var(--legacy-panel-27272a)] border-[var(--legacy-line-3f3f46)] text-[var(--legacy-ink)]"
                 />
               </Form.Item>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
+              <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-[var(--legacy-line-gray-700)]">
                 <Button type="primary" size="middle" htmlType="submit">
                   Create Organization
                 </Button>

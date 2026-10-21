@@ -118,7 +118,7 @@ export default function PlanDetailPage() {
   }
 
   return (
-    <div className="w-full h-full  p-6 text-white pb-20">
+    <div className="w-full h-full  p-6 text-[var(--legacy-ink)] pb-20">
       {contextHolder}
       <div className="mb-6">
         <Breadcrumb
@@ -143,9 +143,9 @@ export default function PlanDetailPage() {
               onClick={() =>
                 router.push("/page/admin-management/plan-management")
               }
-              className="bg-gray-800! border-gray-700! text-white!"
+              className="bg-[var(--legacy-surface-gray-800)]! border-[var(--legacy-line-gray-700)]! text-[var(--legacy-ink)]!"
             />
-            <Title level={2} className="text-white! m-0!">
+            <Title level={2} className="text-[var(--legacy-ink)]! m-0!">
               {id === "create"
                 ? "Create New Plan"
                 : `Edit Plan: ${form.getFieldValue("name") || ""}`}
@@ -220,7 +220,7 @@ export default function PlanDetailPage() {
             </Space>
           </Card>
 
-          <Card title="Global Quotas" className="bg-[#1a1a1a] border-[#303030]">
+          <Card title="Global Quotas" className="bg-[var(--legacy-surface-1a1a1a)] border-[var(--legacy-line-303030)]">
             {/* <Text type="secondary" className="block mb-4">
               These quotas apply to the entire organization regardless of
               specific price period.

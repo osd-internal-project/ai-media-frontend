@@ -190,7 +190,7 @@ const ModelPricingManagementPage = () => {
       render: (details) => {
         if (!details) return "-";
         return (
-          <div className="max-w-md truncate text-gray-400 text-xs bg-gray-800 p-2 rounded">
+          <div className="max-w-md truncate text-[var(--legacy-gray-400)] text-xs bg-[var(--legacy-surface-gray-800)] p-2 rounded">
             {JSON.stringify(details)}
           </div>
         );
@@ -223,7 +223,7 @@ const ModelPricingManagementPage = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold  mb-2">Model Calculation Logic</h1>
-          <p className="text-gray-400">Manage credit/token formulas for each GenAI model</p>
+          <p className="text-[var(--legacy-gray-400)]">Manage credit/token formulas for each GenAI model</p>
         </div>
         <Button
           type="primary"
@@ -245,7 +245,7 @@ const ModelPricingManagementPage = () => {
       />
 
       <Modal
-        title={<span className="text-white">{editingId ? "Edit Model Logic" : "Create Model Logic"}</span>}
+        title={<span className="text-[var(--legacy-ink)]">{editingId ? "Edit Model Logic" : "Create Model Logic"}</span>}
         open={isModalOpen}
         onCancel={handleCancel}
         footer={null}
@@ -262,42 +262,42 @@ const ModelPricingManagementPage = () => {
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="modelType"
-              label={<span className="text-gray-300">Model Key (e.g. seedance, realman)</span>}
+              label={<span className="text-[var(--legacy-gray-300)]">Model Key (e.g. seedance, realman)</span>}
               rules={[{ required: true, message: "Required" }]}
             >
-              <Input className="bg-[#2a2a2e] border-gray-700 text-white" />
+              <Input className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)]" />
             </Form.Item>
 
             <Form.Item
               name="type"
-              label={<span className="text-gray-300">Category (e.g. VIDEO, IMAGE)</span>}
+              label={<span className="text-[var(--legacy-gray-300)]">Category (e.g. VIDEO, IMAGE)</span>}
               rules={[{ required: true, message: "Required" }]}
             >
-              <Input className="bg-[#2a2a2e] border-gray-700 text-white" />
+              <Input className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)]" />
             </Form.Item>
           </div>
 
           <Form.Item
             name="description"
-            label={<span className="text-gray-300">Description</span>}
+            label={<span className="text-[var(--legacy-gray-300)]">Description</span>}
           >
-            <Input.TextArea rows={2} className="bg-[#2a2a2e] border-gray-700 text-white" />
+            <Input.TextArea rows={2} className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)]" />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
               name="provider"
-              label={<span className="text-gray-300">Provider (e.g. BytePlus)</span>}
+              label={<span className="text-[var(--legacy-gray-300)]">Provider (e.g. BytePlus)</span>}
             >
-              <Input maxLength={50} className="bg-[#2a2a2e] border-gray-700 text-white" />
+              <Input maxLength={50} className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)]" />
             </Form.Item>
 
             <Form.Item
               name="iconUrl"
-              label={<span className="text-gray-300">Icon URL</span>}
+              label={<span className="text-[var(--legacy-gray-300)]">Icon URL</span>}
               rules={[{ pattern: /^(https?:\/\/|\/(?!\/))\S+$/, message: "Use https://... or a path like /providers/byteplus.png" }]}
             >
-              <Input placeholder="/providers/byteplus.png" className="bg-[#2a2a2e] border-gray-700 text-white" />
+              <Input placeholder="/providers/byteplus.png" className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)]" />
             </Form.Item>
           </div>
 
@@ -308,10 +308,10 @@ const ModelPricingManagementPage = () => {
              <Switch checkedChildren="Default" unCheckedChildren="Not Default" />
           </Form.Item>
 
-          <div className="border border-gray-700 p-4 rounded-lg bg-[#1c1c1e] mt-4 mb-4">
+          <div className="border border-[var(--legacy-line-gray-700)] p-4 rounded-lg bg-[var(--legacy-surface-1c1c1e)] mt-4 mb-4">
             <Form.Item
               name="calculationType"
-              label={<span className="text-white font-bold">Calculation Strategy</span>}
+              label={<span className="text-[var(--legacy-ink)] font-bold">Calculation Strategy</span>}
               rules={[{ required: true }]}
             >
               <Select 
@@ -326,7 +326,7 @@ const ModelPricingManagementPage = () => {
             </Form.Item>
 
             {(calculationType === "FORMULA" || calculationType === "USE_TOKEN" || calculationType === "NOT_USE_TOKEN") && (
-              <div className="mt-4 p-4 border border-blue-900 bg-[#16213e] rounded text-sm text-blue-200 space-y-3">
+              <div className="mt-4 p-4 border border-blue-900 bg-[var(--legacy-surface-16213e)] rounded text-sm text-blue-200 space-y-3">
 
                 {/* Variables reference */}
                 <div>
@@ -406,30 +406,30 @@ const ModelPricingManagementPage = () => {
                 {(calculationType === "USE_TOKEN" || calculationType === "FORMULA") && (
                   <Form.Item
                     name="tokenFormula"
-                    label={<span className="text-gray-300">{calculationType === "USE_TOKEN" ? "Token Fallback Formula (if token = 0)" : "Token Usage Formula"}</span>}
+                    label={<span className="text-[var(--legacy-gray-300)]">{calculationType === "USE_TOKEN" ? "Token Fallback Formula (if token = 0)" : "Token Usage Formula"}</span>}
                     rules={[{ required: calculationType === "FORMULA", message: "Required" }]}
                   >
-                    <Input placeholder="e.g., body.duration * 49846.15" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                    <Input placeholder="e.g., body.duration * 49846.15" className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)] font-mono" />
                   </Form.Item>
                 )}
 
                 {(calculationType === "USE_TOKEN" || calculationType === "NOT_USE_TOKEN") && (
                   <Form.Item
                     name="creditFormula"
-                    label={<span className="text-gray-300">Credit Usage Formula</span>}
+                    label={<span className="text-[var(--legacy-gray-300)]">Credit Usage Formula</span>}
                     rules={[{ required: true, message: "Required" }]}
                   >
-                  <Input placeholder="e.g., ternary(body.resolution === '2k', 20, ternary(body.resolution === '4k', 30, 15))" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                  <Input placeholder="e.g., ternary(body.resolution === '2k', 20, ternary(body.resolution === '4k', 30, 15))" className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)] font-mono" />
                   </Form.Item>
                 )}
 
                 {calculationType === "FORMULA" && (
                    <Form.Item
                    name="creditFormula"
-                   label={<span className="text-gray-300">Legacy Formula Base</span>}
+                   label={<span className="text-[var(--legacy-gray-300)]">Legacy Formula Base</span>}
                    rules={[{ required: true, message: "Required" }]}
                  >
-                   <Input placeholder="e.g., ternary(body.resolution === '2k', 20, 22.5)" className="bg-[#2a2a2e] border-gray-700 text-white font-mono" />
+                   <Input placeholder="e.g., ternary(body.resolution === '2k', 20, 22.5)" className="bg-[var(--legacy-panel-2a2a2e)] border-[var(--legacy-line-gray-700)] text-[var(--legacy-ink)] font-mono" />
                  </Form.Item>
                 )}
               </div>

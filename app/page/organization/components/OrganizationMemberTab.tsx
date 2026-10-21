@@ -215,7 +215,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
             </Popconfirm>
           </Space>
         ) : (
-          <span className="text-gray-400">View only</span>
+          <span className="text-[var(--legacy-gray-400)]">View only</span>
         ),
     },
   ];
@@ -280,17 +280,17 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
             return (
               <div
                 key={member.id}
-                className="rounded-xl border border-white/10 bg-white/5 p-4"
+                className="rounded-xl border border-[var(--legacy-line-white-10)] bg-[var(--legacy-panel-white-5)] p-4"
               >
                 <div className="flex items-start gap-3">
                   <Avatar className="shrink-0">
                     {user?.fullname?.[0] || "U"}
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-white">
+                    <div className="truncate font-medium text-[var(--legacy-ink)]">
                       {user?.fullname || member.userId}
                     </div>
-                    <div className="truncate text-sm text-gray-400">
+                    <div className="truncate text-sm text-[var(--legacy-gray-400)]">
                       {member?.users?.email || "-"}
                     </div>
                   </div>
@@ -298,7 +298,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
 
                 <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <div className="text-gray-400">Status</div>
+                    <div className="text-[var(--legacy-gray-400)]">Status</div>
                     <div className="mt-1">
                       <Tag
                         color={
@@ -313,7 +313,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-400">Role</div>
+                    <div className="text-[var(--legacy-gray-400)]">Role</div>
                     <div className="mt-1">
                       <Tag color={member.role === "OWNER" ? "gold" : "blue"}>
                         {member.role}
@@ -321,8 +321,8 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                     </div>
                   </div>
                   <div className="sm:col-span-2">
-                    <div className="text-gray-400">Joined At</div>
-                    <div className="mt-1 text-white">
+                    <div className="text-[var(--legacy-gray-400)]">Joined At</div>
+                    <div className="mt-1 text-[var(--legacy-ink)]">
                       {member.joinedAt
                         ? new Date(member.joinedAt).toLocaleDateString()
                         : "-"}
@@ -350,7 +350,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
                       </Popconfirm>
                     </>
                   ) : (
-                    <span className="text-sm text-gray-400">View only</span>
+                    <span className="text-sm text-[var(--legacy-gray-400)]">View only</span>
                   )}
                 </div>
               </div>

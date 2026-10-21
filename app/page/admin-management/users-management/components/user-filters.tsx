@@ -50,10 +50,10 @@ const UserFiltersPage: FC<props> = ({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Input
           placeholder="Search"
-          prefix={<SearchOutlined className="text-gray-500" />}
-          className="w-full text-white lg:max-w-sm"
+          prefix={<SearchOutlined className="text-[var(--legacy-gray-500)]" />}
+          className="w-full text-[var(--legacy-ink)] lg:max-w-sm"
           style={{
-            color: "white",
+            color: "var(--legacy-ink)",
           }}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
@@ -61,16 +61,16 @@ const UserFiltersPage: FC<props> = ({
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             icon={<ReloadOutlined />}
-            className="!border-gray-700 !hover:bg-gray-700"
+            className="!border-[var(--legacy-line-gray-700)] !hover:bg-[var(--legacy-hover-gray-700)]"
             onClick={onRefresh}
           />
           <Button
             icon={<DownloadOutlined />}
-            className="!border-gray-700 !hover:bg-gray-7000"
+            className="!border-[var(--legacy-line-gray-700)] !hover:bg-gray-7000"
           />
           <Button
             icon={<SettingOutlined />}
-            className="!border-gray-700  !hover:bg-gray-700"
+            className="!border-[var(--legacy-line-gray-700)]  !hover:bg-[var(--legacy-hover-gray-700)]"
           />
           <Button
             type="primary"

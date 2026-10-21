@@ -101,7 +101,7 @@ export default function PurchaseClient() {
       <div className="max-w-2xl mx-auto p-6">
         {contextHolder}
         <Card>
-          <p className="text-gray-300">
+          <p className="text-[var(--legacy-gray-300)]">
             No package selected. Please pick a package first.
           </p>
           <Button
@@ -121,24 +121,24 @@ export default function PurchaseClient() {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-4">
       {contextHolder}
-      <h1 className="text-2xl font-bold text-white">Create Your Organization</h1>
-      <p className="text-gray-400">
+      <h1 className="text-2xl font-bold text-[var(--legacy-ink)]">Create Your Organization</h1>
+      <p className="text-[var(--legacy-gray-400)]">
         Enter your organization and tax-invoice details. Your organization is
         created after payment is confirmed.
       </p>
 
       <Card size="small" className="mb-2">
-        <div className="flex justify-between text-gray-300">
+        <div className="flex justify-between text-[var(--legacy-gray-300)]">
           <span>Selected package</span>
-          <span className="text-white font-medium">
+          <span className="text-[var(--legacy-ink)] font-medium">
             {price.interval} · {formatTHB(subTotal)}
           </span>
         </div>
-        <div className="flex justify-between text-gray-300">
+        <div className="flex justify-between text-[var(--legacy-gray-300)]">
           <span>VAT 7%</span>
           <span>{formatTHB(subTotal * 0.07)}</span>
         </div>
-        <div className="flex justify-between font-semibold text-white">
+        <div className="flex justify-between font-semibold text-[var(--legacy-ink)]">
           <span>Total</span>
           <span>{formatTHB(subTotal * 1.07)}</span>
         </div>

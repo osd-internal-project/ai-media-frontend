@@ -48,6 +48,7 @@ import { Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
 import ShareModal from "./share-modal";
+import { FEATURES } from "@/app/config/features";
 import type { SocialShareItem } from "./useSocialShare";
 
 export interface props {
@@ -557,20 +558,22 @@ const PromptActivity: FC<props> = ({
               }}
             />
             {/* Share */}
-            <Button
-              icon={<Share2 size={16} />}
-              type="text"
-              shape="circle"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShareItem({
-                  imageUrl: record.imageUrl,
-                  typeGenerate: record.typeGenerate,
-                  prompt: record.prompt,
-                  url: record.imageUrl, // <-- แนบ link ปัจจุบัน
-                });
-              }}
-            />
+            {FEATURES.social && (
+              <Button
+                icon={<Share2 size={16} />}
+                type="text"
+                shape="circle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareItem({
+                    imageUrl: record.imageUrl,
+                    typeGenerate: record.typeGenerate,
+                    prompt: record.prompt,
+                    url: record.imageUrl, // <-- แนบ link ปัจจุบัน
+                  });
+                }}
+              />
+            )}
             {/* Publish to social — สร้าง task รออนุมัติในแท็บ Public Social
                 (ต่างจากปุ่ม Share ด้านบนที่เป็นการแชร์เองแบบเร็ว ๆ) */}
             {onShareToSocial && (

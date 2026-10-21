@@ -268,7 +268,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         <Space wrap>
           {selectedIds.length > 0 && (
             <>
-              <span className="text-[#99a1af]">
+              <span className="text-[var(--legacy-99a1af)]">
                 {selectedIds.length} selected
               </span>
               <Button

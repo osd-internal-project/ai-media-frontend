@@ -103,14 +103,14 @@ export default function ChangePackageDetailPage() {
               type="text"
               icon={<ArrowLeft className="w-4 h-4" />}
               onClick={handleCancel}
-              className="mb-4 text-gray-400 hover:text-white"
+              className="mb-4 text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)]"
             >
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-[var(--legacy-ink)] mb-2">
               Confirm Package Change
             </h1>
-            <p className="text-gray-400">
+            <p className="text-[var(--legacy-gray-400)]">
               Review and confirm the new package for your organization
             </p>
           </div>
@@ -118,48 +118,48 @@ export default function ChangePackageDetailPage() {
             className="shadow-lg"
             styles={{
               body: {
-                backgroundColor: "#18181b",
+                backgroundColor: "var(--legacy-surface-18181b)",
                 padding: "32px",
               },
             }}
           >
             {/* Organization Info */}
-            <div className="mb-6 p-4 bg-[#27272a] rounded-lg border border-[#3f3f46]">
-              <h3 className="text-white font-medium mb-3">Organization</h3>
+            <div className="mb-6 p-4 bg-[var(--legacy-panel-27272a)] rounded-lg border border-[var(--legacy-line-3f3f46)]">
+              <h3 className="text-[var(--legacy-ink)] font-medium mb-3">Organization</h3>
               <div className="text-sm">
-                 <p className="text-gray-400">Name</p>
-                 <p className="text-white font-semibold">{organization?.name}</p>
+                 <p className="text-[var(--legacy-gray-400)]">Name</p>
+                 <p className="text-[var(--legacy-ink)] font-semibold">{organization?.name}</p>
               </div>
             </div>
 
             {/* Selected Plan Details */}
             {planPrice?.plan?.detailJson && (
-              <div className="mb-6 p-4 bg-[#27272a] rounded-lg border border-[#3f3f46]">
-                <h3 className="text-white font-medium mb-3">
+              <div className="mb-6 p-4 bg-[var(--legacy-panel-27272a)] rounded-lg border border-[var(--legacy-line-3f3f46)]">
+                <h3 className="text-[var(--legacy-ink)] font-medium mb-3">
                   Selected Plan: {planPrice.plan.name}
                 </h3>
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-400">Max Users</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Max Users</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {planPrice.plan.detailJson.maxUserAccess}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Price</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Price</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {planPrice.price}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Image</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Image</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {planPrice.plan.detailJson.imageAllowance}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-400">Credit</p>
-                    <p className="text-white font-semibold">
+                    <p className="text-[var(--legacy-gray-400)]">Credit</p>
+                    <p className="text-[var(--legacy-ink)] font-semibold">
                       {planPrice.plan.detailJson.creditAllowance}
                     </p>
                   </div>
@@ -168,7 +168,7 @@ export default function ChangePackageDetailPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
+            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-[var(--legacy-line-gray-700)]">
               <Button type="primary" size="middle" onClick={onConfirm}>
                 Confirm Change Package
               </Button>

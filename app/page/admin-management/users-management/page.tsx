@@ -200,7 +200,7 @@ const AdminUsersManagementPage = () => {
             </span>
           </div>
           <div>
-            <div className="text-white font-medium">{text}</div>
+            <div className="text-[var(--legacy-ink)] font-medium">{text}</div>
             {/* <div className="text-gray-400 text-xs">{record.userId}</div> */}
           </div>
         </div>
@@ -311,7 +311,7 @@ const AdminUsersManagementPage = () => {
           {paginatedData.map((user) => (
             <div
               key={user.userId}
-              className="rounded-xl border border-white/10 bg-white/5 p-4"
+              className="rounded-xl border border-[var(--legacy-line-white-10)] bg-[var(--legacy-panel-white-5)] p-4"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -325,10 +325,10 @@ const AdminUsersManagementPage = () => {
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-base font-medium text-white">
+                  <div className="truncate text-base font-medium text-[var(--legacy-ink)]">
                     {user.username}
                   </div>
-                  <div className="truncate text-sm text-gray-400">
+                  <div className="truncate text-sm text-[var(--legacy-gray-400)]">
                     {user.fullname || "-"}
                   </div>
                 </div>
@@ -342,16 +342,16 @@ const AdminUsersManagementPage = () => {
 
               <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
-                  <div className="text-gray-400">Role</div>
+                  <div className="text-[var(--legacy-gray-400)]">Role</div>
                   <div className="mt-1">{renderRoleTag(user.role)}</div>
                 </div>
                 <div>
-                  <div className="text-gray-400">Created</div>
-                  <div className="mt-1 text-white">{user.createdAt || "-"}</div>
+                  <div className="text-[var(--legacy-gray-400)]">Created</div>
+                  <div className="mt-1 text-[var(--legacy-ink)]">{user.createdAt || "-"}</div>
                 </div>
                 <div className="sm:col-span-2">
-                  <div className="text-gray-400">Description</div>
-                  <div className="mt-1 break-words text-white">
+                  <div className="text-[var(--legacy-gray-400)]">Description</div>
+                  <div className="mt-1 break-words text-[var(--legacy-ink)]">
                     {user.description || "-"}
                   </div>
                 </div>

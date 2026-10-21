@@ -63,8 +63,8 @@ const AdminGroupPermissionPage = () => {
             </span>
           </div>
           <div>
-            <div className="text-white font-medium">{text}</div>
-            <div className="text-gray-400 text-xs">{record.userId}</div>
+            <div className="text-[var(--legacy-ink)] font-medium">{text}</div>
+            <div className="text-[var(--legacy-gray-400)] text-xs">{record.userId}</div>
           </div>
         </div>
       ),
@@ -88,7 +88,7 @@ const AdminGroupPermissionPage = () => {
           {group?.map((g) => (
             <Tag
               key={g.group.groupId}
-              className="bg-gray-700 border-gray-600 text-gray-300 rounded-full px-3"
+              className="bg-[var(--legacy-panel-gray-700)] border-[var(--legacy-line-gray-600)] text-[var(--legacy-gray-300)] rounded-full px-3"
             >
               {g.group.name}
             </Tag>

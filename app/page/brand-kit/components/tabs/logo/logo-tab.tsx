@@ -140,7 +140,7 @@ const LogoTab: React.FC<LogoTabProps> = ({
   return (
     <div className="logo-tab-shell">
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Text style={{ color: "#94a3b8", fontSize: isMobile ? 12 : 13 }}>
+        <Text style={{ color: mode === "dark" ? "#94a3b8" : semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>
           {logos.length} logo assets configured
         </Text>
 

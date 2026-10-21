@@ -107,7 +107,7 @@ const OrganizationInvitationTab: React.FC<OrganizationInvitationTabProps> = ({
                   </Button>
                 </Popconfirm>
               ) : (
-                <span className="text-gray-400 text-sm">-</span>
+                <span className="text-[var(--legacy-gray-400)] text-sm">-</span>
               ),
           },
         ]
@@ -150,7 +150,7 @@ const OrganizationInvitationTab: React.FC<OrganizationInvitationTabProps> = ({
           invitations.map((inv) => (
             <div
               key={inv.id}
-              className="rounded-xl border border-white/10 bg-white/5 p-4"
+              className="rounded-xl border border-[var(--legacy-line-white-10)] bg-[var(--legacy-panel-white-5)] p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -181,16 +181,16 @@ const OrganizationInvitationTab: React.FC<OrganizationInvitationTabProps> = ({
                   </Popconfirm>
                 )}
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-400">
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-[var(--legacy-gray-400)]">
                 <div>
                   <div>Invited At</div>
-                  <div className="text-white">
+                  <div className="text-[var(--legacy-ink)]">
                     {dayjs(inv.createdAt).format("YYYY-MM-DD HH:mm") || "-"}
                   </div>
                 </div>
                 <div>
                   <div>Expires At</div>
-                  <div className="text-white">
+                  <div className="text-[var(--legacy-ink)]">
                     {inv.expiredAt
                       ? dayjs(inv.expiredAt).format("YYYY-MM-DD HH:mm")
                       : "-"}

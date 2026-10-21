@@ -167,18 +167,18 @@ export default function OrganizationDetailPage() {
             </Button>
           </div>
           <div>Created At: {organization?.createdAt}</div>
-          <div className="text-sm text-gray-500 min-h-4">
+          <div className="text-sm text-[var(--legacy-gray-500)] min-h-4">
             {organization?.description}
           </div>
         </Card>
       </div>
 
       <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
+        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
           {/* creditAllowance < balance when credit was granted outside the plan (e.g. event orgs, allowance 0 = expiry) */}
           {creditAllowance >= cycleBalance ? (
             <>
-              <div className="text-[#99a1af]">Used Total Credit :</div>
+              <div className="text-[var(--legacy-99a1af)]">Used Total Credit :</div>
               <div className="text-xl">
                 {formatNumber(creditAllowance - cycleBalance)}/{" "}
                 {formatNumber(creditAllowance)}
@@ -186,21 +186,21 @@ export default function OrganizationDetailPage() {
             </>
           ) : (
             <>
-              <div className="text-[#99a1af]">Remaining Credit :</div>
+              <div className="text-[var(--legacy-99a1af)]">Remaining Credit :</div>
               <div className="text-xl">{formatNumber(cycleBalance)}</div>
             </>
           )}
         </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">On Top Credit :</div>
+        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
+          <div className="text-[var(--legacy-99a1af)]">On Top Credit :</div>
           <div className="flex">
             <div className="text-xl">
               + {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
             </div>
           </div>
         </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "#18181b" } }}>
-          <div className="text-[#99a1af]">Total Users :</div>
+        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
+          <div className="text-[var(--legacy-99a1af)]">Total Users :</div>
           <div className="text-xl">
             {members.length || 0}/{organization?.maxUserAccess || 0}
           </div>

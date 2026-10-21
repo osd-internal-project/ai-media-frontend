@@ -122,8 +122,8 @@ const AdminWhtRequestsPage: React.FC = () => {
       key: "bank",
       render: (_, r) => (
         <div className="text-xs">
-          <div className="text-white">{r.bankAccountName}</div>
-          <div className="text-gray-400">
+          <div className="text-[var(--legacy-ink)]">{r.bankAccountName}</div>
+          <div className="text-[var(--legacy-gray-400)]">
             {r.bankName} · {r.bankAccountNumber} · br.{r.bankBranchCode}
           </div>
         </div>
@@ -142,7 +142,7 @@ const AdminWhtRequestsPage: React.FC = () => {
       key: "change",
       render: (_, r) => {
         const options = NEXT_STATUSES[r.status] ?? [];
-        if (options.length === 0) return <span className="text-gray-500">—</span>;
+        if (options.length === 0) return <span className="text-[var(--legacy-gray-500)]">—</span>;
         return (
           <Select<WhtStatus>
             placeholder="Set status"
@@ -159,7 +159,7 @@ const AdminWhtRequestsPage: React.FC = () => {
   return (
     <div className="space-y-4">
       {contextHolder}
-      <h2 className="text-xl font-semibold text-white">WHT Requests</h2>
+      <h2 className="text-xl font-semibold text-[var(--legacy-ink)]">WHT Requests</h2>
       <Card size="small">
         <Space wrap className="mb-4">
           <Input.Search

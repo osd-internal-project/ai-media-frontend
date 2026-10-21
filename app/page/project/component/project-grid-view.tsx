@@ -64,7 +64,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                   boxShadow:
                     hoveredCardId === project.id
                       ? "0 10px 28px rgba(0,0,0,0.12)"
-                      : "none",
+                      : (semantic.boxShadowTertiary ?? "none"),
                   cursor: "pointer",
                   position: "relative",
                   transform:

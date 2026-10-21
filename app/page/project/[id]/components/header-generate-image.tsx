@@ -172,10 +172,17 @@ const HeaderGenerateImagePage: FC<props> = ({
         width={isMobile ? "92%" : isTablet ? "78%" : 600}
         placement={isMobile ? "bottom" : "right"}
         height={isMobile ? "78%" : undefined}
+        // Dark keeps gray-300; light uses the secondary text token. Cast: CSSProperties has no custom properties.
+        styles={{
+          body: {
+            "--guide-text":
+              mode === "dark" ? "#D1D5DB" : semantic.colorTextSecondary,
+          } as React.CSSProperties,
+        }}
       >
         <div className="space-y-6">
           {/* Introduction */}
-          <p className="text-gray-300 leading-relaxed">
+          <p className="text-[var(--guide-text)] leading-relaxed">
             {`This article introduces prompt usage tips for Seedream 4.0's
             text-to-image generation, image editing, reference-based generation
             and multi-image creation, helping you quickly get started with video
@@ -185,7 +192,7 @@ const HeaderGenerateImagePage: FC<props> = ({
           {/* General Guidelines Section */}
           <div>
             <h2 className="text-xl font-semibold mb-4">General Guidelines</h2>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-[var(--guide-text)] leading-relaxed">
               {`Seedream 4.0 supports a wide range of tasks such as text-to-image
               generation, image editing, reference-based generation and
               multi-image creation. For optimal image creation results, consider
@@ -200,18 +207,18 @@ const HeaderGenerateImagePage: FC<props> = ({
               <h3 className="text-lg font-medium text-blue-400 mb-2">
                 1. Clearly describe the scene using natural language
               </h3>
-              <p className="text-gray-300 mb-3">
+              <p className="text-[var(--guide-text)] mb-3">
                 Use coherent natural language to describe the subject + action +
                 environment. If aesthetics matter, include descriptors of style,
                 color, lighting, or composition.
               </p>
               <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-green-400">• Recommended:</span> A girl
                   in a lavish dress walking under a parasol along a tree-lined
                   path, in the style of a Monet oil painting.
                 </li>
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-red-400">• Avoid:</span> Girl, umbrella,
                   tree-lined street, oil painting texture.
                 </li>
@@ -223,19 +230,19 @@ const HeaderGenerateImagePage: FC<props> = ({
               <h3 className="text-lg font-medium text-blue-400 mb-2">
                 2. Specify application scenario
               </h3>
-              <p className="text-gray-300 mb-3">
+              <p className="text-[var(--guide-text)] mb-3">
                 If you have a specific use case, explicitly state the image
                 purpose and type in your prompt.
               </p>
               <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-green-400">• Recommended:</span>
                   {` Design
                   a logo for a gaming company. The logo features a dog playing
                   with a game controller. The company name "PITBULL" is written
                   on it.`}
                 </li>
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-red-400">• Avoid:</span> An abstract
                   image of a dog holding a controller, and the word PITBULL on
                   it.
@@ -248,7 +255,7 @@ const HeaderGenerateImagePage: FC<props> = ({
               <h3 className="text-lg font-medium text-blue-400 mb-2">
                 3. Enhance stylistic rendering
               </h3>
-              <p className="text-gray-300">
+              <p className="text-[var(--guide-text)]">
                 If a particular style is needed, use precise style keywords or
                 reference images to achieve better results.
               </p>
@@ -259,16 +266,16 @@ const HeaderGenerateImagePage: FC<props> = ({
               <h3 className="text-lg font-medium text-blue-400 mb-2">
                 4. Improve text rendering accuracy
               </h3>
-              <p className="text-gray-300 mb-3">
+              <p className="text-[var(--guide-text)] mb-3">
                 Use double quotation marks for the text that needs to appear in
                 the generated image.
               </p>
               <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-green-400">• Recommended:</span>{" "}
                   {`Generate a poster with the title "Seedream 4.0".`}
                 </li>
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-red-400">• Avoid:</span> Generate a
                   poster titled Seedream 4.0.
                 </li>
@@ -280,13 +287,13 @@ const HeaderGenerateImagePage: FC<props> = ({
               <h3 className="text-lg font-medium text-blue-400 mb-2">
                 5. Clearly define image editing goals and fixed elements
               </h3>
-              <p className="text-gray-300 mb-3">
+              <p className="text-[var(--guide-text)] mb-3">
                 Use concise, unambiguous instructions for modifications. Avoid
                 vague pronouns. If other elements should remain unchanged,
                 specify that explicitly.
               </p>
               <ul className="space-y-2 ml-4">
-                <li className="text-gray-300">
+                <li className="text-[var(--guide-text)]">
                   <span className="text-green-400">• Recommended:</span> Dress
                   the tallest panda in pink Peking Opera costume and headgear,
                   keeping its pose unchanged.

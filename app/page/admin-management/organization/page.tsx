@@ -104,8 +104,8 @@ export default function OrganizationPage() {
       render: (text, record) => (
         <div className="flex items-center">
           <div>
-            <div className="text-white font-medium">{text}</div>
-            <div className="text-gray-400 text-xs">{record.organizationId}</div>
+            <div className="text-[var(--legacy-ink)] font-medium">{text}</div>
+            <div className="text-[var(--legacy-gray-400)] text-xs">{record.organizationId}</div>
           </div>
         </div>
       ),
@@ -225,7 +225,7 @@ export default function OrganizationPage() {
         <h1 className="text-2xl font-bold mb-2">
           Organization Management
         </h1>
-        <p className="text-gray-400">Manage all organizations in the system</p>
+        <p className="text-[var(--legacy-gray-400)]">Manage all organizations in the system</p>
       </div>
 
       {/* Filters */}
