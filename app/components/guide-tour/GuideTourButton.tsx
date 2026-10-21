@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { Button, Tooltip, Tour } from "antd";
 import type { TourProps } from "antd";
 import { QuestionCircleOutlined } from "@ant-design/icons";
@@ -135,6 +136,8 @@ export default function GuideTourButton({ guide, activeTab, onSelectTab }: Guide
           icon={<QuestionCircleOutlined />}
           aria-label="วิธีใช้งาน"
           onClick={openGuide}
+          // CSSProperties has no custom-property keys; the ring colour reaches the static style block below via this var.
+          style={{ "--guide-tour-ping": semantic.colorPrimary } as CSSProperties}
         />
       </Tooltip>
       <GuideModal
@@ -174,6 +177,7 @@ export default function GuideTourButton({ guide, activeTab, onSelectTab }: Guide
           </span>
         )}
       />
+      {/* Keep this block static: a ${} interpolation here hangs Next 15.5's SWC styled-jsx transform (build never ends). */}
       <style jsx global>{`
         .guide-tour-help {
           position: relative;
@@ -183,7 +187,7 @@ export default function GuideTourButton({ guide, activeTab, onSelectTab }: Guide
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          border: 2px solid ${semantic.colorPrimary};
+          border: 2px solid var(--guide-tour-ping);
           animation: guideTourPing 1.8s ease-out infinite;
           pointer-events: none;
         }

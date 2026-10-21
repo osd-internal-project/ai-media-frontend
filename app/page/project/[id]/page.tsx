@@ -37,23 +37,22 @@ import VideoEditorTab from "./components/tabs/video-editor/video-editor-tab";
 import { STRINGS as VIDEO_EDITOR_STRINGS } from "./components/tabs/video-editor/strings";
 import { FEATURES } from "@/app/config/features";
 import { useOrganization } from "@/app/context/OrganizationContext";
-import VideoFormRenderer from "./components/tabs/video-gen/video-form-renderer";
-import OmnihumenFormRenderer from "./components/tabs/omni-human/omnihumen-form-renderer";
-import DreamactorFormRenderer from "./components/tabs/dream-actor/dreamactor-form-renderer";
-import AudioFormRenderer from "./components/tabs/audio-gen/audio-form-renderer";
-import PromptLibrary from "./components/tabs/library/prompt-library";
-import PromptActivity from "./components/tabs/all-activity/prompt-activity";
-import PublicSocial from "./components/tabs/public-social/public-social";
 
-// Only fabric (Editor) and xyflow (Workflow) load on first open. v1.6.0 lazy-loaded all 9 tabs
-// and `next build --turbopack` stopped finishing on CI, so the light tabs are static again.
+// Only the default Image tab ships with the page; the rest (fabric, xyflow, …) load on first open.
 const tabLoading = () => (
   <div className="h-full w-full grid place-items-center">
     <Spin />
   </div>
 );
+const VideoFormRenderer = dynamic(() => import("./components/tabs/video-gen/video-form-renderer"), { ssr: false, loading: tabLoading });
+const OmnihumenFormRenderer = dynamic(() => import("./components/tabs/omni-human/omnihumen-form-renderer"), { ssr: false, loading: tabLoading });
+const DreamactorFormRenderer = dynamic(() => import("./components/tabs/dream-actor/dreamactor-form-renderer"), { ssr: false, loading: tabLoading });
+const AudioFormRenderer = dynamic(() => import("./components/tabs/audio-gen/audio-form-renderer"), { ssr: false, loading: tabLoading });
 const WorkflowFormRenderer = dynamic(() => import("./components/tabs/workflow/workflow-form-renderer"), { ssr: false, loading: tabLoading });
+const PromptLibrary = dynamic(() => import("./components/tabs/library/prompt-library"), { ssr: false, loading: tabLoading });
+const PromptActivity = dynamic(() => import("./components/tabs/all-activity/prompt-activity"), { ssr: false, loading: tabLoading });
 const EditorSpace = dynamic(() => import("./components/tabs/editor/editor-space"), { ssr: false, loading: tabLoading });
+const PublicSocial = dynamic(() => import("./components/tabs/public-social/public-social"), { ssr: false, loading: tabLoading });
 
 type GenerateTabKey =
   | "image"
