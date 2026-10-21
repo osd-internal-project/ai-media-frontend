@@ -28,6 +28,8 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Normal build is 8–12 min; fail fast instead of hanging for GitHub's 6 h default.
+    timeout-minutes: 25
     outputs:
       image_name: ${{ steps.pkg.outputs.name }}
       image_version: ${{ steps.pkg.outputs.ver }}-${{ inputs.deploy_env || 'sit' }}
