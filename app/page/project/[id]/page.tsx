@@ -315,6 +315,8 @@ const GenerateImagePage: FC = () => {
     (key: GenerateTabKey, text: string, icon: React.ReactNode) => {
       const isDarkMode = mode === "dark";
       const isActive = activeKey === key;
+      const lightActive = !isDarkMode && isActive;
+      const activeTextColor = isDarkMode ? "#ffffff" : semantic.colorPrimaryText;
       return (
         <div
           style={{
@@ -323,14 +325,17 @@ const GenerateImagePage: FC = () => {
             gap: isMobile ? 6 : 8,
             padding: isMobile ? "4px 8px" : isTablet ? "5px 10px" : "6px 12px",
             borderRadius: 8,
-            border:
-              isDarkMode && isActive
+            border: !isActive
+              ? "1px solid transparent"
+              : isDarkMode
                 ? `1px solid ${semantic.colorBorderSecondary || semantic.colorPrimary}`
-                : "1px solid transparent",
-            background:
-              isDarkMode && isActive ? semantic.colorBgElevated : "transparent",
-            color:
-              isDarkMode && isActive ? "#ffffff" : semantic.colorTextSecondary,
+                : `1px solid ${semantic.colorPrimary}66`,
+            background: !isActive
+              ? "transparent"
+              : isDarkMode
+                ? semantic.colorBgElevated
+                : semantic.colorPrimaryBg,
+            color: isActive ? activeTextColor : semantic.colorTextSecondary,
             transition: "all 0.2s ease",
           }}
         >
@@ -346,10 +351,8 @@ const GenerateImagePage: FC = () => {
           </span>
           <Typography.Text
             style={{
-              color:
-                isDarkMode && isActive
-                  ? "#ffffff"
-                  : semantic.colorTextSecondary,
+              color: isActive ? activeTextColor : semantic.colorTextSecondary,
+              fontWeight: lightActive ? 500 : undefined,
               marginBottom: 0,
               fontSize: isMobile ? 12 : isTablet ? 13 : 14,
             }}

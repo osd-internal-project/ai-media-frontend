@@ -337,23 +337,23 @@ html {
 }
 
 .theme-light {
-  --legacy-ink: #1C1D2B;
-  --legacy-gray-300: #5E6275;
-  --legacy-gray-400: #5E6275;
-  --legacy-gray-500: #5E6275;
-  --legacy-9b9c9e: #5E6275;
-  --legacy-99a1af: #5E6275;
-  --legacy-666: #5E6275;
+  --legacy-ink: #1E1B3A;
+  --legacy-gray-300: #5B5876;
+  --legacy-gray-400: #5B5876;
+  --legacy-gray-500: #5B5876;
+  --legacy-9b9c9e: #5B5876;
+  --legacy-99a1af: #5B5876;
+  --legacy-666: #5B5876;
 
-  --legacy-line-gray-600: #E3E3EE;
-  --legacy-line-gray-700: #E3E3EE;
-  --legacy-line-gray-800: #E3E3EE;
-  --legacy-line-4a4a4a: #E3E3EE;
-  --legacy-line-3a3a3a: #E3E3EE;
-  --legacy-line-3f3f46: #E3E3EE;
-  --legacy-line-303030: #E3E3EE;
-  --legacy-line-374151: #E3E3EE;
-  --legacy-line-white-10: #E3E3EE;
+  --legacy-line-gray-600: #E6E3F5;
+  --legacy-line-gray-700: #E6E3F5;
+  --legacy-line-gray-800: #E6E3F5;
+  --legacy-line-4a4a4a: #E6E3F5;
+  --legacy-line-3a3a3a: #E6E3F5;
+  --legacy-line-3f3f46: #E6E3F5;
+  --legacy-line-303030: #E6E3F5;
+  --legacy-line-374151: #E6E3F5;
+  --legacy-line-white-10: #E6E3F5;
 
   --legacy-surface-black: #FFFFFF;
   --legacy-surface-0f0f0f: #FFFFFF;
@@ -365,12 +365,12 @@ html {
   --legacy-surface-16213e: #FFFFFF;
   --legacy-surface-gray-800: #FFFFFF;
 
-  --legacy-panel-27272a: #F4F4F9;
-  --legacy-panel-2a2a2a: #F4F4F9;
-  --legacy-panel-2a2a2e: #F4F4F9;
-  --legacy-panel-gray-700: #F4F4F9;
-  --legacy-panel-white-5: #F4F4F9;
+  --legacy-panel-27272a: #EFEDFA;
+  --legacy-panel-2a2a2a: #EFEDFA;
+  --legacy-panel-2a2a2e: #EFEDFA;
+  --legacy-panel-gray-700: #EFEDFA;
+  --legacy-panel-white-5: #EFEDFA;
 
-  --legacy-hover-gray-700: #ECECF5;
-  --legacy-hover-black: #ECECF5;
+  --legacy-hover-gray-700: #F3F1FD;
+  --legacy-hover-black: #F3F1FD;
 }
