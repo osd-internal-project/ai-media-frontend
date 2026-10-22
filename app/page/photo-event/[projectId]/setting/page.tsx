@@ -15,6 +15,7 @@ import { usePhotoEventPhotos } from "@/app/hooks/usePhotoEventPhotos";
 import { buildKioskUrl } from "@/app/utils/photo-event";
 import PhotosTab from "./components/photos-tab";
 import TemplatesTab from "./components/templates-tab";
+import PrintTab from "./components/print-tab";
 
 const PhotoEventSettingPage = () => {
   const router = useRouter();
@@ -110,6 +111,18 @@ const PhotoEventSettingPage = () => {
                   projectId={projectId}
                   userId={userId}
                   organizationId={organizationId}
+                  semantic={semantic}
+                />
+              ),
+            },
+            {
+              key: "print",
+              label: "Print",
+              children: (
+                <PrintTab
+                  projectId={projectId}
+                  userId={userId}
+                  photos={photos}
                   semantic={semantic}
                 />
               ),

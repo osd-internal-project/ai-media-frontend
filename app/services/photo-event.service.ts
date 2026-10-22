@@ -4,6 +4,9 @@ import type {
   IPhotoEventGeneration,
   IPhotoEventPhoto,
   IPhotoEventTemplate,
+  IPhotoEventPrintAsset,
+  IPhotoEventPrintTemplate,
+  IPrintLayout,
   IPublicPhotoEvent,
 } from "../common/photo-event.type";
 
@@ -113,6 +116,67 @@ const PhotoEventService = (axiosInstance: AxiosInstance) => {
           console.log(err);
           return undefined;
         });
+    },
+    // read ของ print template throw แทนคืนค่าว่าง — ว่างจริงแปลว่า "พิมพ์ด้วย layout default"
+    // ถ้ากลืน error ไว้ kiosk จะพิมพ์ผิดแบบโดยไม่มีใครรู้
+    findPrintTemplates: async (projectId: string): Promise<IPhotoEventPrintTemplate[]> => {
+      const res = await axiosInstance.get(`${baseUrl(projectId)}/print-templates`);
+      return res.data;
+    },
+    findActivePrintTemplate: async (
+      projectId: string,
+    ): Promise<IPhotoEventPrintTemplate | null> => {
+      const res = await axiosInstance.get(`${baseUrl(projectId)}/print-templates/active`);
+      return res.data || null;
+    },
+    createPrintTemplate: async (
+      projectId: string,
+      body: { userId: string; name: string; layout: IPrintLayout },
+    ): Promise<IPhotoEventPrintTemplate> => {
+      const res = await axiosInstance.post(`${baseUrl(projectId)}/print-templates`, body);
+      return res.data;
+    },
+    updatePrintTemplate: async (
+      projectId: string,
+      templateId: string,
+      body: { userId: string; name: string; layout: IPrintLayout },
+    ): Promise<IPhotoEventPrintTemplate> => {
+      const res = await axiosInstance.put(
+        `${baseUrl(projectId)}/print-templates/${templateId}`,
+        body,
+      );
+      return res.data;
+    },
+    activatePrintTemplate: async (
+      projectId: string,
+      templateId: string,
+      userId: string,
+    ): Promise<IPhotoEventPrintTemplate> => {
+      const res = await axiosInstance.put(
+        `${baseUrl(projectId)}/print-templates/${templateId}/activate`,
+        { userId },
+      );
+      return res.data;
+    },
+    removePrintTemplate: async (projectId: string, templateId: string, userId: string) => {
+      const res = await axiosInstance.delete(
+        `${baseUrl(projectId)}/print-templates/${templateId}`,
+        { params: { userId } },
+      );
+      return res.data;
+    },
+    uploadPrintAsset: async (
+      projectId: string,
+      userId: string,
+      file: File,
+    ): Promise<IPhotoEventPrintAsset> => {
+      const formData = new FormData();
+      formData.append("userId", userId);
+      formData.append("file", file);
+      const res = await axiosInstance.post(`${baseUrl(projectId)}/print-assets`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
     },
     publicDownloadUrl: (generationId: string) =>
       `${axiosInstance.defaults.baseURL ?? ""}/public/photo-event/${generationId}/download`,

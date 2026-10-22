@@ -2,36 +2,41 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { QRCode } from "antd";
-import type { IPhotoEventGeneration } from "@/app/common/photo-event.type";
+import type { IPhotoEventGeneration, IPrintLayout } from "@/app/common/photo-event.type";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
+import { DEFAULT_PRINT_LAYOUT } from "@/app/utils/photo-event-print";
+import { PrintCard } from "./print-card";
 
-const PRINT_CSS = `
+// margin 0 = ไม่มีที่ให้ Chrome วาง header/footer (วันที่, title, URL, เลขหน้า)
+const buildPrintCss = ({ paper }: IPrintLayout): string => `
 .pe-print-sheet { display: none; }
 @media print {
-  @page { size: A4 portrait; margin: 12mm; }
+  @page { size: ${paper.widthMm}mm ${paper.heightMm}mm; margin: 0; }
   body > *:not(.pe-print-sheet) { display: none !important; }
-  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; margin: 0 !important; }
   .pe-print-sheet {
-    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    width: 186mm; height: 272mm; color: #191c20; font-family: inherit;
+    display: block; position: relative; overflow: hidden;
+    width: ${paper.widthMm}mm; height: ${paper.heightMm}mm;
   }
-  .pe-print-photo { width: 100%; height: 212mm; object-fit: contain; }
-  .pe-print-footer { display: flex; align-items: center; gap: 8mm; width: 100%; padding-top: 6mm; }
-  .pe-print-footer strong { display: block; font-size: 16pt; font-weight: 500; }
-  .pe-print-footer span { display: block; margin-top: 2mm; font-size: 10pt; color: #5b6573; }
+  .pe-print-sheet > div { position: absolute; left: -${paper.bleedMm}mm; top: -${paper.bleedMm}mm; }
 }
 `;
 
 interface PrintSheetProps {
   generation: IPhotoEventGeneration;
+  layout: IPrintLayout;
+  assetUrls: Record<string, string>;
   onDone: () => void;
   onError: () => void;
 }
 
-/** หน้า A4 ที่มองเห็นเฉพาะตอนพิมพ์ — สั่ง print หลังรูปโหลดเสร็จเท่านั้น ไม่งั้นได้หน้าว่าง */
-function PrintSheet({ generation, onDone, onError }: PrintSheetProps) {
+/** หน้าที่มองเห็นเฉพาะตอนพิมพ์ — สั่ง print หลังรูปทุกรูปโหลดเสร็จเท่านั้น ไม่งั้นได้หน้าว่าง */
+function PrintSheet({ generation, layout, assetUrls, onDone, onError }: PrintSheetProps) {
+  const sheetRef = useRef<HTMLDivElement>(null);
   const finishedRef = useRef(false);
+  // caller ส่ง callback แบบ inline — เก็บใน ref ไม่งั้น effect ด้านล่างรันซ้ำแล้วสั่งพิมพ์ 2 ครั้ง
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   const finish = useCallback(() => {
     if (finishedRef.current) return;
@@ -44,51 +49,62 @@ function PrintSheet({ generation, onDone, onError }: PrintSheetProps) {
     return () => window.removeEventListener("afterprint", finish);
   }, [finish]);
 
-  const printNow = () => {
-    // รอ 1 frame ให้ layout ของหน้า print พร้อมก่อนเปิด dialog
-    requestAnimationFrame(() => {
-      window.print();
-      finish();
-    });
-  };
+  useEffect(() => {
+    const images = Array.from(sheetRef.current?.querySelectorAll("img") ?? []);
+    let cancelled = false;
+    Promise.all(images.map((img) => img.decode()))
+      .then(() => {
+        // รอ 1 frame ให้ layout ของหน้า print พร้อมก่อนเปิด dialog
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          window.print();
+          finish();
+        });
+      })
+      .catch(() => {
+        if (!cancelled) onErrorRef.current();
+      });
+    return () => {
+      cancelled = true;
+    };
+    // พิมพ์ครั้งเดียวต่อ sheet (sheet ถูก key ด้วย generation id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return createPortal(
-    <div className="pe-print-sheet">
-      <style>{PRINT_CSS}</style>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="pe-print-photo"
-        src={generation.resultUrl ?? ""}
-        alt="AI photo"
-        onLoad={printNow}
-        onError={onError}
+    <div className="pe-print-sheet" ref={sheetRef}>
+      <style>{buildPrintCss(layout)}</style>
+      <PrintCard
+        layout={layout}
+        photoUrl={generation.resultUrl ?? ""}
+        shareUrl={buildPhotoShareUrl(generation.id)}
+        assetUrls={assetUrls}
       />
-      <div className="pe-print-footer">
-        <QRCode
-          type="svg"
-          value={buildPhotoShareUrl(generation.id)}
-          size={150}
-          bordered={false}
-          bgColor="#ffffff"
-          color="#000000"
-        />
-        <div>
-          <strong>สแกนเพื่อดาวน์โหลดภาพ</strong>
-          <span>Scan to download your photo</span>
-        </div>
-      </div>
     </div>,
     document.body,
   );
 }
 
-/** สั่งพิมพ์รูปผลลัพธ์ + QR บน A4; `printing` เป็น true ตั้งแต่กดจนปิด dialog */
-export const usePrintGeneration = (onError?: () => void) => {
-  const [target, setTarget] = useState<IPhotoEventGeneration | null>(null);
+export interface IPrintDesign {
+  layout: IPrintLayout;
+  assetUrls: Record<string, string>;
+}
 
-  const print = useCallback((generation: IPhotoEventGeneration) => {
-    if (generation.resultUrl) setTarget(generation);
-  }, []);
+const DEFAULT_DESIGN: IPrintDesign = { layout: DEFAULT_PRINT_LAYOUT, assetUrls: {} };
+
+/** สั่งพิมพ์รูปผลลัพธ์ + QR ตาม layout; `printing` เป็น true ตั้งแต่กดจนปิด dialog */
+export const usePrintGeneration = (onError?: () => void) => {
+  const [target, setTarget] = useState<{
+    generation: IPhotoEventGeneration;
+    design: IPrintDesign;
+  } | null>(null);
+
+  const print = useCallback(
+    (generation: IPhotoEventGeneration, design: IPrintDesign = DEFAULT_DESIGN) => {
+      if (generation.resultUrl) setTarget({ generation, design });
+    },
+    [],
+  );
 
   const clear = useCallback(() => setTarget(null), []);
   const fail = useCallback(() => {
@@ -97,7 +113,14 @@ export const usePrintGeneration = (onError?: () => void) => {
   }, [onError]);
 
   const sheet = target ? (
-    <PrintSheet key={target.id} generation={target} onDone={clear} onError={fail} />
+    <PrintSheet
+      key={target.generation.id}
+      generation={target.generation}
+      layout={target.design.layout}
+      assetUrls={target.design.assetUrls}
+      onDone={clear}
+      onError={fail}
+    />
   ) : null;
 
   return { print, printing: Boolean(target), sheet };
