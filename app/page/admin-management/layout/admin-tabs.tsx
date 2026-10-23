@@ -8,6 +8,7 @@ import {
   Building2,
   Cpu,
   FileText,
+  Megaphone,
   PersonStanding,
   ReceiptText,
   Ticket,
@@ -81,6 +82,13 @@ const adminTabs: AdminTabItem[] = [
     href: "/page/admin-management/customers",
     matchers: ["/customers"],
     icon: <Users size={16} />,
+  },
+  {
+    key: "announcements",
+    label: "Announcements",
+    href: "/page/admin-management/announcements",
+    matchers: ["/announcements"],
+    icon: <Megaphone size={16} />,
   },
 ];
 
