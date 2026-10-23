@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useEffect, useLayoutEffect, useState } from "react";
 import Navbar from "../home/components/Navbar";
+import AnnouncementModal from "../home/components/AnnouncementModal";
 import Footer from "../home/components/Footer";
 import FeaturesHero from "./components/FeaturesHero";
 
@@ -143,6 +144,7 @@ export default function FeaturesPage() {
             {/* Content wrapper with z-index to sit above the fixed background */}
               <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
                 <Navbar />
+                <AnnouncementModal />
                 <FeaturesHero />
                 <AiCaveIntro />
                 <AiCaveMeaning />

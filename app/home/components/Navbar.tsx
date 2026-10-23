@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FEATURES } from "@/app/config/features";
-import AnnouncementModal from "./AnnouncementModal";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -57,9 +56,6 @@ export default function Navbar() {
           Contact Sales
         </a>
       </div>
-
-      {/* ประกาศ — Navbar นี้ใช้ร่วมกันใน home/features/pricing */}
-      <AnnouncementModal />
 
       {/* STYLE */}
       <style jsx>{`

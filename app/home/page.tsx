@@ -11,6 +11,7 @@ import AutomateWorkflow from "./components/AutomateWorkflow";
 import FutureOfCreativity from "./components/FutureOfCreativity";
 import WhyAICave from "./components/WhyAICave";
 import Footer from "./components/Footer";
+import AnnouncementModal from "./components/AnnouncementModal";
 
 export default function Home() {
   return (
@@ -56,6 +57,8 @@ export default function Home() {
       {/* Content wrapper with z-index to sit above the fixed background */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
         <Navbar />
+        {/* อยู่ที่หน้า ไม่ใช่ใน Navbar — HeroSection render Navbar ซ้ำอีกตัว */}
+        <AnnouncementModal />
         <HeroSection />
         <GenerateSmarter />
         <AIImageGeneration />

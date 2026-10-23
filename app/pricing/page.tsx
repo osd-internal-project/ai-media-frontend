@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Navbar from "@/app/home/components/Navbar";
+import AnnouncementModal from "@/app/home/components/AnnouncementModal";
 import BillingGate from "@/app/components/BillingGate";
 import dynamic from "next/dynamic";
 
@@ -93,6 +94,7 @@ export default function PricingPage() {
       {/* Content wrapper with z-index to sit above the fixed background */}
       <div className="relative z-10 flex flex-col">
         <Navbar />
+        <AnnouncementModal />
         <Plan />
         <ContactUs />
       </div>
