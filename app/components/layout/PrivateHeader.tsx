@@ -25,7 +25,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { logout } from "@/app/lib/logout";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { ICreditBalance, IOrganization } from "@/app/common/organization.type";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -141,7 +141,7 @@ export function PrivateHeader({
       key: "logout",
       icon: <LogoutOutlined />,
       label: "Log out",
-      onClick: () => signOut({ callbackUrl: "/login" }),
+      onClick: () => logout(),
     },
   ];
 

@@ -7,6 +7,10 @@ if (process.env.NODE_ENV === "development") {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
+// Keycloak is reached through the public WAF (~1s per hop); openid-client's 3.5s default
+// sent slow sign-ins to /error ("Try again").
+const AUTH_FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * Verifies an access token against Keycloak via the backend's introspection endpoint.
  *
@@ -22,6 +26,7 @@ async function validateAccessToken(accessToken: string): Promise<boolean> {
     const response = await fetch(`${config.backendAuthUrl}/auth/validate`, {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(AUTH_FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) return false;
@@ -80,6 +85,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         grant_type: "refresh_token",
         refresh_token: String(token.refreshToken),
       }),
+      signal: AbortSignal.timeout(AUTH_FETCH_TIMEOUT_MS),
     });
 
     const contentType = response.headers.get("content-type");
@@ -117,6 +123,7 @@ export const authOptions = {
       clientId: process.env.KEYCLOAK_CLIENT_ID!,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
       issuer: process.env.KEYCLOAK_ISSUER,
+      httpOptions: { timeout: AUTH_FETCH_TIMEOUT_MS },
       authorization: {
         params: {
           scope: "openid email profile roles offline_access",
@@ -181,6 +188,7 @@ export const authOptions = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
+            signal: AbortSignal.timeout(AUTH_FETCH_TIMEOUT_MS),
           });
 
           if (!response.ok) return false;
@@ -194,6 +202,7 @@ export const authOptions = {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ accessToken: account.access_token }),
+                signal: AbortSignal.timeout(AUTH_FETCH_TIMEOUT_MS),
               },
             );
             // Note: Returning a string redirects in NextAuth v4
@@ -310,23 +319,8 @@ export const authOptions = {
       return session;
     },
   },
-  events: {
-    async signOut({ token }: any) {
-      if (token.idToken) {
-        const issuerUrl = process.env.KEYCLOAK_ISSUER;
-        const logOutUrl = `${issuerUrl}/protocol/openid-connect/logout`;
-        const params = new URLSearchParams({
-          id_token_hint: token.idToken as string,
-          post_logout_redirect_uri: `${process.env.NEXTAUTH_URL}/`,
-        });
-        try {
-          await fetch(`${logOutUrl}?${params.toString()}`);
-        } catch (err) {
-          console.error("Error during Keycloak logout:", err);
-        }
-      }
-    },
-  },
+  // Keycloak logout runs in the browser via /api/auth/keycloak-logout (app/lib/logout.ts):
+  // a server-side call carries no Keycloak session cookie.
   pages: {
     signIn: "/login",
     error: "/error",
