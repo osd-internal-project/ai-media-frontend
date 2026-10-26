@@ -1,4 +1,4 @@
-import React, { useState, type CSSProperties } from "react";
+import React, { useEffect, useState, type CSSProperties } from "react";
 import {
   Button,
   Card,
@@ -39,6 +39,7 @@ import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../shared/upload-section";
 import DrawToImage from "../../../image-gen/shared/draw-to-image";
 import PromptSection from "./prompt-section";
+import { getCapability } from "../../../workflow/workflow-capabilities";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
@@ -238,6 +239,28 @@ export default function ChatVideoInput(props: Props) {
     setSelectedHeight(newHeight);
     form.setFieldsValue({ width: newWidth, height: newHeight });
   };
+
+  const capability = getCapability(selectedModel);
+  const resolutionOptions = capability?.resolutions ?? ["480p", "720p", "1080p"];
+  const durationRange = capability?.duration ?? { min: 4, max: 15 };
+
+  // Switching model can leave values the new model rejects — snap them back into range.
+  useEffect(() => {
+    if (!resolutionOptions.includes(selectedResolution)) {
+      handleResolutionChange(
+        resolutionOptions.includes("720p") ? "720p" : resolutionOptions[0],
+      );
+    }
+    const clamped = Math.min(
+      Math.max(selectedDuration, durationRange.min),
+      durationRange.max,
+    );
+    if (clamped !== selectedDuration) {
+      setSelectedDuration(clamped);
+      form.setFieldValue("duration", clamped);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModel?.id]);
 
   const ratioOptions = Object.keys(RATIO_SIZE_MAP[selectedResolution]).map(
     (ratio) => ({
@@ -497,7 +520,7 @@ export default function ChatVideoInput(props: Props) {
             getRatioIcon={getRatioIcon}
             showModeSection={false}
             showCountSection={false}
-            resolutionOptions={["480p", "720p", "1080p"]}
+            resolutionOptions={resolutionOptions}
             extraContent={
               <>
                 <Flex vertical gap={6}>
@@ -517,8 +540,8 @@ export default function ChatVideoInput(props: Props) {
                     </Typography.Text>
                   </Flex>
                   <Slider
-                    min={4}
-                    max={15}
+                    min={durationRange.min}
+                    max={durationRange.max}
                     value={selectedDuration}
                     onChange={(value) => {
                       if (typeof value === "number") {

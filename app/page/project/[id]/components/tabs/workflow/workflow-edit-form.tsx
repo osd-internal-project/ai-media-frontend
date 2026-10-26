@@ -193,7 +193,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
     capability?.duration?.max ?? videoConfig?.features?.maxDuration ?? 12;
   const minDuration = capability?.duration?.min ?? 4;
   const supportAudio = videoConfig?.features?.supportAudio ?? true;
-  const showDraftMode = videoConfig?.features?.showDraftMode ?? false;
+  const showDraftMode =
+    (videoConfig?.features?.showDraftMode ?? false) &&
+    model?.sendConfig?.supportDraft !== false;
   const showDraw = !isFirstLast; // image + multi-file video
   const resolutionOptions =
     capability?.resolutions ??
@@ -206,6 +208,8 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   );
   const [selectedMaximumImage, setSelectedMaximumImage] = useState(1);
   const [duration, setDuration] = useState(6);
+  const [generateAudio, setGenerateAudio] = useState(false);
+  const [draftMode, setDraftMode] = useState(false);
 
   // Switching model can leave values the new model rejects — snap them back into range.
   useEffect(() => {
@@ -218,10 +222,9 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
     if (selectedMaximumImage > maxImages) setSelectedMaximumImage(maxImages);
     if (duration > maxDuration) setDuration(maxDuration);
     if (duration < minDuration) setDuration(minDuration);
+    if (!showDraftMode) setDraftMode(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
-  const [generateAudio, setGenerateAudio] = useState(false);
-  const [draftMode, setDraftMode] = useState(false);
 
   // Reference uploads — multi (image / seedance2) and first/last (seedance1)
   const [files, setFiles] = useState<UploadFile[]>([]);

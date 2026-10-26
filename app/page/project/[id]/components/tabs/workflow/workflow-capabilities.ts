@@ -54,12 +54,22 @@ const CAPABILITIES: Readonly<Record<string, WorkflowModelCapability>> = {
   },
 };
 
-/** Capability of a model, or undefined when the workflow has no rules for it. */
+/**
+ * Capability of a model, or undefined when the workflow has no rules for it.
+ * `sendConfig.resolutions` / `sendConfig.duration` override the type defaults.
+ */
 export const getCapability = (
   model: TMasterModelType | undefined,
 ): WorkflowModelCapability | undefined => {
   const key = model?.sendConfig?.type;
-  return key ? CAPABILITIES[key] : undefined;
+  const base = key ? CAPABILITIES[key] : undefined;
+  if (!base) return undefined;
+  const { resolutions, duration } = model?.sendConfig ?? {};
+  return {
+    ...base,
+    ...(resolutions && { resolutions }),
+    ...(duration && { duration }),
+  };
 };
 
 export type ParentPlan =
