@@ -14,6 +14,7 @@ import {
   InputNumber,
   Row,
   Col,
+  Result,
 } from "antd";
 import { useEffect, useState } from "react";
 import { notFound, usePathname, useRouter } from "next/navigation";
@@ -321,6 +322,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     notFound();
   }
 
+  const isOrgClosed =
+    currentOrganization?.isOpen === false &&
+    session?.user?.systemRole !== "SUPER_ADMIN";
+
   // Use Coupon
 
   const handleCouponSubmit = async (values: { code: string }) => {
@@ -505,7 +510,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         className="h-screen overflow-hidden private-layout-shell"
         style={{ position: "relative" }}
       >
-        {!(isMobile || isTablet) ? (
+        {!(isMobile || isTablet) && !isOrgClosed ? (
           <PrivateSider
             organizationId={organizationId}
             mappedPath={mappedPath}
@@ -516,7 +521,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
           />
         ) : null}
 
-        {isMobile || isTablet ? (
+        {(isMobile || isTablet) && !isOrgClosed ? (
           <>
             {mobileSiderOpen ? (
               <div
@@ -605,7 +610,18 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                   accessCodes,
                 }}
               >
-                {children}
+                {isOrgClosed ? (
+                  <Result
+                    status="warning"
+                    title={
+                      currentOrganization?.closedMessage?.trim() ||
+                      "ระบบไม่พร้อมใช้งาน"
+                    }
+                    subTitle="สลับไปองค์กรอื่นได้จากเมนูองค์กรด้านบน"
+                  />
+                ) : (
+                  children
+                )}
               </OrganizationProvider>
             </PrivateContent>
           </div>

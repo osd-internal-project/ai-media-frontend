@@ -83,6 +83,8 @@ export interface IOrganization {
   description?: string | null;
   type: string;
   status: boolean;
+  isOpen: boolean;
+  closedMessage?: string | null;
   createdAt: string;
   updatedAt: string;
   createdById: string;

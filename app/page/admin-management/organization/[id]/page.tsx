@@ -94,6 +94,8 @@ export default function OrganizationDetailPage() {
       name: organization?.name,
       description: organization?.description,
       status: organization?.status,
+      isOpen: organization?.isOpen,
+      closedMessage: organization?.closedMessage,
       accessCodes: organization?.accessCodes,
     });
     setIsEditModalOpen(true);
@@ -161,6 +163,11 @@ export default function OrganizationDetailPage() {
                   <Tag color="blue">PERSONAL</Tag>
                 )}
               </div>
+              {organization?.isOpen === false ? (
+                <div>
+                  <Tag color="error">Closed</Tag>
+                </div>
+              ) : null}
             </div>
             <Button type="link" onClick={handleEdit}>
               Edit
@@ -224,6 +231,17 @@ export default function OrganizationDetailPage() {
           </Form.Item>
           <Form.Item name="status" label="Status" valuePropName="checked">
             <Switch />
+          </Form.Item>
+          <Form.Item
+            name="isOpen"
+            label="System Open"
+            valuePropName="checked"
+            extra="When off, members (except super admin) see only the message below."
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item name="closedMessage" label="Closed Message">
+            <Input.TextArea rows={2} placeholder="ระบบไม่พร้อมใช้งาน" />
           </Form.Item>
           <Form.Item name="accessCodes" label="Access">
             <Checkbox.Group options={ACCESS_CODE} />
