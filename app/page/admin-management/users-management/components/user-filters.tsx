@@ -145,7 +145,10 @@ const UserFiltersPage: FC<props> = ({
                 label="Phone"
                 name="phoneNumber"
                 rules={[
-                  { required: true, message: "Please input phone number!" },
+                  {
+                    required: open.type === "create",
+                    message: "Please input phone number!",
+                  },
                 ]}
               >
                 <Input placeholder="Enter Phone" />

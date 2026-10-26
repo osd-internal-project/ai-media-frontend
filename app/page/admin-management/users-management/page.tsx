@@ -12,6 +12,7 @@ import {
   Popconfirm,
   Space,
   Spin,
+  Switch,
   Table,
   Tag,
 } from "antd";
@@ -42,6 +43,7 @@ const AdminUsersManagementPage = () => {
   const [getdata, setData] = useState<TUser[]>([]);
   const [getGroups, setGroups] = useState<TGroup[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const pageSize = 10;
   const [open, setOpen] = useState<{ status: boolean; type: string }>({
     status: false,
@@ -150,6 +152,55 @@ const AdminUsersManagementPage = () => {
     setLoading(true);
   };
 
+  const handleToggleStatus = async (record: TUser, checked: boolean) => {
+    setUpdatingId(record.userId);
+    // Backend replaces groups on every update, so resend the current ones.
+    const response = await userServices.update(record.userId, {
+      status: checked ? "active" : "unabled",
+      groups: record.groups?.map((g) => g.group.groupId) ?? [],
+    });
+    setUpdatingId(null);
+    if (!response) {
+      messageApi.error("Status update failed");
+      return;
+    }
+    messageApi.success(checked ? "User enabled" : "User disabled");
+    setLoading(true);
+  };
+
+  const renderStatusSwitch = (record: TUser) => {
+    const enabled = record.status === "active";
+    const loadingRow = updatingId === record.userId;
+    return (
+      <Space size={8}>
+        {enabled ? (
+          <Popconfirm
+            title="Disable user"
+            description="This user will not be able to sign in."
+            okText="Disable"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleToggleStatus(record, false)}
+          >
+            <Switch checked size="small" loading={loadingRow} />
+          </Popconfirm>
+        ) : (
+          <Switch
+            checked={false}
+            size="small"
+            loading={loadingRow}
+            onChange={(checked) => handleToggleStatus(record, checked)}
+          />
+        )}
+        <span
+          className={`text-sm ${enabled ? "text-[var(--legacy-ink)]" : "text-[var(--legacy-gray-400)]"}`}
+        >
+          {enabled ? "Enabled" : "Disabled"}
+        </span>
+      </Space>
+    );
+  };
+
   const renderRoleTag = (role?: string) => {
     if (!role) {
       return "-";
@@ -237,14 +288,7 @@ const AdminUsersManagementPage = () => {
         { text: "Enabled", value: "active" },
         { text: "Disabled", value: "inactive" },
       ],
-      render: (status) => (
-        <Tag
-          color={status === "active" ? "green" : "red"}
-          className="rounded-full px-3"
-        >
-          {status === "active" ? "Enabled" : "Unabled"}
-        </Tag>
-      ),
+      render: (_, record) => renderStatusSwitch(record),
     },
     {
       title: "Action",
@@ -332,12 +376,7 @@ const AdminUsersManagementPage = () => {
                     {user.fullname || "-"}
                   </div>
                 </div>
-                <Tag
-                  color={user.status === "active" ? "green" : "red"}
-                  className="rounded-full px-3"
-                >
-                  {user.status === "active" ? "Enabled" : "Unabled"}
-                </Tag>
+                {renderStatusSwitch(user)}
               </div>
 
               <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
