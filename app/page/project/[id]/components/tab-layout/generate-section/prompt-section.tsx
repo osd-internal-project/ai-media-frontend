@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Input, Typography } from "antd";
 import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
-import AssistantModal, {
-  SHOW_PROMPT_ASSISTANT,
-} from "../../assistant/assistant-modal";
+import AssistantModal from "../../assistant/assistant-modal";
+import { useChatAssistantEnabled } from "@/app/hooks/useChatAssistantEnabled";
 
 const { TextArea } = Input;
 
@@ -48,6 +47,7 @@ export default function PromptSection({
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
   const [internalLoading, setInternalLoading] = useState(false);
   const [openAssistant, setOpenAssistant] = useState<boolean>(false);
+  const assistantEnabled = useChatAssistantEnabled();
   const loading = isAiAssisting ?? internalLoading;
 
   const handleAiAssistClick = async () => {
@@ -67,7 +67,7 @@ export default function PromptSection({
         >
           {title}
         </Typography.Text>
-        {SHOW_PROMPT_ASSISTANT && showAiAssist && (
+        {assistantEnabled && showAiAssist && (
           <Button
             size="small"
             type="text"

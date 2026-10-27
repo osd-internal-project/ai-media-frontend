@@ -3,7 +3,8 @@ import { getAccessToken } from "../axios/access-token";
 /** ส่วนของ EventSource ที่หน้าจอใช้อยู่ — แทนกันได้โดยไม่ต้องแก้ handler เดิม */
 export interface AuthEventStream {
   onmessage: ((event: { data: string }) => void) | null;
-  onerror: (() => void) | null;
+  /** `message` = เหตุผลจาก server เมื่ออ่านได้ (เช่น 403 "not a member") */
+  onerror: ((message?: string) => void) | null;
   close: () => void;
 }
 
@@ -22,8 +23,8 @@ export function openAuthEventStream(url: string): AuthEventStream {
       controller.abort();
     },
   };
-  const fail = () => {
-    if (!closed) stream.onerror?.();
+  const fail = (message?: string) => {
+    if (!closed) stream.onerror?.(message);
   };
 
   (async () => {
@@ -36,7 +37,7 @@ export function openAuthEventStream(url: string): AuthEventStream {
       signal: controller.signal,
     });
     if (!response.ok || !response.body) {
-      fail();
+      fail(await readErrorMessage(response));
       return;
     }
     const reader = response.body.getReader();
@@ -60,7 +61,19 @@ export function openAuthEventStream(url: string): AuthEventStream {
     }
     // server ปิด stream ก่อนเราสั่ง close = จบผิดปกติ (เหมือน EventSource onerror)
     fail();
-  })().catch(fail);
+  })().catch(() => fail());
 
   return stream;
+}
+
+/** ข้อความ error ของ Nest (`{ message }`, อาจเป็น array จาก ValidationPipe) */
+async function readErrorMessage(response: Response): Promise<string | undefined> {
+  try {
+    const body: unknown = await response.json();
+    const message = (body as { message?: unknown } | null)?.message; // body ของ Nest เป็น object เสมอ
+    if (Array.isArray(message)) return message.join(", ");
+    return typeof message === "string" ? message : undefined;
+  } catch {
+    return `Request failed (${response.status})`;
+  }
 }

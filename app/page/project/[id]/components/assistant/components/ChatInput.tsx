@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { Button, Input, theme, Typography } from "antd";
-import { ArrowUp, LayoutTemplate, Settings } from "lucide-react";
+import { ArrowUp, LayoutTemplate, Settings, Square } from "lucide-react";
 
 const { Text } = Typography;
 
@@ -9,9 +9,18 @@ interface ChatInputProps {
   onSend: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** ระหว่าง stream ปุ่มส่งกลายเป็นปุ่มหยุด */
+  isStreaming?: boolean;
+  onStop?: () => void;
 }
 
-const ChatInput = ({ onSend, disabled, placeholder = "Message assistant..." }: ChatInputProps) => {
+const ChatInput = ({
+  onSend,
+  disabled,
+  placeholder = "Message assistant...",
+  isStreaming,
+  onStop,
+}: ChatInputProps) => {
   const { token } = theme.useToken();
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -70,10 +79,20 @@ const ChatInput = ({ onSend, disabled, placeholder = "Message assistant..." }: C
               shape="circle"
               icon={<Settings className="h-4 w-4" style={{ color: token.colorTextSecondary }} />}
             /> */}
+            {isStreaming && onStop ? (
+              <Button
+                shape="circle"
+                size="large"
+                aria-label="Stop answering"
+                onClick={onStop}
+                icon={<Square className="h-4 w-4" fill="currentColor" />}
+              />
+            ) : (
             <Button
               type="primary"
               shape="circle"
               size="large"
+              aria-label="Send message"
               disabled={!text.trim() || disabled}
               onClick={handleSend}
               icon={<ArrowUp className="h-5 w-5" />}
@@ -84,6 +103,7 @@ const ChatInput = ({ onSend, disabled, placeholder = "Message assistant..." }: C
                 border: "none",
               }}
             />
+            )}
           </div>
         </div>
       </div>

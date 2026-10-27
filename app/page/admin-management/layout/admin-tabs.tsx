@@ -9,6 +9,7 @@ import {
   Cpu,
   FileText,
   Megaphone,
+  MessageSquare,
   PersonStanding,
   ReceiptText,
   Ticket,
@@ -89,6 +90,13 @@ const adminTabs: AdminTabItem[] = [
     href: "/page/admin-management/announcements",
     matchers: ["/announcements"],
     icon: <Megaphone size={16} />,
+  },
+  {
+    key: "chat-assistant",
+    label: "Chat Assistant",
+    href: "/page/admin-management/chat-assistant",
+    matchers: ["/chat-assistant"],
+    icon: <MessageSquare size={16} />,
   },
 ];
 

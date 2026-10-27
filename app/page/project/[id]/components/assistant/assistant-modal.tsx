@@ -10,14 +10,14 @@ import {
   Modal,
   Input,
   Tag,
+  Tooltip,
 } from "antd";
-import { History, MessageSquare, Sparkles } from "lucide-react";
+import { MessageSquare, PanelLeft, Sparkles } from "lucide-react";
 import { axiosChatAssistant } from "@/app/lib/axios/axios";
 import ChatAssistantService from "@/app/services/chat-assistant.service";
 import type {
   ChatGenerateType,
   ChatModelOption,
-  Conversation,
   Message,
   StreamChunk,
 } from "@/app/services/chat-assistant.types";
@@ -52,8 +52,48 @@ const ROLE_LABELS: Record<ChatGenerateType, string> = {
   dreamactor: "motion prompt",
 };
 
-// Prompt assistant is hidden for now; flip to true to bring the "AI Assist" buttons back.
-export const SHOW_PROMPT_ASSISTANT = false;
+/** หน้าว่างของแต่ละแท็บ — บอกว่าต้องพิมพ์อะไร และมีตัวอย่างให้กดเริ่มได้ทันที */
+const EMPTY_STATES: Record<ChatGenerateType | "default", { heading: string; starters: string[] }> = {
+  image: {
+    heading: "Describe the image you want to make.",
+    starters: [
+      "A product shot of iced coffee for an Instagram ad",
+      "A cosy bedroom at golden hour, editorial style",
+      "A mascot character for a kids' learning app",
+    ],
+  },
+  video: {
+    heading: "Describe the video shot you want to make.",
+    starters: [
+      "A slow dolly-in on a steaming bowl of noodles",
+      "Drone shot over a beach at sunrise",
+      "A sneaker spinning on a pedestal, studio lighting",
+    ],
+  },
+  omnihumen: {
+    heading: "Describe the presenter you want on screen.",
+    starters: [
+      "A friendly bank advisor explaining a savings plan",
+      "An energetic fitness coach, half body, gym background",
+      "A calm news anchor in a modern studio",
+    ],
+  },
+  dreamactor: {
+    heading: "Describe the character and the motion it should perform.",
+    starters: [
+      "A cartoon chef doing a celebratory dance",
+      "A knight in armour bowing slowly",
+      "A street dancer doing a smooth wave",
+    ],
+  },
+  default: {
+    heading: "Describe what you want to make.",
+    starters: [
+      "An image for a coffee shop promotion",
+      "A short video of a city at night",
+    ],
+  },
+};
 
 const AssistantModal: React.FC<Props> = ({
   openAssistant,
@@ -67,7 +107,6 @@ const AssistantModal: React.FC<Props> = ({
 
   // ── State ──────────────────────────────────────────────
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
@@ -77,32 +116,15 @@ const AssistantModal: React.FC<Props> = ({
   const [models, setModels] = useState<ChatModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
   const esRef = useRef<AuthEventStream | null>(null);
+  // ข้อความที่ stream มาแล้ว — Stop ต้องอ่านได้นอก handler ของ stream
+  const accumulatedRef = useRef("");
 
   // `session.user.id` เป็น access token ไม่ใช่ users.userId — backend ตรวจสมาชิก
   // ขององค์กรด้วย userId ตัวจริง ถ้าส่ง token ไปจะถูกปฏิเสธทุกครั้ง
   // (และเดิมประวัติแชทถูกผูกกับ token ที่หมุนเปลี่ยน ทำให้ประวัติหายเป็นระยะ)
   const { userId, organizationId } = useOrgIdentity();
 
-  // ── Greeting ───────────────────────────────────────────
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 18) return "Good afternoon";
-    return "Good evening";
-  })();
-
-  // ── Load conversations ──────────────────────────────────
-  const loadConversations = useCallback(async () => {
-    if (!userId) return;
-    const list = await service.listConversations(userId);
-    setConversations(
-      (list ?? []).sort(
-        (a, b) =>
-          new Date(b.updatedAt ?? b.createdAt).getTime() -
-          new Date(a.updatedAt ?? a.createdAt).getTime(),
-      ),
-    );
-  }, [userId, service]);
+  const emptyState = EMPTY_STATES[generateType ?? "default"];
 
   // ── Load messages ───────────────────────────────────────
   const loadMessages = useCallback(
@@ -127,6 +149,8 @@ const AssistantModal: React.FC<Props> = ({
     setIsStreaming(false);
     setStreamingContent("");
     setActiveConvId(data.id);
+    // ใช้โมเดลที่บทสนทนานี้จำไว้ — ถ้าปิดใช้ไปแล้ว effect ด้านล่างจะตกไปใช้ default
+    setSelectedModel(data.model ?? undefined);
     loadMessages(data.id);
   }, [userId, organizationId, projectId, service, loadMessages]);
 
@@ -134,22 +158,13 @@ const AssistantModal: React.FC<Props> = ({
     if (openAssistant) setConversationChat();
   }, [openAssistant, setConversationChat]);
 
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
   // ── Load selectable models ──────────────────────────────
   useEffect(() => {
     if (!openAssistant) return;
     let cancelled = false;
 
     service.listChatModels().then((rows) => {
-      if (cancelled) return;
-      setModels(rows);
-      // ตั้งค่าเริ่มต้นครั้งเดียว — ไม่ทับตัวเลือกที่ผู้ใช้เพิ่งเปลี่ยน
-      setSelectedModel(
-        (current) => current ?? rows.find((row) => row.isDefault)?.modelId,
-      );
+      if (!cancelled) setModels(rows);
     });
 
     return () => {
@@ -157,16 +172,51 @@ const AssistantModal: React.FC<Props> = ({
     };
   }, [openAssistant, service]);
 
+  // โมเดลที่เลือกต้องอยู่ในรายการที่เปิดใช้ ไม่งั้น backend ตอบ "not available"
+  useEffect(() => {
+    if (models.length === 0) return;
+    if (models.some((model) => model.modelId === selectedModel)) return;
+    setSelectedModel(models.find((model) => model.isDefault)?.modelId ?? models[0].modelId);
+  }, [models, selectedModel]);
+
   // ── Append message to draft ─────────────────────────────
   const handleAppendToDraft = useCallback((content: string) => {
     setDraftPrompt((prev) => (prev ? `${prev}\n${content}` : content));
   }, []);
 
+  // ── Stop streaming ──────────────────────────────────────
+  /** หยุดคำตอบ — เก็บส่วนที่ได้มาแล้วไว้ให้ใช้ต่อได้ */
+  const stopStreaming = useCallback(() => {
+    if (!esRef.current) return;
+    esRef.current.close();
+    esRef.current = null;
+    setIsStreaming(false);
+    setStreamingContent("");
+    const partial = accumulatedRef.current;
+    if (partial) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `tmp-assistant-${Date.now()}`,
+          role: "assistant",
+          content: partial,
+          createdAt: new Date().toISOString(),
+          truncated: true,
+        },
+      ]);
+    }
+  }, []);
+
+  const closeModal = useCallback(() => {
+    stopStreaming();
+    setOpenAssistant(false);
+  }, [stopStreaming, setOpenAssistant]);
+
   // ── Use Prompt ──────────────────────────────────────────
   const handleUsePrompt = useCallback(() => {
     onUsePrompt?.(draftPrompt.trim());
-    setOpenAssistant(false);
-  }, [draftPrompt, onUsePrompt, setOpenAssistant]);
+    closeModal();
+  }, [draftPrompt, onUsePrompt, closeModal]);
 
   // ── Send message (streaming) ────────────────────────────
   const handleSend = useCallback(
@@ -174,8 +224,6 @@ const AssistantModal: React.FC<Props> = ({
       if (isStreaming) return;
 
       let convId = activeConvId;
-      const isFirstMessage =
-        messages.filter((m) => m.role === "user").length === 0;
 
       if (!userId || !organizationId) {
         antMessage.error("Please log in and select an organization.");
@@ -189,24 +237,22 @@ const AssistantModal: React.FC<Props> = ({
           title: text.slice(0, 60) || "New Chat",
         });
         if (!conv) {
-          antMessage.error("Failed to create conversation.");
+          antMessage.error("Couldn't start a conversation. Try again.");
           return;
         }
         convId = conv.id;
         setActiveConvId(convId);
-        await loadConversations();
       }
 
-      const optimisticUserMsg: Message = {
-        id: `tmp-user-${Date.now()}`,
-        role: "user",
-        content: text,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, optimisticUserMsg]);
+      const userMsgId = `tmp-user-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        { id: userMsgId, role: "user", content: text, createdAt: new Date().toISOString() },
+      ]);
 
       setIsStreaming(true);
       setStreamingContent("");
+      accumulatedRef.current = "";
 
       // ข้อความยังไปทาง query string เหมือนเดิม — token ไปทาง header (openAuthEventStream)
       const url = new URL(`${CHAT_ASSISTANT_BASE_URL}/chat/stream`);
@@ -217,95 +263,90 @@ const AssistantModal: React.FC<Props> = ({
       if (generateType) url.searchParams.set("generateType", generateType);
       if (selectedModel) url.searchParams.set("model", selectedModel);
 
-      let accumulated = "";
-      const assistantMsgId = `tmp-assistant-${Date.now()}`;
-
       const es = openAuthEventStream(url.toString());
       esRef.current = es;
 
-      es.onmessage = (event) => {
-        try {
-          const chunk: StreamChunk = JSON.parse(event.data);
-
-          if (chunk.type === "content" && chunk.delta) {
-            accumulated += chunk.delta;
-            setStreamingContent(accumulated);
-          } else if (chunk.type === "done") {
-            es.close();
-            esRef.current = null;
-            setIsStreaming(false);
-            setStreamingContent("");
-
-            const assistantMsg: Message = {
-              id: chunk.messageId ?? assistantMsgId,
-              role: "assistant",
-              content: accumulated,
-              createdAt: new Date().toISOString(),
-              tokenUsage: chunk.tokenUsage,
-            };
-            setMessages((prev) => [...prev, assistantMsg]);
-
-            (async () => {
-              if (isFirstMessage && convId) {
-                const currentConv = conversations.find((c) => c.id === convId);
-                if (!currentConv || currentConv.title === "New Chat") {
-                  const newTitle = text.slice(0, 60);
-                  await service.updateConversation(convId, userId, newTitle);
-                  setConversations((prev) =>
-                    prev.map((c) =>
-                      c.id === convId
-                        ? { ...c, title: newTitle, updatedAt: new Date().toISOString() }
-                        : c,
-                    ),
-                  );
-                }
-              }
-              loadConversations();
-            })();
-          } else if (chunk.type === "error") {
-            es.close();
-            esRef.current = null;
-            setIsStreaming(false);
-            setStreamingContent("");
-            antMessage.error(chunk.error ?? "Streaming error occurred.");
-          }
-        } catch {
-          // ignore parse errors
-        }
-      };
-
-      es.onerror = () => {
+      const finish = () => {
         es.close();
         esRef.current = null;
         setIsStreaming(false);
         setStreamingContent("");
-        if (accumulated) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: assistantMsgId,
-              role: "assistant",
-              content: accumulated,
-              createdAt: new Date().toISOString(),
-            },
-          ]);
+      };
+
+      /** ยังไม่ได้คำตอบเลย — ติดเหตุผลไว้ที่ข้อความของผู้ใช้ให้กดส่งใหม่ได้ */
+      const markFailed = (reason: string) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === userMsgId ? { ...m, error: reason } : m)),
+        );
+      };
+
+      const keepPartial = (truncated: boolean, tokenUsage?: StreamChunk["tokenUsage"], id?: string) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: id ?? `tmp-assistant-${Date.now()}`,
+            role: "assistant",
+            content: accumulatedRef.current,
+            createdAt: new Date().toISOString(),
+            tokenUsage,
+            truncated,
+          },
+        ]);
+      };
+
+      es.onmessage = (event) => {
+        let chunk: StreamChunk;
+        try {
+          chunk = JSON.parse(event.data);
+        } catch {
+          console.warn("[ChatAssistant] unparseable stream chunk:", event.data);
+          return;
+        }
+
+        if (chunk.type === "content" && chunk.delta) {
+          accumulatedRef.current += chunk.delta;
+          setStreamingContent(accumulatedRef.current);
+        } else if (chunk.type === "done") {
+          finish();
+          keepPartial(chunk.finishReason === "length", chunk.tokenUsage, chunk.messageId);
+        } else if (chunk.type === "error") {
+          finish();
+          const reason = chunk.error ?? "The assistant couldn't answer.";
+          if (accumulatedRef.current) {
+            keepPartial(true);
+            antMessage.error(reason);
+          } else {
+            markFailed(reason);
+          }
+        }
+      };
+
+      es.onerror = (reason) => {
+        finish();
+        if (accumulatedRef.current) {
+          keepPartial(true);
         } else {
-          antMessage.error("Connection lost. Please try again.");
+          markFailed(reason ?? "Connection lost. Check your network.");
         }
       };
     },
     [
       isStreaming,
       activeConvId,
-      messages,
-      conversations,
       userId,
       organizationId,
       generateType,
       selectedModel,
       service,
-      loadConversations,
     ],
+  );
+
+  const handleRetry = useCallback(
+    (failed: Message) => {
+      setMessages((prev) => prev.filter((m) => m.id !== failed.id));
+      handleSend(failed.content);
+    },
+    [handleSend],
   );
 
   // ── Cleanup on unmount ──────────────────────────────────
@@ -314,6 +355,8 @@ const AssistantModal: React.FC<Props> = ({
       esRef.current?.close();
     };
   }, []);
+
+  const showEmptyState = !loadingMsgs && messages.length === 0 && !isStreaming;
 
   // ── Render ──────────────────────────────────────────────
   return (
@@ -347,7 +390,7 @@ const AssistantModal: React.FC<Props> = ({
         },
       }}
       footer={null}
-      onCancel={() => setOpenAssistant(false)}
+      onCancel={closeModal}
       maskClosable={false}
       title={
         <div className="flex items-center gap-2">
@@ -402,7 +445,7 @@ const AssistantModal: React.FC<Props> = ({
               <Text
                 style={{ fontSize: 11, color: token.colorTextSecondary, flexShrink: 0 }}
               >
-                Click <strong style={{ color: token.colorPrimary }}>+ Use</strong> on any assistant message to add it here. You can also edit freely.
+                Click <strong style={{ color: token.colorPrimary }}>Use</strong> on a prompt to add it here. You can also edit freely.
               </Text>
 
               <TextArea
@@ -469,17 +512,20 @@ const AssistantModal: React.FC<Props> = ({
             }}
           >
             <div className="flex items-center gap-3">
-              <Button
-                type="text"
-                shape="circle"
-                icon={
-                  <History
-                    className="h-5 w-5"
-                    style={{ color: token.colorTextSecondary }}
-                  />
-                }
-                onClick={() => setSidebarOpen((p) => !p)}
-              />
+              <Tooltip title={sidebarOpen ? "Hide prompt draft" : "Show prompt draft"}>
+                <Button
+                  type="text"
+                  shape="circle"
+                  aria-label={sidebarOpen ? "Hide prompt draft" : "Show prompt draft"}
+                  icon={
+                    <PanelLeft
+                      className="h-5 w-5"
+                      style={{ color: token.colorTextSecondary }}
+                    />
+                  }
+                  onClick={() => setSidebarOpen((p) => !p)}
+                />
+              </Tooltip>
               <Text
                 className="text-sm font-medium truncate"
                 style={{ color: token.colorTextBase }}
@@ -500,6 +546,7 @@ const AssistantModal: React.FC<Props> = ({
               placeholder="Model"
               size="small"
               style={{ minWidth: 190 }}
+              disabled={isStreaming}
               options={models.map((model) => ({
                 value: model.modelId,
                 label: model.displayName,
@@ -508,45 +555,41 @@ const AssistantModal: React.FC<Props> = ({
             />
           </div>
 
-          <>
-              {!activeConvId && (
-                <div className="flex flex-1 flex-col items-center justify-center px-4 -mt-10">
-                  <div className="w-full max-w-[700px] flex flex-col items-center text-center">
-                    <h1
-                      className="text-4xl font-normal tracking-tight mb-2"
-                      style={{ color: token.colorTextBase }}
-                    >
-                      {greeting},
-                    </h1>
-                    <h2
-                      className="text-4xl font-normal tracking-tight mb-10"
-                      style={{ color: token.colorTextBase }}
-                    >
-                      What do you want to create?
-                    </h2>
-                  </div>
+          {showEmptyState ? (
+            <div className="flex flex-1 flex-col justify-center px-6">
+              <div className="mx-auto w-full max-w-[640px]">
+                <h2
+                  className="mb-4"
+                  style={{ color: token.colorTextBase, fontSize: 22, fontWeight: 500 }}
+                >
+                  {emptyState.heading}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {emptyState.starters.map((starter) => (
+                    <Button key={starter} onClick={() => handleSend(starter)}>
+                      {starter}
+                    </Button>
+                  ))}
                 </div>
-              )}
+              </div>
+            </div>
+          ) : (
+            <ChatWindow
+              messages={messages}
+              isStreaming={isStreaming}
+              streamingContent={streamingContent}
+              onAppendMessage={handleAppendToDraft}
+              onRetry={handleRetry}
+            />
+          )}
 
-              {activeConvId && (
-                <ChatWindow
-                  messages={messages}
-                  isStreaming={isStreaming}
-                  streamingContent={streamingContent}
-                  onAppendMessage={handleAppendToDraft}
-                />
-              )}
-
-              <ChatInput
-                onSend={handleSend}
-                disabled={isStreaming || loadingMsgs}
-                placeholder={
-                  activeConvId
-                    ? "Message the assistant..."
-                    : "Start typing to begin a new chat..."
-                }
-              />
-          </>
+          <ChatInput
+            onSend={handleSend}
+            disabled={isStreaming || loadingMsgs}
+            isStreaming={isStreaming}
+            onStop={stopStreaming}
+            placeholder="Describe what you want, or ask for changes..."
+          />
         </main>
       </div>
     </Modal>

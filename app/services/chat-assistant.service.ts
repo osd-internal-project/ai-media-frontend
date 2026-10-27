@@ -1,5 +1,6 @@
 import { AxiosInstance } from "axios";
 import type {
+  ChatAssistantSetting,
   ChatModelOption,
   ChatResponse,
   Conversation,
@@ -30,6 +31,23 @@ const ChatAssistantService = (axiosInstance: AxiosInstance) => {
         .catch((err) => {
           console.error("[ChatAssistant] listChatModels:", err);
           return [];
+        });
+    },
+
+    /** GET /chat-assistant-setting — throw ต่อ ผู้เรียกตัดสินเองว่าโหลดไม่ได้ = ปิด */
+    getSetting: async (): Promise<ChatAssistantSetting> => {
+      return axiosInstance.get("/chat-assistant-setting").then((res) => res.data);
+    },
+
+    /** PATCH /chat-assistant-setting — super admin เท่านั้น */
+    setSetting: async (enabled: boolean): Promise<ChatAssistantSetting> => {
+      return axiosInstance
+        .patch("/chat-assistant-setting", { enabled })
+        .then((res) => res.data)
+        .catch((err) => {
+          throw new Error(
+            err.response?.data?.message ?? "Failed to change the chat assistant setting",
+          );
         });
     },
 

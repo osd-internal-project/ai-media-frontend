@@ -1,31 +1,20 @@
 "use client";
-import { theme, Typography, Tooltip } from "antd";
-import { ChevronDown, ChevronUp, Wrench, Plus } from "lucide-react";
-import { useRef, useState, useLayoutEffect } from "react";
+import { Button, theme, Typography } from "antd";
+import { ChevronDown, Plus, RotateCcw, Wrench } from "lucide-react";
+import { useState } from "react";
 import type { Message } from "@/app/services/chat-assistant.types";
+import MessageContent, { splitPrompt } from "./MessageContent";
 import TokenBadge from "./TokenBadge";
-
-const COLLAPSED_LINE_HEIGHT = 20; // px per line (text-sm leading-relaxed ≈ 1.625 * 13px)
-const MAX_COLLAPSED_LINES = 3;
-const COLLAPSED_MAX_HEIGHT = COLLAPSED_LINE_HEIGHT * MAX_COLLAPSED_LINES;
 
 interface MessageBubbleProps {
   message: Message;
   onAppendMessage?: (content: string) => void;
+  onRetry?: (message: Message) => void;
 }
 
-const MessageBubble = ({ message, onAppendMessage }: MessageBubbleProps) => {
+const MessageBubble = ({ message, onAppendMessage, onRetry }: MessageBubbleProps) => {
   const { token } = theme.useToken();
   const [toolExpanded, setToolExpanded] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    setOverflows(el.scrollHeight > COLLAPSED_MAX_HEIGHT + 4);
-  }, [message.content]);
 
   if (message.role === "system") return null;
 
@@ -59,79 +48,77 @@ const MessageBubble = ({ message, onAppendMessage }: MessageBubbleProps) => {
     );
   }
 
+  // assistant ที่ขอ tool แต่ไม่มีข้อความ — ไม่มีอะไรให้แสดง
+  if (!message.content) return null;
+
   const isUser = message.role === "user";
+  // ไม่มี prompt card (คำตอบเก่า/โมเดลไม่ทำตาม) — ให้ Use ทั้งข้อความแทน
+  const hasPromptCard = !isUser && splitPrompt(message.content).some((s) => s.type === "prompt");
 
   return (
-    <div className={`flex mb-4 group ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
       <div className={`flex flex-col gap-1 max-w-[75%] ${isUser ? "items-end" : "items-start"}`}>
-        <div className="relative">
-          <div
-            className="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words"
-            style={{
-              backgroundColor: isUser ? token.colorPrimary : token.colorBgContainer,
-              color: isUser ? "#fff" : token.colorTextBase,
-              border: isUser ? "none" : `1px solid ${token.colorBorder}`,
-              borderBottomRightRadius: isUser ? "4px" : "16px",
-              borderBottomLeftRadius: isUser ? "16px" : "4px",
-            }}
-          >
-            <div
-              ref={contentRef}
-              style={{
-                overflow: "hidden",
-                maxHeight: expanded ? "none" : `${COLLAPSED_MAX_HEIGHT}px`,
-                transition: "max-height 0.25s ease",
-              }}
-            >
-              {message.content}
-            </div>
-
-            {overflows && (
-              <button
-                onClick={() => setExpanded((p) => !p)}
-                className="flex items-center gap-1 mt-2 text-xs font-medium transition-opacity opacity-70 hover:opacity-100"
-                style={{ color: isUser ? "rgba(255,255,255,0.85)" : token.colorPrimary, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-              >
-                {expanded ? (
-                  <><ChevronUp className="h-3 w-3" /> Show less</>
-                ) : (
-                  <><ChevronDown className="h-3 w-3" /> Show more</>
-                )}
-              </button>
-            )}
-          </div>
-
-          {!isUser && onAppendMessage && (
-            <Tooltip title="Add to prompt draft">
-              <button
-                onClick={() => onAppendMessage(message.content)}
-                className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-0.5"
-                style={{
-                  backgroundColor: token.colorPrimary,
-                  color: "#fff",
-                  borderRadius: "6px",
-                  padding: "2px 6px",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                  lineHeight: "16px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-                }}
-              >
-                <Plus className="h-2.5 w-2.5" />
-                Use
-              </button>
-            </Tooltip>
+        <div
+          className="rounded-2xl px-4 py-3 text-sm leading-relaxed break-words"
+          style={{
+            backgroundColor: isUser ? token.colorPrimary : token.colorBgContainer,
+            color: isUser ? "#fff" : token.colorTextBase,
+            border: isUser ? "none" : `1px solid ${token.colorBorder}`,
+            borderBottomRightRadius: isUser ? "4px" : "16px",
+            borderBottomLeftRadius: isUser ? "16px" : "4px",
+            opacity: message.error ? 0.6 : 1,
+          }}
+        >
+          {isUser ? (
+            <div className="whitespace-pre-wrap">{message.content}</div>
+          ) : (
+            <MessageContent content={message.content} onUse={onAppendMessage} />
           )}
         </div>
 
-        {!isUser && message.tokenUsage && (
-          <div className="px-1">
-            <TokenBadge
-              totalTokens={message.tokenUsage.totalTokens}
-              model={message.tokenUsage.model}
-            />
+        {message.error && (
+          <div className="flex items-center gap-2 px-1">
+            <Typography.Text type="danger" style={{ fontSize: 12 }}>
+              Not sent: {message.error}
+            </Typography.Text>
+            {onRetry && (
+              <Button
+                size="small"
+                type="link"
+                icon={<RotateCcw className="h-3 w-3" />}
+                onClick={() => onRetry(message)}
+                style={{ paddingInline: 0 }}
+              >
+                Try again
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!isUser && (
+          <div className="flex items-center gap-2 px-1">
+            {!hasPromptCard && onAppendMessage && (
+              <Button
+                size="small"
+                type="text"
+                icon={<Plus className="h-3 w-3" />}
+                onClick={() => onAppendMessage(message.content)}
+                style={{ color: token.colorPrimary, paddingInline: 4 }}
+              >
+                Use
+              </Button>
+            )}
+            {message.truncated && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                Answer cut short. Ask for the rest or send again.
+              </Typography.Text>
+            )}
+            {message.tokenUsage && (
+              <TokenBadge
+                totalTokens={message.tokenUsage.totalTokens}
+                model={message.tokenUsage.model}
+              />
+            )}
           </div>
         )}
       </div>

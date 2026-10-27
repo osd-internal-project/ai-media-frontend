@@ -24,6 +24,10 @@ export interface Message {
   createdAt: string;
   /** Populated on the frontend after a streaming `done` event */
   tokenUsage?: TokenUsage;
+  /** Frontend only: why sending this user message failed — shows "Try again" */
+  error?: string;
+  /** Frontend only: the answer stopped early (Stop pressed or hit max tokens) */
+  truncated?: boolean;
 }
 
 export interface TokenUsage {
@@ -90,6 +94,11 @@ export type ChatGenerateType =
   | "video"
   | "omnihumen"
   | "dreamactor";
+
+/** สวิตช์เปิด/ปิดผู้ช่วยแชททั้งระบบ (GET/PATCH /chat-assistant-setting) */
+export interface ChatAssistantSetting {
+  enabled: boolean;
+}
 
 /** โมเดลที่เลือกได้ในหน้าแชท (GET /chat-models) */
 export interface ChatModelOption {
