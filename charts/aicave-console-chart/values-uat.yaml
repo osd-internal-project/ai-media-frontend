@@ -22,7 +22,7 @@ env:
   authBackendUrl: "http://aicave-user-service:8972/api"
   nextauthUrl: "https://aicave-uat.osd.co.th"
   nextauthUrlInternal: "http://aicave-console"
-  keycloakIssuer: "https://auth-events.osd.co.th/realms/eportal"
+  keycloakIssuer: "https://auth-events-uat.osd.co.th/realms/eportal"
   authTrustHost: "true"
 
 # Secrets managed via GitHub Actions secrets and passed with --set:
@@ -37,3 +37,10 @@ resources:
   limits:
     memory: "192Mi"
     cpu: "350m"
+
+# Resolve the UAT Keycloak host through the in-cluster Traefik (ClusterIP) so pods do
+# not depend on public DNS / WAF for this name.
+hostAliases:
+  - ip: "100.96.0.228"
+    hostnames:
+      - "auth-events-uat.osd.co.th"
