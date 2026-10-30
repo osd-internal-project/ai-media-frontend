@@ -69,6 +69,7 @@ const ModelPricingManagementPage = () => {
         provider: record.provider,
         iconUrl: record.iconUrl,
         isDefault: record.isDefault,
+        allowPublish: record.allowPublish,
         calculationType: calcType,
         creditFormula,
         tokenFormula,
@@ -120,6 +121,7 @@ const ModelPricingManagementPage = () => {
         type: values.type,
         description: values.description,
         isDefault: values.isDefault || false,
+        allowPublish: values.allowPublish || false,
         provider: values.provider?.trim() || null,
         iconUrl: values.iconUrl?.trim() || null,
         modelDetails: detailsJson,
@@ -173,6 +175,13 @@ const ModelPricingManagementPage = () => {
       title: "Description",
       dataIndex: "description",
       key: "description",
+    },
+    {
+      title: "Community",
+      dataIndex: "allowPublish",
+      key: "allowPublish",
+      render: (allow: boolean) =>
+        allow ? <Tag color="green">เผยแพร่ได้</Tag> : <Tag>ปิด</Tag>,
     },
     {
       title: "Calculation Strategy",
@@ -301,12 +310,21 @@ const ModelPricingManagementPage = () => {
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="isDefault"
-            valuePropName="checked"
-          >
-             <Switch checkedChildren="Default" unCheckedChildren="Not Default" />
-          </Form.Item>
+          <Space size="large">
+            <Form.Item
+              name="isDefault"
+              valuePropName="checked"
+            >
+               <Switch checkedChildren="Default" unCheckedChildren="Not Default" />
+            </Form.Item>
+            <Form.Item
+              name="allowPublish"
+              valuePropName="checked"
+              tooltip="เปิดเมื่อ license ของ model นี้อนุญาตให้เผยแพร่งานบน Community"
+            >
+               <Switch checkedChildren="เผยแพร่ Community ได้" unCheckedChildren="ห้ามเผยแพร่ Community" />
+            </Form.Item>
+          </Space>
 
           <div className="border border-[var(--legacy-line-gray-700)] p-4 rounded-lg bg-[var(--legacy-surface-1c1c1e)] mt-4 mb-4">
             <Form.Item

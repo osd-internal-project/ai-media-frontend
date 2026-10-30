@@ -33,3 +33,30 @@ export type OrgGalleryPage = {
   page: number;
   pageSize: number;
 };
+
+export type CommunityVisibility = "PUBLIC" | "PRIVATE";
+
+export type PublishRequest = {
+  organizationId: string;
+  galleryIds: string[];
+  visibility: CommunityVisibility;
+  includePrompt: boolean;
+};
+
+export type PublishResult =
+  | { galleryId: string; publicationId: string; status: "PENDING" }
+  | { galleryId: string; publicationId: string; status: "FAILED"; error: string }
+  | { galleryId: string; status: "SKIPPED"; reason: "NOT_OWNER" | "MODEL_NOT_ALLOWED" | "NOT_FOUND" };
+
+export type IntegrationApiKeyScope = "webhook" | "original";
+
+export type IntegrationApiKey = {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: IntegrationApiKeyScope[];
+  createdByUserId: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+};

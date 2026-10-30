@@ -8,6 +8,7 @@ import {
   Building2,
   Cpu,
   FileText,
+  KeyRound,
   Megaphone,
   MessageSquare,
   PersonStanding,
@@ -97,6 +98,13 @@ const adminTabs: AdminTabItem[] = [
     href: "/page/admin-management/chat-assistant",
     matchers: ["/chat-assistant"],
     icon: <MessageSquare size={16} />,
+  },
+  {
+    key: "integration-keys",
+    label: "API Keys",
+    href: "/page/admin-management/integration-keys",
+    matchers: ["/integration-keys"],
+    icon: <KeyRound size={16} />,
   },
 ];
 

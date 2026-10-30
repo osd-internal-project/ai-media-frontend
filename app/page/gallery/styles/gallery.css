@@ -59,3 +59,24 @@
 @media (prefers-reduced-motion: reduce) {
   .og-tile-check, .og-tile-creator { transition: none; }
 }
+
+.og-pd-root .ant-drawer-body { color: var(--og-text); }
+.og-pd { display: grid; gap: 24px; }
+.og-pd section { display: grid; gap: 8px; }
+.og-pd p { margin: 0; }
+.og-pd-label { font-size: 13px; font-weight: 600; }
+.og-pd-hint { font-size: 12px; color: var(--og-muted); }
+.og-pd-row { grid-template-columns: 1fr auto; align-items: center; }
+.og-pd-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.og-pd-thumb {
+  position: relative; width: 64px; height: 64px; flex: none; border-radius: 8px; overflow: hidden;
+  display: grid; place-items: center; color: var(--og-muted);
+  background: var(--og-panel); box-shadow: 0 0 0 1px var(--og-border);
+}
+.og-pd-skips { margin: 0; padding-left: 18px; color: var(--og-warning); font-size: 13px; }
+.og-pd-skips li { margin: 2px 0; }
+.og-pd-live { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.og-pd-live li { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 12px; font-size: 13px; }
+.og-pd-ok { color: var(--og-success); }
+.og-pd-error { color: var(--og-error); display: grid; gap: 6px; }
+.og-pd-error ul { margin: 0; padding-left: 18px; font-size: 12px; }

@@ -17,6 +17,7 @@ import type {
   PublishStatusFilter,
 } from "@/app/common/org-gallery.type";
 import GalleryTile from "./components/gallery-tile";
+import PublishDrawer from "./components/publish-drawer";
 import "./styles/gallery.css";
 
 const PAGE_SIZE = 24;
@@ -60,6 +61,9 @@ export default function OrgGalleryPage() {
   const [members, setMembers] = useState<{ label: string; value: string }[]>([]);
   // เก็บทั้ง item ไว้ เพื่อให้ตัวนับยังถูกเมื่อเปลี่ยนหน้าหรือเปลี่ยนตัวกรอง
   const [selected, setSelected] = useState<Map<string, OrgGalleryItem>>(new Map());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // สถานะของชิ้นที่เลือกไว้เก่าแล้วหลังเผยแพร่/ถอด — ล้างตอนปิด drawer
+  const [selectionStale, setSelectionStale] = useState(false);
 
   const load = useCallback(async () => {
     if (!organizationId) return;
@@ -212,7 +216,28 @@ export default function OrgGalleryPage() {
           <Button type="text" onClick={() => setSelected(new Map())} className="og-clear">
             ล้างที่เลือก
           </Button>
+          <Button type="primary" onClick={() => setDrawerOpen(true)}>
+            เผยแพร่ไป Community
+          </Button>
         </div>
+      )}
+
+      {organizationId && (
+        <PublishDrawer
+          open={drawerOpen}
+          organizationId={organizationId}
+          items={[...selected.values()]}
+          themeVars={cssVars}
+          onChanged={() => {
+            setSelectionStale(true);
+            load();
+          }}
+          onClose={() => {
+            setDrawerOpen(false);
+            if (selectionStale) setSelected(new Map());
+            setSelectionStale(false);
+          }}
+        />
       )}
     </div>
   );

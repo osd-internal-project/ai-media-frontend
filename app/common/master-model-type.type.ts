@@ -5,6 +5,7 @@ export interface TMasterModelType {
   type: string | null;
   description: string | null;
   isDefault: boolean;
+  allowPublish: boolean;
   modelDetails: any | null;
   createdAt: string;
   updatedAt: string;
