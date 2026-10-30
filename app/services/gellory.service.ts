@@ -1,4 +1,5 @@
 import { AxiosInstance } from "axios";
+import type { OrgGalleryPage, OrgGalleryQuery } from "@/app/common/org-gallery.type";
 
 const GalleryServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/gallery";
@@ -49,6 +50,17 @@ const GalleryServices = (axiosInstance: AxiosInstance) => {
           console.log(err);
           return;
         });
+    },
+    /** ผลงานทั้ง org — throw เมื่อพัง เพื่อให้หน้าแสดง error แทนรายการว่าง */
+    findByOrg: async (
+      organizationId: string,
+      query: OrgGalleryQuery
+    ): Promise<OrgGalleryPage> => {
+      const res = await axiosInstance.get<OrgGalleryPage>(
+        `${baseUrl}/org/${organizationId}`,
+        { params: query }
+      );
+      return res.data;
     },
     findActivityById: async (
       projectId: string,

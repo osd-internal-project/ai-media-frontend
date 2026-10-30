@@ -8,6 +8,7 @@ import {
   BookTemplate,
   MessageSquare,
   Camera,
+  Images,
 } from "lucide-react";
 import {
   hasAccessCode,
@@ -43,6 +44,15 @@ export const MenuSider = [
         icon: <FolderOpen size={22} />,
         label: (
           <span style={{ fontSize: 12, fontWeight: "normal" }}>Projects</span>
+        ),
+      },
+      {
+        key: `gallery`,
+        // MEMBER/VIEWER เห็นเฉพาะงานของตัวเอง — backend เป็นคนกรอง
+        role: ["OWNER", "ADMIN", "MEMBER", "VIEWER", "SUPER_ADMIN"],
+        icon: <Images size={22} />,
+        label: (
+          <span style={{ fontSize: 12, fontWeight: "normal" }}>Gallery</span>
         ),
       },
       {
