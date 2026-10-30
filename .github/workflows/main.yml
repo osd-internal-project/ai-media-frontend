@@ -24,6 +24,8 @@ permissions:
 
 env:
   DEPLOY_ENV: ${{ inputs.deploy_env || 'sit' }}
+  # uat lives in its own cluster with the plain namespace name; other envs keep aicave-<env>
+  NAMESPACE: ${{ inputs.deploy_env == 'uat' && 'aicave' || format('aicave-{0}', inputs.deploy_env || 'sit') }}
 
 jobs:
   build-and-deploy:
@@ -90,7 +92,8 @@ jobs:
           docker builder prune -f
 
   deploy:
-    runs-on: [self-hosted, k8s]
+    # uat runs on the runner of the UAT cluster (kube-osd-uat); other envs keep the existing runner
+    runs-on: ${{ inputs.deploy_env == 'uat' && fromJSON('["self-hosted", "Linux", "X64", "kube-osd-uat"]') || fromJSON('["self-hosted", "k8s"]') }}
     needs: build-and-deploy
     environment: ${{ inputs.deploy_env || 'sit' }}
 
@@ -110,7 +113,7 @@ jobs:
             --docker-server=swr.ap-southeast-2.myhuaweicloud.com \
             --docker-username=ap-southeast-2@HPUAGIPPWFA7YCNYJIGE \
             --docker-password=${{ secrets.HUAWEI_REGISTRY_PASSWORD }} \
-            --namespace=aicave-${{ env.DEPLOY_ENV }} \
+            --namespace=${{ env.NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       # ---------------------------------------------------------------------
@@ -119,7 +122,7 @@ jobs:
       - name: Fix Stuck Helm Release
         run: |
           DEPLOY_ENV="${{ env.DEPLOY_ENV }}"
-          NS="aicave-${DEPLOY_ENV}"
+          NS="${{ env.NAMESPACE }}"
           RELEASE="aicave-console"
           STATUS=$(helm status ${RELEASE} -n ${NS} -o json 2>/dev/null | jq -r '.info.status' 2>/dev/null || echo "not-found")
           echo "Current Helm release status: ${STATUS}"
@@ -158,7 +161,7 @@ jobs:
             --set secretEnv.KEYCLOAK_CLIENT_ID=${{ secrets.KEYCLOAK_CLIENT_ID }} \
             --set secretEnv.KEYCLOAK_CLIENT_SECRET=${{ secrets.KEYCLOAK_CLIENT_SECRET }} \
             --set secretEnv.NEXT_PUBLIC_OMISE_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_OMISE_PUBLIC_KEY }} \
-            --namespace aicave-${DEPLOY_ENV} \
+            --namespace ${{ env.NAMESPACE }} \
             --wait \
             --timeout 5m \
             --atomic \
@@ -172,7 +175,7 @@ jobs:
       - name: Debug on Failure
         if: failure()
         run: |
-          NS="aicave-${{ env.DEPLOY_ENV }}"
+          NS="${{ env.NAMESPACE }}"
           echo "====== POD STATUS ======"
           kubectl get pods -n ${NS} -l app=aicave-console -o wide
 
@@ -196,8 +199,8 @@ jobs:
       - name: Verify Deployment
         run: |
           kubectl rollout status deployment/aicave-console \
-            -n aicave-${{ env.DEPLOY_ENV }}
-          kubectl get pods -n aicave-${{ env.DEPLOY_ENV }} \
+            -n ${{ env.NAMESPACE }}
+          kubectl get pods -n ${{ env.NAMESPACE }} \
             -l app=aicave-console
 
       # ---------------------------------------------------------------------

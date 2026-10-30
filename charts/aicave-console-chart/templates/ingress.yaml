@@ -4,10 +4,12 @@ kind: Ingress
 metadata:
   name: {{ .Values.appName }}-ingress
   namespace: {{ .Values.namespace }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
+    # security headers (were an nginx configuration-snippet) are set by this Traefik Middleware
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Values.namespace }}-{{ .Values.appName }}-security-headers@kubernetescrd
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls.enabled }}

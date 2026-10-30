@@ -1,28 +1,28 @@
 # UAT Environment Values
 # Override specific values for UAT environment
 
-namespace: aicave-uat
-replicaCount: 3
+namespace: aicave
+replicaCount: 1
 
 image:
   tag: "v1.0.25"
 
 ingress:
   hosts:
-    - host: uat.aicave.ai
+    - host: aicave-uat.osd.co.th
       paths:
         - path: /
           pathType: Prefix
   tls:
     enabled: true
-    secretName: aicave-console-tls-uat
+    secretName: aicave-tls
 
 env:
   version: "2.0.0"
   authBackendUrl: "http://aicave-user-service:8972/api"
-  nextauthUrl: "https://uat.aicave.ai"
+  nextauthUrl: "https://aicave-uat.osd.co.th"
   nextauthUrlInternal: "http://aicave-console"
-  keycloakIssuer: "https://id24-uat.aicave.ai/realms/eportal"
+  keycloakIssuer: "https://auth-events.osd.co.th/realms/eportal"
   authTrustHost: "true"
 
 # Secrets managed via GitHub Actions secrets and passed with --set:

@@ -1,0 +1,15 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Values.appName }}-security-headers
+  namespace: {{ .Values.namespace }}
+spec:
+  headers:
+    customResponseHeaders:
+      Content-Security-Policy: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; media-src 'self' blob: data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: wss: data: blob:;"
+      X-Frame-Options: "SAMEORIGIN"
+      X-Content-Type-Options: "nosniff"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Permissions-Policy: "geolocation=(), microphone=(), camera=(self)"
+{{- end }}
