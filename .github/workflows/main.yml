@@ -95,7 +95,7 @@ jobs:
     # uat runs on the runner of the UAT cluster (kube-osd-uat); other envs keep the existing runner
     runs-on: ${{ inputs.deploy_env == 'uat' && fromJSON('["self-hosted", "Linux", "X64", "kube-osd-uat"]') || fromJSON('["self-hosted", "k8s"]') }}
     needs: build-and-deploy
-    environment: ${{ inputs.deploy_env || 'sit' }}
+    environment: ${{ inputs.deploy_env == 'uat' && 'uat-osd' || inputs.deploy_env || 'sit' }}
 
     steps:
       # ---------------------------------------------------------------------
