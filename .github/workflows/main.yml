@@ -24,6 +24,9 @@ permissions:
 
 env:
   DEPLOY_ENV: ${{ inputs.deploy_env || 'sit' }}
+  # NEXT_PUBLIC_* is baked at build time: the new UAT cluster has its own .env.uat-osd and image tag,
+  # so the old UAT image (<ver>-uat) is never overwritten.
+  BUILD_ENV: ${{ inputs.deploy_env == 'uat' && 'uat-osd' || inputs.deploy_env || 'sit' }}
   # uat lives in its own cluster with the plain namespace name; other envs keep aicave-<env>
   NAMESPACE: ${{ inputs.deploy_env == 'uat' && 'aicave' || format('aicave-{0}', inputs.deploy_env || 'sit') }}
 
@@ -32,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image_name: ${{ steps.pkg.outputs.name }}
-      image_version: ${{ steps.pkg.outputs.ver }}-${{ inputs.deploy_env || 'sit' }}
+      image_version: ${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }}
 
     steps:
       # ---------------------------------------------------------------------
@@ -59,8 +62,8 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build --no-cache --platform linux/amd64 \
-            --build-arg BUILD_ENV=${{ env.DEPLOY_ENV }} \
-            -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} -f ./Dockerfile .
+            --build-arg BUILD_ENV=${{ env.BUILD_ENV }} \
+            -t ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }} -f ./Dockerfile .
 
       # ---------------------------------------------------------------------
       # Login to Huawei Cloud Container Registry
@@ -76,9 +79,9 @@ jobs:
       # ---------------------------------------------------------------------
       - name: Tag and Push Docker Image
         run: |
-          docker tag ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} \
-            swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }}
-          docker push swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }}
+          docker tag ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }} \
+            swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }}
+          docker push swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }}
 
       # ---------------------------------------------------------------------
       # Cleanup local Docker images
@@ -86,8 +89,8 @@ jobs:
       - name: Cleanup Docker Images
         if: always()
         run: |
-          docker rmi ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} || true
-          docker rmi swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.DEPLOY_ENV }} || true
+          docker rmi ${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }} || true
+          docker rmi swr.ap-southeast-2.myhuaweicloud.com/osd-internal/${{ steps.pkg.outputs.name }}:${{ steps.pkg.outputs.ver }}-${{ env.BUILD_ENV }} || true
           docker image prune -f
           docker builder prune -f
 
