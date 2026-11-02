@@ -7,6 +7,7 @@ import type {
   IPhotoEventTemplate,
 } from "@/app/common/photo-event.type";
 import LoadingImage from "@/app/components/photo-event/loading-image";
+import TemplatePreview from "@/app/components/photo-event/template-preview";
 import CameraCaptureModal, {
   canUseLiveCamera,
 } from "@/app/components/photo-event/camera-capture-modal";
@@ -114,9 +115,7 @@ export default function PhotoStep({
       <div className="kiosk-photo-stage">
         <div className="kiosk-chip">
           <div className="kiosk-chip-thumb">
-            {template.imageUrls[0] && (
-              <LoadingImage className="kiosk-img" src={template.imageUrls[0]} alt={template.title} />
-            )}
+            <TemplatePreview template={template} />
           </div>
           <div className="kiosk-chip-text">
             <span>Style</span>

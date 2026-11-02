@@ -20,6 +20,7 @@ import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { useRouter } from "next/navigation";
 import { isAudio, isVideo, mentionLabels } from "@/app/utils/prompt-guide-media";
+import PreviewGrid from "@/app/components/preview-grid";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -83,15 +84,21 @@ function MediaThumb({
 
 /** ผลลัพธ์เต็มกรอบ + reference เป็น thumbnail เล็ก (เฉพาะแสดงผล — Use แนบแค่ reference) */
 function ResultPreview({ guide }: { guide: TPromptGuide }) {
-  const result = guide.results?.[0];
-  if (!result) return null;
+  const results = guide.results ?? [];
+  if (results.length === 0) return null;
   const refs = guide.images ?? [];
   const labels = MENTION_TYPES.has(guide.generateType)
     ? mentionLabels(refs)
     : [];
   return (
     <>
-      <MediaThumb url={result.url} alt={guide.title || "Result"} />
+      <PreviewGrid
+        items={results}
+        getKey={(media) => media.uid}
+        renderItem={(media) => (
+          <MediaThumb url={media.url} alt={guide.title || "Result"} />
+        )}
+      />
       <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent" />
       <Tag
         style={{
@@ -425,57 +432,16 @@ export default function BrowsePromptModal({
                       <ResultPreview guide={guide} />
                     ) : guide.images && guide.images.length > 0 ? (
                       <>
-                        {/* 1 image: Show full */}
-                        {guide.images.length === 1 && (
-                          <MediaThumb
-                            url={guide.images[0].url}
-                            alt={guide.title || "Template"}
-                          />
-                        )}
-
-                        {/* 2 images: Split side by side */}
-                        {guide.images.length === 2 && (
-                          <div className="flex h-full w-full">
-                            <div className="relative w-1/2 h-full border-r border-black/20">
-                              <MediaThumb
-                                url={guide.images[0].url}
-                                alt="Image 1"
-                              />
-                            </div>
-                            <div className="relative w-1/2 h-full">
-                              <MediaThumb
-                                url={guide.images[1].url}
-                                alt="Image 2"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 3+ images: Grid layout */}
-                        {guide.images.length >= 3 && (
-                          <div className="flex flex-col h-full w-full">
-                            <div className="flex h-1/2 border-b border-black/20">
-                              <div className="relative w-1/2 h-full border-r border-black/20">
-                                <MediaThumb
-                                  url={guide.images[0].url}
-                                  alt="Image 1"
-                                />
-                              </div>
-                              <div className="relative w-1/2 h-full">
-                                <MediaThumb
-                                  url={guide.images[1].url}
-                                  alt="Image 2"
-                                />
-                              </div>
-                            </div>
-                            <div className="relative w-full h-1/2">
-                              <MediaThumb
-                                url={guide.images[2].url}
-                                alt="Image 3"
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <PreviewGrid
+                          items={guide.images}
+                          getKey={(media) => media.uid}
+                          renderItem={(media, i) => (
+                            <MediaThumb
+                              url={media.url}
+                              alt={i === 0 ? guide.title || "Template" : `Image ${i + 1}`}
+                            />
+                          )}
+                        />
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                       </>
                     ) : (

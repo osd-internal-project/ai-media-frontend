@@ -9,6 +9,8 @@ export interface IPhotoEventTemplate {
   promptTail: string | null;
   defaultPromptTail: string;
   imageUrls: string[];
+  /** รูปผลลัพธ์ตัวอย่าง — preview ใช้ก่อน, ว่าง = ใช้ imageUrls[0] */
+  resultUrls: string[];
   sortOrder: number;
 }
 

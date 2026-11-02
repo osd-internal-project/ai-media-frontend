@@ -3,7 +3,7 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
 import type { IPhotoEventTemplate } from "@/app/common/photo-event.type";
-import LoadingImage from "@/app/components/photo-event/loading-image";
+import TemplatePreview from "@/app/components/photo-event/template-preview";
 
 interface TemplateStepProps {
   projectName: string;
@@ -41,13 +41,7 @@ export default function TemplateStep({
               style={{ animationDelay: `${Math.min(index * 50, 450)}ms` }}
               onClick={() => onSelect(template)}
             >
-              {template.imageUrls[0] && (
-                <LoadingImage
-                  className="kiosk-img"
-                  src={template.imageUrls[0]}
-                  alt={template.title}
-                />
-              )}
+              <TemplatePreview template={template} />
               <div className="kiosk-card-meta">
                 <div className="kiosk-card-title">{template.title}</div>
                 <span className="kiosk-pill">เลือก · Select</span>

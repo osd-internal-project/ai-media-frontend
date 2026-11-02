@@ -20,6 +20,7 @@ import PhotoEventService, {
 } from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import useResponsive from "@/app/hooks/useResponsive";
+import PreviewGrid from "@/app/components/preview-grid";
 import { PROMPT_MAX_LENGTH } from "@/app/config/prompt";
 
 interface TemplatesTabProps {
@@ -197,14 +198,22 @@ export default function TemplatesTab({
                     background: "#0003",
                   }}
                 >
-                  {guide.images?.[0]?.url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={guide.images[0].url}
-                      alt={guide.title ?? "template"}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  )}
+                  <PreviewGrid
+                    items={
+                      guide.results?.length
+                        ? guide.results
+                        : (guide.images ?? []).slice(0, 1)
+                    }
+                    getKey={(media) => media.uid}
+                    renderItem={(media) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={media.url}
+                        alt={guide.title ?? "template"}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    )}
+                  />
                   {isSelected && (
                     <div
                       style={{
