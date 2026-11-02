@@ -48,3 +48,9 @@ hostAliases:
 # No metrics-server on the UAT cluster: an HPA cannot read metrics and would force minReplicas.
 autoscaling:
   enabled: false
+
+networkPolicy:
+  enabled: true
+  traefik:
+    namespace: traefik
+    port: 8443   # websecure container port

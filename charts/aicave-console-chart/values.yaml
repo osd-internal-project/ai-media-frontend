@@ -90,3 +90,7 @@ autoscaling:
 # malware download / C2 like the plain-HTTP fetch seen in the incident.
 networkPolicy:
   enabled: true
+  # Egress to the in-cluster Traefik (set when hostAliases point a host at the Traefik Service).
+  # traefik:
+  #   namespace: traefik
+  #   port: 8443

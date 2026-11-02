@@ -31,6 +31,18 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.namespace }}
+    # In-cluster Traefik: pods resolve the Keycloak host to the Traefik Service (hostAliases).
+    # The policy is evaluated after the Service is translated, so the port is the
+    # container port of the websecure entrypoint (8443), not 443.
+    {{- with .Values.networkPolicy.traefik }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace }}
+      ports:
+        - protocol: TCP
+          port: {{ .port }}
+    {{- end }}
     # External HTTPS only (Keycloak / OIDC). Plain-HTTP and all other outbound
     # ports are denied. Tighten `to:` to the Keycloak CIDR when known.
     - ports:
