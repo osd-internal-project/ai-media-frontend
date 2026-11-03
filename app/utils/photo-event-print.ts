@@ -1,4 +1,8 @@
-import type { IPrintBox, IPrintLayout } from "@/app/common/photo-event.type";
+import type {
+  IPrintBox,
+  IPrintDesign,
+  IPrintLayout,
+} from "@/app/common/photo-event.type";
 
 /** การ์ด 4×6 นิ้ว จัดแบบเดียวกับใบพิมพ์เดิม — ใช้เมื่อ event ยังไม่มี template ที่ active */
 export const DEFAULT_PRINT_LAYOUT: IPrintLayout = {
@@ -36,6 +40,12 @@ export const DEFAULT_PRINT_LAYOUT: IPrintLayout = {
     },
   ],
 };
+
+/** design ของ template ที่ active — event ที่ยังไม่มี template ใช้ layout default */
+export const toPrintDesign = (template: IPrintDesign | null): IPrintDesign =>
+  template
+    ? { layout: template.layout, assetUrls: template.assetUrls }
+    : { layout: DEFAULT_PRINT_LAYOUT, assetUrls: {} };
 
 export interface IPaperPreset {
   key: string;

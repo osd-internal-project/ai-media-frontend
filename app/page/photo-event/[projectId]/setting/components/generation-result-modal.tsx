@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Image, Modal, QRCode, Space, Typography, message } from "antd";
 import { Copy, Download, ExternalLink, Printer } from "lucide-react";
 import type { IPhotoEventGeneration } from "@/app/common/photo-event.type";
@@ -8,14 +8,18 @@ import PhotoEventService from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
 import { usePrintGeneration } from "@/app/components/photo-event/print-sheet";
+import { toPrintDesign } from "@/app/utils/photo-event-print";
+import { cardFilename, renderPrintCardPng, saveBlob } from "@/app/utils/photo-event-print-render";
 import useResponsive from "@/app/hooks/useResponsive";
 
 interface GenerationResultModalProps {
+  projectId: string;
   generation: IPhotoEventGeneration | null;
   onClose: () => void;
 }
 
 export default function GenerationResultModal({
+  projectId,
   generation,
   onClose,
 }: GenerationResultModalProps) {
@@ -24,8 +28,31 @@ export default function GenerationResultModal({
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const shareUrl = generation ? buildPhotoShareUrl(generation.id) : "";
   const { print, printing, sheet: printSheet } = usePrintGeneration(() =>
-    messageApi.error("Cannot load the photo for printing"),
+    messageApi.error("Cannot load the print template or photo"),
   );
+
+  const [downloading, setDownloading] = useState(false);
+
+  const loadDesign = () =>
+    photoEventService.findActivePrintTemplate(projectId).then(toPrintDesign);
+
+  const downloadCard = async (target: IPhotoEventGeneration) => {
+    if (!target.resultUrl) return;
+    setDownloading(true);
+    try {
+      const blob = await renderPrintCardPng({
+        ...(await loadDesign()),
+        photoUrl: target.resultUrl,
+        shareUrl: buildPhotoShareUrl(target.id),
+      });
+      saveBlob(blob, cardFilename(target.id));
+    } catch (error) {
+      console.error("Failed to render the photo card", error);
+      messageApi.error("Cannot create the photo card");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const copyLink = async () => {
     try {
@@ -73,14 +100,15 @@ export default function GenerationResultModal({
               <Button
                 icon={<Printer size={14} />}
                 loading={printing}
-                onClick={() => print(generation)}
+                onClick={() => print(generation, loadDesign())}
               >
                 Print
               </Button>
               <Button
                 type="primary"
                 icon={<Download size={14} />}
-                href={photoEventService.publicDownloadUrl(generation.id)}
+                loading={downloading}
+                onClick={() => downloadCard(generation)}
               >
                 Download
               </Button>

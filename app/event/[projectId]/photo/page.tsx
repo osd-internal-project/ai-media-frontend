@@ -14,6 +14,7 @@ import ProjectService from "@/app/services/project.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { usePhotoEventPhotos } from "@/app/hooks/usePhotoEventPhotos";
 import { usePrintGeneration } from "@/app/components/photo-event/print-sheet";
+import { toPrintDesign } from "@/app/utils/photo-event-print";
 import KioskChrome from "./components/kiosk-chrome";
 import TemplateStep from "./components/template-step";
 import PhotoStep from "./components/photo-step";
@@ -225,7 +226,10 @@ const PhotoKioskPage = () => {
             printFailed={printFailed}
             onPrint={() => {
               setPrintFailed(false);
-              print(generation);
+              print(
+                generation,
+                photoEventService.findActivePrintTemplate(projectId).then(toPrintDesign),
+              );
             }}
             onRestart={restart}
           />

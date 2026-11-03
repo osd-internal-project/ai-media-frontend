@@ -46,6 +46,8 @@ export interface IPublicPhotoEvent {
   id: string;
   imageUrl: string;
   createdAt: string;
+  /** template ที่ active ของ event — null = ใช้ layout default */
+  printDesign: IPrintDesign | null;
 }
 
 export const PHOTO_EVENT_ROOM_TYPE = "photo-event";
@@ -99,6 +101,12 @@ export interface IPhotoEventPrintTemplate {
   /** storage key → presigned URL ของพื้นหลัง/icon/กรอบ */
   assetUrls: Record<string, string>;
   updatedAt: string;
+}
+
+/** layout + URL ของ asset ที่ใช้ render การ์ด 1 ใบ (พิมพ์และดาวน์โหลด) */
+export interface IPrintDesign {
+  layout: IPrintLayout;
+  assetUrls: Record<string, string>;
 }
 
 export interface IPhotoEventPrintAsset {

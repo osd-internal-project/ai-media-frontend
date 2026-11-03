@@ -2,9 +2,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { IPhotoEventGeneration, IPrintLayout } from "@/app/common/photo-event.type";
+import type { IPhotoEventGeneration, IPrintDesign, IPrintLayout } from "@/app/common/photo-event.type";
 import { buildPhotoShareUrl } from "@/app/utils/photo-event";
-import { DEFAULT_PRINT_LAYOUT } from "@/app/utils/photo-event-print";
 import { PrintCard } from "./print-card";
 
 // margin 0 = ไม่มีที่ให้ Chrome วาง header/footer (วันที่, title, URL, เลขหน้า)
@@ -85,23 +84,31 @@ function PrintSheet({ generation, layout, assetUrls, onDone, onError }: PrintShe
   );
 }
 
-export interface IPrintDesign {
-  layout: IPrintLayout;
-  assetUrls: Record<string, string>;
-}
-
-const DEFAULT_DESIGN: IPrintDesign = { layout: DEFAULT_PRINT_LAYOUT, assetUrls: {} };
-
-/** สั่งพิมพ์รูปผลลัพธ์ + QR ตาม layout; `printing` เป็น true ตั้งแต่กดจนปิด dialog */
+/**
+ * สั่งพิมพ์รูปผลลัพธ์ตาม design (ส่ง Promise ได้ — เช่นโหลด template ที่ active ตอนกด)
+ * `printing` เป็น true ตั้งแต่กดจนปิด dialog; โหลด design หรือรูปไม่ได้ → `onError`
+ */
 export const usePrintGeneration = (onError?: () => void) => {
   const [target, setTarget] = useState<{
     generation: IPhotoEventGeneration;
     design: IPrintDesign;
   } | null>(null);
+  const [loadingDesign, setLoadingDesign] = useState(false);
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   const print = useCallback(
-    (generation: IPhotoEventGeneration, design: IPrintDesign = DEFAULT_DESIGN) => {
-      if (generation.resultUrl) setTarget({ generation, design });
+    async (generation: IPhotoEventGeneration, design: IPrintDesign | Promise<IPrintDesign>) => {
+      if (!generation.resultUrl) return;
+      setLoadingDesign(true);
+      try {
+        setTarget({ generation, design: await design });
+      } catch (error) {
+        console.error("Failed to load print design", error);
+        onErrorRef.current?.();
+      } finally {
+        setLoadingDesign(false);
+      }
     },
     [],
   );
@@ -109,8 +116,8 @@ export const usePrintGeneration = (onError?: () => void) => {
   const clear = useCallback(() => setTarget(null), []);
   const fail = useCallback(() => {
     setTarget(null);
-    onError?.();
-  }, [onError]);
+    onErrorRef.current?.();
+  }, []);
 
   const sheet = target ? (
     <PrintSheet
@@ -123,5 +130,5 @@ export const usePrintGeneration = (onError?: () => void) => {
     />
   ) : null;
 
-  return { print, printing: Boolean(target), sheet };
+  return { print, printing: loadingDesign || Boolean(target), sheet };
 };

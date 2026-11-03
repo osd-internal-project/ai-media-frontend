@@ -314,6 +314,7 @@ export default function PhotosTab({
       />
 
       <GenerationResultModal
+        projectId={projectId}
         generation={openedGeneration}
         onClose={() => setOpenedGeneration(null)}
       />

@@ -7,7 +7,45 @@ import { useParams } from "next/navigation";
 import type { IPublicPhotoEvent } from "@/app/common/photo-event.type";
 import PhotoEventService from "@/app/services/photo-event.service";
 import { axiosCore } from "@/app/lib/axios/axios";
-import LoadingImage from "@/app/components/photo-event/loading-image";
+import { buildPhotoShareUrl } from "@/app/utils/photo-event";
+import { toPrintDesign } from "@/app/utils/photo-event-print";
+import { cardFilename, renderPrintCardPng, saveBlob } from "@/app/utils/photo-event-print-render";
+
+interface ICard {
+  blob: Blob;
+  url: string;
+  aspectRatio: string;
+}
+
+/** การ์ดตาม print template ของ event — ไฟล์เดียวกับที่ดาวน์โหลด */
+const useCard = (photo: IPublicPhotoEvent | null) => {
+  const [card, setCard] = useState<ICard | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!photo) return;
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const design = toPrintDesign(photo.printDesign);
+    renderPrintCardPng({ ...design, photoUrl: photo.imageUrl, shareUrl: buildPhotoShareUrl(photo.id) })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        const { widthMm, heightMm } = design.layout.paper;
+        setCard({ blob, url: objectUrl, aspectRatio: `${widthMm} / ${heightMm}` });
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to render the photo card", error);
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [photo]);
+
+  return { card, failed };
+};
 
 /** หน้าสาธารณะจาก QR code — ไม่ต้อง login (อยู่นอก matcher ของ middleware) */
 const SharePhotoPage = () => {
@@ -15,6 +53,7 @@ const SharePhotoPage = () => {
   const photoEventService = useMemo(() => PhotoEventService(axiosCore), []);
   const [photo, setPhoto] = useState<IPublicPhotoEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const { card, failed } = useCard(photo);
 
   useEffect(() => {
     photoEventService
@@ -53,32 +92,40 @@ const SharePhotoPage = () => {
           title={<span style={{ color: "#f2f4f5" }}>ไม่พบรูปภาพ · Photo not found</span>}
           subTitle={<span style={{ color: "#8c99a9" }}>ลิงก์อาจไม่ถูกต้อง · This link may be invalid.</span>}
         />
+      ) : failed ? (
+        <Result
+          status="error"
+          title={<span style={{ color: "#f2f4f5" }}>สร้างภาพไม่สำเร็จ · Cannot create your photo</span>}
+          subTitle={<span style={{ color: "#8c99a9" }}>โหลดหน้านี้ใหม่อีกครั้ง · Reload this page to try again.</span>}
+          extra={
+            <Button type="primary" onClick={() => window.location.reload()}>
+              โหลดใหม่ · Reload
+            </Button>
+          }
+        />
+      ) : !card ? (
+        <Spin size="large" style={{ marginTop: 80 }} />
       ) : (
         <>
-          <div
+          {/* eslint-disable-next-line @next/next/no-img-element -- blob URL ของการ์ดที่ render บน canvas */}
+          <img
+            src={card.url}
+            alt="Your AI photo"
             style={{
-              position: "relative",
               width: "100%",
               maxWidth: 480,
-              aspectRatio: "3 / 4",
-              borderRadius: 24,
-              overflow: "hidden",
-              border: "1px solid rgba(111,106,222,0.6)",
-              boxShadow: "0 24px 70px rgba(0,0,0,0.55), 0 0 60px rgba(111,106,222,0.18)",
+              aspectRatio: card.aspectRatio,
+              display: "block",
+              borderRadius: 12,
+              boxShadow: "0 24px 70px rgba(0,0,0,0.55)",
             }}
-          >
-            <LoadingImage
-              src={photo.imageUrl}
-              alt="Your AI photo"
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
-          </div>
+          />
           <Button
             type="primary"
             size="large"
             shape="round"
             icon={<Download size={18} />}
-            href={photoEventService.publicDownloadUrl(photo.id)}
+            onClick={() => saveBlob(card.blob, cardFilename(photo.id))}
             style={{
               width: "100%",
               maxWidth: 480,
