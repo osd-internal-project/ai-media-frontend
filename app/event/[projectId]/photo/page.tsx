@@ -19,6 +19,8 @@ import TemplateStep from "./components/template-step";
 import PhotoStep from "./components/photo-step";
 import GeneratingStep from "./components/generating-step";
 import ResultStep from "./components/result-step";
+import DisplaySettings from "./components/display-settings";
+import { useKioskDisplay } from "./kiosk-display";
 import { useIdleCountdown } from "./use-idle-countdown";
 import {
   KIOSK_GENERATE_TIMEOUT_MS,
@@ -46,6 +48,9 @@ const PhotoKioskPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const generationIdRef = useRef<string | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { display, updateDisplay, layout } = useKioskDisplay(stageRef);
 
   const applyGenerationUpdate = useCallback((next: IPhotoEventGeneration) => {
     if (next.id !== generationIdRef.current) return;
@@ -93,9 +98,13 @@ const PhotoKioskPage = () => {
     setPrintFailed(true),
   );
 
-  // หยุดนับถอยหลังระหว่างพิมพ์/ถ่ายรูป — กันจอรีเซ็ตกลับหน้าแรกกลางคัน
+  // หยุดนับถอยหลังระหว่างพิมพ์/ถ่ายรูป/ตั้งค่าจอ — กันจอรีเซ็ตกลับหน้าแรกกลางคัน
   const idleSecondsLeft = useIdleCountdown(
-    (step === "photo" || step === "result") && !printing && !cameraOpen && !uploading,
+    (step === "photo" || step === "result") &&
+      !printing &&
+      !cameraOpen &&
+      !uploading &&
+      !settingsOpen,
     KIOSK_IDLE_SECONDS,
     restart,
   );
@@ -165,58 +174,72 @@ const PhotoKioskPage = () => {
   };
 
   return (
-    <div className="kiosk-root" onContextMenu={(e) => e.preventDefault()}>
-      <KioskChrome step={step} onBack={goBack} />
-      {step === "template" && (
-        <TemplateStep
-          projectName={projectName}
-          templates={templates}
-          loading={templatesLoading}
-          onSelect={(selected) => {
-            setTemplate(selected);
-            setStep("photo");
-          }}
+    <div
+      ref={stageRef}
+      className={display.frame ? "kiosk-stage is-framed" : "kiosk-stage"}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <div className="kiosk-root" style={layout?.rootStyle}>
+        <KioskChrome step={step} onBack={goBack} onOpenSettings={() => setSettingsOpen(true)} />
+        {step === "template" && (
+          <TemplateStep
+            projectName={projectName}
+            templates={templates}
+            loading={templatesLoading}
+            onSelect={(selected) => {
+              setTemplate(selected);
+              setStep("photo");
+            }}
+          />
+        )}
+        {step === "photo" && template && (
+          <PhotoStep
+            template={template}
+            photos={photos}
+            selectedPhoto={selectedPhoto}
+            submitting={submitting}
+            uploading={uploading}
+            uploadError={uploadError}
+            cameraOpen={cameraOpen}
+            onCameraOpenChange={setCameraOpen}
+            onTakePhoto={uploadGuestPhoto}
+            onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
+            onChangeTemplate={() => setStep("template")}
+            onGenerate={startGeneration}
+          />
+        )}
+        {step === "generating" && (
+          <GeneratingStep
+            photo={selectedPhoto}
+            progress={generation?.progress ?? null}
+            errorMessage={errorMessage}
+            onRetry={startGeneration}
+            onRestart={restart}
+          />
+        )}
+        {step === "result" && generation && (
+          <ResultStep
+            generation={generation}
+            idleSecondsLeft={idleSecondsLeft}
+            printing={printing}
+            printFailed={printFailed}
+            onPrint={() => {
+              setPrintFailed(false);
+              print(generation);
+            }}
+            onRestart={restart}
+          />
+        )}
+        {printSheet}
+      </div>
+      {settingsOpen && layout && (
+        <DisplaySettings
+          display={display}
+          layout={layout}
+          onChange={updateDisplay}
+          onClose={() => setSettingsOpen(false)}
         />
       )}
-      {step === "photo" && template && (
-        <PhotoStep
-          template={template}
-          photos={photos}
-          selectedPhoto={selectedPhoto}
-          submitting={submitting}
-          uploading={uploading}
-          uploadError={uploadError}
-          cameraOpen={cameraOpen}
-          onCameraOpenChange={setCameraOpen}
-          onTakePhoto={uploadGuestPhoto}
-          onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
-          onChangeTemplate={() => setStep("template")}
-          onGenerate={startGeneration}
-        />
-      )}
-      {step === "generating" && (
-        <GeneratingStep
-          photo={selectedPhoto}
-          progress={generation?.progress ?? null}
-          errorMessage={errorMessage}
-          onRetry={startGeneration}
-          onRestart={restart}
-        />
-      )}
-      {step === "result" && generation && (
-        <ResultStep
-          generation={generation}
-          idleSecondsLeft={idleSecondsLeft}
-          printing={printing}
-          printFailed={printFailed}
-          onPrint={() => {
-            setPrintFailed(false);
-            print(generation);
-          }}
-          onRestart={restart}
-        />
-      )}
-      {printSheet}
     </div>
   );
 };

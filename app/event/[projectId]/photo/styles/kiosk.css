@@ -1,6 +1,7 @@
 /* Kiosk photo booth — dark premium; จอแนวตั้ง 1080x1920 เป็นหลัก รองรับแนวนอน
-   เปลี่ยนธีมทั้งจอได้ที่ตัวแปรใน .kiosk-root */
-.kiosk-root {
+   เปลี่ยนธีมทั้งจอได้ที่ตัวแปรใน .kiosk-stage
+   layout อ้างขนาดกรอบ .kiosk-root (container + cq units) ไม่ใช่จอจริง — ให้ตั้งค่าจำลองขนาดจอได้ */
+.kiosk-stage {
   /* สีจาก aiCaveColors (app/theme/themeConfig.ts) + ไล่สีม่วง→teal แบบโลโก้ */
   --k-bg: #191c20;
   --k-text: #f2f4f5;
@@ -16,11 +17,22 @@
   --k-accent-glow: rgba(111, 106, 222, 0.42);
   --k-on-accent: #ffffff;
   --k-radius: 28px;
-  --k-pad: clamp(16px, 3.2vmin, 48px);
+  --k-pad: clamp(16px, 3.2cqmin, 48px);
   --k-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   position: fixed;
   inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+.kiosk-root {
+  container: kiosk / size;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
   /* iPhone notch / home bar — มีผลเมื่อ viewport-fit=cover */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   display: flex;
@@ -45,8 +57,8 @@
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 /* ชนะกฎ `* { font-family: 'Prompt' !important }` ใน globals.css ด้วย specificity ที่สูงกว่า */
-.kiosk-root,
-.kiosk-root * {
+.kiosk-stage,
+.kiosk-stage * {
   font-family: var(--font-kiosk-sans), "Prompt", sans-serif !important;
 }
 .kiosk-root .kiosk-serif {
@@ -58,12 +70,14 @@
 /* ── Chrome ───────────────────────────────────────────────── */
 .kiosk-chrome {
   display: grid;
-  grid-template-columns: 52px 1fr 52px;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
   padding: calc(var(--k-pad) * 0.6) var(--k-pad) 0;
   flex-shrink: 0;
 }
+.kiosk-chrome > .kiosk-icon-btn { justify-self: start; }
+.kiosk-chrome-actions { justify-self: end; display: flex; gap: 8px; }
 .kiosk-icon-btn {
   width: 48px;
   height: 48px;
@@ -80,7 +94,7 @@
 }
 .kiosk-icon-btn:active { background: var(--k-surface-strong); border-color: var(--k-accent); }
 .kiosk-logo {
-  height: clamp(26px, 3.4vmin, 40px);
+  height: clamp(26px, 3.4cqmin, 40px);
   width: auto;
   display: block;
 }
@@ -92,7 +106,7 @@
 }
 .kiosk-progress-bars { display: flex; gap: 6px; }
 .kiosk-progress-bars span {
-  width: clamp(28px, 5vmin, 56px);
+  width: clamp(28px, 5cqmin, 56px);
   height: 3px;
   border-radius: 99px;
   background: var(--k-line-strong);
@@ -114,14 +128,14 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(14px, 2.4vmin, 32px);
-  padding: clamp(12px, 2vmin, 28px) var(--k-pad) var(--k-pad);
+  gap: clamp(14px, 2.4cqmin, 32px);
+  padding: clamp(12px, 2cqmin, 28px) var(--k-pad) var(--k-pad);
   animation: kiosk-fade 480ms var(--k-ease) both;
 }
 .kiosk-heading { text-align: center; flex-shrink: 0; }
 .kiosk-eyebrow {
   display: inline-block;
-  font-size: clamp(11px, 1.4vmin, 15px);
+  font-size: clamp(11px, 1.4cqmin, 15px);
   font-weight: 500;
   letter-spacing: 0.32em;
   text-transform: uppercase;
@@ -129,7 +143,7 @@
 }
 .kiosk-heading h1 {
   margin: 10px 0 0;
-  font-size: clamp(32px, 5.2vmin, 76px);
+  font-size: clamp(32px, 5.2cqmin, 76px);
   font-weight: 300;
   line-height: 1.12;
   letter-spacing: -0.01em;
@@ -138,7 +152,7 @@
 .kiosk-heading .kiosk-sub {
   display: block;
   margin-top: 6px;
-  font-size: clamp(18px, 2.6vmin, 34px);
+  font-size: clamp(18px, 2.6cqmin, 34px);
   color: var(--k-muted);
 }
 
@@ -151,7 +165,7 @@
   background: var(--k-surface);
   backdrop-filter: blur(12px);
   color: var(--k-text);
-  font-size: clamp(17px, 2.1vmin, 24px);
+  font-size: clamp(17px, 2.1cqmin, 24px);
   font-weight: 400;
   display: inline-flex;
   align-items: center;
@@ -196,7 +210,7 @@
   justify-content: center;
   gap: 14px;
   color: var(--k-muted);
-  font-size: clamp(17px, 2.2vmin, 26px);
+  font-size: clamp(17px, 2.2cqmin, 26px);
   font-weight: 300;
   text-align: center;
 }
@@ -209,7 +223,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-content: start;
-  gap: clamp(12px, 1.8vmin, 26px);
+  gap: clamp(12px, 1.8cqmin, 26px);
   padding: 4px 2px 12px;
 }
 .kiosk-card {
@@ -240,13 +254,13 @@
   right: 0;
   bottom: 0;
   z-index: 1;
-  padding: clamp(12px, 1.8vmin, 22px);
+  padding: clamp(12px, 1.8cqmin, 22px);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .kiosk-card-title {
-  font-size: clamp(16px, 2vmin, 26px);
+  font-size: clamp(16px, 2cqmin, 26px);
   font-weight: 400;
   line-height: 1.2;
   display: -webkit-box;
@@ -261,7 +275,7 @@
   gap: 6px;
   padding: 7px 16px;
   border-radius: 999px;
-  font-size: clamp(12px, 1.5vmin, 16px);
+  font-size: clamp(12px, 1.5cqmin, 16px);
   font-weight: 500;
   color: var(--k-on-accent);
   background: var(--k-accent-grad);
@@ -274,7 +288,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(14px, 2vmin, 24px);
+  gap: clamp(14px, 2cqmin, 24px);
 }
 .kiosk-chip {
   align-self: stretch;
@@ -290,7 +304,7 @@
 }
 .kiosk-chip-thumb {
   position: relative;
-  width: clamp(48px, 6vmin, 72px);
+  width: clamp(48px, 6cqmin, 72px);
   aspect-ratio: 3 / 4;
   border-radius: 12px;
   overflow: hidden;
@@ -307,7 +321,7 @@
 }
 .kiosk-chip-text strong {
   display: block;
-  font-size: clamp(16px, 2vmin, 24px);
+  font-size: clamp(16px, 2cqmin, 24px);
   font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
@@ -344,7 +358,7 @@
   padding: 24px;
   text-align: center;
   color: var(--k-muted);
-  font-size: clamp(16px, 2vmin, 24px);
+  font-size: clamp(16px, 2cqmin, 24px);
   font-weight: 300;
 }
 .kiosk-hero-empty svg { color: var(--k-accent); }
@@ -368,7 +382,7 @@
   border: none;
   background: transparent;
   color: var(--k-text);
-  font-size: clamp(16px, 2vmin, 22px);
+  font-size: clamp(16px, 2cqmin, 22px);
   font-weight: 400;
   cursor: pointer;
 }
@@ -403,12 +417,11 @@
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 40px), transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 40px), transparent 100%);
 }
-.kiosk-strip .kiosk-empty { min-height: clamp(96px, 11vh, 150px); min-height: clamp(96px, 11dvh, 150px); font-size: 16px; }
+.kiosk-strip .kiosk-empty { min-height: clamp(96px, 11cqh, 150px); font-size: 16px; }
 .kiosk-thumb {
   position: relative;
   flex: 0 0 auto;
-  height: clamp(96px, 11vh, 150px);
-  height: clamp(96px, 11dvh, 150px);
+  height: clamp(96px, 11cqh, 150px);
   aspect-ratio: 3 / 4;
   padding: 0;
   border: 2px solid transparent;
@@ -450,10 +463,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(20px, 3vmin, 40px);
+  gap: clamp(20px, 3cqmin, 40px);
   text-align: center;
 }
-.kiosk-generating .kiosk-hero { flex: none; height: min(54vh, 72vw); height: min(54dvh, 72vw); }
+.kiosk-generating .kiosk-hero { flex: none; height: min(54cqh, 72cqw); }
 .kiosk-generating .kiosk-hero img { filter: blur(6px) saturate(0.9) brightness(0.7); transform: scale(1.06); }
 .kiosk-scan {
   position: absolute;
@@ -472,18 +485,18 @@
   align-items: center;
   justify-content: center;
 }
-.kiosk-ring svg { width: clamp(120px, 18vmin, 220px); height: auto; filter: drop-shadow(0 0 20px var(--k-accent-glow)); }
+.kiosk-ring svg { width: clamp(120px, 18cqmin, 220px); height: auto; filter: drop-shadow(0 0 20px var(--k-accent-glow)); }
 .kiosk-ring-track { stroke: rgba(255, 255, 255, 0.14); }
 .kiosk-ring-value { stroke: url(#kiosk-accent); transition: stroke-dashoffset 600ms var(--k-ease); }
 .kiosk-ring-spin { transform-origin: 50% 50%; animation: kiosk-spin 1.6s linear infinite; }
 .kiosk-ring-text {
   position: absolute;
-  font-size: clamp(26px, 4vmin, 48px);
+  font-size: clamp(26px, 4cqmin, 48px);
   font-weight: 300;
   color: var(--k-text);
 }
-.kiosk-generating h2 { margin: 0; font-size: clamp(26px, 3.8vmin, 52px); font-weight: 300; color: var(--k-text); }
-.kiosk-generating p { margin: 0; color: var(--k-muted); font-size: clamp(16px, 2.2vmin, 26px); min-height: 1.5em; }
+.kiosk-generating h2 { margin: 0; font-size: clamp(26px, 3.8cqmin, 52px); font-weight: 300; color: var(--k-text); }
+.kiosk-generating p { margin: 0; color: var(--k-muted); font-size: clamp(16px, 2.2cqmin, 26px); min-height: 1.5em; }
 
 /* ── Step 4: result ───────────────────────────────────────── */
 .kiosk-result {
@@ -493,19 +506,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(18px, 3vmin, 36px);
+  gap: clamp(18px, 3cqmin, 36px);
 }
 .kiosk-result .kiosk-hero {
   flex: none;
-  height: min(56vh, 76vw);
-  height: min(56dvh, 76vw);
+  height: min(56cqh, 76cqw);
   border-color: rgba(var(--k-accent-rgb), 0.7);
   box-shadow: 0 0 0 1px rgba(var(--k-accent-rgb), 0.4), 0 40px 110px rgba(0, 0, 0, 0.6), 0 0 80px rgba(var(--k-accent-rgb), 0.14);
 }
 .kiosk-result-side {
   display: flex;
   align-items: center;
-  gap: clamp(16px, 2.4vmin, 28px);
+  gap: clamp(16px, 2.4cqmin, 28px);
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -519,32 +531,93 @@
   color: #191c20;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
-.kiosk-qr-card strong { display: block; font-size: clamp(18px, 2.4vmin, 28px); font-weight: 500; color: #191c20; }
-.kiosk-qr-card span { display: block; margin-top: 4px; color: #8c99a9; font-size: clamp(13px, 1.6vmin, 18px); }
+.kiosk-qr-card strong { display: block; font-size: clamp(18px, 2.4cqmin, 28px); font-weight: 500; color: #191c20; }
+.kiosk-qr-card span { display: block; margin-top: 4px; color: #8c99a9; font-size: clamp(13px, 1.6cqmin, 18px); }
+
+/* ── Display settings (อยู่นอกกรอบ จึงไม่ถูกย่อตาม scale) ──── */
+.kiosk-settings-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  animation: kiosk-fade 200ms ease both;
+}
+.kiosk-settings {
+  width: min(520px, 100%);
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  padding: 20px 22px 22px;
+  border-radius: 24px;
+  border: 1px solid var(--k-line-strong);
+  background: var(--k-bg);
+  color: var(--k-text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: kiosk-rise 320ms var(--k-ease) both;
+}
+.kiosk-settings header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.kiosk-settings h2 { margin: 0; font-size: 20px; font-weight: 400; color: var(--k-text); }
+.kiosk-settings-row { padding: 14px 0; border-bottom: 1px solid var(--k-line); }
+.kiosk-settings-row > label,
+.kiosk-settings-row > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+.kiosk-settings-row output { color: var(--k-muted); font-size: 15px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.kiosk-settings-row input[type="range"] { width: 100%; height: 32px; accent-color: var(--k-accent); cursor: pointer; }
+.kiosk-segment { display: flex; flex-wrap: wrap; gap: 8px; }
+.kiosk-segment button {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--k-line-strong);
+  background: var(--k-surface-strong);
+  color: var(--k-text);
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.kiosk-segment button[aria-pressed="true"] { border-color: var(--k-accent); background: rgba(var(--k-accent-rgb), 0.24); }
+.kiosk-segment button small { color: var(--k-muted); font-size: 12px; }
+.kiosk-settings-summary { margin: 14px 0 0; color: var(--k-muted); font-size: 14px; }
+.kiosk-settings footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.kiosk-settings footer .kiosk-btn { min-height: 52px; padding: 0 24px; font-size: 16px; }
+.kiosk-settings :focus-visible,
+.kiosk-chrome :focus-visible { outline: 2px solid #5ecfd8; outline-offset: 2px; }
+/* เส้นขอบกรอบเมื่อจำลองขนาดจอ ให้เห็นว่าจอจริงใหญ่กว่า */
+.kiosk-stage.is-framed .kiosk-root { outline: 1px solid rgba(94, 207, 216, 0.5); }
 
 /* ── Responsive ───────────────────────────────────────────── */
-@media (orientation: landscape) {
+@container kiosk (orientation: landscape) {
   .kiosk-template-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .kiosk-chip { align-self: center; min-width: min(560px, 100%); }
   .kiosk-result { flex-direction: row; gap: 56px; }
-  .kiosk-result .kiosk-hero { height: min(72vh, 52vw); height: min(72dvh, 52vw); }
+  .kiosk-result .kiosk-hero { height: min(72cqh, 52cqw); }
   .kiosk-result-side { flex-direction: column; align-items: stretch; }
-  .kiosk-generating .kiosk-hero { height: min(52vh, 36vw); height: min(52dvh, 36vw); }
+  .kiosk-generating .kiosk-hero { height: min(52cqh, 36cqw); }
 }
 /* แท็บเล็ตแนวตั้ง */
-@media (min-width: 721px) and (max-width: 1024px) and (orientation: portrait) {
+@container kiosk (min-width: 721px) and (max-width: 1024px) and (orientation: portrait) {
   .kiosk-template-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 /* มือถือแนวนอน — ความสูงน้อย ต้องเก็บพื้นที่ให้รูป */
-@media (orientation: landscape) and (max-height: 560px) {
+@container kiosk (orientation: landscape) and (max-height: 560px) {
   .kiosk-heading .kiosk-sub { display: none; }
-  .kiosk-heading h1 { margin-top: 4px; font-size: clamp(22px, 6vh, 32px); }
+  .kiosk-heading h1 { margin-top: 4px; font-size: clamp(22px, 6cqh, 32px); }
   .kiosk-template-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .kiosk-btn { min-height: 48px; padding: 0 20px; }
   .kiosk-result { gap: 24px; }
   .kiosk-sheet-toggle { min-height: 48px; }
 }
-@media (max-width: 720px) {
+@container kiosk (max-width: 720px) {
   .kiosk-template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kiosk-progress-label { display: none; }
   .kiosk-btn { min-height: 54px; padding: 0 22px; }
@@ -558,8 +631,8 @@
   .kiosk-result-side .kiosk-btn { flex: 1 1 100%; }
   .kiosk-sheet-toggle { padding: 0 16px; gap: 8px; }
 }
-@media (max-width: 380px) {
-  .kiosk-root { --k-radius: 20px; }
+@container kiosk (max-width: 380px) {
+  .kiosk-root > * { --k-radius: 20px; }
   .kiosk-btn small { display: none; }
   .kiosk-sheet-count { display: none; }
 }

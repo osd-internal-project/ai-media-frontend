@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ChevronLeft, Maximize, Minimize } from "lucide-react";
+import { ChevronLeft, Maximize, Minimize, Settings2 } from "lucide-react";
 import { KIOSK_STEPS, TKioskStep } from "../kiosk.types";
 
 interface KioskChromeProps {
   step: TKioskStep;
   onBack: () => void;
+  onOpenSettings: () => void;
 }
 
-export default function KioskChrome({ step, onBack }: KioskChromeProps) {
+export default function KioskChrome({ step, onBack, onOpenSettings }: KioskChromeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const activeIndex = KIOSK_STEPS.findIndex((s) => s.key === step);
   const active = KIOSK_STEPS[activeIndex];
@@ -53,15 +54,24 @@ export default function KioskChrome({ step, onBack }: KioskChromeProps) {
           </div>
         )}
       </div>
-      <button
-        type="button"
-        className="kiosk-icon-btn"
-        onClick={toggleFullscreen}
-        aria-label="Toggle fullscreen"
-        style={{ justifySelf: "end" }}
-      >
-        {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-      </button>
+      <div className="kiosk-chrome-actions">
+        <button
+          type="button"
+          className="kiosk-icon-btn"
+          onClick={onOpenSettings}
+          aria-label="Display settings"
+        >
+          <Settings2 size={18} />
+        </button>
+        <button
+          type="button"
+          className="kiosk-icon-btn"
+          onClick={toggleFullscreen}
+          aria-label="Toggle fullscreen"
+        >
+          {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+        </button>
+      </div>
     </div>
   );
 }
