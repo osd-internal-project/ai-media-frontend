@@ -53,6 +53,7 @@ export default function GeneratingStep({
           {!errorMessage && <div className="kiosk-scan" />}
           {!errorMessage && (
             <div className="kiosk-ring">
+              <div className="kiosk-ring-orbit" aria-hidden />
               <svg viewBox="0 0 120 120" aria-hidden>
                 <defs>
                   <linearGradient id="kiosk-accent" x1="0" y1="0" x2="1" y2="1">
@@ -61,22 +62,20 @@ export default function GeneratingStep({
                   </linearGradient>
                 </defs>
                 <circle className="kiosk-ring-track" cx="60" cy="60" r={RING_RADIUS} fill="none" strokeWidth="3" />
-                <circle
-                  className={`kiosk-ring-value ${hasProgress ? "" : "kiosk-ring-spin"}`}
-                  cx="60"
-                  cy="60"
-                  r={RING_RADIUS}
-                  fill="none"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={
-                    hasProgress
-                      ? RING_CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100)
-                      : RING_CIRCUMFERENCE * 0.72
-                  }
-                  transform="rotate(-90 60 60)"
-                />
+                {hasProgress && (
+                  <circle
+                    className="kiosk-ring-value"
+                    cx="60"
+                    cy="60"
+                    r={RING_RADIUS}
+                    fill="none"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={RING_CIRCUMFERENCE}
+                    strokeDashoffset={RING_CIRCUMFERENCE * (1 - Math.min(progress, 100) / 100)}
+                    transform="rotate(-90 60 60)"
+                  />
+                )}
               </svg>
               {hasProgress && <span className="kiosk-ring-text">{progress}%</span>}
             </div>

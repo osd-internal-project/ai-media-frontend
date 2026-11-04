@@ -94,6 +94,8 @@ export default function PhotoStep({
     const strip = stripRef.current;
     if (!strip) return;
     const onWheel = (event: WheelEvent) => {
+      // แนวนอนแถบเป็นคอลัมน์เลื่อนขึ้นลง — ปล่อยล้อเมาส์ทำงานปกติ
+      if (strip.scrollWidth <= strip.clientWidth) return;
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
       event.preventDefault();
       strip.scrollLeft += event.deltaY;

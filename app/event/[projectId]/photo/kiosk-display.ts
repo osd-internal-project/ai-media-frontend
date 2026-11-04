@@ -7,7 +7,7 @@ export interface ISize {
   height: number;
 }
 
-/** การตั้งค่าหน้าจอ kiosk ต่อเครื่อง — frame = null คือใช้เต็มจอจริง, templateColumns = null คือตาม breakpoint */
+/** การตั้งค่าหน้าจอ kiosk ต่อเครื่อง — frame = null คือใช้เต็มจอจริง (frame เป็น preview ชั่วคราว ไม่บันทึก), templateColumns = null คือตาม breakpoint */
 export interface IKioskDisplay {
   frame: ISize | null;
   scale: number;
@@ -42,15 +42,6 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 const toNumber = (value: unknown, fallback: number) =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
-function parseFrame(value: unknown): ISize | null {
-  if (!value || typeof value !== "object") return null;
-  const { width, height } = value as Record<string, unknown>;
-  const w = toNumber(width, NaN);
-  const h = toNumber(height, NaN);
-  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
-  return { width: Math.round(w), height: Math.round(h) };
-}
-
 function parseColumns(value: unknown): number | null {
   const columns = toNumber(value, NaN);
   return KIOSK_TEMPLATE_COLUMNS.find((option) => option === columns) ?? null;
@@ -64,7 +55,8 @@ export function parseKioskDisplay(raw: string | null): IKioskDisplay {
     if (!data || typeof data !== "object") return KIOSK_DISPLAY_DEFAULT;
     const record = data as Record<string, unknown>;
     return {
-      frame: parseFrame(record.frame),
+      // frame ที่บันทึกไว้ทำให้จอจริงกลายเป็นกรอบเล็ก/ชิดกลาง — ทุกครั้งที่เปิดจึงเริ่มเต็มจอ
+      frame: null,
       scale: clamp(toNumber(record.scale, 1), KIOSK_SCALE_RANGE.min, KIOSK_SCALE_RANGE.max),
       margin: clamp(toNumber(record.margin, 0), KIOSK_MARGIN_RANGE.min, KIOSK_MARGIN_RANGE.max),
       templateColumns: parseColumns(record.templateColumns),
@@ -123,7 +115,7 @@ export function useKioskDisplay(stageRef: RefObject<HTMLElement | null>) {
   const updateDisplay = useCallback((next: IKioskDisplay) => {
     setDisplay(next);
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...next, frame: null }));
     } catch (error) {
       console.warn("kiosk display settings not saved", error);
     }

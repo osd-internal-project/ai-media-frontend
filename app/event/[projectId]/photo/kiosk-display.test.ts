@@ -29,10 +29,10 @@ describe("parseKioskDisplay", () => {
     assert.deepEqual(parseKioskDisplay("{oops"), KIOSK_DISPLAY_DEFAULT);
   });
 
-  test("v1 settings saved before templateColumns existed still load", () => {
-    const parsed = parseKioskDisplay('{"frame":{"width":1080,"height":1920},"scale":1.2,"margin":8}');
+  test("v1 settings load without the stored preview frame, so the real screen stays full", () => {
+    const parsed = parseKioskDisplay('{"frame":{"width":910,"height":1310},"scale":1.2,"margin":8}');
     assert.deepEqual(parsed, {
-      frame: { width: 1080, height: 1920 },
+      frame: null,
       scale: 1.2,
       margin: 8,
       templateColumns: null,
