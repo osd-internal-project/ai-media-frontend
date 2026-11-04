@@ -201,7 +201,7 @@ const PhotoKioskPage = () => {
       className={display.frame ? "kiosk-stage is-framed" : "kiosk-stage"}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <div className="kiosk-root" style={layout?.rootStyle}>
+      <div className={layout?.portraitLayout ? "kiosk-root is-portrait-layout" : "kiosk-root"} style={layout?.rootStyle}>
         <KioskChrome step={step} onBack={goBack} onOpenSettings={() => setSettingsOpen(true)} />
         {step === "template" && (
           <TemplateStep

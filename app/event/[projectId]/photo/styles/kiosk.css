@@ -32,7 +32,8 @@
   background: #000;
 }
 .kiosk-root {
-  container: kiosk / size;
+  /* kiosk-orient ใช้แค่กับ layout แนวนอน — ตั้ง "แนวตั้ง" บนจอแนวนอนจะถอดชื่อนี้ออก layout จึงเป็นแนวตั้งทั้งจอ */
+  container: kiosk kiosk-orient / size;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -72,6 +73,7 @@
   letter-spacing: 0.04em;
 }
 .kiosk-root > * { position: relative; }
+.kiosk-root.is-portrait-layout { container-name: kiosk; }
 
 /* ── Chrome ───────────────────────────────────────────────── */
 .kiosk-chrome {
@@ -237,6 +239,8 @@
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* การ์ด aspect-ratio + overflow:hidden มีขนาดขั้นต่ำ 0 — แถว auto จะถูกบีบจนการ์ดซ้อนกัน */
+  grid-auto-rows: max-content;
   align-content: start;
   gap: clamp(12px, 1.8cqmin, 26px);
   padding: 4px 2px 12px;
@@ -650,7 +654,7 @@
 .kiosk-stage.is-framed .kiosk-root { outline: 1px solid rgba(94, 207, 216, 0.5); }
 
 /* ── Responsive ───────────────────────────────────────────── */
-@container kiosk (orientation: landscape) {
+@container kiosk-orient (orientation: landscape) {
   .kiosk-template-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .kiosk-chip { align-self: center; min-width: min(560px, 100%); }
   .kiosk-result {
@@ -717,7 +721,7 @@
   .kiosk-template-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 /* มือถือแนวนอน — ความสูงน้อย ต้องเก็บพื้นที่ให้รูป */
-@container kiosk (orientation: landscape) and (max-height: 560px) {
+@container kiosk-orient (orientation: landscape) and (max-height: 560px) {
   .kiosk-heading .kiosk-sub { display: none; }
   .kiosk-heading h1 { margin-top: 4px; font-size: clamp(22px, 6cqh, 32px); }
   .kiosk-template-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -751,7 +755,7 @@
 /* คอลัมน์ที่ตั้งเองในหน้าตั้งค่า — 2 คลาสชนะกฎ breakpoint ด้านบน */
 .kiosk-template-grid.has-cols {
   grid-template-columns: repeat(var(--k-cols), minmax(0, 1fr));
-  align-content: center;
+  align-content: safe center;
 }
 @media (prefers-reduced-motion: reduce) {
   .kiosk-root *, .kiosk-root *::before, .kiosk-root *::after { animation: none !important; transition: none !important; }

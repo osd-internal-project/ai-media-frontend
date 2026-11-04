@@ -26,7 +26,7 @@ const sameFrame = (a: ISize | null, b: ISize | null) =>
 
 export default function DisplaySettings({ display, layout, onChange, onClose }: DisplaySettingsProps) {
   const { screen } = layout;
-  const isPortrait = screen.height >= screen.width;
+  const isPortrait = layout.portraitLayout || screen.height >= screen.width;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -36,10 +36,16 @@ export default function DisplaySettings({ display, layout, onChange, onClose }: 
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // เต็มจอ + กดแนวจอ/ลากความกว้าง → เริ่มกรอบจากขนาดจอปัจจุบัน
+  // แนวจอเป็นตัวตัดสิน layout (ปุ่มข้าง/ปุ่มล่าง) — เต็มจอยังเต็มจอ ไม่ย่อเป็นกรอบ
   const setOrientation = (portrait: boolean) => {
     if (portrait === isPortrait) return;
-    onChange({ ...display, frame: { width: screen.height, height: screen.width } });
+    const frame = display.frame && { width: display.frame.height, height: display.frame.width };
+    onChange({ ...display, frame, orientation: portrait ? "portrait" : "landscape" });
+  };
+
+  const setPreset = (frame: ISize | null) => {
+    const orientation = frame ? (frame.height >= frame.width ? "portrait" : "landscape") : display.orientation;
+    onChange({ ...display, frame, orientation });
   };
 
   const setWidth = (width: number) => {
@@ -83,7 +89,7 @@ export default function DisplaySettings({ display, layout, onChange, onClose }: 
                 key={preset.label}
                 type="button"
                 aria-pressed={sameFrame(display.frame, preset.frame)}
-                onClick={() => onChange({ ...display, frame: preset.frame })}
+                onClick={() => setPreset(preset.frame)}
               >
                 {preset.label}
                 {preset.frame && (
@@ -153,6 +159,7 @@ export default function DisplaySettings({ display, layout, onChange, onClose }: 
 
         <p className="kiosk-settings-summary">
           จอ {Math.round(screen.width)}×{Math.round(screen.height)} px
+          {layout.portraitLayout && " ใช้ layout แนวตั้ง"}
           {layout.fit < 1 && ` ย่อแสดงที่ ${Math.round(layout.fit * 100)}% ให้พอดีจอนี้`}
           {layout.fit > 1 && ` ขยายแสดงที่ ${Math.round(layout.fit * 100)}% ให้พอดีจอนี้`}
         </p>

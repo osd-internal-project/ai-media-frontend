@@ -7,9 +7,13 @@ export interface ISize {
   height: number;
 }
 
-/** การตั้งค่าหน้าจอ kiosk ต่อเครื่อง — frame = null คือใช้เต็มจอจริง (frame เป็น preview ชั่วคราว ไม่บันทึก), templateColumns = null คือตาม breakpoint */
+export type KioskOrientation = "portrait" | "landscape";
+
+/** การตั้งค่าหน้าจอ kiosk ต่อเครื่อง — frame = null คือเต็มจอจริง (frame เป็น preview ชั่วคราว ไม่บันทึก);
+ *  orientation = null คือตามจอ, "portrait" บนจอแนวนอน → ใช้ layout แนวตั้ง (ปุ่มอยู่ล่าง) เต็มจอ */
 export interface IKioskDisplay {
   frame: ISize | null;
+  orientation: KioskOrientation | null;
   scale: number;
   margin: number;
   templateColumns: number | null;
@@ -17,6 +21,7 @@ export interface IKioskDisplay {
 
 export const KIOSK_DISPLAY_DEFAULT: IKioskDisplay = {
   frame: null,
+  orientation: null,
   scale: 1,
   margin: 0,
   templateColumns: null,
@@ -42,6 +47,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 const toNumber = (value: unknown, fallback: number) =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
+function parseOrientation(value: unknown): KioskOrientation | null {
+  return value === "portrait" || value === "landscape" ? value : null;
+}
+
 function parseColumns(value: unknown): number | null {
   const columns = toNumber(value, NaN);
   return KIOSK_TEMPLATE_COLUMNS.find((option) => option === columns) ?? null;
@@ -57,6 +66,7 @@ export function parseKioskDisplay(raw: string | null): IKioskDisplay {
     return {
       // frame ที่บันทึกไว้ทำให้จอจริงกลายเป็นกรอบเล็ก/ชิดกลาง — ทุกครั้งที่เปิดจึงเริ่มเต็มจอ
       frame: null,
+      orientation: parseOrientation(record.orientation),
       scale: clamp(toNumber(record.scale, 1), KIOSK_SCALE_RANGE.min, KIOSK_SCALE_RANGE.max),
       margin: clamp(toNumber(record.margin, 0), KIOSK_MARGIN_RANGE.min, KIOSK_MARGIN_RANGE.max),
       templateColumns: parseColumns(record.templateColumns),
@@ -72,6 +82,8 @@ export interface IKioskLayout {
   screen: ISize;
   /** สัดส่วนย่อ/ขยายให้กรอบพอดีจอจริง — ขยายเกิน 1 ได้ ไม่ให้ frame ที่ค้างไว้กลายเป็นกรอบเล็กบนจอใหญ่ */
   fit: number;
+  /** ตั้งแนวตั้งไว้แต่จอเป็นแนวนอน — บังคับ layout แนวตั้งโดยไม่ย่อหรือหมุน */
+  portraitLayout: boolean;
   rootStyle: CSSProperties;
 }
 
@@ -86,6 +98,7 @@ export function computeKioskLayout(display: IKioskDisplay, viewport: ISize): IKi
   return {
     screen,
     fit,
+    portraitLayout: display.orientation === "portrait" && screen.width > screen.height,
     rootStyle: {
       width: screen.width / display.scale,
       height: screen.height / display.scale,
