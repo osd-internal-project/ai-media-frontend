@@ -32,7 +32,7 @@ env:
 
 resources:
   requests:
-    memory: "64Mi"
+    memory: "160Mi"
     cpu: "100m"
   limits:
     memory: "192Mi"
