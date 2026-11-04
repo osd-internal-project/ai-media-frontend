@@ -103,7 +103,7 @@ export default function PhotoStep({
   }, [sheetOpen, photos.length]);
 
   return (
-    <div className="kiosk-content">
+    <div className="kiosk-content kiosk-photo-content">
       <div className="kiosk-heading">
         <span className="kiosk-eyebrow">Step 02 · Your photo</span>
         <h1>{selectedPhoto ? "พร้อมสร้างภาพแล้ว" : "เลือกรูปของคุณ"}</h1>
@@ -142,18 +142,11 @@ export default function PhotoStep({
                   Tap to choose your photo
                 </div>
               </div>
-              <div className="kiosk-actions">
-                {takePhotoButton(true)}
-                <button type="button" className="kiosk-btn" onClick={openSheet}>
-                  <Images size={22} />
-                  เลือกรูป <small>Choose photo</small>
-                </button>
-              </div>
             </div>
           </div>
         )}
 
-        {selectedPhoto && (
+        {selectedPhoto ? (
           <div className="kiosk-actions">
             {takePhotoButton(false)}
             <button type="button" className="kiosk-btn" onClick={openSheet}>
@@ -168,6 +161,14 @@ export default function PhotoStep({
             >
               <Wand2 size={22} />
               {submitting ? "กำลังเริ่ม…" : "สร้างภาพ"} <small>Generate</small>
+            </button>
+          </div>
+        ) : (
+          <div className="kiosk-actions">
+            {takePhotoButton(true)}
+            <button type="button" className="kiosk-btn" onClick={openSheet}>
+              <Images size={22} />
+              เลือกรูป <small>Choose photo</small>
             </button>
           </div>
         )}

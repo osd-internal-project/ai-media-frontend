@@ -11,5 +11,8 @@ export const KIOSK_STEPS: readonly { key: TKioskStep; th: string; en: string }[]
 export const KIOSK_IDLE_SECONDS = 90;
 export const KIOSK_POLL_MS = 5000;
 export const KIOSK_GENERATE_TIMEOUT_MS = 3 * 60 * 1000;
+/** หน้าเลือกสไตล์ว่างนานเท่านี้ → เน้นการ์ดวนทีละใบเพื่อดึงคนที่เดินผ่าน */
+export const KIOSK_ATTRACT_SECONDS = 30;
+export const KIOSK_ATTRACT_STEP_MS = 2400;
 /** รูปที่นำเข้าภายในช่วงนี้จะมีป้าย NEW */
 export const KIOSK_NEW_PHOTO_MS = 2 * 60 * 1000;

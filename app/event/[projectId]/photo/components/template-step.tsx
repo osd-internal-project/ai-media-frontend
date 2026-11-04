@@ -1,14 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { CSSProperties, useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { IPhotoEventTemplate } from "@/app/common/photo-event.type";
 import TemplatePreview from "@/app/components/photo-event/template-preview";
+import { KIOSK_ATTRACT_STEP_MS } from "../kiosk.types";
 
 interface TemplateStepProps {
   projectName: string;
   templates: IPhotoEventTemplate[];
   loading: boolean;
+  /** null = จำนวนคอลัมน์ตาม breakpoint */
+  columns: number | null;
+  /** จอว่างนาน — เน้นการ์ดวนทีละใบ */
+  attract: boolean;
   onSelect: (template: IPhotoEventTemplate) => void;
 }
 
@@ -16,8 +21,26 @@ export default function TemplateStep({
   projectName,
   templates,
   loading,
+  columns,
+  attract,
   onSelect,
 }: TemplateStepProps) {
+  const [highlight, setHighlight] = useState(0);
+  const cycling = attract && templates.length > 1;
+
+  useEffect(() => {
+    if (!cycling) return;
+    setHighlight(0);
+    const timer = setInterval(
+      () => setHighlight((index) => (index + 1) % templates.length),
+      KIOSK_ATTRACT_STEP_MS,
+    );
+    return () => clearInterval(timer);
+  }, [cycling, templates.length]);
+
+  // React ไม่มี type ให้ CSS custom property
+  const gridStyle = columns ? ({ "--k-cols": columns } as CSSProperties) : undefined;
+
   return (
     <div className="kiosk-content">
       <div className="kiosk-heading">
@@ -32,13 +55,15 @@ export default function TemplateStep({
           <span className="kiosk-serif">No styles yet</span>
         </div>
       ) : (
-        <div className="kiosk-template-grid kiosk-scroll">
+        <div
+          className={`kiosk-template-grid kiosk-scroll ${columns ? "has-cols" : ""}`}
+          style={gridStyle}
+        >
           {templates.map((template, index) => (
             <button
               type="button"
               key={template.promptGuideId}
-              className="kiosk-card"
-              style={{ animationDelay: `${Math.min(index * 50, 450)}ms` }}
+              className={`kiosk-card ${cycling && index === highlight ? "is-attract" : ""}`}
               onClick={() => onSelect(template)}
             >
               <TemplatePreview template={template} />

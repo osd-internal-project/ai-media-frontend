@@ -10,6 +10,7 @@ import {
   KIOSK_DISPLAY_PRESETS,
   KIOSK_MARGIN_RANGE,
   KIOSK_SCALE_RANGE,
+  KIOSK_TEMPLATE_COLUMNS,
   KIOSK_WIDTH_RANGE,
 } from "../kiosk-display";
 
@@ -96,6 +97,22 @@ export default function DisplaySettings({ display, layout, onChange, onClose }: 
         </div>
 
         <div className="kiosk-settings-row">
+          <span>คอลัมน์สไตล์</span>
+          <div className="kiosk-segment">
+            {KIOSK_TEMPLATE_COLUMNS.map((columns) => (
+              <button
+                key={columns ?? "auto"}
+                type="button"
+                aria-pressed={display.templateColumns === columns}
+                onClick={() => onChange({ ...display, templateColumns: columns })}
+              >
+                {columns ?? "อัตโนมัติ"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="kiosk-settings-row">
           <label htmlFor="kiosk-width">
             ความกว้าง <output htmlFor="kiosk-width">{Math.round(screen.width)} px</output>
           </label>
@@ -137,6 +154,7 @@ export default function DisplaySettings({ display, layout, onChange, onClose }: 
         <p className="kiosk-settings-summary">
           จอ {Math.round(screen.width)}×{Math.round(screen.height)} px
           {layout.fit < 1 && ` ย่อแสดงที่ ${Math.round(layout.fit * 100)}% ให้พอดีจอนี้`}
+          {layout.fit > 1 && ` ขยายแสดงที่ ${Math.round(layout.fit * 100)}% ให้พอดีจอนี้`}
         </p>
 
         <footer>

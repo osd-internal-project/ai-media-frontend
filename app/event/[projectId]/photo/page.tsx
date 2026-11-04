@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type {
@@ -24,12 +25,19 @@ import DisplaySettings from "./components/display-settings";
 import { useKioskDisplay } from "./kiosk-display";
 import { useIdleCountdown } from "./use-idle-countdown";
 import {
+  KIOSK_ATTRACT_SECONDS,
   KIOSK_GENERATE_TIMEOUT_MS,
   KIOSK_IDLE_SECONDS,
   KIOSK_POLL_MS,
   TKioskStep,
 } from "./kiosk.types";
 import "./styles/kiosk.css";
+
+/** เปลี่ยน step แบบ cross-fade (เก่าจางออก ใหม่จางเข้า) — browser ที่ไม่มี View Transitions เปลี่ยนทันที */
+const transitionStep = (update: () => void) => {
+  if (typeof document.startViewTransition !== "function") return update();
+  document.startViewTransition(() => flushSync(update));
+};
 
 const PhotoKioskPage = () => {
   const router = useRouter();
@@ -56,7 +64,7 @@ const PhotoKioskPage = () => {
   const applyGenerationUpdate = useCallback((next: IPhotoEventGeneration) => {
     if (next.id !== generationIdRef.current) return;
     setGeneration(next);
-    if (next.status === "success" && next.resultUrl) setStep("result");
+    if (next.status === "success" && next.resultUrl) transitionStep(() => setStep("result"));
     if (next.status === "failed") setErrorMessage(next.errorMessage || "Generation failed");
   }, []);
 
@@ -82,14 +90,16 @@ const PhotoKioskPage = () => {
 
   const restart = useCallback(() => {
     generationIdRef.current = null;
-    setGeneration(null);
-    setErrorMessage(null);
-    setSelectedPhotoId(null);
-    setPrintFailed(false);
-    setUploadError(null);
-    setCameraOpen(false);
-    setTemplate(null);
-    setStep("template");
+    transitionStep(() => {
+      setGeneration(null);
+      setErrorMessage(null);
+      setSelectedPhotoId(null);
+      setPrintFailed(false);
+      setUploadError(null);
+      setCameraOpen(false);
+      setTemplate(null);
+      setStep("template");
+    });
     // โหลดใหม่เพื่อให้ URL รูป template ไม่หมดอายุ และเห็น template ที่ staff เพิ่งแก้
     loadTemplates();
   }, [loadTemplates]);
@@ -109,6 +119,17 @@ const PhotoKioskPage = () => {
     KIOSK_IDLE_SECONDS,
     restart,
   );
+
+  const [attract, setAttract] = useState(false);
+  useIdleCountdown(step === "template" && !attract && !settingsOpen, KIOSK_ATTRACT_SECONDS, () =>
+    setAttract(true),
+  );
+  useEffect(() => {
+    if (!attract) return;
+    const stop = () => setAttract(false);
+    window.addEventListener("pointerdown", stop);
+    return () => window.removeEventListener("pointerdown", stop);
+  }, [attract]);
 
   const uploadGuestPhoto = async (file: File) => {
     if (!userId) {
@@ -141,11 +162,11 @@ const PhotoKioskPage = () => {
       });
       generationIdRef.current = created.id;
       applyGeneration(created);
-      setStep("generating");
+      transitionStep(() => setStep("generating"));
       applyGenerationUpdate(created);
     } catch (error) {
-      setStep("generating");
       setErrorMessage(getPhotoEventErrorMessage(error));
+      transitionStep(() => setStep("generating"));
     } finally {
       setSubmitting(false);
     }
@@ -170,7 +191,7 @@ const PhotoKioskPage = () => {
 
   const goBack = () => {
     if (step === "template") router.push("/page/photo-event");
-    else if (step === "photo") setStep("template");
+    else if (step === "photo") transitionStep(() => setStep("template"));
     else restart();
   };
 
@@ -187,9 +208,13 @@ const PhotoKioskPage = () => {
             projectName={projectName}
             templates={templates}
             loading={templatesLoading}
+            columns={display.templateColumns}
+            attract={attract}
             onSelect={(selected) => {
-              setTemplate(selected);
-              setStep("photo");
+              transitionStep(() => {
+                setTemplate(selected);
+                setStep("photo");
+              });
             }}
           />
         )}
@@ -205,7 +230,7 @@ const PhotoKioskPage = () => {
             onCameraOpenChange={setCameraOpen}
             onTakePhoto={uploadGuestPhoto}
             onSelectPhoto={(photo) => setSelectedPhotoId(photo.id)}
-            onChangeTemplate={() => setStep("template")}
+            onChangeTemplate={() => transitionStep(() => setStep("template"))}
             onGenerate={startGeneration}
           />
         )}

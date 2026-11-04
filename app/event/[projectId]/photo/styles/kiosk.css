@@ -19,6 +19,12 @@
   --k-radius: 28px;
   --k-pad: clamp(16px, 3.2cqmin, 48px);
   --k-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* motion: เข้า decelerate / ออก accelerate (อิง M3) — สั้นพอไม่ให้แขกรอ */
+  --k-dur-in: 320ms;
+  --k-dur-out: 200ms;
+  --k-dur-press: 120ms;
+  --k-ease-in: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --k-ease-out: cubic-bezier(0.3, 0, 0.8, 0.15);
 
   position: fixed;
   inset: 0;
@@ -78,6 +84,11 @@
 }
 .kiosk-chrome > .kiosk-icon-btn { justify-self: start; }
 .kiosk-chrome-actions { justify-self: end; display: flex; gap: 8px; }
+/* ปุ่มของทีมงาน — จางไว้ไม่ให้แขกสนใจ แตะครั้งเดียวยังทำงาน */
+.kiosk-chrome-actions .kiosk-icon-btn { opacity: 0.22; transition: opacity var(--k-dur-in) var(--k-ease-in), background 200ms ease, border-color 200ms ease; }
+.kiosk-chrome-actions .kiosk-icon-btn:hover,
+.kiosk-chrome-actions .kiosk-icon-btn:focus-visible,
+.kiosk-chrome-actions .kiosk-icon-btn:active { opacity: 1; }
 .kiosk-icon-btn {
   width: 48px;
   height: 48px;
@@ -110,7 +121,7 @@
   height: 3px;
   border-radius: 99px;
   background: var(--k-line-strong);
-  transition: background 400ms var(--k-ease);
+  transition: background var(--k-dur-in) var(--k-ease-in);
 }
 .kiosk-progress-bars span.is-done { background: rgba(var(--k-accent-rgb), 0.55); }
 .kiosk-progress-bars span.is-active { background: var(--k-accent-grad); box-shadow: 0 0 12px var(--k-accent-glow); }
@@ -130,7 +141,10 @@
   flex-direction: column;
   gap: clamp(14px, 2.4cqmin, 32px);
   padding: clamp(12px, 2cqmin, 28px) var(--k-pad) var(--k-pad);
-  animation: kiosk-fade 480ms var(--k-ease) both;
+}
+/* browser ที่ไม่มี View Transitions — ให้หน้าใหม่ยังจางเข้า */
+@supports not (view-transition-name: none) {
+  .kiosk-content { animation: kiosk-fade var(--k-dur-in) var(--k-ease-in) both; }
 }
 .kiosk-heading { text-align: center; flex-shrink: 0; }
 .kiosk-eyebrow {
@@ -171,8 +185,9 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
+  white-space: nowrap;
   cursor: pointer;
-  transition: transform 160ms ease, opacity 200ms ease, box-shadow 300ms ease;
+  transition: transform var(--k-dur-press) var(--k-ease-in), opacity 200ms ease, box-shadow 300ms ease;
 }
 .kiosk-btn small { font-size: 0.72em; color: inherit; opacity: 0.7; font-weight: 300; }
 .kiosk-btn:active { transform: scale(0.97); }
@@ -237,10 +252,15 @@
   cursor: pointer;
   text-align: left;
   color: var(--k-text);
-  animation: kiosk-rise 520ms var(--k-ease) backwards;
-  transition: transform 220ms var(--k-ease), border-color 220ms ease, box-shadow 220ms ease;
+  transition: transform var(--k-dur-in) var(--k-ease-in), border-color var(--k-dur-in) ease, box-shadow var(--k-dur-in) ease;
 }
-.kiosk-card:active { transform: scale(0.97); border-color: var(--k-accent); box-shadow: 0 0 0 1px var(--k-accent), 0 20px 50px var(--k-accent-glow); }
+.kiosk-card:active { transition-duration: var(--k-dur-press); transform: scale(0.97); border-color: var(--k-accent); box-shadow: 0 0 0 1px var(--k-accent), 0 20px 50px var(--k-accent-glow); }
+/* idle attract — ไฮไลต์เบาๆ ทีละใบ; reduced-motion เหลือแค่ขอบสี */
+.kiosk-card.is-attract {
+  transform: scale(1.03);
+  border-color: rgba(var(--k-accent-rgb), 0.8);
+  box-shadow: 0 0 0 1px rgba(var(--k-accent-rgb), 0.5), 0 24px 60px var(--k-accent-glow);
+}
 .kiosk-card::after {
   content: "";
   position: absolute;
@@ -339,7 +359,7 @@
   overflow: hidden;
   background: var(--k-surface);
   border: 1px solid var(--k-line);
-  animation: kiosk-pop 520ms var(--k-ease) both;
+  animation: kiosk-pop var(--k-dur-in) var(--k-ease-in) both;
 }
 .kiosk-hero.is-selected {
   border-color: rgba(var(--k-accent-rgb), 0.7);
@@ -387,7 +407,7 @@
   cursor: pointer;
 }
 .kiosk-sheet-toggle .kiosk-sheet-count { color: var(--k-muted); font-weight: 300; }
-.kiosk-sheet-toggle .kiosk-sheet-chevron { margin-left: auto; color: var(--k-accent); transition: transform 320ms var(--k-ease); }
+.kiosk-sheet-toggle .kiosk-sheet-chevron { margin-left: auto; color: var(--k-accent); transition: transform var(--k-dur-in) var(--k-ease-in); }
 .kiosk-sheet.is-open .kiosk-sheet-chevron { transform: rotate(180deg); }
 .kiosk-sheet-new {
   padding: 3px 10px;
@@ -396,12 +416,12 @@
   font-weight: 600;
   color: var(--k-on-accent);
   background: var(--k-accent-grad);
-  animation: kiosk-pulse 1.6s ease infinite;
+  animation: kiosk-pulse 1.6s ease 3;
 }
 .kiosk-sheet-body {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 420ms var(--k-ease);
+  transition: grid-template-rows var(--k-dur-in) var(--k-ease-in);
 }
 .kiosk-sheet.is-open .kiosk-sheet-body { grid-template-rows: 1fr; }
 .kiosk-sheet-inner { min-height: 0; overflow: hidden; }
@@ -556,7 +576,7 @@
   background: var(--k-bg);
   color: var(--k-text);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-  animation: kiosk-rise 320ms var(--k-ease) both;
+  animation: kiosk-rise var(--k-dur-in) var(--k-ease-in) both;
 }
 .kiosk-settings header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .kiosk-settings h2 { margin: 0; font-size: 20px; font-weight: 400; color: var(--k-text); }
@@ -603,6 +623,32 @@
   .kiosk-result .kiosk-hero { height: min(72cqh, 52cqw); }
   .kiosk-result-side { flex-direction: column; align-items: stretch; }
   .kiosk-generating .kiosk-hero { height: min(52cqh, 36cqw); }
+
+  /* Step 2 แนวนอน: หัวข้อ+chip แถวบน, รูปกลางสูงเต็มแถว, ปุ่มเป็นคอลัมน์ทางขวา */
+  .kiosk-photo-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head head chip"
+      "side hero actions"
+      "sheet sheet sheet";
+    align-items: center;
+  }
+  .kiosk-photo-content > .kiosk-heading { grid-area: head; text-align: left; }
+  .kiosk-photo-content .kiosk-sub { display: none; }
+  .kiosk-photo-content > .kiosk-photo-stage { display: contents; }
+  .kiosk-photo-content .kiosk-chip { grid-area: chip; min-width: 0; }
+  .kiosk-photo-content .kiosk-empty { grid-area: side; }
+  .kiosk-photo-content .kiosk-hero { grid-area: hero; height: 100%; width: auto; justify-self: center; }
+  .kiosk-photo-content .kiosk-photo-stage > .kiosk-actions {
+    grid-area: actions;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-self: start;
+    min-width: min(320px, 100%);
+  }
+  .kiosk-photo-content > .kiosk-sheet { grid-area: sheet; }
 }
 /* แท็บเล็ตแนวตั้ง */
 @container kiosk (min-width: 721px) and (max-width: 1024px) and (orientation: portrait) {
@@ -616,6 +662,18 @@
   .kiosk-btn { min-height: 48px; padding: 0 20px; }
   .kiosk-result { gap: 24px; }
   .kiosk-sheet-toggle { min-height: 48px; }
+  /* จอเตี้ย: รูปกินสองแถว, ปุ่มย้ายไปใต้ chip */
+  .kiosk-photo-content {
+    grid-template-areas:
+      "head hero chip"
+      "side hero actions"
+      "sheet sheet sheet";
+  }
+  .kiosk-photo-content .kiosk-photo-stage > .kiosk-actions { gap: 8px; justify-self: stretch; align-self: start; }
+  .kiosk-photo-content .kiosk-actions .kiosk-btn { min-height: 44px; }
+  .kiosk-photo-content .kiosk-chip { align-self: end; padding: 6px 8px 6px 6px; }
+  .kiosk-photo-content .kiosk-chip-thumb { width: 40px; }
+  .kiosk-photo-content > .kiosk-heading { align-self: start; }
 }
 @container kiosk (max-width: 720px) {
   .kiosk-template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -625,7 +683,6 @@
   .kiosk-chip .kiosk-btn { margin-left: auto; }
   .kiosk-photo-stage > .kiosk-actions { align-self: stretch; }
   .kiosk-actions .kiosk-btn { flex: 1 1 auto; }
-  .kiosk-hero-empty .kiosk-actions { flex-direction: column; align-self: stretch; }
   .kiosk-result-side { align-self: stretch; }
   .kiosk-qr-card { flex-direction: column; text-align: center; padding: 16px; }
   .kiosk-result-side .kiosk-btn { flex: 1 1 100%; }
@@ -636,9 +693,22 @@
   .kiosk-btn small { display: none; }
   .kiosk-sheet-count { display: none; }
 }
+/* คอลัมน์ที่ตั้งเองในหน้าตั้งค่า — 2 คลาสชนะกฎ breakpoint ด้านบน */
+.kiosk-template-grid.has-cols {
+  grid-template-columns: repeat(var(--k-cols), minmax(0, 1fr));
+  align-content: center;
+}
 @media (prefers-reduced-motion: reduce) {
   .kiosk-root *, .kiosk-root *::before, .kiosk-root *::after { animation: none !important; transition: none !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  .kiosk-card.is-attract { transform: none; }
 }
+
+/* เปลี่ยน step: เก่าจางออกเร็ว แล้วใหม่จางเข้า — pseudo อยู่นอก .kiosk-stage จึงใช้ตัวแปร --k-* ไม่ได้ */
+::view-transition-old(root) { animation: kiosk-vt-out 200ms cubic-bezier(0.3, 0, 0.8, 0.15) both; }
+::view-transition-new(root) { animation: kiosk-vt-in 320ms cubic-bezier(0.05, 0.7, 0.1, 1) 80ms both; }
+@keyframes kiosk-vt-out { to { opacity: 0; } }
+@keyframes kiosk-vt-in { from { opacity: 0; } }
 
 @keyframes kiosk-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes kiosk-rise {
