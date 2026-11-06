@@ -579,11 +579,8 @@ const TemplateSettingPage: FC = (): ReactElement => {
       {contextHolderNoti}
       <Spin
         spinning={loading}
-        style={{
-          height: "100%",
-          minHeight: 0,
-          display: "block",
-        }}
+        // Spin ที่มี children ส่ง style ไปที่ตัว indicator ไม่ใช่ wrapper จึงต้องให้ความสูงผ่าน wrapperClassName ไม่งั้น list ไม่มีความสูงให้ scroll
+        wrapperClassName="h-full min-h-0 [&>.ant-spin-container]:h-full"
       >
         <PromptGuideComponent
           searchQuery={searchQuery}
