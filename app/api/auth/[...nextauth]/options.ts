@@ -296,10 +296,11 @@ export const authOptions = {
         return token;
       }
 
-      // ต่ออายุก่อนหมด 5 นาที — backend ตรวจ access token ทุก request แล้ว (KeycloakAuthGuard)
+      // Keycloak ออก access token อายุ 5 นาที — buffer ต้องสั้นกว่านั้น ไม่งั้น refresh ทุก /api/auth/session.
+      // 90s = client cache 60s (access-token.ts) + เผื่อ 30s ให้ token ที่ส่งออกไปยังใช้ได้
       const expiresAt = Number(token.expiresAt);
-      const fiveMinutes = 5 * 60 * 1000;
-      if (Number.isFinite(expiresAt) && expiresAt - Date.now() < fiveMinutes) {
+      const refreshBufferMs = 90 * 1000;
+      if (Number.isFinite(expiresAt) && expiresAt - Date.now() < refreshBufferMs) {
         return refreshAccessToken(token);
       }
 

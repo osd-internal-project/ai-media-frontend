@@ -1,6 +1,6 @@
 import { getSession } from "next-auth/react";
 
-/** อ่าน session ซ้ำไม่บ่อยกว่านี้ — server ต่ออายุ token ก่อนหมด 5 นาทีอยู่แล้ว */
+/** อ่าน session ซ้ำไม่บ่อยกว่านี้ — server ต่ออายุ token เมื่อเหลือ < 90s (options.ts) จึงต้องสั้นกว่านั้น */
 const SESSION_CACHE_MS = 60 * 1000;
 
 let cached: { token?: string; at: number } | null = null;
@@ -26,6 +26,11 @@ export async function getAccessToken(): Promise<string | undefined> {
       inflight = null;
     });
   return inflight;
+}
+
+/** ใส่ token จาก session ที่ SessionProvider โหลดมาแล้ว — request แรกจะได้ไม่ต้องยิง /api/auth/session ซ้ำ */
+export function primeAccessToken(token: string): void {
+  cached = { token, at: Date.now() };
 }
 
 /** ทิ้ง token ที่ cache ไว้ — เรียกเมื่อ backend ตอบ 401 */

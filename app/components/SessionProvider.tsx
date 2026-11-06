@@ -8,6 +8,7 @@ import {
 import { ReactNode, useEffect } from "react";
 import { axiosUser } from "../lib/axios/axios";
 import AuthService from "../services/auth.service";
+import { primeAccessToken } from "../lib/axios/access-token";
 
 // Component to monitor session expiration
 // function SessionExpirationMonitor() {
@@ -110,6 +111,16 @@ import AuthService from "../services/auth.service";
 //   return null;
 // }
 
+// Rendered before children so its effect runs before the page's first data-fetching effect.
+function AccessTokenSync() {
+  const { data: session } = useSession();
+  const token = session?.error ? undefined : session?.accessToken;
+  useEffect(() => {
+    if (token) primeAccessToken(token);
+  }, [token]);
+  return null;
+}
+
 export default function SessionProvider({ children }: { children: ReactNode }) {
   return (
     <NextAuthSessionProvider
@@ -117,6 +128,7 @@ export default function SessionProvider({ children }: { children: ReactNode }) {
       // refetchOnWindowFocus={true}
     >
       {/* <SessionExpirationMonitor /> */}
+      <AccessTokenSync />
       {children}
     </NextAuthSessionProvider>
   );
