@@ -113,7 +113,7 @@ const PublishDrawer: React.FC<Props> = ({
     }
   };
 
-  const sent = results?.filter((r) => r.status === "PENDING").length ?? 0;
+  const sent = results?.filter((r) => r.status === "PUBLISHED").length ?? 0;
   const failed =
     results?.filter(
       (r): r is Extract<PublishResult, { status: "FAILED" }> => r.status === "FAILED"
@@ -151,7 +151,7 @@ const PublishDrawer: React.FC<Props> = ({
         <div className="og-pd">
           {sent > 0 && (
             <p className="og-pd-ok">
-              ส่งแล้ว {sent} ชิ้น Community จะตรวจก่อนแสดง สถานะเปลี่ยนเป็น &quot;เผยแพร่แล้ว&quot; เมื่อผ่าน
+              เผยแพร่แล้ว {sent} ชิ้น Community จะดึงไปแสดงในรอบถัดไป
             </p>
           )}
           {failed.length > 0 && (

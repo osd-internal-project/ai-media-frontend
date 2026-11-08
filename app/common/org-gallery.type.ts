@@ -44,7 +44,7 @@ export type PublishRequest = {
 };
 
 export type PublishResult =
-  | { galleryId: string; publicationId: string; status: "PENDING" }
+  | { galleryId: string; publicationId: string; status: "PUBLISHED" }
   | { galleryId: string; publicationId: string; status: "FAILED"; error: string }
   | { galleryId: string; status: "SKIPPED"; reason: "NOT_OWNER" | "MODEL_NOT_ALLOWED" | "NOT_FOUND" };
 
