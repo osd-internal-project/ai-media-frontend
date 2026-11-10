@@ -14,7 +14,7 @@ import type {
 } from "@/app/common/org-gallery.type";
 
 const SKIP_REASON: Record<string, string> = {
-  NOT_OWNER: "งานของคนอื่น เผยแพร่ได้เฉพาะเจ้าของงาน",
+  ROLE_NOT_ALLOWED: "เผยแพร่ได้เฉพาะ Owner/Admin ขององค์กร",
   MODEL_NOT_ALLOWED: "สร้างด้วย model ที่ยังไม่อนุญาตให้เผยแพร่",
   NOT_FOUND: "ไม่พบงานนี้แล้ว",
 };

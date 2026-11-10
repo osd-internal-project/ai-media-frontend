@@ -14,7 +14,6 @@ import type {
   GalleryType,
   OrgGalleryItem,
   OrgGalleryPage,
-  PublishStatusFilter,
 } from "@/app/common/org-gallery.type";
 import GalleryTile from "./components/gallery-tile";
 import PublishDrawer from "./components/publish-drawer";
@@ -30,13 +29,7 @@ const TYPE_OPTIONS: { label: string; value: GalleryType | "all" }[] = [
   { label: "เสียง", value: "audio" },
 ];
 
-const STATUS_OPTIONS: { label: string; value: PublishStatusFilter | "all" }[] = [
-  { label: "ทุกสถานะ", value: "all" },
-  { label: "ยังไม่เผยแพร่", value: "NONE" },
-  { label: "รอตรวจ", value: "PENDING" },
-  { label: "เผยแพร่แล้ว", value: "PUBLISHED" },
-  { label: "ไม่ผ่านการตรวจ", value: "REJECTED" },
-];
+type StatusTab = "all" | "PUBLISHED" | "UNPUBLISHED";
 
 type MemberRow = { userId: string; users?: { fullname?: string } };
 
@@ -44,7 +37,9 @@ export default function OrgGalleryPage() {
   const { data: session } = useSession();
   const organizationId = session?.user?.organizationId ?? undefined;
   const { organizationRole } = useOrganization();
-  const orgWide = ORG_WIDE_ROLES.includes(organizationRole ?? "");
+  // SUPER_ADMIN ที่เป็น MEMBER ใน org ก็ยังเห็นทั้ง org ตาม backend
+  const orgWide =
+    ORG_WIDE_ROLES.includes(organizationRole ?? "") || session?.user?.systemRole === "SUPER_ADMIN";
   const { mode } = useThemeMode();
   const token = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
 
@@ -52,7 +47,7 @@ export default function OrgGalleryPage() {
   const memberService = useMemo(() => OrganizationMembersServices(axiosUser), []);
 
   const [type, setType] = useState<GalleryType | "all">("all");
-  const [status, setStatus] = useState<PublishStatusFilter | "all">("all");
+  const [status, setStatus] = useState<StatusTab>("all");
   const [memberId, setMemberId] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<OrgGalleryPage | null>(null);
@@ -113,6 +108,26 @@ export default function OrgGalleryPage() {
     });
   }, []);
 
+  const counts = result?.counts;
+  const countLabel = (label: string, n?: number) => (
+    <span>
+      {label}
+      {n !== undefined && <span className="og-count">{n}</span>}
+    </span>
+  );
+  const statusOptions: { label: React.ReactNode; value: StatusTab }[] = [
+    { label: countLabel("ทั้งหมด", counts?.all), value: "all" },
+    {
+      label: (
+        <span>
+          <span className="og-dot" aria-hidden />
+          {countLabel("เผยแพร่แล้ว", counts?.published)}
+        </span>
+      ),
+      value: "PUBLISHED",
+    },
+    { label: countLabel("ยังไม่เผยแพร่", counts?.unpublished), value: "UNPUBLISHED" },
+  ];
   const publishable = [...selected.values()].filter((i) => i.publishBlock === null).length;
   const filtered = type !== "all" || status !== "all" || !!memberId;
 
@@ -153,12 +168,11 @@ export default function OrgGalleryPage() {
 
       <div className="og-filters">
         <Segmented options={TYPE_OPTIONS} value={type} onChange={resetPage(setType)} />
-        <Select
-          options={STATUS_OPTIONS}
+        <Segmented<StatusTab>
+          aria-label="สถานะ Community"
+          options={statusOptions}
           value={status}
           onChange={resetPage(setStatus)}
-          style={{ minWidth: 170 }}
-          aria-label="สถานะ Community"
         />
       </div>
 

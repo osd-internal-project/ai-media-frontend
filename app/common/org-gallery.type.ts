@@ -1,8 +1,8 @@
 export type GalleryType = "image" | "video" | "omnihuman" | "dreamactor" | "audio";
 export type PublicationStatus = "PENDING" | "PUBLISHED" | "REJECTED" | "REMOVED" | "FAILED";
-export type PublishStatusFilter = "NONE" | PublicationStatus;
+export type PublishStatusFilter = "NONE" | "UNPUBLISHED" | PublicationStatus;
 /** เหตุที่กดเผยแพร่ไม่ได้ — null = เผยแพร่ได้ */
-export type PublishBlock = "NOT_OWNER" | "MODEL_NOT_ALLOWED" | null;
+export type PublishBlock = "ROLE_NOT_ALLOWED" | "MODEL_NOT_ALLOWED" | null;
 
 export type OrgGalleryItem = {
   id: string;
@@ -32,6 +32,7 @@ export type OrgGalleryPage = {
   total: number;
   page: number;
   pageSize: number;
+  counts: { all: number; published: number; unpublished: number };
 };
 
 export type CommunityVisibility = "PUBLIC" | "PRIVATE";
@@ -46,7 +47,7 @@ export type PublishRequest = {
 export type PublishResult =
   | { galleryId: string; publicationId: string; status: "PUBLISHED" }
   | { galleryId: string; publicationId: string; status: "FAILED"; error: string }
-  | { galleryId: string; status: "SKIPPED"; reason: "NOT_OWNER" | "MODEL_NOT_ALLOWED" | "NOT_FOUND" };
+  | { galleryId: string; status: "SKIPPED"; reason: "ROLE_NOT_ALLOWED" | "MODEL_NOT_ALLOWED" | "NOT_FOUND" };
 
 export type IntegrationApiKeyScope = "webhook" | "original";
 
