@@ -125,16 +125,22 @@ const ProjectsPage = () => {
   // Memoized semantic tokens — recomputed only when theme changes
   const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
 
-  const activeProjects = useMemo(
-    () =>
-      projects.filter((p) => (p.status || "").toLowerCase() === "active")
-        .length,
+  const countByStatus = useCallback(
+    (status: string) =>
+      projects.filter((p) => (p.status || "").toLowerCase() === status).length,
     [projects],
   );
+  const activeProjects = useMemo(() => countByStatus("active"), [countByStatus]);
   const inactiveProjects = useMemo(
-    () => projects.length - activeProjects,
-    [projects.length, activeProjects],
+    () => countByStatus("inactive"),
+    [countByStatus],
   );
+  // status filters client-side so the tab counts always reflect the full list
+  const visibleProjects = useMemo(() => {
+    const status = searchValue.status as string | undefined;
+    if (!status) return projects;
+    return projects.filter((p) => (p.status || "").toLowerCase() === status);
+  }, [projects, searchValue.status]);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -145,7 +151,7 @@ const ProjectsPage = () => {
       const response = await projectService.findByOrganizationId(
         organizationId,
         session.user.id,
-        searchValue,
+        { name: searchValue.name },
       );
       setProjects(response || []);
       setAssignedCredit(
@@ -202,12 +208,12 @@ const ProjectsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
 
-  // On filter/search change: re-fetch projects only (org data unchanged)
+  // On search change: re-fetch projects only (org data unchanged)
   useEffect(() => {
     if (!organizationId) return;
     fetchProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchValue]);
+  }, [searchValue.name]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -413,7 +419,7 @@ const ProjectsPage = () => {
         >
           <PageSubHeader
             title="Projects"
-            count={projects.length}
+            count={visibleProjects.length}
             background={semantic.colorBgContainer as string}
             borderColor={semantic.colorBorder as string}
             titleColor={semantic.colorTextBase as string}
@@ -582,7 +588,7 @@ const ProjectsPage = () => {
                   <Typography.Text
                     style={{ fontSize: 16, color: semantic.colorTextSecondary }}
                   >
-                    {projects.length} projects
+                    {visibleProjects.length} projects
                   </Typography.Text>
                 ) : null}
                 <Radio.Group
@@ -668,14 +674,14 @@ const ProjectsPage = () => {
           <Divider style={{ margin: 0 }} />
           {loading ? (
             <div className="text-center text-[var(--legacy-gray-400)]">Loading ...</div>
-          ) : projects.length === 0 ? (
+          ) : visibleProjects.length === 0 ? (
             <div className="text-center py-12">
               <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
               <h3 className="text-xl text-[var(--legacy-gray-400)] mb-2">No project yet</h3>
             </div>
           ) : viewType === "grid" ? (
             <ProjectGridView
-              projects={projects}
+              projects={visibleProjects}
               semantic={semantic}
               onClickProject={onClickProject}
               formatDate={formatDate}
@@ -685,7 +691,7 @@ const ProjectsPage = () => {
             />
           ) : (
             <ProjectListView
-              projects={projects}
+              projects={visibleProjects}
               semantic={semantic}
               organizationRole={organizationRole}
               onClickProject={onClickProject}
