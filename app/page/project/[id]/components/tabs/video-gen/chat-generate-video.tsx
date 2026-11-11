@@ -155,6 +155,8 @@ const ChatGenerateVideo: FC<Props> = ({
   const [selectedAudio, setSelectedAudio] = useState<boolean>(false);
   const [selectedDuration, setSelectedDuration] = useState<number>(6);
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
+  // X ระหว่าง upload: ถ้าไม่จำไว้ upload ที่เสร็จทีหลังจะเพิ่ม ref ที่มองไม่เห็นกลับเข้าไป (ไฟล์อาจถูกลบไปแล้ว → DownloadFailed)
+  const removedUploadUids = useRef(new Set<string>());
   const [draftMode, setDraftMode] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedWidth, setSelectedWidth] = useState<number>(1920);
@@ -987,6 +989,11 @@ const ChatGenerateVideo: FC<Props> = ({
       formData.append("organizationId", session?.user?.organizationId || "");
       try {
         const result = await UploadsServices(axiosWorker).upload(formData);
+        if (removedUploadUids.current.delete(file.uid)) {
+          // DELETE ที่ยิงตอนกด X อาจมาก่อน row ถูกสร้าง (ได้ 409) — ลบซ้ำหลัง upload เสร็จ
+          await UploadsServices(axiosWorker).remove(file.uid);
+          return;
+        }
         setRefImage((prev) => [...prev, result]);
         setFiles((prev) =>
           prev.map((f) =>
@@ -1019,6 +1026,9 @@ const ChatGenerateVideo: FC<Props> = ({
   };
 
   const onRemoveFileMuti = async (file: UploadFile) => {
+    if (file.status !== "done" && file.status !== "error") {
+      removedUploadUids.current.add(file.uid);
+    }
     setRefImage((prev) => prev.filter((f) => f.uid !== file.uid));
     setFiles((prev) => {
       const filtered = prev.filter((f) => f.uid !== file.uid);
