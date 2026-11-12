@@ -164,6 +164,10 @@ export default function OrganizationDetailPage() {
     },
   };
 
+  const creditAllowance = organization?.subscription?.creditAllowance || 0;
+  // event orgs get credit outside the plan (allowance 0) — "used" would go negative; same rule as the admin page
+  const cycleBalance = organization?.creditBalance?.currentCycleBalance || 0;
+
   return (
     <div className="space-y-4 p-3 sm:p-4">
       {contextHolder}
@@ -212,15 +216,15 @@ export default function OrganizationDetailPage() {
             style={{ color: semantic.colorTextBase }}
             className="text-sm sm:text-base"
           >
-            Used Total Credit :
+            {creditAllowance >= cycleBalance
+              ? "Used Total Credit :"
+              : "Remaining Credit :"}
           </div>
           <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-2">
             <div className="break-all text-lg sm:text-xl">
-              {formatNumber(
-                (organization?.subscription?.creditAllowance || 0) -
-                  (organization?.creditBalance?.currentCycleBalance || 0),
-              )}
-              / {formatNumber(organization?.subscription?.creditAllowance || 0)}
+              {creditAllowance >= cycleBalance
+                ? `${formatNumber(creditAllowance - cycleBalance)} / ${formatNumber(creditAllowance)}`
+                : formatNumber(cycleBalance)}
             </div>
           </div>
         </Card>
