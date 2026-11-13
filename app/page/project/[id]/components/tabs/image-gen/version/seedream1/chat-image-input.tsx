@@ -66,6 +66,10 @@ type Props = {
   resolutionScale?: Record<string, number>;
   maxRefImages?: number;
   showGroupAndCount?: boolean;
+  /** Shown only when given; models without a background option leave it out */
+  backgroundOptions?: { key: string; label: string }[];
+  selectedBackground?: string;
+  setSelectedBackground?: (background: string) => void;
 };
 
 const DEFAULT_RESOLUTION_OPTIONS = ["2k", "4k"];
@@ -101,6 +105,9 @@ export default function ChatImageInput({
   resolutionScale = DEFAULT_RESOLUTION_SCALE,
   maxRefImages = 8,
   showGroupAndCount = true,
+  backgroundOptions,
+  selectedBackground,
+  setSelectedBackground,
 }: Props) {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -310,6 +317,9 @@ export default function ChatImageInput({
               showGroupAndCount ? setSelectedMaximumImage : undefined
             }
             ratioSizeMap={RATIO_SIZE_MAP}
+            backgroundOptions={backgroundOptions}
+            selectedBackground={selectedBackground}
+            handleBackgroundChange={setSelectedBackground}
           />
           <BrandKitSection
             semantic={semantic}

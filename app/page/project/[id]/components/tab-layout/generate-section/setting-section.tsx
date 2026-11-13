@@ -34,6 +34,10 @@ type Props = {
   resolutionTitle?: string;
   countTitle?: string;
   resolutionOptions?: string[];
+  backgroundTitle?: string;
+  backgroundOptions?: { key: string; label: string }[];
+  selectedBackground?: string;
+  handleBackgroundChange?: (background: string) => void;
   showModeSection?: boolean;
   showRatioSection?: boolean;
   showResolutionSection?: boolean;
@@ -68,6 +72,10 @@ export default function SettingSection({
   resolutionTitle = "Resolution",
   countTitle = "Images Count",
   resolutionOptions = ["2k", "4k"],
+  backgroundTitle = "Background",
+  backgroundOptions,
+  selectedBackground,
+  handleBackgroundChange,
   showModeSection,
   showRatioSection,
   showResolutionSection,
@@ -76,6 +84,53 @@ export default function SettingSection({
   extraContent,
 }: Props) {
   const [showSettings, setShowSettings] = useState(true);
+
+  // One row of option buttons; columns split evenly so 3 options fit one line.
+  const renderChips = (
+    title: string,
+    options: string[],
+    selected: string | undefined,
+    onSelect: ((value: string) => void) | undefined,
+    labelOf: (value: string) => string,
+  ) => (
+    <Flex vertical gap={6}>
+      <Typography.Text
+        style={{ fontSize: 12, color: semantic.colorTextSecondary }}
+      >
+        {title}
+      </Typography.Text>
+      <Row gutter={[6, 6]}>
+        {options.map((option) => (
+          <Col span={24 / options.length} key={option}>
+            <Button
+              block
+              onClick={() => onSelect?.(option)}
+              style={{
+                height: 30,
+                fontSize: 12,
+                borderRadius: 8,
+                border: `1px solid ${
+                  selected === option
+                    ? semantic.colorPrimary
+                    : semantic.colorBorder
+                }`,
+                background:
+                  selected === option
+                    ? `${semantic.colorPrimary}1A`
+                    : "transparent",
+                color:
+                  selected === option
+                    ? semantic.colorPrimary
+                    : semantic.colorTextSecondary,
+              }}
+            >
+              {labelOf(option)}
+            </Button>
+          </Col>
+        ))}
+      </Row>
+    </Flex>
+  );
 
   const normalizedCountControl = countControl
     ? {
@@ -317,45 +372,24 @@ export default function SettingSection({
               </Flex>
             )}
 
-            {shouldShowResolution && (
-              <Flex vertical gap={6}>
-                <Typography.Text
-                  style={{ fontSize: 12, color: semantic.colorTextSecondary }}
-                >
-                  {resolutionTitle}
-                </Typography.Text>
-                <Row gutter={[6, 6]}>
-                  {resolutionOptions.map((resolution) => (
-                    <Col span={12} key={resolution}>
-                      <Button
-                        block
-                        onClick={() => handleResolutionChange?.(resolution)}
-                        style={{
-                          height: 30,
-                          fontSize: 12,
-                          borderRadius: 8,
-                          border: `1px solid ${
-                            selectedResolution === resolution
-                              ? semantic.colorPrimary
-                              : semantic.colorBorder
-                          }`,
-                          background:
-                            selectedResolution === resolution
-                              ? `${semantic.colorPrimary}1A`
-                              : "transparent",
-                          color:
-                            selectedResolution === resolution
-                              ? semantic.colorPrimary
-                              : semantic.colorTextSecondary,
-                        }}
-                      >
-                        {resolution.toUpperCase()}
-                      </Button>
-                    </Col>
-                  ))}
-                </Row>
-              </Flex>
-            )}
+            {shouldShowResolution &&
+              renderChips(
+                resolutionTitle,
+                resolutionOptions,
+                selectedResolution,
+                handleResolutionChange,
+                (resolution) => resolution.toUpperCase(),
+              )}
+
+            {backgroundOptions &&
+              renderChips(
+                backgroundTitle,
+                backgroundOptions.map((o) => o.key),
+                selectedBackground,
+                handleBackgroundChange,
+                (key) =>
+                  backgroundOptions.find((o) => o.key === key)?.label ?? key,
+              )}
 
             {extraContent}
           </Flex>

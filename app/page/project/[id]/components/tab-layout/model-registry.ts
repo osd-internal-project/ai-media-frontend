@@ -6,6 +6,7 @@ import type {
 } from "./types/generator-config.type";
 import { seedr1Config } from "../tabs/image-gen/version/seedream1/config";
 import { seedr2Config } from "../tabs/image-gen/version/seedream2/config";
+import { seedr3Config } from "../tabs/image-gen/version/seedream3/config";
 import { seeda1Config } from "../tabs/video-gen/version/seedance1/config";
 import { seeda2Config } from "../tabs/video-gen/version/seedance2/config";
 import { seedaudio1Config } from "../tabs/audio-gen/version/seedaudio1/config";
@@ -22,6 +23,7 @@ import { seedaudio1Config } from "../tabs/audio-gen/version/seedaudio1/config";
 const imageConfigByType: Readonly<Record<string, ImageModelConfig>> = {
   seedream1: seedr1Config,
   seedream2: seedr2Config,
+  seedream3: seedr3Config,
 };
 
 const videoConfigByType: Readonly<Record<string, VideoModelConfig>> = {

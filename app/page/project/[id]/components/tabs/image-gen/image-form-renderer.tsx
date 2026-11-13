@@ -6,12 +6,14 @@ import ChatGenerateImage, {
 import { getImageModelConfig } from "../../tab-layout/model-registry";
 import ChatImageInput from "./version/seedream1/chat-image-input";
 import ChatImageInputSeedream2 from "./version/seedream2/chat-image-input";
+import ChatImageInputSeedream3 from "./version/seedream3/chat-image-input";
 
 /** Maps a model's `sendConfig.type` → form component. Payload config is sourced
  *  from the shared model-registry so it cannot drift from the workflow. */
 const formComponentByType: Record<string, FC<ImageInputProps>> = {
   seedream1: ChatImageInput as FC<ImageInputProps>,
   seedream2: ChatImageInputSeedream2,
+  seedream3: ChatImageInputSeedream3,
 };
 
 const ImageFormRenderer: FC<ImageChatProps> = (props) => {

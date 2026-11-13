@@ -92,6 +92,7 @@ export interface ImageFormState {
   selectedHeight: number;
   selectedMaximumImage: number;
   groupMode: string;
+  selectedBackground?: string;
   projectId: string;
   userId: string;
   organizationId: string | undefined;
@@ -115,6 +116,7 @@ export interface ImageGeneratePayload {
   imageGenerateType: string;
   typeGenerate: string;
   organizationId: string | undefined;
+  background?: "auto" | "transparent";
 }
 
 export interface ImageModelConfig {

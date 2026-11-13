@@ -122,6 +122,8 @@ export interface ImageInputProps {
   selectedRatio: string;
   setSelectedResolution: (resolution: string) => void;
   selectedResolution: string;
+  setSelectedBackground: (background: string) => void;
+  selectedBackground: string;
   setSelectedMaximumImage: (n: number) => void;
   selectedMaximumImage: number;
   form: FormInstance;
@@ -268,6 +270,7 @@ const ChatGenerateImage: FC<
   const [selectedRatio, setSelectedRatio] = useState<string>("1:1");
   const [selectedMaximumImage, setSelectedMaximumImage] = useState<number>(1);
   const [selectedResolution, setSelectedResolution] = useState<string>("2k");
+  const [selectedBackground, setSelectedBackground] = useState<string>("auto");
   const [selectedWidth, setSelectedWidth] = useState<number>(2048);
   const [selectedHeight, setSelectedHeight] = useState<number>(2048);
   const [fristRowSeq, setFristRowSeq] = useState<number | undefined>(undefined);
@@ -999,6 +1002,7 @@ const ChatGenerateImage: FC<
       selectedHeight,
       selectedMaximumImage,
       groupMode: groupMode || "",
+      selectedBackground,
       projectId,
       userId: userId || "",
       organizationId: session?.user?.organizationId ?? undefined,
@@ -1206,6 +1210,8 @@ const ChatGenerateImage: FC<
             selectedRatio={selectedRatio}
             setSelectedResolution={setSelectedResolution}
             selectedResolution={selectedResolution}
+            setSelectedBackground={setSelectedBackground}
+            selectedBackground={selectedBackground}
             setSelectedMaximumImage={setSelectedMaximumImage}
             selectedMaximumImage={selectedMaximumImage}
             form={form}
