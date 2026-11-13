@@ -13,3 +13,26 @@ export const getTypeFile = (path: string): string => {
   if (ext && ["mp4", "mov", "avi", "mkv"].includes(ext)) return "video";
   return "unknown";
 };
+
+const VIDEO_METADATA_TIMEOUT_MS = 5000;
+
+/**
+ * Read a video's length in seconds from its metadata; `undefined` if it cannot be read in time.
+ * Seedance bills reference-video seconds too, so the credit estimate needs this.
+ */
+export const getVideoDuration = (url: string): Promise<number | undefined> =>
+  new Promise((resolve) => {
+    const video = document.createElement("video");
+    const done = (value: number | undefined) => {
+      clearTimeout(timer);
+      video.removeAttribute("src");
+      video.load();
+      resolve(value);
+    };
+    const timer = setTimeout(() => done(undefined), VIDEO_METADATA_TIMEOUT_MS);
+    video.preload = "metadata";
+    video.onloadedmetadata = () =>
+      done(Number.isFinite(video.duration) ? video.duration : undefined);
+    video.onerror = () => done(undefined);
+    video.src = url;
+  });

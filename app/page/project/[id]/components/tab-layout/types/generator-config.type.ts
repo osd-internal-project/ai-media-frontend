@@ -11,6 +11,8 @@ export interface RefImage {
 export interface ComputedFileRef {
   type: string;
   url: string;
+  /** seconds; only for video refs — the credit formula bills reference-video length */
+  duration?: number;
 }
 
 /** All form state passed from the generic orchestrator into buildSubmitPayload */

@@ -39,9 +39,11 @@ import type {
   VideoModelConfig,
   VideoFormState,
   RefImage,
+  ComputedFileRef,
 } from "../../tab-layout/types/generator-config.type";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
+import { getVideoDuration } from "@/app/page/project/[id]/components/tab-layout/utils/file-type.util";
 import {
   fetchOlderTasks,
   HISTORY_LOAD_THRESHOLD_PX,
@@ -157,6 +159,7 @@ const ChatGenerateVideo: FC<Props> = ({
   const [isLoadingUpload, setIsLoadingUpload] = useState<boolean>(false);
   // X ระหว่าง upload: ถ้าไม่จำไว้ upload ที่เสร็จทีหลังจะเพิ่ม ref ที่มองไม่เห็นกลับเข้าไป (ไฟล์อาจถูกลบไปแล้ว → DownloadFailed)
   const removedUploadUids = useRef(new Set<string>());
+  const creditRequestRef = useRef(0);
   const [draftMode, setDraftMode] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedWidth, setSelectedWidth] = useState<number>(1920);
@@ -237,15 +240,13 @@ const ChatGenerateVideo: FC<Props> = ({
       return;
     }
     const tempTask = `temp-${Date.now()}`;
-    const computedFiles = await Promise.all(
-      refImage.map(async (img) => ({
-        type: await getTypeFile(img.imagePath),
-        url: img.imagePath,
-      })),
-    );
+    const requestId = ++creditRequestRef.current;
+    const computedFiles = await buildFileRefs(refImage);
     const state: VideoFormState = buildCurrentState(computedFiles);
     const payload = modelConfig.buildSubmitPayload(values, state, tempTask);
     const credit = await generateServices.getCreditPreSend(payload);
+    // an older estimate (e.g. before the video ref finished uploading) must not overwrite a newer one
+    if (requestId !== creditRequestRef.current) return;
     setCerrentUsedCredit(credit ?? 0);
   };
 
@@ -1099,6 +1100,18 @@ const ChatGenerateVideo: FC<Props> = ({
     return "unknown";
   };
 
+  const buildFileRefs = (refs: RefImage[]): Promise<ComputedFileRef[]> =>
+    Promise.all(
+      refs.map(async (img) => {
+        const type = getTypeFile(img.imagePath);
+        return {
+          type,
+          url: img.imagePath,
+          duration: type === "video" ? await getVideoDuration(img.url) : undefined,
+        };
+      }),
+    );
+
   /** Helper to build the current VideoFormState snapshot */
   const buildCurrentState = useCallback(
     (computedFiles: { type: string; url: string }[]): VideoFormState => ({
@@ -1236,12 +1249,7 @@ const ChatGenerateVideo: FC<Props> = ({
       return openNotificationWithIcon("error", "Please select an AI model");
 
     const tempTask = `temp-${Date.now()}`;
-    const computedFiles = await Promise.all(
-      refImage.map(async (img) => ({
-        type: await getTypeFile(img.imagePath),
-        url: img.imagePath,
-      })),
-    );
+    const computedFiles = await buildFileRefs(refImage);
 
     const state = buildCurrentState(computedFiles);
     const socketPayload = modelConfig.buildSubmitPayload(
