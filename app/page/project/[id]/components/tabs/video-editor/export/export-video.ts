@@ -196,18 +196,16 @@ function createCanvas(width: number, height: number) {
   return { canvas, context };
 }
 
+type HardwareAcceleration = "no-preference" | "prefer-software";
+
 /**
  * Renders the project to an MP4 (H.264 + AAC) entirely in the browser.
  * Throws ExportError for known problems and an AbortError when cancelled.
  */
-export async function exportVideo(
-  project: EditorProject,
-  resolve: MediaResolver,
-  { resolution, signal, onProgress }: ExportOptions,
-): Promise<Blob> {
+export async function exportVideo(project: EditorProject, resolve: MediaResolver, options: ExportOptions): Promise<Blob> {
   const total = projectDuration(project);
   if (total <= 0) throw new ExportError("empty");
-  const { width, height } = outputSize(project.aspect, resolution);
+  const { width, height } = outputSize(project.aspect, options.resolution);
   if (!(await canEncodeVideo("avc", { width, height }))) throw new ExportError("video-codec");
   if (!(await canEncodeAudio("aac"))) {
     // LGPL libavcodec build, only fetched on browsers without a native AAC encoder.
@@ -215,6 +213,26 @@ export async function exportVideo(
     registerAacEncoder();
   }
 
+  try {
+    return await renderOnce(project, resolve, options, "no-preference");
+  } catch (error) {
+    // Windows Media Foundation H.264 encoders pass isConfigSupported but fail mid-encode; OpenH264 does not.
+    if (!(error instanceof DOMException && error.name === "OperationError")) throw error;
+    if (!(await canEncodeVideo("avc", { width, height, hardwareAcceleration: "prefer-software" }))) throw error;
+    console.warn("[video-editor] hardware encoder failed, retrying with software", error);
+    options.onProgress(0);
+    return renderOnce(project, resolve, options, "prefer-software");
+  }
+}
+
+async function renderOnce(
+  project: EditorProject,
+  resolve: MediaResolver,
+  { resolution, signal, onProgress }: ExportOptions,
+  hardwareAcceleration: HardwareAcceleration,
+): Promise<Blob> {
+  const total = projectDuration(project);
+  const { width, height } = outputSize(project.aspect, resolution);
   const inputs = createInputCache(resolve);
   let output: Output<Mp4OutputFormat, BufferTarget> | null = null;
   try {
@@ -222,7 +240,7 @@ export async function exportVideo(
 
     const { canvas, context } = createCanvas(width, height);
     output = new Output({ format: new Mp4OutputFormat({ fastStart: "in-memory" }), target: new BufferTarget() });
-    const videoSource = new CanvasSource(canvas, { codec: "avc", bitrate: QUALITY_MEDIUM });
+    const videoSource = new CanvasSource(canvas, { codec: "avc", bitrate: QUALITY_MEDIUM, hardwareAcceleration });
     const audioSource = new AudioBufferSource({ codec: "aac", bitrate: QUALITY_MEDIUM });
     output.addVideoTrack(videoSource, { frameRate: FPS });
     output.addAudioTrack(audioSource);
