@@ -12,7 +12,7 @@ import { Segmented } from "antd";
 function PlanSkeleton() {
   return (
     <div className="mb-10 mt-0 flex w-full flex-col items-center justify-center">
-      <div className="mb-6 h-10 w-44 animate-pulse rounded-full bg-white/10 sm:w-56" />
+      <div className="mb-6 h-10 w-44 animate-pulse rounded-full bg-(--l-raised) sm:w-56" />
       <div className="flex w-full gap-3 overflow-hidden pb-4 md:grid md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
@@ -35,7 +35,7 @@ function PlanSkeleton() {
                   </div>
                 ))}
               </div>
-              <div className="mt-8 h-10 w-32 rounded-full bg-white/10" />
+              <div className="mt-8 h-10 w-32 rounded-full bg-(--l-raised)" />
             </div>
           </div>
         ))}
@@ -104,47 +104,14 @@ export default function Plan() {
 
   return (
     <>
-      <section
-        className="relative flex w-full flex-col items-center overflow-hidden bg-[#0a0a0f] bg-cover bg-center bg-no-repeat px-4 pb-12 pt-24 sm:px-5 sm:pb-14 sm:pt-28 md:pt-[112px]"
-        style={{ backgroundImage: 'url("/images/herosection/bg.png")' }}
-      >
-        {/* <Navbar /> */}
-        {/* Background Collage representing Image 2 */}
-
-        {/* Gradient overlays to match Hero image 1 dark fading */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            zIndex: 0,
-            background:
-              "linear-gradient(to bottom, rgba(10, 10, 15, 0.8), rgba(10, 10, 15, 0.6), rgba(10, 10, 15, 1))",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            zIndex: 0,
-            background:
-              "radial-gradient(circle at center, transparent 0%, #0a0a0f 90%)",
-            pointerEvents: "none",
-          }}
-        />
+      <section className="landing-container pb-12 pt-12 sm:pb-14 md:pt-16">
         <div className="z-10 w-full overflow-hidden pb-10 pt-8 sm:pb-16 sm:pt-14 ">
           <div className="mx-auto w-full max-w-7xl px-0 sm:px-2 md:px-4">
-            <div className="mb-8 text-left text-white sm:mb-12 md:mb-16">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <div className="mb-8 text-left sm:mb-12 md:mb-16">
+              <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] text-(--l-ink) md:text-[56px]">
                 Pricing Plans
               </h1>
-              <p className="mt-3 max-w-2xl text-sm text-white/80 sm:text-lg">
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-(--l-ink-2)">
                 Choose the perfect plan for you and your team.
               </p>
             </div>

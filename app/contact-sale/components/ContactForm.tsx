@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { axiosCore } from "@/app/lib/axios/axios";
-import { Card, Form, Input, Button } from "antd";
+import { Card, Form, Input, Button, Select } from "antd";
 import ContactSaleLogServices from "@/app/services/contact-sale-log.service";
 import { TContactSaleLog } from "@/app/common/contact-sale-log.type";
 import { MessageInstance } from "antd/es/message/interface";
@@ -10,6 +10,23 @@ import { MessageInstance } from "antd/es/message/interface";
 interface props {
   messageApi: MessageInstance;
 }
+
+// Landing-page buttons link here with ?topic=…; the topic only pre-fills the message, the API payload is unchanged.
+const TOPIC_MESSAGES: Record<string, string> = {
+  demo: "I'd like a demo of AI Cave for my team.",
+  packages: "I'd like details on AI Cave packages and Credit.",
+  community: "I'd like to know more about the AI Cave Community and Creator Marketplace.",
+};
+
+const CONTENT_TYPES = [
+  "Product and ad images",
+  "Short videos and Reels",
+  "Virtual presenters",
+  "Voiceover and sound",
+  "Event photos",
+];
+
+type ContactFormValues = TContactSaleLog & { contentTypes?: string[] };
 export default function ContactForm({ messageApi }: props) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -19,10 +36,20 @@ export default function ContactForm({ messageApi }: props) {
     [],
   );
 
-  async function handleSubmitForm(values: TContactSaleLog) {
+  useEffect(() => {
+    const topic = new URLSearchParams(window.location.search).get("topic");
+    const preset = topic ? TOPIC_MESSAGES[topic] : undefined;
+    if (preset && !form.getFieldValue("message")) form.setFieldsValue({ message: preset });
+  }, [form]);
+
+  async function handleSubmitForm({ contentTypes, ...values }: ContactFormValues) {
+    // No column for content types yet, so they travel inside the message.
+    const payload: TContactSaleLog = contentTypes?.length
+      ? { ...values, message: `${values.message}\n\nContent we make most: ${contentTypes.join(", ")}` }
+      : values;
     try {
       setLoading(true);
-      await contactSaleLogService.create(values);
+      await contactSaleLogService.create(payload);
       messageApi.success("Success! We have received your contact details.");
       // form.resetFields();
     } catch (error) {
@@ -200,6 +227,24 @@ export default function ContactForm({ messageApi }: props) {
                       <Input
                         placeholder="Phone Number"
                         className="h-12 rounded-full border-none bg-white px-5 text-base text-gray-900 shadow-sm placeholder:text-gray-600 sm:px-6"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="contentTypes"
+                      label={
+                        <span className="text-gray-300 text-xs font-bold uppercase tracking-wide mb-1 block">
+                          What content does your team make most?
+                        </span>
+                      }
+                      className="mb-4"
+                    >
+                      <Select
+                        mode="multiple"
+                        allowClear
+                        placeholder="Pick one or more"
+                        options={CONTENT_TYPES.map((v) => ({ value: v, label: v }))}
+                        className="min-h-12 w-full [&_.ant-select-selector]:!min-h-12 [&_.ant-select-selector]:!rounded-3xl [&_.ant-select-selector]:!border-none [&_.ant-select-selector]:!bg-white [&_.ant-select-selector]:!px-4"
                       />
                     </Form.Item>
 

@@ -1,0 +1,168 @@
+.landing {
+  position: relative;
+  min-height: 100vh;
+  /* clip, not hidden: hidden makes .landing a scroll container and breaks every position: sticky inside it. */
+  overflow-x: clip;
+  background: var(--l-bg);
+  color: var(--l-ink);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Anchor jumps land right under the sticky bars: 64px nav, plus the 62px group nav on features. Replaces the app-wide 96px. */
+html:has(.landing) {
+  scroll-padding-top: 64px;
+}
+
+html:has(.l-groupnav) {
+  scroll-padding-top: 126px;
+}
+
+/* antd's reset.css is unlayered, so it beats Tailwind's layered utilities; hand these back to the utilities. */
+.landing :where(h1, h2, h3, h4, h5, h6, p, ol, ul, dl, figure) {
+  margin: revert-layer;
+  font-weight: revert-layer;
+}
+
+.landing ::selection {
+  background: var(--l-primary);
+  color: var(--l-primary-ink);
+}
+
+.landing :focus-visible {
+  outline: 2px solid var(--l-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+@media (min-width: 768px) {
+  .landing-container {
+    padding-inline: 32px;
+  }
+}
+
+/* The hero's single authored moment: the generated result develops in after the prompt finishes. */
+.demo-reveal {
+  animation: demo-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes demo-reveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+    filter: blur(14px) saturate(0.4);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    filter: blur(0) saturate(1);
+  }
+}
+
+/* Thai sits taller than Latin: open the leading and drop the negative tracking set for English headlines. */
+.landing:lang(th) :where(h1, h2, h3) {
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+/* Brand gradient on type, used in three places only: hero headline, Results figures, final CTA headline. */
+.l-gradient-text {
+  background-image: linear-gradient(100deg, var(--l-grad-a), var(--l-grad-b) 55%, var(--l-grad-a));
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.l-gradient-text--sweep {
+  animation: l-gradient-sweep 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+@keyframes l-gradient-sweep {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+/* Workflow: the active step's bar fills over the auto-advance interval. */
+.l-step-progress {
+  animation-name: l-step-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+@keyframes l-step-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Workflow editing step: the playhead sweeps the joined clips. Its track spans the timeline, so 100% is the full width. */
+.l-playhead-run {
+  animation: l-playhead 3.2s linear infinite;
+}
+
+@keyframes l-playhead {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* Credit tree: dots fall down each connector while the tree is on screen. */
+.l-flow-dot {
+  animation: l-flow 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes l-flow {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(calc(2.25rem - 5px)); opacity: 0; }
+}
+
+/* Voice sample: bars breathe only while audio plays. */
+.l-wave-bar {
+  animation: l-wave 0.72s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+@keyframes l-wave {
+  from { transform: scaleY(0.55); }
+  to { transform: scaleY(1); }
+}
+
+/* A global rule keeps summary as list-item and beats the flex utility; restore the row layout. */
+.landing .l-faq > summary {
+  display: flex;
+}
+
+/* FAQ answer eases in when its question opens. */
+.l-faq[open] .l-faq-body {
+  animation: l-faq-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes l-faq-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing [data-flow] {
+    display: none;
+  }
+  /* Keep fades and color changes so state still reads; drop movement and long sequences. */
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  /* Moving parts jump straight to their end state; only opacity and color still ease. */
+  .landing [data-motion="move"] {
+    transition-property: opacity, color, background-color !important;
+  }
+}
