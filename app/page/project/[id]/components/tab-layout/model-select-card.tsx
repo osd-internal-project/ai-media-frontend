@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, type CSSProperties, type FC } from "react";
-import { Card, Select, Tooltip, Typography } from "antd";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { formPanel } from "@/app/theme/surface";
+import { Select, Tooltip, Typography } from "antd";
 import { AudioLines, Drama, Image as ImageIcon, Sparkles, UserRound, Video, type LucideIcon } from "lucide-react";
 import type { TMasterModelType } from "@/app/common/master-model-type.type";
 
@@ -10,6 +12,13 @@ type ModelSelectContextValue = {
 };
 
 export const ModelSelectContext = createContext<ModelSelectContextValue | null>(null);
+
+/** Readable model name for a stored slug (e.g. "dola-seedream-5-5-261028" → "Seedream 5.5"); unknown slugs show as-is. */
+export function ModelName({ slug }: { slug?: string | null }) {
+  const ctx = useContext(ModelSelectContext);
+  const match = ctx?.filteredAIModels.find((m) => m.modelType === slug || m.name === slug);
+  return <>{match?.name ?? slug ?? ""}</>;
+}
 
 const fallbackIconByType: Record<string, LucideIcon> = {
   image: ImageIcon,
@@ -132,26 +141,28 @@ type Props = {
 /** AI model picker shown as its own card above the option panel; reads models from ModelSelectContext. */
 export default function ModelSelectCard({ semantic, isMobile }: Props) {
   const ctx = useContext(ModelSelectContext);
+  const { mode } = useThemeMode();
   if (!ctx || ctx.filteredAIModels.length === 0) return null;
   const { selectedAIModel, filteredAIModels, onAIModelChange } = ctx;
   const description: string | undefined = selectedAIModel?.modelDetails?.description;
 
   return (
-    <Card
+    <div
       data-tour="model"
-      size="small"
-      style={{ background: semantic.colorBgContainer, borderColor: semantic.colorBorder, flexShrink: 0 }}
-      styles={{ body: { padding: 12 } }}
+      style={{ padding: 12, borderBottom: `1px solid ${semantic.colorBorderSecondary ?? semantic.colorBorder}`, flexShrink: 0 }}
     >
-      <Typography.Text style={{ display: "block", fontSize: 12, fontWeight: 500, color: semantic.colorTextSecondary, marginBottom: 6 }}>
-        AI Model
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <Typography.Text id="ai-model-label" style={{ flexShrink: 0, fontSize: 13, fontWeight: 500, color: semantic.colorTextSecondary }}>
+        Model
       </Typography.Text>
       <Select
+        aria-labelledby="ai-model-label"
         style={
           {
             width: "100%",
             fontSize: 13,
-            ["--model-select-bg" as string]: semantic.colorBgContainer,
+            // Controls sit a step above the panel so the select reads as a field.
+            ["--model-select-bg" as string]: formPanel(mode).field,
             ["--model-select-border" as string]: semantic.colorBorder,
             ["--model-select-text" as string]: semantic.colorTextBase,
             ["--model-select-placeholder" as string]: semantic.colorTextSecondary,
@@ -199,6 +210,7 @@ export default function ModelSelectCard({ semantic, isMobile }: Props) {
           };
         })}
       />
+      </div>
       {description && (
         <Typography.Paragraph
           ellipsis={{ rows: 2, tooltip: description }}
@@ -207,6 +219,6 @@ export default function ModelSelectCard({ semantic, isMobile }: Props) {
           {description}
         </Typography.Paragraph>
       )}
-    </Card>
+    </div>
   );
 }

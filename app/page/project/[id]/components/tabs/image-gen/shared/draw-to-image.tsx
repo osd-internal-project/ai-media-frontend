@@ -230,10 +230,10 @@ export default function DrawToImage({
   });
 
   const triggerStyle: React.CSSProperties = {
-    width: 56,
-    height: 56,
+    width: 48,
+    height: 48,
     borderRadius: 8,
-    border: `2px dashed ${semantic.colorBorder as string}`,
+    border: `1px dashed ${semantic.colorBorder as string}`,
     background: semantic.colorBgBase as string,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,

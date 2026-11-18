@@ -1,7 +1,7 @@
 import React, { useState, type CSSProperties } from "react";
+import { formPanel } from "@/app/theme/surface";
 import {
   Button,
-  Card,
   Flex,
   Form,
   Image,
@@ -18,7 +18,6 @@ import {
   ImagePlus,
   RectangleHorizontal,
   RectangleVertical,
-  Sparkles,
   Square,
   Volume2,
   VolumeX,
@@ -35,7 +34,7 @@ import {
 } from "@/app/common/prompt-guide.type";
 import Quata from "@/app/page/project/component/quata";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../shared/upload-section";
 import DrawToImage from "../../../image-gen/shared/draw-to-image";
 import PromptSection from "./prompt-section";
@@ -463,7 +462,7 @@ export default function ChatVideoInput(props: Props) {
           <PromptSection
             generateType="video"
             semantic={semantic}
-            placeholder="Describe what you want to video... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
+            placeholder="Describe what you want to create... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
             rows={5}
             maxLength={8000}
             required={true}
@@ -575,40 +574,27 @@ export default function ChatVideoInput(props: Props) {
         </Flex>
 
         <Flex
-          vertical
-          gap={8}
+          align="center"
+          gap={12}
           style={{
             position: "sticky",
             bottom: 0,
             zIndex: 10,
             borderTop: `1px solid ${semantic.colorBorder}`,
-            background: semantic.colorBgContainer,
+            background: formPanel(mode).bg,
             paddingInline: 12,
             paddingBlock: 12,
           }}
         >
-          <Card
-            data-tour="quota"
-            size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-              width: "100%",
-              minWidth: 0,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
+          <div data-tour="quota" style={{ flex: 1, minWidth: 0 }}>
             <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
+                            creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"
               cerrentUsedCredit={cerrentUsedCredit}
             />
-          </Card>
+          </div>
           <Button
-            block
             type="primary"
             data-tour="generate"
             htmlType="submit"
@@ -616,12 +602,10 @@ export default function ChatVideoInput(props: Props) {
             style={{
               color: "white",
               border: "none",
-              height: 40,
-              borderRadius: 10,
+              height: 36,
+              borderRadius: 8,
               fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
             }}
-            icon={<Sparkles size={16} />}
             loading={submitting}
           >
             Generate Video

@@ -1,4 +1,5 @@
 import React, { FC, useState } from "react";
+import { ModelName } from "../../../tab-layout/model-select-card";
 import { Button, Card, Divider, Flex, Space, Typography } from "antd";
 import type { GlobalToken } from "antd";
 import {
@@ -12,6 +13,7 @@ import GenerationProgress from "../../../shared/generation-progress";
 import AudioPlayer from "../../../shared/audio-player";
 import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { Message, isAudioLoading } from "./audio.types";
+import SwatchTag, { jobCode } from "../../../shared/swatch-tag";
 
 interface Props {
   message: Message;
@@ -67,6 +69,17 @@ const AudioResultItem: FC<Props> = ({
       }}
     >
       <Flex wrap gap={8} align="center" style={{ marginBottom: 8 }}>
+        {/* Wrapper keeps the code right after the date; the tag's own auto margin would split the free space. */}
+        <span style={{ order: 99 }}>
+          <SwatchTag
+            type="audio"
+            code={jobCode(message.taskId)}
+            fontSize={metaFontSize}
+            border={semantic.colorBorder}
+            fill={semantic.colorBgTextActive}
+            ink={semantic.colorTextSecondary}
+          />
+        </span>
         {meta.map((text) => (
           <Typography.Text
             key={text}
@@ -79,10 +92,10 @@ const AudioResultItem: FC<Props> = ({
           style={{
             fontSize: metaFontSize,
             fontWeight: 600,
-            color: semantic.colorPrimary,
+            color: semantic.colorTextBase,
           }}
         >
-          {config.modelName || ""}
+          <ModelName slug={config.modelName} />
         </Typography.Text>
         <Typography.Text
           style={{
@@ -162,15 +175,12 @@ const AudioResultItem: FC<Props> = ({
             vertical
             gap={8}
             style={{
-              padding: 12,
+              padding: "10px 8px 10px 0",
               maxWidth: 640,
-              borderRadius: 12,
-              border: `1px solid ${semantic.colorBorder}`,
-              background: semantic.colorBgContainer,
             }}
           >
-            <Flex gap={8} align="center">
-              <div style={{ flex: 1, minWidth: 0 }}>
+            <Flex gap={4} align="center">
+              <div style={{ flex: 1, minWidth: 0, marginInlineEnd: 4 }}>
                 <AudioPlayer
                   src={audio.imageUrl}
                   seed={audio.id}
@@ -178,8 +188,9 @@ const AudioResultItem: FC<Props> = ({
                 />
               </div>
               {audio.id && (
-                <Space size={4}>
+                <Space size={0}>
                   <Button
+                    type="text"
                     aria-label={audio.status ? "Remove from favorites" : "Add to favorites"}
                     icon={
                       audio.status ? (
@@ -193,6 +204,7 @@ const AudioResultItem: FC<Props> = ({
                     }
                   />
                   <Button
+                    type="text"
                     aria-label="Download audio"
                     icon={<DownloadOutlined />}
                     onClick={() =>

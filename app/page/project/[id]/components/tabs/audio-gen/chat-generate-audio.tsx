@@ -6,6 +6,7 @@ import React, {
   useState,
   type FC,
 } from "react";
+import { canvasBg } from "@/app/theme/surface";
 import { Flex, Form, message, notification } from "antd";
 import type { RcFile } from "antd/es/upload";
 import { useSession } from "next-auth/react";
@@ -16,7 +17,7 @@ import GenerateServices from "@/app/services/generate.service";
 import UploadsServices from "@/app/services/uploads.service";
 import { useWebSocket } from "@/app/hooks/useWebsocket";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import ResultHeader from "../video-gen/shared/result-header";
@@ -695,7 +696,7 @@ const ChatGenerateAudio: FC<Props> = ({
   return (
     <Flex
       vertical
-      style={{ height: "100%", minHeight: 0, background: getCanvasBg(mode) }}
+      style={{ height: "100%", minHeight: 0, background: canvasBg(mode) }}
     >
       {contextHolder}
       {contextHolderNoti}

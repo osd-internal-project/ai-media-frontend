@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from "react";
+import { ModelName } from "../../../tab-layout/model-select-card";
 import useResponsive from "@/app/hooks/useResponsive";
 import {
   Card,
@@ -15,6 +16,7 @@ import { ImageOff, Trash2, User } from "lucide-react";
 import ActionBar from "./action-bar";
 import { Message } from "../chat-generate-image";
 import ImageSmartReference from "./image-smart-reference";
+import SwatchTag, { jobCode } from "../../../shared/swatch-tag";
 import { MediaSkeleton } from "../../../shared/smart-media";
 import GenerationProgress, {
   mediaRowStyle,
@@ -111,12 +113,22 @@ const ResultItem: FC<Props> = ({
                 gap: 6,
                 width: "100%",
                 flexWrap: "wrap",
+                alignItems: "center",
               }}
             >
+              <SwatchTag
+                type="image"
+                imageUrl={message.imageUrls?.[0]?.imageUrl}
+                code={jobCode(message.taskId ?? message.id)}
+                fontSize={metaFontSize}
+                border={semantic.colorBorder}
+                fill={semantic.colorBgTextActive}
+                ink={semantic.colorTextSecondary}
+              />
               <Typography.Text
                 style={{
                   fontSize: metaFontSize,
-                  color: semantic.colorPrimary,
+                  color: semantic.colorTextSecondary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
                 }}
@@ -135,13 +147,13 @@ const ResultItem: FC<Props> = ({
               <Typography.Text
                 style={{
                   fontSize: metaFontSize,
-                  fontWeight: 600,
-                  color: semantic.colorPrimary,
+                  fontWeight: 500,
+                  color: semantic.colorTextBase,
                   whiteSpace: "nowrap",
                   marginRight: 6,
                 }}
               >
-                {message.generateConfig?.modelName || ""}
+                <ModelName slug={message.generateConfig?.modelName} />
               </Typography.Text>
               <Typography.Text
                 style={{
@@ -245,13 +257,25 @@ const ResultItem: FC<Props> = ({
             align="middle"
             style={{ marginBottom: 8, flexWrap: "nowrap", overflowX: "auto" }}
           >
+            <Col flex="none" style={{ order: 99 }}>
+              <SwatchTag
+                type="image"
+                imageUrl={message.imageUrls?.[0]?.imageUrl}
+                code={jobCode(message.taskId ?? message.id)}
+                fontSize={metaFontSize}
+                border={semantic.colorBorder}
+                fill={semantic.colorBgTextActive}
+                ink={semantic.colorTextSecondary}
+              />
+            </Col>
             <Col flex="none">
               <Typography.Text
                 style={{
                   fontSize: metaFontSize,
-                  color: semantic.colorPrimary,
+                  color: semantic.colorTextSecondary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {message.resolution || ""}
@@ -272,13 +296,13 @@ const ResultItem: FC<Props> = ({
               <Typography.Text
                 style={{
                   fontSize: metaFontSize,
-                  fontWeight: 600,
-                  color: semantic.colorPrimary,
+                  fontWeight: 500,
+                  color: semantic.colorTextBase,
                   whiteSpace: "nowrap",
                   marginRight: 8,
                 }}
               >
-                {message.generateConfig?.modelName || ""}
+                <ModelName slug={message.generateConfig?.modelName} />
               </Typography.Text>
               <Typography.Text
                 style={{

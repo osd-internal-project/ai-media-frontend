@@ -11,7 +11,12 @@ import "./styles/styles.css";
 import UserServices from "../../../services/users.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import { axiosCore } from "@/app/lib/axios/axios";
-import HeaderGenerateImagePage from "./components/header-generate-image";
+import HeaderGenerateImagePage, { ProjectViewControls } from "./components/header-generate-image";
+import { typeColor } from "@/app/theme/typeColors";
+import { canvasBg } from "@/app/theme/surface";
+
+// Tabs that create media; each wears its type colour.
+const GENERATE_TYPES = new Set<string>(["image", "video", "audio", "omnihumen", "dreamactor"]);
 import { ModelSelectContext } from "./components/tab-layout/model-select-card";
 import type { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
@@ -28,7 +33,7 @@ import {
 import dynamic from "next/dynamic";
 import ImageFormRenderer from "./components/tabs/image-gen/image-form-renderer";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
@@ -193,24 +198,6 @@ const GenerateImagePage: FC = () => {
     };
   }, [normalizedAccessCodes, accessCodes]);
 
-  // Memoized tab icon colours — only changes with theme
-  const tabIconColorByType = useMemo<Record<GenerateTabKey, string>>(
-    () => ({
-      image: "#1890ff",
-      video: semantic.colorPrimary || "#1677ff",
-      omnihumen: semantic.colorSuccess || "#52c41a",
-      dreamactor: semantic.colorWarning || "#faad14",
-      audio: semantic.colorSuccess || "#13c2c2",
-      workflow: semantic.colorPrimary || "#7c3aed",
-      library: "#1890ff",
-      activity: semantic.colorTextSecondary || "#8c8c8c",
-      editor: semantic.colorInfo || "#1890ff",
-      "video-editor": semantic.colorInfo || "#1890ff",
-      social: semantic.colorPrimary || "#6F6ADE",
-    }),
-    [semantic],
-  );
-
   // ── Data fetching ──────────────────────────────────────────────────────────
 
   // Fetch project data and all AI models in parallel
@@ -313,46 +300,32 @@ const GenerateImagePage: FC = () => {
 
   const renderTabLabel = useCallback(
     (key: GenerateTabKey, text: string, icon: React.ReactNode) => {
-      const isDarkMode = mode === "dark";
       const isActive = activeKey === key;
-      const lightActive = !isDarkMode && isActive;
-      const activeTextColor = isDarkMode ? "#ffffff" : semantic.colorPrimaryText;
+      // Active state is the ink bar underneath; the label only changes colour and weight.
+      const color = isActive ? semantic.colorTextBase : semantic.colorTextSecondary;
       return (
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
             gap: isMobile ? 6 : 8,
-            padding: isMobile ? "4px 8px" : isTablet ? "5px 10px" : "6px 12px",
-            borderRadius: 8,
-            border: !isActive
-              ? "1px solid transparent"
-              : isDarkMode
-                ? `1px solid ${semantic.colorBorderSecondary || semantic.colorPrimary}`
-                : `1px solid ${semantic.colorPrimary}66`,
-            background: !isActive
-              ? "transparent"
-              : isDarkMode
-                ? semantic.colorBgElevated
-                : semantic.colorPrimaryBg,
-            color: isActive ? activeTextColor : semantic.colorTextSecondary,
-            transition: "all 0.2s ease",
+            padding: isMobile ? "4px 6px" : isTablet ? "5px 8px" : "6px 10px",
+            color,
           }}
         >
+          {/* Generate tabs wear their type colour at all times so the five kinds of work read apart. */}
           <span
             style={{
               display: "inline-flex",
-              color: isActive
-                ? tabIconColorByType[key]
-                : semantic.colorTextSecondary,
+              color: GENERATE_TYPES.has(key) ? typeColor(key, mode).mark : isActive ? semantic.colorPrimary : color,
             }}
           >
             {icon}
           </span>
           <Typography.Text
             style={{
-              color: isActive ? activeTextColor : semantic.colorTextSecondary,
-              fontWeight: lightActive ? 500 : undefined,
+              color,
+              fontWeight: isActive ? 500 : 400,
               marginBottom: 0,
               fontSize: isMobile ? 12 : isTablet ? 13 : 14,
             }}
@@ -362,13 +335,13 @@ const GenerateImagePage: FC = () => {
         </div>
       );
     },
-    [mode, activeKey, isMobile, isTablet, semantic, tabIconColorByType],
+    [activeKey, isMobile, isTablet, semantic, mode],
   );
 
   return (
     <div
       className="h-full min-h-0 flex flex-col overflow-hidden"
-      style={{ backgroundColor: getCanvasBg(mode) }}
+      style={{ backgroundColor: canvasBg(mode) }}
     >
       <HeaderGenerateImagePage
         teamView={teamView}
@@ -408,11 +381,15 @@ const GenerateImagePage: FC = () => {
             flex: 1,
             height: "100%",
             width: "100%",
-            // Light: panels sit on the canvas; dark keeps its container surface.
-            background: mode === "dark" ? semantic.colorBgContainer : getCanvasBg(mode),
+            // Panels float on a canvas one step darker, so the layers read apart.
+            background: canvasBg(mode),
             borderTop: `1px solid ${semantic.colorBorder}`,
             minHeight: 0,
             overflow: "hidden",
+            ["--tab-divider" as string]: semantic.colorBorder,
+            ["--tab-ink" as string]: GENERATE_TYPES.has(activeKey as string)
+              ? typeColor(activeKey as string, mode).mark
+              : semantic.colorPrimary,
           }}
           className="ant-tabs-full generate-tabs"
           activeKey={activeKey as Exclude<GenerateTabKey, "workflow" | "social" | "video-editor">}
@@ -428,6 +405,18 @@ const GenerateImagePage: FC = () => {
             scrollbarWidth: "thin",
             scrollBehavior: "smooth",
           }}
+          tabBarExtraContent={
+            isMobile ? undefined : {
+              right: (
+                <ProjectViewControls
+                  teamView={teamView}
+                  setTeamView={setTeamView}
+                  activeKey={activeKey}
+                  onChangeTab={(key) => onChangeTab(key as GenerateTabKey)}
+                />
+              ),
+            }
+          }
           onChange={(key) => onChangeTab(key as GenerateTabKey)}
           items={[
             ...(canAccessImage

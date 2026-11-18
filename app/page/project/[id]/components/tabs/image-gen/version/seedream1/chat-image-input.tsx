@@ -1,20 +1,20 @@
 import React from "react";
+import { formPanel } from "@/app/theme/surface";
 import {
   RectangleHorizontal,
   RectangleVertical,
-  Sparkles,
   Square,
   Zap,
   ZapIcon,
 } from "lucide-react";
-import { Button, Card, Flex, Form, FormInstance, type UploadFile } from "antd";
+import { Button, Flex, Form, FormInstance, type UploadFile } from "antd";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import {
   TPromptGuide,
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../../../tab-layout/generate-section/upload-section";
 import DrawToImage from "../../shared/draw-to-image";
 import PromptSection from "../../../../tab-layout/generate-section/prompt-section";
@@ -287,7 +287,7 @@ export default function ChatImageInput({
           <PromptSection
             generateType="image"
             semantic={semantic}
-            placeholder={"Describe what you want to image...\n\nBe specific about style, lighting, mood, and details for best results."}
+            placeholder={"Describe what you want to create...\n\nBe specific about style, lighting, mood, and details for best results."}
             required={true}
             projectId={projectId}
             maxLength={PROMPT_MAX_LENGTH}
@@ -329,38 +329,27 @@ export default function ChatImageInput({
         </Flex>
 
         <Flex
-          vertical
-          gap={8}
+          align="center"
+          gap={12}
           style={{
             position: "sticky",
             bottom: 0,
             zIndex: 10,
             borderTop: `1px solid ${semantic.colorBorder}`,
-            background: semantic.colorBgContainer,
+            background: formPanel(mode).bg,
             paddingInline: 12,
             paddingBlock: 12,
           }}
         >
-          <Card
-            data-tour="quota"
-            size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
+          <div data-tour="quota" style={{ flex: 1, minWidth: 0 }}>
             <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
+                            creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               cerrentUsedCredit={cerrentUsedCredit}
               size="small"
             />
-          </Card>
+          </div>
           <Button
-            block
             type="primary"
             data-tour="generate"
             htmlType="submit"
@@ -368,12 +357,10 @@ export default function ChatImageInput({
             style={{
               color: "white",
               border: "none",
-              height: 40,
-              borderRadius: 10,
+              height: 36,
+              borderRadius: 8,
               fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
             }}
-            icon={<Sparkles size={16} />}
             loading={submitting}
           >
             Generate x {selectedMaximumImage}

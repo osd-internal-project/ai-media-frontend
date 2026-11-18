@@ -191,28 +191,21 @@ export default function BrandKitSection({
       <Flex align="center" justify="space-between">
         <Text
           style={{
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: 1.2,
+            fontSize: 13,
+            fontWeight: 500,
             color: c.label,
-            textTransform: "uppercase",
           }}
         >
-          BRAND KIT
+          Brand kit
         </Text>
         <Switch checked={active} onChange={setActive} size="small" />
       </Flex>
 
       <Card
         size="small"
-        style={{
-          width: "100%",
-          borderRadius: 16,
-          marginTop: 4,
-        }}
-        bodyStyle={{
-          padding: 12,
-        }}
+        variant="borderless"
+        style={{ width: "100%", background: "transparent", boxShadow: "none" }}
+        styles={{ body: { padding: 0 } }}
       >
         <Flex align="center" justify="space-between">
           <Flex align="center" gap={10} style={{ minWidth: 0, flex: 1 }}>

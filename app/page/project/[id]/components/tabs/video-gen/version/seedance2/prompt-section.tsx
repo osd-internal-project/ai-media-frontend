@@ -63,10 +63,8 @@ export default function PromptSection({
       <Flex align="center" justify="space-between">
         <Typography.Text
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
+            fontSize: 13,
+            fontWeight: 500,
             color: semantic.colorTextSecondary,
           }}
         >

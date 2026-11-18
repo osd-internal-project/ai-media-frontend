@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { formPanel } from "@/app/theme/surface";
+import { useThemeMode } from "@/app/components/ThemeProvider";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button, Card, Col, Flex, Row, Slider, Typography } from "antd";
 
@@ -84,6 +86,10 @@ export default function SettingSection({
   extraContent,
 }: Props) {
   const [showSettings, setShowSettings] = useState(true);
+  const { mode } = useThemeMode();
+  // Chips sit one step above the panel at rest; the selected label uses the light indigo text step (about 6:1).
+  const chipRest = formPanel(mode).field;
+  const chipSelectedText = mode === "dark" ? "#A29EF2" : (semantic.colorPrimaryText ?? semantic.colorPrimary);
 
   // One row of option buttons; columns split evenly so 3 options fit one line.
   const renderChips = (
@@ -117,10 +123,10 @@ export default function SettingSection({
                 background:
                   selected === option
                     ? `${semantic.colorPrimary}1A`
-                    : "transparent",
+                    : chipRest,
                 color:
                   selected === option
-                    ? semantic.colorPrimary
+                    ? chipSelectedText
                     : semantic.colorTextSecondary,
               }}
             >
@@ -194,10 +200,8 @@ export default function SettingSection({
       >
         <Typography.Text
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
+            fontSize: 13,
+            fontWeight: 500,
             color: semantic.colorTextSecondary,
           }}
         >
@@ -216,14 +220,8 @@ export default function SettingSection({
       {showSettings && (
         <Card
           variant="borderless"
-          style={{
-            background: semantic.colorBgContainer,
-            border: `1px solid ${semantic.colorBorder}`,
-            borderRadius: 12,
-            minWidth: 0,
-            maxWidth: '100%',
-          }}
-          styles={{ body: { padding: 10 } }}
+          style={{ background: "transparent", boxShadow: "none", minWidth: 0, maxWidth: "100%" }}
+          styles={{ body: { padding: 0 } }}
         >
           <Flex vertical gap={14}>
             {groupModes && (
@@ -255,10 +253,10 @@ export default function SettingSection({
                           background:
                             groupMode === mode.id
                               ? `${semantic.colorPrimary}1A`
-                              : "transparent",
+                              : chipRest,
                           color:
                             groupMode === mode.id
-                              ? semantic.colorPrimary
+                              ? chipSelectedText
                               : semantic.colorTextSecondary,
                         }}
                       >
@@ -298,10 +296,10 @@ export default function SettingSection({
                           background:
                             selectedRatio === option.key
                               ? `${semantic.colorPrimary}1A`
-                              : "transparent",
+                              : chipRest,
                           color:
                             selectedRatio === option.key
-                              ? semantic.colorPrimary
+                              ? chipSelectedText
                               : semantic.colorTextSecondary,
                         }}
                       >

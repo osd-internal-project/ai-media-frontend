@@ -91,13 +91,13 @@ export default function UploadSection({
         return (
           <Flex
             key={file.uid}
-            style={{ position: "relative", width: 56, height: 56 }}
+            style={{ position: "relative", width: 48, height: 48 }}
           >
             <Card
               variant="borderless"
               style={{
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 borderRadius: 8,
                 overflow: "hidden",
                 border: `1px solid ${semantic.colorBorder}`,
@@ -112,8 +112,8 @@ export default function UploadSection({
                   src={source}
                   alt={file.name}
                   preview={false}
-                  width={56}
-                  height={56}
+                  width={48}
+                  height={48}
                   style={{ objectFit: "cover" }}
                 />
               ) : (
@@ -181,10 +181,10 @@ export default function UploadSection({
               align="center"
               justify="center"
               style={{
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 borderRadius: 8,
-                border: `2px dashed ${semantic.colorBorder}`,
+                border: `1px dashed ${semantic.colorBorder}`,
                 background: semantic.colorBgBase,
                 cursor: "pointer",
               }}
@@ -225,25 +225,22 @@ export default function UploadSection({
 
   return (
     <Flex vertical gap={8} className={className} data-tour="upload">
-      <Typography.Text
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-          color: semantic.colorTextSecondary,
-        }}
-      >
-        {sectionTitle}
-      </Typography.Text>
+      {/* With the default content the description already names the field, so it is the only label. */}
+      {renderContent ? (
+        <Typography.Text
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: semantic.colorTextSecondary,
+          }}
+        >
+          {sectionTitle}
+        </Typography.Text>
+      ) : null}
       <Card
         variant="borderless"
-        style={{
-          background: semantic.colorBgContainer,
-          border: `1px solid ${semantic.colorBorder}`,
-          borderRadius: 12,
-        }}
-        styles={{ body: { padding: 12 } }}
+        style={{ background: "transparent", boxShadow: "none" }}
+        styles={{ body: { padding: 0 } }}
       >
         {renderContent ? (
           renderContent
@@ -251,7 +248,7 @@ export default function UploadSection({
           <Flex vertical gap={8}>
             <Flex align="center" justify="space-between">
               <Typography.Text
-                style={{ fontSize: 12, color: semantic.colorTextSecondary }}
+                style={{ fontSize: 13, fontWeight: 500, color: semantic.colorTextSecondary }}
               >
                 {displayDescription}
               </Typography.Text>

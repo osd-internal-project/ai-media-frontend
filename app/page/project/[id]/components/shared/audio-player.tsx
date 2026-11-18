@@ -14,7 +14,7 @@ interface Props {
   compact?: boolean;
 }
 
-const BAR_COUNT = 40;
+const BAR_COUNT = 64;
 
 const formatTime = (sec: number) => {
   if (!Number.isFinite(sec) || sec < 0) return "0:00";
@@ -49,7 +49,7 @@ const AudioPlayer: React.FC<Props> = ({
   const [failed, setFailed] = useState(false);
   const bars = useMemo(() => barHeights(seed ?? src), [seed, src]);
   const progress = duration > 0 ? current / duration : 0;
-  const barAreaHeight = compact ? 28 : 36;
+  const barAreaHeight = compact ? 24 : 28;
 
   const toggle = () => {
     const el = audioRef.current;
@@ -102,7 +102,7 @@ const AudioPlayer: React.FC<Props> = ({
       <Button
         type="primary"
         shape="circle"
-        size={compact ? "middle" : "large"}
+        size="middle"
         aria-label={playing ? "Pause" : `Play ${ariaLabel}`}
         disabled={failed}
         icon={
@@ -113,7 +113,7 @@ const AudioPlayer: React.FC<Props> = ({
           )
         }
         onClick={toggle}
-        style={{ flexShrink: 0 }}
+        style={{ flexShrink: 0, width: compact ? 32 : 36, height: compact ? 32 : 36, minWidth: 0 }}
       />
       {failed ? (
         <Typography.Text style={{ color: token.colorError, fontSize: 13 }}>
@@ -140,7 +140,8 @@ const AudioPlayer: React.FC<Props> = ({
               height: barAreaHeight,
               display: "flex",
               alignItems: "center",
-              gap: 2,
+              // Thin fixed bars spread across the row; width is constant so the pitch adapts.
+              justifyContent: "space-between",
               cursor: duration ? "pointer" : "default",
               outline: "none",
             }}
@@ -149,13 +150,13 @@ const AudioPlayer: React.FC<Props> = ({
               <span
                 key={i}
                 style={{
-                  flex: 1,
+                  flex: "0 0 3px",
                   height: `${h * 100}%`,
-                  borderRadius: 2,
+                  borderRadius: 999,
                   background:
                     (i + 0.5) / BAR_COUNT <= progress
                       ? token.colorPrimary
-                      : token.colorFillSecondary,
+                      : token.colorTextQuaternary,
                   transition: "background 120ms",
                 }}
               />
@@ -164,7 +165,7 @@ const AudioPlayer: React.FC<Props> = ({
           <Typography.Text
             style={{
               flexShrink: 0,
-              fontSize: compact ? 11 : 12,
+              fontSize: 12,
               color: token.colorTextSecondary,
               fontVariantNumeric: "tabular-nums",
             }}

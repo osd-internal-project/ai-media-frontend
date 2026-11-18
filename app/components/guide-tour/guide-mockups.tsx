@@ -97,7 +97,7 @@ export function GenerateMockup({ stepIds, marker }: GuideMockupProps) {
             style={box({
               height: 18,
               border: "none",
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${semantic.colorInfo} 100%)`,
+              background: semantic.colorPrimary,
             })}
           >
             <Marker>{marker("generate")}</Marker>

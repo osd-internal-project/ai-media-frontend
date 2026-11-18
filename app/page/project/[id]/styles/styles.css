@@ -46,15 +46,30 @@
 
 .ant-tabs-full.generate-tabs .ant-tabs-nav .ant-tabs-tab {
   margin-right: 2px !important;
-  padding: 8px 0 !important;
+  padding: 5px 0 !important;
 }
 
 .ant-tabs-full.generate-tabs .ant-tabs-nav .ant-tabs-tab:last-child {
   margin-right: 0 !important;
 }
 
-.ant-tabs-full.generate-tabs .ant-tabs-ink-bar {
-  display: none !important;
+/* Tabs fall into create · library · tools; a hairline marks where each group starts. */
+.ant-tabs-full.generate-tabs .ant-tabs-tab[data-node-key="library"],
+.ant-tabs-full.generate-tabs .ant-tabs-tab[data-node-key="activity"] + .ant-tabs-tab {
+  position: relative;
+  margin-left: 13px !important;
+}
+
+.ant-tabs-full.generate-tabs .ant-tabs-tab[data-node-key="library"]::before,
+.ant-tabs-full.generate-tabs .ant-tabs-tab[data-node-key="activity"] + .ant-tabs-tab::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  height: 20px;
+  width: 1px;
+  transform: translateY(-50%);
+  background: var(--tab-divider);
 }
 
 .ant-tabs-full .ant-tabs-content-holder,
@@ -140,4 +155,13 @@
 }
 .action-bar-btn.default-btn:hover {
   background: rgba(80,80,80,0.95) !important;
+}
+/* The active tab's underline takes the colour of the kind of work it makes. */
+.ant-tabs-full.generate-tabs .ant-tabs-ink-bar {
+  background: var(--tab-ink) !important;
+}
+
+/* Workspace primary buttons sit flat: no hard offset ring under Generate. */
+.ant-tabs-full .ant-btn-primary {
+  box-shadow: none !important;
 }

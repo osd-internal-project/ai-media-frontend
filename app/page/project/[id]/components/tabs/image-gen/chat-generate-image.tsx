@@ -7,6 +7,7 @@ import React, {
   type FC,
   useLayoutEffect,
 } from "react";
+import { canvasBg } from "@/app/theme/surface";
 
 import {
   Avatar,
@@ -63,7 +64,7 @@ import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import AiImageLoader from "@/app/components/AiImageLoader/AiImageLoader";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
+import { getThemeConfig, aiCaveColors } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
@@ -1187,7 +1188,7 @@ const ChatGenerateImage: FC<
       style={{
         height: "100%",
         minHeight: 0,
-        background: getCanvasBg(mode),
+        background: canvasBg(mode),
       }}
     >
       {contextHolder}

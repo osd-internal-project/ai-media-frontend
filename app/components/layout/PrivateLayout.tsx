@@ -16,7 +16,8 @@ import {
   Col,
   Result,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { PageHeaderProvider, type PageHeaderInfo } from "../../context/PageHeaderContext";
 import { notFound, usePathname, useRouter } from "next/navigation";
 import { renderMenuItems, MenuSider } from "../../config/menu";
 import Sider from "antd/es/layout/Sider";
@@ -103,6 +104,8 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [accessCodes, setAccessCodes] = useState<string[] | undefined>();
+  const [pageHeader, setPageHeader] = useState<PageHeaderInfo>(null);
+  const pageHeaderValue = useMemo(() => ({ pageHeader, setPageHeader }), [pageHeader]);
 
   const [teamOrganizations, setTeamOrganizations] = useState<IOrganization[]>(
     [],
@@ -568,6 +571,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             </div>
           </>
         ) : null}
+        <PageHeaderProvider value={pageHeaderValue}>
         <Layout className="flex-1 w-full h-full overflow-hidden">
           {/* <PrivateNavigation
               organizationRole={organizationRole}
@@ -626,6 +630,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
             </PrivateContent>
           </div>
         </Layout>
+        </PageHeaderProvider>
       </Layout>
     </Spin>
     //   <style>{`

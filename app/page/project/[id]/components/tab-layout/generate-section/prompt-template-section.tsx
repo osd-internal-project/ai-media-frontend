@@ -24,13 +24,23 @@ export default function PromptTemplateSection({
 
   return (
     <>
+      {/* Compact but unmistakably a button: indigo outline and tint, not a bare text link. */}
       <Button
         data-tour="template"
-        block
+        size="small"
         icon={<Presentation size={14} />}
         onClick={handleOpenModal}
         disabled={!organizationId || !selectedModel}
-        style={{padding:16}}
+        style={{
+          alignSelf: "flex-start",
+          height: 32,
+          paddingInline: 12,
+          fontSize: 13,
+          fontWeight: 500,
+          color: "#A29EF2",
+          background: "rgba(111, 106, 222, 0.10)",
+          borderColor: "rgba(111, 106, 222, 0.45)",
+        }}
       >
         {buttonText}
       </Button>

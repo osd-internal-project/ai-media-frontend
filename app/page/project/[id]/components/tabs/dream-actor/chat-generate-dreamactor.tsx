@@ -7,6 +7,7 @@ import React, {
   type FC,
   useLayoutEffect,
 } from "react";
+import { canvasBg } from "@/app/theme/surface";
 import {
   Card,
   Flex,
@@ -37,7 +38,7 @@ import type {
   DreamactorFormState,
 } from "../../tab-layout/types/generator-config.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import DreamactorResultItem from "./shared/dream-item-result";
@@ -1222,7 +1223,7 @@ const ChatGenerateDreamactor: FC<
       style={{
         height: "100%",
         minHeight: 0,
-        background: getCanvasBg(mode),
+        background: canvasBg(mode),
       }}
     >
       {contextHolder}

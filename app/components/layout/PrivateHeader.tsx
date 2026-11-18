@@ -5,21 +5,22 @@ import type { CSSProperties } from "react";
 import {
   Avatar,
   Button,
-  Card,
   Divider,
   Dropdown,
   Layout,
   Menu,
   Progress,
   Space,
+  Tooltip,
   Typography,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
   CreditCardOutlined,
   DownOutlined,
-  HomeOutlined,
   LogoutOutlined,
+  MoonOutlined,
+  SunOutlined,
   MenuOutlined,
   SettingOutlined,
   UserOutlined,
@@ -34,6 +35,8 @@ import { canSeeBilling } from "@/app/utils/permissions";
 import ThemeToggleButton from "../ThemeToggleButton";
 import InvitationBell from "./InvitationBell";
 import { useThemeMode } from "../ThemeProvider";
+import { canvasBg, overlayShadow } from "@/app/theme/surface";
+import { usePageHeader } from "@/app/context/PageHeaderContext";
 import "./LayoutStyle.css";
 import { User ,Users} from "lucide-react";
 import Link from "next/link";
@@ -72,9 +75,10 @@ export function PrivateHeader({
   handleOpenCouponModal,
 }: HeaderProps) {
   const router = useRouter();
-  const { mode } = useThemeMode();
+  const { mode, toggleMode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   const { isMobile, isTablet } = useResponsive();
+  const { pageHeader } = usePageHeader();
 
   const [orgOpen, setOrgOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -136,6 +140,13 @@ export function PrivateHeader({
     //   onClick: handleOpenCouponModal,
     // },
 
+    // Phones: the bar has no room, so these live in the avatar menu.
+    ...(isMobile && showBilling
+      ? [{ key: "plans", icon: <CreditCardOutlined />, label: "Change Package", onClick: () => router.push("/page/plans") }]
+      : []),
+    ...(isMobile
+      ? [{ key: "theme", icon: mode === "dark" ? <SunOutlined /> : <MoonOutlined />, label: mode === "dark" ? "Light mode" : "Dark mode", onClick: toggleMode }]
+      : []),
     { type: "divider" as const },
     {
       key: "logout",
@@ -148,8 +159,7 @@ export function PrivateHeader({
   const dropdownPanelStyle: CSSProperties = {
     background: semantic.colorBgElevated ?? semantic.colorBgContainer,
     borderRadius: 8,
-    boxShadow:
-      "0 6px 16px 0 rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05)",
+    boxShadow: overlayShadow(mode),
     maxHeight: 500,
     display: "flex",
     flexDirection: "column",
@@ -167,8 +177,12 @@ export function PrivateHeader({
     <Header
       className="private-header-shell"
       style={{
-        height: isMobile ? 54 : isTablet ? 58 : 62,
-        borderBottom: `1px solid ${semantic.colorBorder}`,
+        height: isMobile ? 50 : 52,
+        // antd's Header sets line-height 64px, which made every item taller than this 52px bar.
+        lineHeight: "normal",
+        // Same as the page canvas so the work panels, not the chrome, read as the front layer.
+        background: canvasBg(mode),
+        borderBottom: `1px solid ${semantic.colorBorderSecondary ?? semantic.colorBorder}`,
         padding: isMobile ? "0 8px" : isTablet ? "0 14px" : "0 20px",
         display: "flex",
         justifyContent: "space-between",
@@ -225,119 +239,142 @@ export function PrivateHeader({
             type="text"
             className="private-header-org-btn"
             data-tour="org-switcher"
+            aria-label={`Organization: ${activeOrg?.name ?? ""}`}
             style={{
-              padding: isMobile ? "0 2px" : isTablet ? "0 10px" : "0 16px",
-              minWidth: isMobile ? 40 : undefined,
-              height: isMobile ? 40 : isTablet ? 44 : 50,
+              padding: isMobile ? "0 4px" : "0 8px",
+              height: 32,
               display: "flex",
               alignItems: "center",
-              borderRadius: 10,
+              gap: 8,
+              borderRadius: 8,
+              // Fill + border + chevron: the switcher reads as a button before hover; the project beside it is a plain label.
+              background: semantic.colorBgTextActive,
+              border: `1px solid ${semantic.colorBorder}`,
             }}
           >
-            <Space size={isMobile ? 6 : isTablet ? 8 : 12} align="center">
-              <Avatar
-                size={isMobile ? 28 : 32}
-                icon={<HomeOutlined />}
-                style={{
-                  backgroundColor: semantic.colorBgTextActive,
-                  color: semantic.colorPrimary,
-                }}
-              />
-              {!isMobile ? (
-                <>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                      lineHeight: 1.2,
-                      maxWidth: 220,
-                    }}
-                  >
-                    <Typography.Text
-                      type="secondary"
-                      style={{
-                        fontSize: 12,
-                        color: semantic.colorTextSecondary,
-                      }}
-                    >
-                      ORGANIZATION
-                    </Typography.Text>
-                    <Typography.Text
-                      strong
-                      style={{ color: semantic.colorTextBase }}
-                    >
-                      {activeOrg?.name}
-                    </Typography.Text>
-                  </div>
-                  <DownOutlined
-                    style={{ fontSize: 14, color: semantic.colorTextSecondary }}
-                  />
-                </>
-              ) : null}
-            </Space>
+            {/* Org initial as a quiet mark; the org is context, the open project is the focus. */}
+            <span
+              aria-hidden
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 6,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 600,
+                background: semantic.colorBgTextActive,
+                color: semantic.colorTextBase,
+              }}
+            >
+              {(activeOrg?.name ?? "?").trim().charAt(0).toUpperCase()}
+            </span>
+            {!isMobile ? (
+              <>
+                <Typography.Text
+                  ellipsis
+                  style={{
+                    display: "inline-block",
+                    lineHeight: "20px",
+                    verticalAlign: "middle",
+                    maxWidth: 200,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: semantic.colorTextBase,
+                  }}
+                >
+                  {activeOrg?.name}
+                </Typography.Text>
+                <DownOutlined style={{ fontSize: 10, marginInlineStart: 2, color: semantic.colorTextSecondary }} />
+              </>
+            ) : null}
           </Button>
         </Dropdown>
+
+        {pageHeader && !isMobile ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span aria-hidden style={{ fontSize: 16, color: semantic.colorTextQuaternary ?? semantic.colorTextSecondary }}>
+              /
+            </span>
+            <Tooltip title={pageHeader.subtitle}>
+              <Typography.Text
+                ellipsis
+                style={{
+                  display: "block",
+                  lineHeight: "20px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: semantic.colorTextBase,
+                  maxWidth: isTablet ? 180 : 320,
+                }}
+              >
+                {pageHeader.name}
+              </Typography.Text>
+            </Tooltip>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: semantic.colorTextSecondary }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 999,
+                  background:
+                    pageHeader.status === "Deleted" ? semantic.colorError : semantic.colorSuccess,
+                }}
+              />
+              {pageHeader.status}
+            </span>
+          </div>
+        ) : null}
       </Space>
 
       <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
-        {showBilling ? (
+        {showBilling && !isMobile ? (
           <Link href="/page/plans">
-            <Button type="primary" ghost  style={{ borderColor: "#6C6AC4", color: "#6C6AC4" }}>
+            <Button style={{ height: 32, paddingInline: isMobile ? 8 : 12, fontSize: isMobile ? 12 : 13 }}>
               Change Package
             </Button>
           </Link>
         ) : null}
         {showBilling ? (
-        <Card
-          hoverable
-          className="private-header-balance-card"
-          styles={{
-            body: {
-              padding: isMobile ? "2px 6px" : isTablet ? "3px 8px" : "4px 12px",
+          <div
+            style={{
+              height: 32,
               display: "flex",
               alignItems: "center",
-              gap: isMobile ? 6 : 8,
-            },
-          }}
-          style={{
-            borderRadius: 10,
-            borderColor: semantic.colorBorder,
-            boxShadow: "none",
-            minWidth: isMobile ? 78 : isTablet ? 136 : 180,
-            maxWidth: 240,
-            background: semantic.colorBgContainer,
-          }}
-        >
-          <Space align="center" size={isMobile ? 4 : 6}>
-            <CreditCardOutlined style={{ color: semantic.colorTextBase }} />
+              gap: 8,
+              paddingInline: isMobile ? 8 : 10,
+              borderRadius: 8,
+              border: `1px solid ${semantic.colorBorder}`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <CreditCardOutlined style={{ color: semantic.colorTextSecondary }} />
             <Text
               style={{
                 color: semantic.colorTextBase,
-                fontSize: isMobile ? 11 : 13,
+                fontSize: isMobile ? 12 : 13,
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
               }}
             >
-              {formatCompactNumber(creditBalance?.currentCycleBalance)}+{" "}
+              {formatCompactNumber(creditBalance?.currentCycleBalance)} +{" "}
               {formatCompactNumber(creditBalance?.onTopBalance)}
             </Text>
             {!isMobile && !isTablet ? (
-              <>
-                <Divider
-                  type="vertical"
-                  style={{ height: 24, borderColor: semantic.colorBorder }}
-                />
-                <Progress
-                  percent={tokenPercentage}
-                  showInfo={false}
-                  strokeColor={semantic.colorPrimary}
-                  trailColor={semantic.colorFillSecondary ?? semantic.colorPrimaryBg}
-                  size="small"
-                  style={{ width: 100, marginBottom: 0 }}
-                />
-              </>
+              <Progress
+                percent={tokenPercentage}
+                showInfo={false}
+                // Cyan marks what remains; indigo stays reserved for actions.
+                strokeColor={semantic.colorInfoText ?? semantic.colorInfo}
+                // Dark mode has no colorFillSecondary; a purple fallback made an empty bar look full.
+                trailColor={semantic.colorFillSecondary ?? semantic.colorBorder}
+                size="small"
+                style={{ width: 64, marginBottom: 0, lineHeight: 0 }}
+              />
             ) : null}
-          </Space>
-        </Card>
+          </div>
         ) : null}
 
         <div className="private-header-action-wrap">
@@ -345,7 +382,7 @@ export function PrivateHeader({
         </div>
 
         <div className="private-header-action-wrap">
-          <ThemeToggleButton />
+          {isMobile ? null : <ThemeToggleButton />}
         </div>
 
         <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
@@ -361,7 +398,7 @@ export function PrivateHeader({
             <Space size={isMobile ? 6 : 8}>
               <Avatar
                 size={isMobile ? 30 : 32}
-                style={{ backgroundColor: semantic.colorPrimary }}
+                style={{ backgroundColor: semantic.colorPrimary, fontWeight: 500 }}
               >
                 {user?.fullname
                   ? user.fullname

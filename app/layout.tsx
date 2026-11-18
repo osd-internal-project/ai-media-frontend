@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import SessionProvider from "./components/SessionProvider";
 import { ThemeProvider, type ThemeMode } from "./components/ThemeProvider";
 import "./globals.css";
+import { appSans, brandSans } from "./theme/fonts";
 export const metadata = {
   title: "AI CAVE",
   description: "AI-Media Application",
@@ -21,7 +22,7 @@ export default async function RootLayout({
     (await cookies()).get("theme")?.value === "light" ? "light" : "dark";
 
   return (
-    <html lang="en" className={`theme-${initialMode}`}>
+    <html lang="en" className={`theme-${initialMode} ${appSans.variable} ${brandSans.variable}`}>
       <body>
         <ThemeProvider initialMode={initialMode}>
           <SessionProvider>{children}</SessionProvider>

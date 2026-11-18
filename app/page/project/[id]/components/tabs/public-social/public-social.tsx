@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { canvasBg } from "@/app/theme/surface";
 import {
   Alert,
   Badge,
@@ -21,7 +22,7 @@ import {
   SocialAccount,
 } from "@/app/common/activity-share.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { usePublicSocial } from "./usePublicSocial";
 import ShareTaskList from "./share-task-list";
 import ApprovalQueue from "./approval-queue";
@@ -173,7 +174,7 @@ const PublicSocial: React.FC<PublicSocialProps> = ({
   return (
     <div
       className="h-full overflow-auto"
-      style={{ background: getCanvasBg(mode), padding: 16 }}
+      style={{ background: canvasBg(mode), padding: 16 }}
     >
       <Flex justify="space-between" align="center" wrap gap={12}>
         <Segmented

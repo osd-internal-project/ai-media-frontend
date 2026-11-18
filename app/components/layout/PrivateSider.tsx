@@ -1,5 +1,5 @@
 import React from "react";
-import { Layout, Menu, Image as AntdImage, Button } from "antd";
+import { ConfigProvider, Layout, Menu, Image as AntdImage, Button } from "antd";
 import { MenuFoldOutlined } from "@ant-design/icons";
 import { MenuSider, renderMenuItems } from "@/app/config/menu";
 import { useThemeMode } from "../ThemeProvider";
@@ -72,6 +72,17 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
   ];
 
   return (
+    // Indigo owns the nav: the selected page is a solid brand block; the rest stay quiet ink.
+    <ConfigProvider
+      theme={{
+        components: {
+          Menu: {
+            itemColor: semantic.colorTextSecondary,
+            itemHoverColor: semantic.colorTextBase,
+          },
+        },
+      }}
+    >
     <Sider
       className="private-sider-shell"
       width={92}
@@ -83,9 +94,10 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
         display: "flex",
         flexDirection: "column",
         height: "100vh",
-        padding: "0 10px",
+        padding: "0 6px",
         position: "relative",
         transition: "background 0.2s cubic-bezier(0.4,0,0.2,1)",
+        ["--sider-accent" as string]: semantic.colorPrimary,
       }}
     >
       {/* Logo */}
@@ -221,6 +233,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
         </div>
       ) : null}
     </Sider>
+    </ConfigProvider>
   );
 };
 

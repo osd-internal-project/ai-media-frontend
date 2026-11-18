@@ -1,4 +1,5 @@
 import React from "react";
+import { formPanel } from "@/app/theme/surface";
 import {
   Button,
   Card,
@@ -12,10 +13,10 @@ import {
   Typography,
   Upload,
 } from "antd";
-import { AudioLines, ImagePlus, Plus, Sparkles, X } from "lucide-react";
+import { AudioLines, ImagePlus, Plus, X } from "lucide-react";
 import Quata from "@/app/page/project/component/quata";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import PromptSection from "../../../video-gen/version/seedance2/prompt-section";
 import type { AudioInputProps } from "../../chat-generate-audio";
 import type {
@@ -83,11 +84,8 @@ export default function ChatAudioInput(props: AudioInputProps) {
   };
 
   const labelStyle = { fontSize: 12, color: semantic.colorTextSecondary };
-  const cardStyle = {
-    borderRadius: 12,
-    borderColor: semantic.colorBorder,
-    background: semantic.colorBgContainer,
-  };
+  // Sections sit flat in the one form panel; spacing, not borders, separates them.
+  const cardStyle = { border: "none", background: "transparent", boxShadow: "none" };
 
   const mentionOptions = references.map((_, i) => ({
     value: `Audio${i + 1}`,
@@ -164,7 +162,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             paddingBlock: 12,
           }}
         >
-          <Card size="small" data-tour="voice" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="voice" style={cardStyle} styles={{ body: { padding: 0 } }}>
             <Flex vertical gap={10}>
               <Flex justify="space-between" align="center">
                 <Typography.Text strong style={{ fontSize: 13 }}>
@@ -226,7 +224,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             </Flex>
           </Card>
 
-          <Card size="small" data-tour="ref-image" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="ref-image" style={cardStyle} styles={{ body: { padding: 0 } }}>
             <Flex vertical gap={8}>
               <Typography.Text strong style={{ fontSize: 13 }}>
                 Reference image
@@ -288,7 +286,7 @@ export default function ChatAudioInput(props: AudioInputProps) {
             projectId={projectId}
           />
 
-          <Card size="small" data-tour="output" style={cardStyle} styles={{ body: { padding: 12 } }}>
+          <Card size="small" data-tour="output" style={cardStyle} styles={{ body: { padding: 0 } }}>
             <Flex vertical gap={12}>
               <Typography.Text strong style={{ fontSize: 13 }}>
                 Output
@@ -367,40 +365,27 @@ export default function ChatAudioInput(props: AudioInputProps) {
         </Flex>
 
         <Flex
-          vertical
-          gap={8}
+          align="center"
+          gap={12}
           style={{
             position: "sticky",
             bottom: 0,
             zIndex: 10,
             borderTop: `1px solid ${semantic.colorBorder}`,
-            background: semantic.colorBgContainer,
+            background: formPanel(mode).bg,
             paddingInline: 12,
             paddingBlock: 12,
           }}
         >
-          <Card
-            data-tour="quota"
-            size="small"
-            style={{
-              borderRadius: 12,
-              borderColor: semantic.colorBorder,
-              background: semantic.colorBgElevated,
-              width: "100%",
-              minWidth: 0,
-            }}
-            styles={{ body: { padding: "8px 12px" } }}
-          >
+          <div data-tour="quota" style={{ flex: 1, minWidth: 0 }}>
             <Quata
-              title="Quota"
-              creditUsed={usedCredit.used || 0}
+                            creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"
               cerrentUsedCredit={cerrentUsedCredit}
             />
-          </Card>
+          </div>
           <Button
-            block
             type="primary"
             data-tour="generate"
             htmlType="submit"
@@ -408,12 +393,10 @@ export default function ChatAudioInput(props: AudioInputProps) {
             style={{
               color: "white",
               border: "none",
-              height: 40,
-              borderRadius: 10,
+              height: 36,
+              borderRadius: 8,
               fontWeight: 600,
-              background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
             }}
-            icon={<Sparkles size={16} />}
             loading={submitting}
           >
             Generate Audio

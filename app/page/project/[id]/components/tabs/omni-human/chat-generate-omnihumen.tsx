@@ -6,6 +6,7 @@ import React, {
   type FC,
   useLayoutEffect,
 } from "react";
+import { canvasBg } from "@/app/theme/surface";
 import {
   Flex,
   Form,
@@ -29,7 +30,7 @@ import LogsServices from "@/app/services/logs.service";
 import { useSession } from "next-auth/react";
 import type { OmniModelConfig, OmniFormState } from "../../tab-layout/types/generator-config.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import GenerateTwoPaneLayout from "../../tab-layout/generate-two-pane-layout";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import OmniResultItem from "./shared/omni-result";
@@ -1204,7 +1205,7 @@ const ChatGenerateOmnihumen: FC<
       style={{
         height: "100%",
         minHeight: 0,
-        background: getCanvasBg(mode),
+        background: canvasBg(mode),
       }}
     >
       {contextHolder}

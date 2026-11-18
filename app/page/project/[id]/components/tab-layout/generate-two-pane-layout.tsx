@@ -5,10 +5,11 @@ import { LoadingOutlined, SendOutlined } from "@ant-design/icons";
 import { PermissionGuard } from "@/app/components/PermissionGuard";
 import { projectPermissions } from "@/app/utils/permissions";
 
-import { PictureOutlined, VideoCameraOutlined } from "@ant-design/icons";
-import { Sparkle } from "lucide-react";
-import { aiCaveColors } from "@/app/theme/themeConfig";
+import { MessageOutlined, PictureOutlined, PlaySquareOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { AudioLines } from "lucide-react";
 import useResponsive from "@/app/hooks/useResponsive";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { formPanel } from "@/app/theme/surface";
 import ModelSelectCard from "./model-select-card";
 
 type EmptyAction = {
@@ -66,19 +67,8 @@ export default function GenerateTwoPaneLayout({
   const [showLeftOverlay, setShowLeftOverlay] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const { isTablet } = useResponsive();
+  const { mode } = useThemeMode();
 
-// Utility to convert hex color to rgba
-function hexToRgba(hex: string, alpha: number) {
-  let c = hex.replace('#', '');
-  if (c.length === 3) {
-    c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
-  }
-  const num = parseInt(c, 16);
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return `rgba(${r},${g},${b},${alpha})`;
-  }
   
   // Handler: show overlay when input focused
   const handleInputFocus = () => {
@@ -235,7 +225,7 @@ useEffect(() => {
         height: "100%",
         minHeight: 0,
         margin: 0,
-        padding: isMobile ? 8 : isTablet ? 12 : 20,
+        padding: isMobile ? 8 : 12,
       }}
     >
       {/* LEFT PANE: Desktop = sidebar, Mobile = overlay+input */}
@@ -244,17 +234,20 @@ useEffect(() => {
           flex={isTablet ? "0 0 clamp(240px, 30vw, 280px)" : "0 0 clamp(280px, 24vw, 360px)"}
           style={{ minHeight: 0, height: "100%", paddingInline: 0, display: "flex", flexDirection: "column", gap: 12 }}
         >
-          <ModelSelectCard semantic={semantic} isMobile={false} />
           <Card
             style={{
               flex: 1,
               minHeight: 0,
               overflow: "hidden",
-              background: semantic.colorBgContainer,
-              borderColor: semantic.colorBorder,
+              // Indigo-tinted panel with a brand edge and a deep shadow: the form reads as its own surface.
+              background: formPanel(mode).bg,
+              border: `1px solid ${formPanel(mode).border}`,
+              boxShadow: formPanel(mode).shadow,
             }}
-            styles={{ body: { height: "100%", padding: 0 } }}
+            styles={{ body: { height: "100%", padding: 0, display: "flex", flexDirection: "column" } }}
           >
+            {/* Model is the first field of the one form panel, not a card of its own. */}
+            <ModelSelectCard semantic={semantic} isMobile={false} />
             <PermissionGuard
               roles={projectPermissions.useChat}
               userRole={projectRole}
@@ -272,7 +265,7 @@ useEffect(() => {
                 </Card>
               }
             >
-              {leftPanel}
+              <div style={{ flex: 1, minHeight: 0 }}>{leftPanel}</div>
             </PermissionGuard>
           </Card>
         </Col>
@@ -476,7 +469,6 @@ useEffect(() => {
         style={{
           flexShrink: 0,
           boxShadow: "none",
-          background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`
         }}
       />
     </div>
@@ -492,7 +484,9 @@ useEffect(() => {
             height: "100%",
             minHeight: 0,
             overflow: "hidden",
+            // Results sit straight on the canvas (user choice); only the form is a panel.
             background: "transparent",
+            border: "none",
             boxShadow: "none",
           }}
           styles={{
@@ -532,24 +526,18 @@ useEffect(() => {
             {(!loading && !isFetchingHistory && messagesLength === 0) ? (
               <Flex align="center" justify="center" style={{ height: "100%", paddingInline: 24 }}>
                 <Flex vertical align="center" style={{ textAlign: "center", maxWidth: 320 }}>
-                  <div style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 16,
-                    background: `linear-gradient(135deg, ${hexToRgba(semantic.colorPrimary, 0.25)} 0%, ${hexToRgba(semantic.colorPrimary, 0.25)} 50%, ${hexToRgba(aiCaveColors.secondary, 0.25)} 100%)`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 16,
-                  }}>
+                  {/* Same icon as the active tab, so the empty pane reads as part of it. */}
+                  <div style={{ fontSize: 32, lineHeight: 1, color: semantic.colorTextSecondary, marginBottom: 16 }}>
                     {tabKey === "image" ? (
-                      <PictureOutlined style={{ fontSize: 32, color: semantic.colorPrimary }} />
+                      <PictureOutlined />
                     ) : tabKey === "video" ? (
-                      <VideoCameraOutlined style={{ fontSize: 32, color: semantic.colorPrimary }} />
+                      <VideoCameraOutlined />
                     ) : tabKey === "omnihumen" ? (
-                      <Sparkle style={{ fontSize: 32, color: semantic.colorPrimary }} />
+                      <MessageOutlined />
+                    ) : tabKey === "audio" ? (
+                      <AudioLines size={32} />
                     ) : (
-                      <Sparkle style={{ fontSize: 32, color: semantic.colorPrimary }} />
+                      <PlaySquareOutlined />
                     )}
                   </div>
                   <Typography.Title level={4} style={{ marginBottom: 8 }}>

@@ -6,6 +6,7 @@ import React, {
   type FC,
   useLayoutEffect,
 } from "react";
+import { canvasBg } from "@/app/theme/surface";
 import {
   Flex,
   Form,
@@ -28,7 +29,7 @@ import { useWebSocket } from "@/app/hooks/useWebsocket";
 import PromptGuideTypeServices from "@/app/services/prompt-guide-type.service";
 import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import { RcFile, UploadChangeParam } from "antd/es/upload";
 import VideoResultItem from "./shared/result-item";
 import ResultHeader from "./shared/result-header";
@@ -1314,7 +1315,7 @@ const ChatGenerateVideo: FC<Props> = ({
   return (
     <Flex
       vertical
-      style={{ height: "100%", minHeight: 0, background: getCanvasBg(mode) }}
+      style={{ height: "100%", minHeight: 0, background: canvasBg(mode) }}
     >
       {contextHolder}
       {contextHolderNoti}

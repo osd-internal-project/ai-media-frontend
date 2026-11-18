@@ -1,4 +1,5 @@
 import React, { FC, useState, useRef, useEffect } from "react";
+import { ModelName } from "../../../tab-layout/model-select-card";
 import useResponsive from "@/app/hooks/useResponsive";
 import { Card, Space, Typography, Button, Divider, Row, Col } from "antd";
 import GenerationProgress, {
@@ -12,6 +13,7 @@ import VideoItem from "./video-player";
 import ImageSmartReference from "../../image-gen/shared/image-smart-reference";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { Volume1, VolumeX, User, Trash2 } from "lucide-react";
+import SwatchTag, { jobCode } from "../../../shared/swatch-tag";
 
 interface Props {
   message: Message;
@@ -86,11 +88,11 @@ const VideoResultItem: FC<Props> = ({
         <div style={{ marginBottom: 8, width: "100%" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
             <div style={{ display: "flex", flexDirection: "row", gap: 6, width: "100%", flexWrap: "wrap" }}>
-              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorPrimary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap" }}>{message.resolution || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.ratio || ""}</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.duration || ""} s</Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, whiteSpace: "nowrap" }}>{message.generateConfig?.generateAudio ? (<Volume1 color="green" size={metaFontSize} />) : (<VolumeX size={metaFontSize} />)}</Typography.Text>
-              <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 600, color: semantic.colorPrimary, whiteSpace: "nowrap", marginRight: 6 }}>{message.generateConfig?.modelName || ""}</Typography.Text>
+              <Typography.Text style={{ fontSize: metaFontSize, fontWeight: 500, color: semantic.colorTextBase, whiteSpace: "nowrap", marginRight: 6 }}><ModelName slug={message.generateConfig?.modelName} /></Typography.Text>
               <Typography.Text style={{ fontSize: metaFontSize, color: semantic.colorTextSecondary, fontWeight: 400, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle" }}>
                   <User size={metaFontSize} style={{ marginRight: 2, verticalAlign: "middle" }} />
@@ -158,11 +160,22 @@ const VideoResultItem: FC<Props> = ({
       ) : (
         <>
           <Row gutter={8} align="middle" style={{ marginBottom: 8, flexWrap: "nowrap", overflowX: "auto" }}>
+            <Col flex="none" style={{ order: 99 }}>
+              <SwatchTag
+                type="video"
+                imageUrl={message.imageUrls?.[0]?.thumbnailUrl}
+                code={jobCode(message.taskId ?? message.id)}
+                fontSize={metaFontSize}
+                border={semantic.colorBorder}
+                fill={semantic.colorBgTextActive}
+                ink={semantic.colorTextSecondary}
+              />
+            </Col>
             <Col flex="none">
               <Typography.Text
                 style={{
                   fontSize: metaFontSize,
-                  color: semantic.colorPrimary,
+                  color: semantic.colorTextSecondary,
                   fontWeight: 400,
                   whiteSpace: "nowrap",
                 }}
@@ -212,12 +225,12 @@ const VideoResultItem: FC<Props> = ({
                 style={{
                   fontSize: metaFontSize,
                   fontWeight: 600,
-                  color: semantic.colorPrimary,
+                  color: semantic.colorTextBase,
                   whiteSpace: "nowrap",
                   marginRight: 8,
                 }}
               >
-                {message.generateConfig?.modelName || ""}
+                <ModelName slug={message.generateConfig?.modelName} />
               </Typography.Text>
               <Typography.Text
                 style={{

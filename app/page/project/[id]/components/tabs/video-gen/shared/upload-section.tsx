@@ -79,10 +79,8 @@ export default function UploadSection({
     <Flex vertical gap={8}>
       <Typography.Text
         style={{
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
+          fontSize: 13,
+          fontWeight: 500,
           color: semantic.colorTextSecondary,
         }}
       >
@@ -90,12 +88,8 @@ export default function UploadSection({
       </Typography.Text>
       <Card
         variant="borderless"
-        style={{
-          background: semantic.colorBgContainer,
-          border: `1px solid ${semantic.colorBorder}`,
-          borderRadius: 12,
-        }}
-        styles={{ body: { padding: 12 } }}
+        style={{ background: "transparent", boxShadow: "none" }}
+        styles={{ body: { padding: 0 } }}
       >
         {renderContent ? (
           renderContent

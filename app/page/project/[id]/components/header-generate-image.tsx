@@ -1,6 +1,7 @@
-import { Drawer, Space, Typography, Tag, Switch } from "antd";
+import { Drawer, Space, Typography, Switch } from "antd";
 import { BulbOutlined } from "@ant-design/icons";
-import React, { useMemo, useState, type FC } from "react";
+import React, { useEffect, useMemo, useState, type FC } from "react";
+import { usePageHeader } from "@/app/context/PageHeaderContext";
 import type { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -42,7 +43,15 @@ const HeaderGenerateImagePage: FC<props> = ({
   const { isMobile, isTablet } = useResponsive();
   const { mode } = useThemeMode();
   const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
-  const guide = useMemo(() => workPageGuide(activeKey ?? "image"), [activeKey]);
+  const { setPageHeader } = usePageHeader();
+  const projectName = getProject?.name || "Project";
+  const projectStatus = (getProject?.status || "active").toLowerCase() === "deleted" ? "Deleted" : "Active";
+  const subtitle = subtitleByTab[activeKey ?? ""] ?? "Create, organize, and share your project media";
+
+  useEffect(() => {
+    setPageHeader(isMobile ? null : { name: projectName, status: projectStatus, subtitle });
+    return () => setPageHeader(null);
+  }, [isMobile, projectName, projectStatus, subtitle, setPageHeader]);
 
   const showDrawer = () => {
     setOpen(true);
@@ -69,26 +78,19 @@ const HeaderGenerateImagePage: FC<props> = ({
         >
           {getProject?.name || "Project"}
         </Typography.Title>
-        <Tag
-          style={{
-            marginInlineEnd: 0,
-            border: "none",
-            borderRadius: 999,
-            color:
-              (getProject?.status || "").toLowerCase() === "deleted"
-                ? (semantic.colorErrorText ?? semantic.colorError)
-                : (semantic.colorSuccessText ?? semantic.colorSuccess),
-            backgroundColor: semantic.colorBgTextActive,
-            fontWeight: 600,
-            fontSize: isMobile ? 11 : 12,
-            padding: "0 6px",
-            lineHeight: 1.5,
-          }}
-        >
-          {(getProject?.status || "active").toLowerCase() === "deleted"
-            ? "Deleted"
-            : "Active"}
-        </Tag>
+        {/* Same status mark as the desktop breadcrumb: a dot and a word, not a pill. */}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: semantic.colorTextSecondary }}>
+          <span
+            aria-hidden
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: projectStatus === "Deleted" ? semantic.colorError : semantic.colorSuccess,
+            }}
+          />
+          {projectStatus}
+        </span>
       </Space>
       <Typography.Text
         style={{
@@ -103,61 +105,28 @@ const HeaderGenerateImagePage: FC<props> = ({
   ), [isMobile, isTablet, semantic, getProject?.name, getProject?.status, activeKey]);
 
   return (
-    <div
-      className="w-full"
-      style={{
-        padding: isMobile ? "6px 8px" : isTablet ? "7px 10px" : "9px 14px",
-        backgroundColor: semantic.colorBgContainer,
-        borderBottom: `1px solid ${semantic.colorBorder}`,
-      }}
-    >
-      {/* Mobile: Title at top */}
+    <>
+      {/* Desktop/tablet show the project in the app header and the controls in the tab bar. */}
       {isMobile && (
-        <div className="mb-0">
-          {titleSection}
-        </div>
-      )}
-
-      {/* Controls section */}
-      <div
-        className={`flex ${
-          isMobile ? "flex-col space-y-1" : "justify-between items-center gap-4"
-        }`}
-      >
-        {/* Desktop/Tablet: Title on left */}
-        {!isMobile && (
-          <div className="min-w-0">
-            {titleSection}
-          </div>
-        )}
-
-        {/* Controls wrapper */}
         <div
-          className={`flex ${
-            isMobile ? "items-start gap-2 justify-start flex-wrap" : "items-center gap-4 shrink-0"
-          }`}
-          style={{ marginTop: isMobile ? 6 : 0 }}
+          className="w-full"
+          style={{
+            padding: "6px 8px",
+            backgroundColor: semantic.colorBgContainer,
+            borderBottom: `1px solid ${semantic.colorBorder}`,
+          }}
         >
-          <div data-tour="view-switch">
-            {" "}
-            <span
-              className="font-medium"
-              style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}
-            >
-              {`View : `}
-            </span>{" "}
-            <Switch
-              checkedChildren="Team"
-              unCheckedChildren="Personal"
-              // size="small"
-              defaultChecked
-              value={teamView}
-              onChange={setTeamView}
+          {titleSection}
+          <div style={{ marginTop: 6 }}>
+            <ProjectViewControls
+              teamView={teamView}
+              setTeamView={setTeamView}
+              activeKey={activeKey}
+              onChangeTab={onChangeTab}
             />
           </div>
-          <GuideTourButton guide={guide} activeTab={activeKey} onSelectTab={onChangeTab} />
         </div>
-      </div>
+      )}
 
       <Drawer
         title={
@@ -303,6 +272,30 @@ const HeaderGenerateImagePage: FC<props> = ({
           </div>
         </div>
       </Drawer>
+    </>
+  );
+};
+
+type ViewControlsProps = Pick<props, "teamView" | "setTeamView" | "activeKey" | "onChangeTab">;
+
+/** Team/Personal switch and the guide-tour button; tab bar on desktop, project row on mobile. */
+export const ProjectViewControls: FC<ViewControlsProps> = ({ teamView, setTeamView, activeKey, onChangeTab }) => {
+  const { mode } = useThemeMode();
+  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
+  const guide = useMemo(() => workPageGuide(activeKey ?? "image"), [activeKey]);
+  return (
+    <div className="flex items-center gap-3">
+      <div data-tour="view-switch" className="flex items-center gap-2">
+        <span style={{ color: semantic.colorTextSecondary, fontSize: 13 }}>View</span>
+        <Switch
+          checkedChildren="Team"
+          unCheckedChildren="Personal"
+          defaultChecked
+          value={teamView}
+          onChange={setTeamView}
+        />
+      </div>
+      <GuideTourButton guide={guide} activeTab={activeKey} onSelectTab={onChangeTab} />
     </div>
   );
 };

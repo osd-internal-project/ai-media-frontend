@@ -4,7 +4,6 @@ import {
   ImagePlus,
   Play,
   RefreshCcw,
-  Sparkles,
   Video,
   X,
   Zap,
@@ -23,7 +22,6 @@ import {
   type FormInstance,
   type UploadFile,
   Image,
-  Card,
 } from "antd";
 import { RcFile } from "antd/es/upload";
 import {
@@ -31,7 +29,7 @@ import {
   TPromptGuideTemplate,
 } from "@/app/common/prompt-guide.type";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../../../tab-layout/generate-section/prompt-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
@@ -425,39 +423,27 @@ export default function ChatDreamactorInput({
           />
         </Flex>
 
-        <Card
-          data-tour="quota"
-          size="small"
-          style={{
-            borderRadius: 12,
-            borderColor: semantic.colorBorder,
-            background: semantic.colorBgElevated,
-          }}
-          styles={{ body: { padding: "8px 12px" } }}
-        >
-          <Quata
-            title="Quota"
-            creditUsed={usedCredit.used || 0}
+        <div data-tour="quota">
+            <Quata
+                        creditUsed={usedCredit.used || 0}
             creditTotal={usedCredit.total || 0}
             size="small"
             cerrentUsedCredit={cerrentUsedCredit}
           />
-        </Card>
+          </div>
         <Button
-          block
-          type="primary"
+            block
+            type="primary"
           data-tour="generate"
           htmlType="submit"
           disabled={submitting}
           style={{
             color: "white",
             border: "none",
-            height: 40,
-            borderRadius: 10,
+            height: 36,
+            borderRadius: 8,
             fontWeight: 600,
-            background: `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${semantic.colorPrimary} 50%, ${aiCaveColors.secondary} 100%)`,
           }}
-          icon={<Sparkles size={16} />}
           loading={submitting}
         >
           Generate

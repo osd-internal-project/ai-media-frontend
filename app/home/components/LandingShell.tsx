@@ -48,13 +48,11 @@ const landingVars: Record<ThemeMode, Record<string, string>> = {
 export default function LandingShell({ children }: { children: ReactNode }) {
   const { mode } = useThemeMode();
   return (
-    <main className="landing" style={landingVars[mode] as CSSProperties}>
-      {/* globals.css forces font-family 'Prompt' but nothing loads it; this sheet registers that family. React hoists it to <head>. */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap"
-        precedence="default"
-      />
+    // Public pages keep the Prompt display face; the app below login uses Anuphan.
+    <main
+      className="landing"
+      style={{ ...landingVars[mode], "--font-app-sans": "var(--font-brand-sans)" } as CSSProperties}
+    >
       <LocaleProvider>{children}</LocaleProvider>
     </main>
   );

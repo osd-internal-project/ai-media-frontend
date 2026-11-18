@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { formPanel } from "@/app/theme/surface";
 import { Loader2, RefreshCw, Wand2 } from "lucide-react";
 import { Button, Flex, Form, Input, Typography } from "antd";
 import type { ChatGenerateType } from "@/app/services/chat-assistant.types";
@@ -43,6 +45,7 @@ export default function PromptSection({
   projectId,
   generateType,
 }: Props) {
+  const { mode } = useThemeMode();
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
   const [internalLoading, setInternalLoading] = useState(false);
@@ -58,14 +61,19 @@ export default function PromptSection({
       <Flex align="center" justify="space-between">
         <Typography.Text
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
+            fontSize: 13,
+            fontWeight: 500,
             color: semantic.colorTextSecondary,
           }}
         >
           {title}
+        </Typography.Text>
+        <Flex align="center" gap={8}>
+        {/* Counter rides the label row instead of a row of its own. */}
+        <Typography.Text
+          style={{ fontSize: 12, color: semantic.colorTextSecondary, fontVariantNumeric: "tabular-nums" }}
+        >
+          {promptText.length}/{maxLength}
         </Typography.Text>
         {assistantEnabled && showAiAssist && (
           <Button
@@ -95,6 +103,7 @@ export default function PromptSection({
             {loading ? aiAssistThinkingLabel : aiAssistLabel}
           </Button>
         )}
+        </Flex>
       </Flex>
 
       <Form.Item
@@ -108,14 +117,14 @@ export default function PromptSection({
         ]}
       >
         <TextArea
-          rows={rows}
+          // Grows with the prompt so a short one leaves room for the settings below.
+          autoSize={{ minRows: Math.min(rows, 3), maxRows: 10 }}
           maxLength={maxLength}
           placeholder={placeholder}
           style={{
             width: "100%",
-            minHeight: 110,
             resize: "none",
-            backgroundColor: semantic.colorBgElevated,
+            backgroundColor: formPanel(mode).field,
             color: semantic.colorTextBase,
             padding: "10px",
             borderRadius: "0.5rem",
@@ -124,13 +133,6 @@ export default function PromptSection({
         />
       </Form.Item>
 
-      <Flex justify="space-between" align="center">
-        <Typography.Text
-          style={{ fontSize: 10, color: semantic.colorTextSecondary }}
-        >
-          {promptText.length}/{maxLength}
-        </Typography.Text>
-      </Flex>
 
       {/* {showRegenerateButton && promptText.trim() && (
         <Button

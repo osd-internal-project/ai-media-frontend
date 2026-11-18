@@ -41,6 +41,8 @@ import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import ImageEditor from "../../chat-components/image-editor";
+import SwatchTag, { jobCode } from "../../shared/swatch-tag";
+import { ModelName } from "../../tab-layout/model-select-card";
 
 export interface props {
   shouldRefetch?: boolean;
@@ -94,10 +96,11 @@ const PromptLibrary: FC<props> = ({
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
+  // Overlay actions are dark chips over the image; cyan is reserved for "done/remaining", not buttons.
   const secondaryActionStyle = {
-    backgroundColor: aiCaveColors.secondary,
-    borderColor: aiCaveColors.secondary,
-    color: semantic.colorBgBase,
+    backgroundColor: "rgba(20, 22, 25, 0.78)",
+    borderColor: "transparent",
+    color: "#FFFFFF",
   };
 
   const actionButtonStyle = {
@@ -213,37 +216,12 @@ const PromptLibrary: FC<props> = ({
       api.error({ message: "Failed to remove" });
     }
   };
-  const getTypeBadgeStyle = (type: string) => {
-    const normalized = (type || "image").toLowerCase();
-
-    if (normalized === "video") {
-      return {
-        color: semantic.colorPrimary,
-        background: `${semantic.colorPrimary}1A`,
-        borderColor: `${semantic.colorPrimary}33`,
-      };
-    }
-    if (normalized === "omnihumen" || normalized === "omnihuman") {
-      return {
-        color: semantic.colorSuccess,
-        background: `${semantic.colorSuccess}1A`,
-        borderColor: `${semantic.colorSuccess}33`,
-      };
-    }
-    if (normalized === "dreamactor") {
-      return {
-        color: semantic.colorWarning,
-        background: `${semantic.colorWarning}1A`,
-        borderColor: `${semantic.colorWarning}33`,
-      };
-    }
-
-    return {
-      color: semantic.colorInfo || semantic.colorPrimary,
-      background: `${semantic.colorInfo || semantic.colorPrimary}1A`,
-      borderColor: `${semantic.colorInfo || semantic.colorPrimary}33`,
-    };
-  };
+  // Swatch Book: the type is a label, not a colour; colour belongs to the work itself.
+  const getTypeBadgeStyle = (_type: string) => ({
+    color: semantic.colorTextBase,
+    background: semantic.colorBgTextActive,
+    borderColor: semantic.colorBorder,
+  });
 
   // =========================
   // OPEN
@@ -270,11 +248,11 @@ const PromptLibrary: FC<props> = ({
             width: "100%",
             height: "100%",
             padding: "44px 16px 16px",
-            background: `linear-gradient(180deg, ${semantic.colorPrimary}24 0%, transparent 70%)`,
+            background: semantic.colorBgTextActive,
           }}
         >
           <Flex vertical gap={8}>
-            <AudioLines size={28} style={{ color: semantic.colorPrimary }} />
+            <AudioLines size={28} style={{ color: semantic.colorTextSecondary }} />
             <Typography.Paragraph
               ellipsis={{ rows: 3 }}
               style={{
@@ -351,7 +329,7 @@ const PromptLibrary: FC<props> = ({
 
           {/* GRID */}
           <Row gutter={[16, 16]} data-tour="library-grid">
-            {displayItems.map((item, idx) => (
+            {displayItems.map((item) => (
               <Col key={item.id} xs={24} md={12} lg={8} xl={6}>
                 <Card
                   onClick={() => onSelectItem(item)}
@@ -364,9 +342,8 @@ const PromptLibrary: FC<props> = ({
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    transition: "transform 220ms ease, box-shadow 220ms ease",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                    animation: `fadeInUp 280ms ease ${idx * 35}ms both`,
+                    // A contact sheet: flat swatches, no lift, no staggered entrance.
+                    transition: "border-color 160ms ease",
                   }}
                   className="group"
                 >
@@ -433,11 +410,13 @@ const PromptLibrary: FC<props> = ({
                       />
                       <Button
                         icon={<Trash2 size={16} />}
+                        aria-label="Remove from library"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemoveFromLibrary(item);
                         }}
-                        style={actionButtonStyle}
+                        // Destructive action reads apart from download/open at a glance.
+                        style={{ ...actionButtonStyle, color: semantic.colorError }}
                       />
                       <Button
                         icon={<Eye size={16} />}
@@ -467,12 +446,22 @@ const PromptLibrary: FC<props> = ({
                       align="center"
                       style={{ rowGap: 4 }}
                     >
+                      <SwatchTag
+                        type={item?.typeGenerate}
+                        imageUrl={item?.thumbnailUrl || (isVideoType(item?.typeGenerate) ? undefined : item?.imageUrl)}
+                        code={jobCode(item?.taskId ?? item?.id)}
+                        fontSize={12}
+                        border={semantic.colorBorder}
+                        fill={semantic.colorBgTextActive}
+                        ink={semantic.colorTextSecondary}
+                      />
                       <Typography.Text
                         style={{
                           fontSize: 12,
-                          color: semantic.colorPrimary,
-                          fontWeight: 500,
+                          color: semantic.colorTextSecondary,
+                          fontWeight: 400,
                           whiteSpace: "nowrap",
+                          fontVariantNumeric: "tabular-nums",
                         }}
                       >
                         {item?.resolution ||
@@ -485,7 +474,7 @@ const PromptLibrary: FC<props> = ({
                         style={{ fontSize: 12, maxWidth: "44%" }}
                         ellipsis
                       >
-                        {item?.generateConfig?.modelName || "Unknown"}
+                        {item?.generateConfig?.modelName ? <ModelName slug={item.generateConfig.modelName} /> : "Unknown"}
                       </Typography.Text>
 
                       <Typography.Text

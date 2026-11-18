@@ -6,6 +6,7 @@ import React, {
   type FC,
   type ReactElement,
 } from "react";
+import { ModelName } from "../../tab-layout/model-select-card";
 import {
   Button,
   Empty,
@@ -38,13 +39,14 @@ import { useSession } from "next-auth/react";
 import { axiosCore } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import { useThemeMode } from "@/app/components/ThemeProvider";
+import { typeColor } from "@/app/theme/typeColors";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import {
   StarFilled,
   StarOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { Modal } from "antd";
+import { ConfigProvider, Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
 import ShareModal from "./share-modal";
@@ -145,40 +147,6 @@ const PromptActivity: FC<props> = ({
     }
   };
 
-  const getTypeBadgeStyle = (type: string) => {
-    const normalized = (type || "image").toLowerCase();
-
-    if (normalized === "image") {
-      return {
-        color: "#1890ff",
-        background: `$#1890ff1A`,
-      };
-    }
-
-    if (normalized === "video") {
-      return {
-        color: semantic.colorPrimary,
-        background: `${semantic.colorPrimary}1A`,
-      };
-    }
-    if (normalized === "omnihumen" || normalized === "omnihuman") {
-      return {
-        color: semantic.colorSuccess,
-        background: `${semantic.colorSuccess}1A`,
-      };
-    }
-    if (normalized === "dreamactor") {
-      return {
-        color: semantic.colorWarning,
-        background: `${semantic.colorWarning}1A`,
-      };
-    }
-
-    return {
-      color: "#1890ff",
-    };
-  };
-
   // ImageEditor loads a remote (presigned) URL directly with crossOrigin, so we
   // pass the record's presigned URL instead of proxying the bytes through the API.
   const openImageEditor = (imageUrl: string) => {
@@ -190,7 +158,7 @@ const PromptActivity: FC<props> = ({
       title: "Preview",
       dataIndex: "imageUrl",
       key: "preview",
-      width: 140,
+      width: 80,
       render: (_, record) => {
         const isVideo =
           record.typeGenerate === "video" ||
@@ -200,8 +168,8 @@ const PromptActivity: FC<props> = ({
         return (
           <div
             style={{
-              width: 112,
-              height: 64,
+              width: 56,
+              height: 56,
               borderRadius: 8,
               overflow: "hidden",
               border: `1px solid ${semantic.colorBorder}`,
@@ -218,7 +186,7 @@ const PromptActivity: FC<props> = ({
               <AudioLines
                 size={28}
                 aria-label="Audio"
-                style={{ margin: "auto", color: semantic.colorPrimary }}
+                style={{ margin: "auto", color: semantic.colorTextSecondary }}
               />
             ) : isVideo ? (
               record.imageUrl ? (
@@ -326,26 +294,9 @@ const PromptActivity: FC<props> = ({
       },
     },
     {
-      title: "Type",
-      dataIndex: "typeGenerate",
-      key: "type",
-      width: 120,
-      render: (value) => (
-        <Tag
-          style={{
-            textTransform: "capitalize",
-            ...getTypeBadgeStyle(value),
-          }}
-        >
-          {value}
-        </Tag>
-      ),
-    },
-    {
       title: "Prompt",
       dataIndex: "prompt",
       key: "prompt",
-      width: 270,
       ellipsis: true,
       render: (value, record) => (
         <div
@@ -357,10 +308,12 @@ const PromptActivity: FC<props> = ({
           onMouseEnter={() => setHoveredId(record.id)}
           onMouseLeave={() => setHoveredId(null)}
         >
+          {/* One row carries what used to be four columns: prompt, then type · model · creator. */}
+          <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: 2 }}>
           <Tooltip title={value}>
             <Typography.Text
               style={{
-                maxWidth: 250,
+                maxWidth: "100%",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -370,6 +323,15 @@ const PromptActivity: FC<props> = ({
               {value || "-"}
             </Typography.Text>
           </Tooltip>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: semantic.colorTextSecondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, flexShrink: 0, background: typeColor(record.typeGenerate, mode).mark }} />
+            <span style={{ color: typeColor(record.typeGenerate, mode).text, textTransform: "capitalize" }}>{record.typeGenerate || "image"}</span>
+            <span>·</span>
+            <span>{record?.generateConfig?.modelName ? <ModelName slug={record.generateConfig.modelName} /> : "Unknown model"}</span>
+            <span>·</span>
+            <span>{record?.users?.fullname || "-"}</span>
+          </span>
+          </div>
           {hoveredId === record.id && !!value && (
             <Button
               icon={<Copy size={16} />}
@@ -385,19 +347,6 @@ const PromptActivity: FC<props> = ({
           )}
         </div>
       ),
-    },
-    {
-      title: "Model",
-      key: "model",
-      width: 180,
-      render: (_, record) =>
-        record?.generateConfig?.modelName || "Unknown model",
-    },
-    {
-      title: "Created By",
-      key: "user",
-      width: 160,
-      render: (_, record) => record?.users?.fullname || "-",
     },
     {
       title: "Date",
@@ -525,9 +474,10 @@ const PromptActivity: FC<props> = ({
                 }
               }}
             />
-            {/* Delete */}
+            {/* Delete: red glyph so it never reads like download */}
             <Button
-              icon={<Trash2 size={16} />}
+              icon={<Trash2 size={16} style={{ color: semantic.colorError }} />}
+              aria-label="Delete"
               type="text"
               shape="circle"
               onClick={(e) => {
@@ -623,13 +573,15 @@ const PromptActivity: FC<props> = ({
               background: semantic.colorBgContainer,
             }}
           >
+            {/* Minimal table: no header dividers, header on the table surface, 64px rows. */}
+            <ConfigProvider theme={{ components: { Table: { headerSplitColor: "transparent", headerBg: "transparent", cellPaddingBlockMD: 4 } } }}>
             <Table
               rowKey="id"
               columns={columns}
               dataSource={getData.data}
               pagination={false}
               size="middle"
-              scroll={{ x: 1200 }}
+              scroll={{ x: 640 }}
               locale={{
                 emptyText: (
                   <Empty
@@ -639,6 +591,7 @@ const PromptActivity: FC<props> = ({
                 ),
               }}
             />
+            </ConfigProvider>
           </div>
 
           {!isEmpty && (
