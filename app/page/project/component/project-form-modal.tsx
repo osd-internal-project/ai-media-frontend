@@ -14,6 +14,7 @@ import {
   Tag,
   FormInstance,
   Modal,
+  theme,
 } from "antd";
 import {
   CloseOutlined,
@@ -23,7 +24,6 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import {
   ICreditBalance,
@@ -78,7 +78,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
 }) => {
   const { mode: themeMode } = useThemeMode();
   const { isMobile } = useResponsive();
-  const semantic = getThemeConfig(themeMode).token ?? {};
+  const semantic = theme.useToken().token;
   const [activeEditTab, setActiveEditTab] = useState<"settings" | "members">(
     "settings",
   );
@@ -343,7 +343,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
 
       <Card
         size="small"
-        bodyStyle={{ padding: isMobile ? 8 : 10 }}
+        styles={{ body: { padding: isMobile ? 8 : 10 } }}
         style={{
           borderColor: semantic.colorBorder,
           borderRadius: 12,
@@ -484,6 +484,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                 <Col flex="none">
                   <Button
                     type="text"
+                    aria-label="Remove member"
                     icon={<CloseOutlined />}
                     onClick={() => {
                       setProjectMembers(

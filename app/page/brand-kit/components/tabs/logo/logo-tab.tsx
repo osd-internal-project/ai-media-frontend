@@ -8,13 +8,13 @@ import {
   Card,
   Modal,
   Tag,
+  theme,
 } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
 import LogoModal, { type LogoModalValues } from "./logo-modal";
@@ -56,7 +56,7 @@ const LogoTab: React.FC<LogoTabProps> = ({
   emptyState,
 }) => {
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const { isMobile, isTablet } = useResponsive();
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);

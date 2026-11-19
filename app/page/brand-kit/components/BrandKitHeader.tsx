@@ -80,12 +80,12 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
               textOverflow: isMobile ? "ellipsis" : undefined,
               maxWidth: isMobile ? 180 : isTablet ? 280 : undefined,
             }}
-            level={isMobile ? 5 : isTablet ? 4 : 3}
+            level={1}
           >
             {selectedKit.name || "-"}
           </Title>
           <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 10 : isTablet ? 12 : 13, whiteSpace: isMobile ? "nowrap" : undefined, overflow: isMobile ? "hidden" : undefined, textOverflow: isMobile ? "ellipsis" : undefined, maxWidth: isMobile ? 180 : isTablet ? 320 : undefined }}>
-            {(selectedKit.industryType || "-")} · Updated {(selectedKit.updatedAt || "-")}
+            {(selectedKit.industryType || "-")} · Updated {formatUpdated(selectedKit.updatedAt)}
           </Text>
         </div>
       </Col>
@@ -165,5 +165,14 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
     `}</style>
   </div>
 );
+
+/** "26 May 2026"; the API sends a raw ISO timestamp. */
+function formatUpdated(value?: string | null): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export default BrandKitHeader;

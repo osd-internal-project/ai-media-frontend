@@ -53,7 +53,8 @@ export const generationTypeColors = (
   video: token.colorInfo,
   omnihuman: token.colorWarning,
   dreamactor: aiCaveColors.dreamActor,
-  audio: token.colorSuccess,
+  // Success green sat next to the mint video line; magenta keeps the series apart.
+  audio: token.magenta,
 });
 
 /**

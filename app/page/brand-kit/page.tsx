@@ -9,7 +9,7 @@ import { extractFontNames } from "./helpers/extractFontNames";
 import { useSession } from "next-auth/react";
 
 import "./styles/style.css";
-import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin, Tooltip, Col } from "antd";
+import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin, Tooltip, Col, theme } from "antd";
 import {
   PlusOutlined,
   BgColorsOutlined,
@@ -31,7 +31,7 @@ import ColorTab from "./components/tabs/color/color-tab";
 import type { TBrandKitDetail } from "@/app/common/brand-kit";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg, getThemeConfig } from "@/app/theme/themeConfig";
+import { getCanvasBg } from "@/app/theme/themeConfig";
 import { Divide, Palette } from "lucide-react";
 import TypographyTab from "./components/tabs/typography/typography-tab";
 import LogoTab from "./components/tabs/logo/logo-tab";
@@ -80,7 +80,7 @@ export default function BrandKitPage() {
   });
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
 
   // ปรับ Layout ให้สูงเต็ม parent container (ไม่ fix 100vh)
   // ให้แน่ใจว่า parent container (layout.tsx) มี height: 100% หรือ min-h-screen
@@ -672,6 +672,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
             className="brandkit-fab"
             type="primary"
             shape="circle"
+            aria-label="All brand kits"
             icon={<Palette size={20} color={semantic.colorWhite} />}
             onClick={() => setSidebarOpen(true)}
             style={{

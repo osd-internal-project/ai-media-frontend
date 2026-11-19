@@ -39,8 +39,6 @@ export type StatCardItem = {
   /** Extra content below the progress bar, e.g. an upgrade CTA. */
   footer?: React.ReactNode;
   icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
 };
 
 export type UsersTabProps = {

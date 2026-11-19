@@ -51,3 +51,6 @@ package-lock.json
 # Environment files (local dev only — .env.sit/.env.uat/.env.prod are public URLs and safe to commit)
 .env
 .env.local
+
+.impeccable/
+.claude/

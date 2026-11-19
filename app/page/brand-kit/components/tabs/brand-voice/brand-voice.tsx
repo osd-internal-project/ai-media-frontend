@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Row, Col, Typography, Button, Space, Card, Tag, Progress, Form, Input } from "antd";
+import { Row, Col, Typography, Button, Space, Card, Tag, Progress, Form, Input, theme } from "antd";
 import { PlusOutlined, SoundOutlined, EditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
 
@@ -85,7 +84,7 @@ const BrandVoiceTab: React.FC<BrandVoiceTabProps> = ({
   onSaveVoice,
 }) => {
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const { isMobile } = useResponsive();
   const [form] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
@@ -141,7 +140,7 @@ return (
           style={{ marginBottom: 14 }}
         >
           <Title
-            level={5}
+            level={2}
             style={{
               margin: 0,
               fontSize: isMobile ? 15 : 16,
@@ -219,7 +218,7 @@ return (
           }}
         >
           <Title
-            level={5}
+            level={2}
             style={{
               margin: 0,
               marginBottom: 14,
@@ -293,7 +292,7 @@ return (
         {/* Keywords */}
         <div>
           <Title
-            level={5}
+            level={2}
             style={{
               margin: 0,
               marginBottom: 14,

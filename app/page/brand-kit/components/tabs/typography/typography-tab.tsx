@@ -1,8 +1,8 @@
+import { Type as TypeIcon } from "lucide-react";
 
 import React, { useState } from "react";
-import { Row, Col, Typography, Button, Space, Card, Form, Modal } from "antd";
+import { Row, Col, Typography, Button, Space, Card, Form, Modal, theme } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import TypoModal from "./typo-modal";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -35,13 +35,12 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
 }) => {
 
     const { mode } = useThemeMode();
-    const semantic = getThemeConfig(mode).token ?? {};
+    const semantic = theme.useToken().token;
     const [modalOpen, setModalOpen] = useState(false);
     const [form] = Form.useForm();
     const [editIndex, setEditIndex] = useState<string | null>(null);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-    const [hoveredId, setHoveredId] = useState<string | null>(null);
     const { isMobile, isTablet } = useResponsive();
 
     // Handler for opening modal (add)
@@ -125,8 +124,8 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
               gap: 12,
             }}
           >
-            <div style={{ fontSize: 48, opacity: 0.2 }}>🥣</div>
-            <div style={{ fontSize: isMobile ? 16 : 18 }}>No typography yet</div>
+            <TypeIcon size={40} strokeWidth={1.5} aria-hidden style={{ opacity: 0.5 }} />
+            <div style={{ fontSize: 16, color: semantic.colorTextBase }}>No typography yet</div>
             <div style={{ fontSize: isMobile ? 13 : 14, color: semantic.colorTextSecondary }}>Add your first brand font to get started.</div>
           </div>
           <TypoModal
@@ -143,7 +142,7 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
   return (
     <div className="typo-tab-shell">
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Text style={{ color: mode === "dark" ? "#94a3b8" : semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>{fonts.length} fonts configured</Text>
+        <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>{fonts.length} fonts configured</Text>
         <Button className="typo-tab-action" type="default" size={isMobile ? "small" : "middle"} icon={<PlusOutlined />} onClick={handleAddFont}>
           {isMobile ? "Add" : "Add Font"}
         </Button>
@@ -157,9 +156,7 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
             size="small"
             className="typo-card-hover-group typo-card-anim"
             styles={{ body: { display: "flex", alignItems: "center", gap: isMobile ? 10 : 16, padding: isMobile ? 10 : 16 } }}
-            style={{ borderRadius: 12, background: semantic.colorBgContainer, border: `1px solid ${semantic.colorBorder}`, position: "relative" }}
-            onMouseEnter={() => setHoveredId(font.id)}
-            onMouseLeave={() => setHoveredId(null)}
+            style={{ borderRadius: 14, background: semantic.colorBgContainer, border: `1px solid ${semantic.colorBorder}`, position: "relative" }}
           >
             {/* Font Icon */}
         <div
@@ -182,7 +179,7 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
             {/* Font Info */}
             <div style={{ flex: 1 }}>
               <Row align="middle" style={{ gap: 12 }}>
-                <Title level={5} style={{ color: semantic.colorTextBase, margin: 0, fontSize: isMobile ? 15 : 18 }}>
+                <Title level={2} style={{ color: semantic.colorTextBase, margin: 0, fontSize: isMobile ? 15 : 18 }}>
                   {font.name}
                 </Title>
                 <Text
@@ -230,8 +227,6 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
                 flexDirection: 'column',
                 gap: isMobile ? 6 : 8,
                 zIndex: 10,
-                opacity: isMobile || isTablet || hoveredId === font.id ? 1 : 0,
-                pointerEvents: isMobile || isTablet || hoveredId === font.id ? 'auto' : 'none',
                 transition: 'opacity 0.2s',
               }}
             >
@@ -239,20 +234,18 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
                 className="typo-tab-action"
                 type="text"
                 icon={<EditOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
-                style={{ width: isMobile ? 30 : 36, height: isMobile ? 30 : 36, borderRadius: 18, color: semantic.colorTextSecondary, background: 'rgba(0,0,0,0.06)', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)' }}
+                style={{ width: 36, height: 36, borderRadius: 8, color: semantic.colorTextSecondary, background: semantic.colorFillSecondary }}
                 onClick={() => handleEditFont(font)}
                 aria-label="Edit Font"
-                tabIndex={-1}
               />
               <Button
                 className="typo-tab-action"
                 type="text"
                 icon={<DeleteOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
                 danger
-                style={{ width: isMobile ? 30 : 36, height: isMobile ? 30 : 36, borderRadius: 18, background: 'rgba(255,0,0,0.06)', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)' }}
+                style={{ width: 36, height: 36, borderRadius: 8, background: semantic.colorFillSecondary }}
                 onClick={() => handleDeleteFont(font.id)}
                 aria-label="Delete Font"
-                tabIndex={-1}
               />
             </div>
 
@@ -306,20 +299,20 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
 
         .typo-card-anim {
           animation: typoCardIn 300ms ease;
-          transition: transform 180ms ease, box-shadow 180ms ease;
         }
 
-        .typo-card-anim:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+        /* Actions stay reachable on touch screens and by keyboard, not only on hover. */
+        .typo-action-btns {
+          opacity: 0;
         }
-
-        .typo-tab-action {
-          transition: transform 160ms ease, box-shadow 160ms ease;
+        .typo-card-anim:hover .typo-action-btns,
+        .typo-card-anim:focus-within .typo-action-btns {
+          opacity: 1;
         }
-
-        .typo-tab-action:hover {
-          transform: translateY(-1px);
+        @media (hover: none) {
+          .typo-action-btns {
+            opacity: 1;
+          }
         }
 
         @keyframes typoCardIn {

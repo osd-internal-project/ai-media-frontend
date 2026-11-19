@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { Row, Col, Typography, Tag, Button, message, Form, Modal } from "antd";
+import { Row, Col, Typography, Tag, Button, message, Form, Modal, theme } from "antd";
 import { CopyOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
-import { PlusIcon } from "lucide-react";
+import { Palette, PlusIcon } from "lucide-react";
 import ColorModal from "./color-modal";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import useResponsive from "@/app/hooks/useResponsive";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ColorItem {
   id: string;
@@ -31,10 +29,8 @@ interface ColorTabProps {
 
 
 const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onColorAdded, emptyState }) => {
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const { isMobile, isTablet } = useResponsive();
@@ -193,6 +189,11 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
     <div
       className="color-tab-root"
       style={{
+        // `as string`: CSSProperties has no type for custom properties.
+        ["--ct-border" as string]: semantic.colorBorder,
+        ["--ct-primary" as string]: semantic.colorPrimary,
+        ["--ct-error" as string]: semantic.colorError,
+        ["--ct-ink" as string]: semantic.colorTextBase,
         width: "100%",
         overflow: "visible",
         touchAction: "pan-y",
@@ -227,8 +228,8 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
           color: semantic.colorTextSecondary,
           gap: 12,
         }}>
-          <div style={{ fontSize: 48, opacity: 0.2 }}>🥣</div>
-          <div style={{ fontSize: 18 }}>No colors yet</div>
+          <Palette size={40} strokeWidth={1.5} aria-hidden style={{ opacity: 0.5 }} />
+          <div style={{ fontSize: 16, color: semantic.colorTextBase }}>No colors yet</div>
           <div style={{ fontSize: 14, color: semantic.colorTextSecondary }}>Add your first brand color to get started.</div>
         </div>
       ) : (
@@ -244,148 +245,101 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
             const groupColors = colorsByType[type];
             return (
               <div key={type} className="color-tab-group" style={{ marginTop: 24 }}>
-                <Text style={{ color: semantic.colorTextSecondary, fontSize: 12, fontWeight: 500 }}>
-                  {type.toUpperCase()}
+                <Text style={{ color: semantic.colorTextSecondary, fontSize: 13, fontWeight: 600, textTransform: "capitalize" }}>
+                  {type}
                 </Text>
 
                 <Row
                   gutter={[isMobile ? 12 : 20, isMobile ? 14 : 24]}
                   style={{ marginTop: 8, marginLeft: 0, marginRight: 0 }}
                 >
-                  {groupColors.map((color, groupIdx) => {
-                    const hoverKey = `${type}-${groupIdx}`;
-                    const showActions = hoveredKey === hoverKey || isMobile;
+                  {groupColors.map((color) => {
                     // หา index จริงของสีนี้ใน colors (เพื่อให้ลบ/แก้ไขถูกต้อง)
                     const realIndex = colors.findIndex(
                       c => c.id === color.id
                     );
                     return (
                       <Col key={color.id} xs={12} sm={8} md={8} lg={6} xl={6}>
-                        <div className="color-tab-item" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {/* Swatch 1:1 with hover overlay */}
+                        <div className="color-tab-item" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           <div
-                            className="color-tab-swatch"
-                            style={{
-                              position: "relative",
-                              width: "100%",
-                              maxWidth: isMobile ? 140 : isTablet ? 170 : 200,
-                              aspectRatio: "1 / 1",
-                              borderRadius: 12,
-                              background: color.hex,
-                              cursor: "pointer",
-                              overflow: "hidden",
-                              border: `1px solid ${semantic.colorBorder}`,
-                            }}
-                            onMouseEnter={() => setHoveredKey(hoverKey)}
-                            onMouseLeave={() => setHoveredKey(null)}
+                            className="color-tab-swatch-wrap"
+                            style={{ maxWidth: isMobile ? 140 : isTablet ? 170 : 200 }}
                           >
-                            {showActions && (
-                              <div
-                                className="color-tab-overlay"
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  width: "100%",
-                                  height: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: isMobile ? 8 : 12,
-                                  background: isMobile ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.18)",
+                            <button
+                              type="button"
+                              className="color-tab-swatch"
+                              aria-label={`Copy ${color.name} ${color.hex}`}
+                              onClick={() => handleCopy(color.hex)}
+                              style={{ background: color.hex }}
+                            />
+                            {/* Overlay on hover/focus; a row under the swatch on touch screens, so it never covers the colour. */}
+                            <div className="color-tab-actions">
+                              <Button
+                                className="color-tab-icon-btn"
+                                type="text"
+                                aria-label={`Copy ${color.name} hex`}
+                                icon={<CopyOutlined />}
+                                onClick={() => handleCopy(color.hex)}
+                              />
+                              <Button
+                                className="color-tab-icon-btn"
+                                type="text"
+                                aria-label={`Edit ${color.name}`}
+                                icon={<EditOutlined />}
+                                onClick={() => {
+                                  setEditColor(color);
+                                  setEditIndex(realIndex);
+                                  form.setFieldsValue({
+                                    id: color.id,
+                                    name: color.name,
+                                    hex: color.hex,
+                                    type: color.type,
+                                  });
+                                  setIsModalOpen(true);
                                 }}
-                              >
-                                <Button
-                                  className="color-tab-icon-btn"
-                                  type="text"
-                                  icon={<CopyOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
-                                  onClick={() => handleCopy(color.hex)}
-                                  style={{
-                                    minWidth: isMobile ? 30 : 36,
-                                    width: isMobile ? 32 : 40,
-                                    height: isMobile ? 32 : 40,
-                                    borderRadius: 8,
-                                    background: 'rgba(255,255,255,0.18)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#',
-                                    boxShadow: '0 1px 4px #0001',
-                                  }}
-                                />
-                                <Button
-                                  className="color-tab-icon-btn"
-                                  type="text"
-                                  icon={<EditOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
-                                  onClick={() => {
-                                    setEditColor(color);
-                                    setEditIndex(realIndex);
-                                    form.setFieldsValue({
-                                      id: color.id,
-                                      name: color.name,
-                                      hex: color.hex,
-                                      type: color.type,
-                                    });
-                                    setIsModalOpen(true);
-                                  }}
-                                  style={{
-                                    minWidth: isMobile ? 30 : 36,
-                                    width: isMobile ? 32 : 40,
-                                    height: isMobile ? 32 : 40,
-                                    borderRadius: 8,
-                                    color: '#222',
-                                    background: 'rgba(255,255,255,0.18)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 1px 4px #0001',
-                                  }}
-                                  title="Edit"
-                                />
-                                <Button
-                                  className="color-tab-icon-btn"
-                                  danger
-                                  type="text"
-                                  icon={<DeleteOutlined style={{ fontSize: isMobile ? 14 : 18 }} />}
-                                  onClick={() => {
-                                    handleDeleteColor(color, realIndex);
-                                  }}
-                                  style={{
-                                    minWidth: isMobile ? 30 : 36,
-                                    width: isMobile ? 32 : 40,
-                                    height: isMobile ? 32 : 40,
-                                    borderRadius: 8,
-                                    background: 'rgba(255,255,255,0.18)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 1px 4px #0001',
-                                  }}
-                                  title="Delete"
-                                />
-                              </div>
-                            )}
+                              />
+                              <Button
+                                className="color-tab-icon-btn"
+                                danger
+                                type="text"
+                                aria-label={`Delete ${color.name}`}
+                                icon={<DeleteOutlined />}
+                                onClick={() => {
+                                  handleDeleteColor(color, realIndex);
+                                }}
+                              />
+                            </div>
                           </div>
 
-                          {/* Name & Hex */}
-                          <Title level={isMobile ? 5 : 5} style={{ margin: 0, color: semantic.colorTextBase, fontSize: isMobile ? 14 : 16 }}>
+                          <Text strong style={{ color: semantic.colorTextBase, fontSize: isMobile ? 14 : 16 }}>
                             {color.name}
-                          </Title>
-                          <Text style={{ fontSize: isMobile ? 12 : 13 }}>{color.hex}</Text>
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+                            {color.hex}
+                          </Text>
+                          {/* Ink text with a colour dot: the swatch colour itself is unreadable as text on many panels. */}
                           <Tag
                             className="color-tab-type-tag"
                             style={{
-                              marginTop: 8,
-                              color: color.hex,
                               width: "fit-content",
-                              textAlign: "center",
-                              borderRadius: 8,
-                              border: `1px solid ${color.hex}`,
-                              letterSpacing: 0.5,
-                              display: "inline-block",
-                              fontSize: isMobile ? 11 : 12,
+                              color: semantic.colorTextSecondary,
+                              borderColor: semantic.colorBorder,
+                              background: "transparent",
+                              fontSize: 12,
                             }}
                           >
+                            <span
+                              aria-hidden
+                              style={{
+                                display: "inline-block",
+                                width: 8,
+                                height: 8,
+                                marginRight: 6,
+                                borderRadius: "50%",
+                                background: color.hex,
+                                verticalAlign: "middle",
+                              }}
+                            />
                             {color.type}
                           </Tag>
                         </div>
@@ -399,10 +353,10 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
           {/* Palette Section: show only if colors exist */}
           {colors.length > 0 && (
             <div className="color-tab-group" style={{ marginTop: 48 }}>
-              <Text style={{ color: "#64748b", fontSize: 13, fontWeight: 500, marginBottom: 8, display: "block" }}>
+              <Text style={{ color: semantic.colorTextSecondary, fontSize: 13, fontWeight: 600, marginBottom: 8, display: "block" }}>
                 Palette
               </Text>
-              <div style={{ display: "flex", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 4px 0 #0001", minHeight: 36, border: `1px solid ${semantic.colorBorder}` }}>
+              <div style={{ display: "flex", borderRadius: 14, overflow: "hidden", minHeight: 36, border: `1px solid ${semantic.colorBorder}` }}>
                 {colors.map((color, idx) => (
                   <div
                     key={color.hex + idx}
@@ -448,59 +402,83 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
       </Modal>
 
       <style jsx global>{`
-        .color-tab-root {
-          min-height: 0;
-        }
-
-        .color-tab-group {
-          animation: colorGroupIn 300ms ease;
-        }
-
-        .color-tab-item {
-          transition: transform 180ms ease;
-        }
-
-        .color-tab-item:hover {
-          transform: translateY(-1px);
+        .color-tab-swatch-wrap {
+          position: relative;
+          width: 100%;
         }
 
         .color-tab-swatch {
-          transition: transform 180ms ease, box-shadow 180ms ease;
+          display: block;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          padding: 0;
+          border-radius: 14px;
+          border: 1px solid var(--ct-border);
+          cursor: pointer;
         }
 
-        .color-tab-swatch:hover {
-          transform: translateY(-1px) scale(1.01);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        .color-tab-swatch:focus-visible {
+          outline: 2px solid var(--ct-primary);
+          outline-offset: 2px;
         }
 
-        .color-tab-overlay {
-          animation: colorOverlayFade 180ms ease;
+        .color-tab-actions {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          border-radius: 14px;
+          background: rgba(0, 0, 0, 0.18);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 150ms ease;
         }
 
-        .color-tab-icon-btn,
-        .color-tab-action {
-          transition: transform 160ms ease, box-shadow 160ms ease;
+        .color-tab-swatch-wrap:hover .color-tab-actions,
+        .color-tab-swatch-wrap:focus-within .color-tab-actions {
+          opacity: 1;
         }
 
-        .color-tab-icon-btn:hover,
-        .color-tab-action:hover {
-          transform: translateY(-1px);
+        .color-tab-actions .color-tab-icon-btn {
+          pointer-events: auto;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          /* A light plate reads on any swatch colour, in either theme. */
+          background: rgba(255, 255, 255, 0.92);
+          color: #1e1b3a;
         }
 
-        .color-tab-type-tag {
-          transition: all 180ms ease;
+        .color-tab-actions .color-tab-icon-btn.ant-btn-dangerous {
+          color: var(--ct-error);
         }
 
-        @keyframes colorOverlayFade {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        @media (hover: none) {
+          .color-tab-actions {
+            position: static;
+            justify-content: flex-start;
+            gap: 4px;
+            margin-top: 6px;
+            background: none;
+            opacity: 1;
+          }
+
+          .color-tab-actions .color-tab-icon-btn {
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            color: var(--ct-ink);
+          }
         }
 
-        @keyframes colorGroupIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+          .color-tab-actions {
+            transition: none;
+          }
         }
-      `}</style>
+`}</style>
 
 
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Col, Row, Space, Tag, Typography } from "antd";
+import { Col, Row, Space, Tag, Typography, theme } from "antd";
 import "./LayoutStyle.css";
 
 type PageSubHeaderProps = {
@@ -31,6 +31,7 @@ export default function PageSubHeader({
   chipText,
   compact = true,
 }: PageSubHeaderProps) {
+  const { token } = theme.useToken();
   return (
     <div
       style={{
@@ -50,11 +51,13 @@ export default function PageSubHeader({
       >
         <Col flex="1 1 auto" style={{ minWidth: 0 }}>
           <Space size={8} align="center" wrap>
+            {/* The page's only h1, sized like the former h3 so layouts don't shift. */}
             <Typography.Title
-              level={3}
+              level={1}
               style={{
                 margin: 0,
-                fontSize: compact ? 22 : undefined,
+                fontSize: compact ? 22 : token.fontSizeHeading3,
+                lineHeight: token.lineHeightHeading3,
                 color: titleColor,
               }}
             >

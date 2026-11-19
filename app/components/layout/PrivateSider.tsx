@@ -108,15 +108,18 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          padding: "16px 0",
+          // Same 52px as the header, so the mark lines up with the organization switcher.
+          height: 52,
           flexShrink: 0,
         }}
       >
+        {/* 302px source: the old 33px logo-1.png blurred when drawn at 42px on 2x screens. */}
         <AntdImage
-          src="/images/logo-1.png"
-          alt="OSD Logo"
+          src="/images/logo-mark.png"
+          alt="AI Cave"
           preview={false}
-          width={42}
+          width={30}
+          className="private-sider-logo-mark"
           style={{ background: "transparent" }}
         />
       </div>

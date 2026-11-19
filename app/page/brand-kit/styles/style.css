@@ -165,3 +165,21 @@
           transform: translateY(0);
         }
       }
+.brandkit-item:focus-visible {
+  outline: 2px solid var(--ant-color-primary, currentColor);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandkit-mobile-backdrop,
+  .brandkit-fab,
+  .brandkit-sidebar-item,
+  .brandkit-sidebar-shell,
+  .logo-card-anim,
+  .brand-voice-card,
+  .ci-tab-section,
+  .typo-card-anim {
+    animation: none !important;
+    transition: none !important;
+  }
+}

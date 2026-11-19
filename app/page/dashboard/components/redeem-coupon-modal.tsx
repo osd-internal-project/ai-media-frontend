@@ -10,13 +10,12 @@ import {
   Space,
   Tabs,
   Typography,
+  theme,
 } from "antd";
 import type { FormInstance } from "antd";
 import { CreditCard, History, Sparkles, Ticket } from "lucide-react";
 import { FC, useState } from "react";
 import { RiseOutlined } from "@ant-design/icons";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 import TransactionHistory from "./transaction-history";
 import { ICouponCodeUsage } from "@/app/common/coupon.type";
@@ -44,8 +43,7 @@ const RedeemCouponModal: FC<ColorModalProps> = ({
   handleCancel,
 }) => {
   const { Text } = Typography;
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const { isMobile } = useResponsive();
   const [activeTab, setActiveTab] = useState("1");
   const ItemTab = [

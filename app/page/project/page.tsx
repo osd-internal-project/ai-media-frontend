@@ -12,13 +12,15 @@ import {
   message,
   Radio,
   Spin,
-  Typography,
   Space,
   Divider,
+  Empty,
+  Grid,
+  Segmented,
+  theme,
 } from "antd";
 import {
   PlusOutlined,
-  ProjectOutlined,
   SearchOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
@@ -27,6 +29,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { IProject } from "@/app/common/project.type";
 import ProjectService from "@/app/services/project.service";
+import GalleryServices from "@/app/services/gellory.service";
+import type { ProjectPreview } from "./component/project-grid-view";
 import UserServices from "@/app/services/users.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
@@ -40,8 +44,6 @@ import {
   IOrganizationSubscription,
 } from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import ProjectGridView from "./component/project-grid-view";
 import ProjectListView from "./component/project-list-view";
 import useResponsive from "@/app/hooks/useResponsive";
@@ -77,6 +79,8 @@ const ProjectsPage = () => {
 
   // Service instances memoized — created once per mount, not on every render
   const projectService = useMemo(() => ProjectService(axiosCore), []);
+  const galleryService = useMemo(() => GalleryServices(axiosCore), []);
+  const [previews, setPreviews] = useState<Record<string, ProjectPreview[]>>({});
   const userServices = useMemo(() => UserServices(axiosUser), []);
   const organizationService = useMemo(
     () => OrganizationServices(axiosUser),
@@ -120,10 +124,10 @@ const ProjectsPage = () => {
   const [editForm] = Form.useForm();
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
   const { isMobile, isTablet } = useResponsive();
-  const { mode } = useThemeMode();
+  const isWide = !!Grid.useBreakpoint().xl;
 
   // Memoized semantic tokens — recomputed only when theme changes
-  const semantic = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
+  const semantic = theme.useToken().token;
 
   const countByStatus = useCallback(
     (status: string) =>
@@ -144,6 +148,25 @@ const ProjectsPage = () => {
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
+  // Latest three works per project (All Activity's filter: everything except failed), so cards show
+  // the work instead of only a name. `status: true` would mean Library-only and hid photo-event work.
+  const loadPreviews = async (list: IProject[]) => {
+    const entries = await Promise.all(
+      list.map(async (p) => {
+        const res = await galleryService.findById(p.id, organizationId, 1, 3, undefined, { hideFailed: true });
+        const items: ProjectPreview[] = (res?.data ?? [])
+          .filter((it: { imageUrl?: string }) => !!it.imageUrl)
+          .map((it: { id: string; imageUrl: string; typeGenerate?: string }) => ({
+            id: it.id,
+            url: it.imageUrl,
+            isVideo: (it.typeGenerate ?? "").toLowerCase().includes("video"),
+          }));
+        return [p.id, items] as const;
+      }),
+    );
+    setPreviews(Object.fromEntries(entries));
+  };
+
   const fetchProjects = async () => {
     if (!organizationId || !session?.user?.id) return;
     setLoading(true);
@@ -154,6 +177,7 @@ const ProjectsPage = () => {
         { name: searchValue.name },
       );
       setProjects(response || []);
+      loadPreviews(response || []);
       setAssignedCredit(
         response?.reduce((acc, p) => acc + p.limitCreditAllowance, 0) ?? 0,
       );
@@ -396,6 +420,140 @@ const ProjectsPage = () => {
       ? "calc(100svh - 58px)"
       : "calc(100svh - 62px)";
 
+  // ≥1200px: search, filters and view toggle join the header row, so the list starts higher.
+  const searchControls = (
+              <Form
+                form={searchForm}
+                onFinish={(value) => handleSearch(value)}
+                style={{ width: isWide ? "auto" : "100%" }}
+              >
+                <Space
+                  size={isMobile ? 6 : isTablet ? 10 : 16}
+                  align="center"
+                  wrap
+                  style={{ width: "100%" }}
+                >
+                  {isMobile ? (
+                    <Button
+                      onClick={() => searchForm.submit()}
+                      type={"default"}
+                      icon={<SearchOutlined style={{ fontSize: 12 }} />}
+                      aria-label="Search projects"
+                      size="small"
+                      style={{
+                        minWidth: 28,
+                        borderRadius: 6,
+                        border: `1px solid ${semantic.colorBorder}`,
+                        color: semantic.colorTextSecondary,
+                        backgroundColor: semantic.colorBgContainer,
+                      }}
+                    />
+                  ) : (
+                    <Form.Item name="name" style={{ marginBottom: 0 }}>
+                      <Input
+                        size="small"
+                        placeholder="Search project..."
+                        style={{
+                          width: isWide ? 240 : isTablet ? 220 : 380,
+                          maxWidth: "100%",
+                          borderRadius: 4,
+                        }}
+                        prefix={
+                          <SearchOutlined
+                            onClick={() => searchForm.submit()}
+                            style={{ color: semantic.colorTextSecondary }}
+                          />
+                        }
+                        onPressEnter={() => searchForm.submit()}
+                      />
+                    </Form.Item>
+                  )}
+                  <Segmented
+                    className="project-status-seg"
+                    aria-label="Filter projects by status"
+                    value={(searchValue.status as string | undefined) ?? "all"}
+                    options={[
+                      // The header chip already shows the total, so "All" carries no count.
+                      { label: "All", value: "all" },
+                      { label: `Active (${activeProjects})`, value: "active" },
+                      { label: `Inactive (${inactiveProjects})`, value: "inactive" },
+                    ]}
+                    onChange={(v) => handleSearch({ status: v === "all" ? undefined : v })}
+                  />
+                </Space>
+              </Form>
+  );
+  const viewToggle = (
+                <Radio.Group
+                  className="project-view-toggle"
+                  value={viewType}
+                  onChange={(e) => setViewType(e.target.value)}
+                  style={{
+                    background: "transparent",
+                    borderRadius: 8,
+                    padding: isMobile ? "1px" : isTablet ? "2px" : "3px",
+                    border: `1px solid ${semantic.colorBorder}`,
+                    display: "flex",
+                    gap: isMobile ? 2 : isTablet ? 3 : 4,
+                  }}
+                >
+                  <Radio.Button
+                    value="list"
+                    aria-label="List view"
+                    title="List view"
+                    style={{
+                      background:
+                        viewType === "list"
+                          ? semantic.colorPrimary
+                          : "transparent",
+                      color:
+                        viewType === "list" ? "#fff" : semantic.colorTextBase,
+                      borderRadius:
+                        isMobile || isTablet ? 4 : "6px 0px 0px 6px",
+                      width: isMobile ? 20 : isTablet ? 22 : 24,
+                      height: isMobile ? 20 : isTablet ? 22 : 24,
+                      padding: 0,
+                      border: "none",
+                      transition: "background 0.2s",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <UnorderedListOutlined
+                      style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
+                    />
+                  </Radio.Button>
+                  <Radio.Button
+                    value="grid"
+                    aria-label="Grid view"
+                    title="Grid view"
+                    style={{
+                      background:
+                        viewType === "grid"
+                          ? semantic.colorPrimary
+                          : "transparent",
+                      color:
+                        viewType === "grid" ? "#fff" : semantic.colorTextBase,
+                      borderRadius:
+                        isMobile || isTablet ? 4 : "0px 6px 6px 0px",
+                      width: isMobile ? 20 : isTablet ? 22 : 24,
+                      height: isMobile ? 20 : isTablet ? 22 : 24,
+                      padding: 0,
+                      border: "none",
+                      transition: "background 0.2s",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppstoreOutlined
+                      style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
+                    />
+                  </Radio.Button>
+                </Radio.Group>
+  );
+
   return (
     <Spin spinning={loading} style={{ height: "100%" }}>
       <div
@@ -427,12 +585,13 @@ const ProjectsPage = () => {
             chipBg={semantic.colorBgTextActive as string}
             chipText={semantic.colorTextSecondary as string}
             rightSlot={
-              <Space size={8}>
+              <Space size={isWide ? 12 : 8} align="center" className="project-header-actions">
+                {isWide && searchControls}
+                {isWide && viewToggle}
                 <GuideTourButton guide={PROJECT_LIST_GUIDE} />
                 {canCreateProjects(organizationRole) ? (
                   <Button
                     type="primary"
-                    size={"small"}
                     icon={<PlusOutlined />}
                     onClick={handleOpen}
                   >
@@ -444,6 +603,7 @@ const ProjectsPage = () => {
             compact
           />
           {/* Filter/Search Section */}
+          {!isWide && (
           <Row
             className="project-filter-row"
             align={isMobile ? "top" : "middle"}
@@ -451,15 +611,15 @@ const ProjectsPage = () => {
             gutter={[10, isMobile ? 6 : 8]}
             wrap
             style={{
-              minHeight: isMobile ? 40 : isTablet ? 44 : 46,
+              minHeight: isMobile ? 40 : 42,
               height: "auto",
               width: "100%",
               margin: 0,
               padding: isMobile
                 ? "6px 10px"
                 : isTablet
-                  ? "8px 12px"
-                  : "8px 14px",
+                  ? "4px 12px"
+                  : "4px 14px",
               backgroundColor: semantic.colorBgContainer,
               borderBottom: `1px solid ${semantic.colorBorder}`,
             }}
@@ -472,103 +632,7 @@ const ProjectsPage = () => {
               flex="1"
               style={{ display: "flex", alignItems: "center" }}
             >
-              <Form
-                form={searchForm}
-                onFinish={(value) => handleSearch(value)}
-                style={{ width: "100%" }}
-              >
-                <Space
-                  size={isMobile ? 6 : isTablet ? 10 : 16}
-                  align="center"
-                  wrap
-                  style={{ width: "100%" }}
-                >
-                  {isMobile ? (
-                    <Button
-                      onClick={() => searchForm.submit()}
-                      type={"default"}
-                      icon={<SearchOutlined style={{ fontSize: 12 }} />}
-                      size="small"
-                      style={{
-                        minWidth: 28,
-                        borderRadius: 6,
-                        border: `1px solid ${semantic.colorBorder}`,
-                        color: semantic.colorTextSecondary,
-                        backgroundColor: semantic.colorBgContainer,
-                      }}
-                    />
-                  ) : (
-                    <Form.Item name="name" style={{ marginBottom: 0 }}>
-                      <Input
-                        size="small"
-                        placeholder="Search project..."
-                        style={{
-                          width: isTablet ? 220 : 380,
-                          maxWidth: "100%",
-                          borderRadius: 4,
-                        }}
-                        prefix={
-                          <SearchOutlined
-                            onClick={() => searchForm.submit()}
-                            style={{ color: semantic.colorTextSecondary }}
-                          />
-                        }
-                        onPressEnter={() => searchForm.submit()}
-                      />
-                    </Form.Item>
-                  )}
-                  <Space size={isMobile ? 4 : isTablet ? 8 : 12} wrap>
-                    <Button
-                      className="project-filter-btn"
-                      type={!searchValue["status"] ? "primary" : "default"}
-                      ghost
-                      variant="outlined"
-                      size={"small"}
-                      style={{
-                        color: semantic.colorTextSecondary,
-                        fontWeight: 500,
-                      }}
-                      onClick={() => handleSearch({ status: undefined })}
-                    >
-                      All ({projects.length})
-                    </Button>
-                    <Button
-                      className="project-filter-btn"
-                      type={
-                        searchValue.status === "active" ? "primary" : "default"
-                      }
-                      ghost
-                      variant="outlined"
-                      size={"small"}
-                      style={{
-                        color: semantic.colorTextSecondary,
-                        fontWeight: 500,
-                      }}
-                      onClick={() => handleSearch({ status: "active" })}
-                    >
-                      Active ({activeProjects})
-                    </Button>
-                    <Button
-                      className="project-filter-btn"
-                      type={
-                        searchValue.status === "inactive"
-                          ? "primary"
-                          : "default"
-                      }
-                      ghost
-                      variant="outlined"
-                      size={"small"}
-                      style={{
-                        color: semantic.colorTextSecondary,
-                        fontWeight: 500,
-                      }}
-                      onClick={() => handleSearch({ status: "inactive" })}
-                    >
-                      Inactive ({inactiveProjects})
-                    </Button>
-                  </Space>
-                </Space>
-              </Form>
+              {searchControls}
             </Col>
             <Col
               xs={24}
@@ -584,80 +648,11 @@ const ProjectsPage = () => {
               }}
             >
               <Space size={isMobile ? 8 : isTablet ? 12 : 16}>
-                {!isMobile && !isTablet ? (
-                  <Typography.Text
-                    style={{ fontSize: 16, color: semantic.colorTextSecondary }}
-                  >
-                    {visibleProjects.length} projects
-                  </Typography.Text>
-                ) : null}
-                <Radio.Group
-                  className="project-view-toggle"
-                  value={viewType}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{
-                    background: "transparent",
-                    borderRadius: 8,
-                    padding: isMobile ? "1px" : isTablet ? "2px" : "3px",
-                    border: `1px solid ${semantic.colorBorder}`,
-                    display: "flex",
-                    gap: isMobile ? 2 : isTablet ? 3 : 4,
-                  }}
-                >
-                  <Radio.Button
-                    value="list"
-                    style={{
-                      background:
-                        viewType === "list"
-                          ? semantic.colorPrimary
-                          : "transparent",
-                      color:
-                        viewType === "list" ? "#fff" : semantic.colorTextBase,
-                      borderRadius:
-                        isMobile || isTablet ? 4 : "6px 0px 0px 6px",
-                      width: isMobile ? 20 : isTablet ? 22 : 24,
-                      height: isMobile ? 20 : isTablet ? 22 : 24,
-                      padding: 0,
-                      border: "none",
-                      transition: "background 0.2s",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <UnorderedListOutlined
-                      style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
-                    />
-                  </Radio.Button>
-                  <Radio.Button
-                    value="grid"
-                    style={{
-                      background:
-                        viewType === "grid"
-                          ? semantic.colorPrimary
-                          : "transparent",
-                      color:
-                        viewType === "grid" ? "#fff" : semantic.colorTextBase,
-                      borderRadius:
-                        isMobile || isTablet ? 4 : "0px 6px 6px 0px",
-                      width: isMobile ? 20 : isTablet ? 22 : 24,
-                      height: isMobile ? 20 : isTablet ? 22 : 24,
-                      padding: 0,
-                      border: "none",
-                      transition: "background 0.2s",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <AppstoreOutlined
-                      style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
-                    />
-                  </Radio.Button>
-                </Radio.Group>
+                {viewToggle}
               </Space>
             </Col>
           </Row>
+          )}
         </div>
 
         <div
@@ -672,16 +667,42 @@ const ProjectsPage = () => {
           }}
         >
           <Divider style={{ margin: 0 }} />
-          {loading ? (
-            <div className="text-center text-[var(--legacy-gray-400)]">Loading ...</div>
+          {loading && visibleProjects.length === 0 ? (
+            // The page-level <Spin> already shows progress; this only reserves room for it.
+            <div style={{ minHeight: 240 }} />
           ) : visibleProjects.length === 0 ? (
-            <div className="text-center py-12">
-              <ProjectOutlined className="text-6xl text-gray-600 mb-4" />
-              <h3 className="text-xl text-[var(--legacy-gray-400)] mb-2">No project yet</h3>
-            </div>
+            searchValue.name || searchValue.status ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No project matches this search or filter."
+                style={{ marginTop: 48 }}
+              >
+                <Button
+                  onClick={() => {
+                    searchForm.setFieldsValue({ name: undefined });
+                    handleSearch({ name: undefined, status: undefined });
+                  }}
+                >
+                  Clear search
+                </Button>
+              </Empty>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description="No projects yet."
+                style={{ marginTop: 48 }}
+              >
+                {canCreateProjects(organizationRole) && (
+                  <Button type="primary" onClick={handleOpen}>
+                    New project
+                  </Button>
+                )}
+              </Empty>
+            )
           ) : viewType === "grid" ? (
             <ProjectGridView
               projects={visibleProjects}
+              previews={previews}
               semantic={semantic}
               onClickProject={onClickProject}
               formatDate={formatDate}
@@ -732,28 +753,35 @@ const ProjectsPage = () => {
           animation: projectTopIn 280ms ease;
         }
 
-        .project-filter-row {
-          backdrop-filter: saturate(140%) blur(2px);
-        }
-
-        .project-filter-btn {
-          transition:
-            transform 160ms ease,
-            box-shadow 160ms ease;
-        }
-
-        .project-filter-btn:hover {
-          transform: translateY(-1px);
-        }
-
         .project-view-toggle .ant-radio-button-wrapper {
-          transition:
-            transform 160ms ease,
-            background-color 160ms ease;
+          transition: background-color 160ms ease;
         }
 
-        .project-view-toggle .ant-radio-button-wrapper:hover {
-          transform: translateY(-1px);
+        /* One control height (32px) across the header row; the shared buttons default to 24 or 40. */
+        .project-header-actions .ant-btn,
+        .project-header-actions .ant-input-affix-wrapper {
+          height: 32px;
+        }
+        .project-header-actions .ant-btn-icon-only {
+          width: 32px;
+        }
+        .project-status-seg .ant-segmented-item-label {
+          min-height: 28px;
+          line-height: 28px;
+        }
+
+        /* Touch screens get a 44px target; the inline 20–24px sizes suit a pointer only. */
+        @media (hover: none) {
+          .project-view-toggle .ant-radio-button-wrapper {
+            min-width: 44px !important;
+            min-height: 44px !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .project-top-shell {
+            animation: none;
+          }
         }
 
         .project-main-scroll::-webkit-scrollbar {

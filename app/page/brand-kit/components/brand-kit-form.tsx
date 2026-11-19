@@ -1,10 +1,8 @@
 "use client";
 
 import React from "react";
-import { Form, Input, Select, Typography } from "antd";
+import { Form, Input, Select, Typography, theme } from "antd";
 import type { FormInstance } from "antd/es/form";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 
 type BrandKitFormProps = {
   form: FormInstance;
@@ -15,11 +13,7 @@ export default function BrandKitForm({
   form,
   mode = 'create',
 }: BrandKitFormProps) {
-  const { mode: themeMode } = useThemeMode();
-  const hintColor =
-    themeMode === "dark"
-      ? "#9ca3af"
-      : getThemeConfig(themeMode).token?.colorTextSecondary;
+  const hintColor = theme.useToken().token.colorTextSecondary;
   return (
     <>
       <Typography.Text style={{ color: hintColor, marginBottom: 12, display: "block" }}>

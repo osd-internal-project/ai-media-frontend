@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, Form, Input, Select, Space } from "antd";
+import { Modal, Form, Input, Select, Space, theme } from "antd";
 
 interface ColorModalProps {
   open: boolean;
@@ -10,6 +10,7 @@ interface ColorModalProps {
 
 
 const ColorModal: React.FC<ColorModalProps> = ({ open, form, onOk, onCancel }) => {
+  const { token } = theme.useToken();
   const [hexValue, setHexValue] = useState<string>("");
 
   // Sync with form value when modal opens or form resets
@@ -56,11 +57,11 @@ const ColorModal: React.FC<ColorModalProps> = ({ open, form, onOk, onCancel }) =
           width: 44,
           height: 44,
           borderRadius: 10,
-          border: "1px solid #2b3442",
+          border: `1px solid ${token.colorBorder}`,
           background:
             hexValue && /^#([0-9A-Fa-f]{6})$/.test(hexValue)
               ? hexValue
-              : "#1e293b",
+              : token.colorFillSecondary,
           flexShrink: 0,
         }}
       />

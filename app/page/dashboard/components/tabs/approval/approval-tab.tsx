@@ -29,7 +29,7 @@ export default function ApprovalsTab({
     <Card
     bordered={false}
       style={{ background: "transparent", boxShadow: "none" }}
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
 
     >
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -77,7 +77,7 @@ export default function ApprovalsTab({
             background: token.colorSuccessBg,
             borderColor: token.colorSuccessBorder,
           }}
-          bodyStyle={{ padding: 28 }}
+          styles={{ body: { padding: 28 } }}
         >
           <Empty description="No pending approval requests" />
         </Card>
@@ -96,7 +96,7 @@ export default function ApprovalsTab({
                 key={user.userId}
                 bordered
                 style={{ borderColor: token.colorBorderSecondary }}
-                bodyStyle={{ padding: 14 }}
+                styles={{ body: { padding: 14 } }}
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0 flex-1">

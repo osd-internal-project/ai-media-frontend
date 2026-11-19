@@ -7,7 +7,7 @@ import {
 } from "@ant-design/icons";
 import { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
-import Quata from "./quata";
+import { formatNumber } from "@/app/utils/format";
 
 interface ProjectListViewProps {
   projects: IProject[];
@@ -81,9 +81,10 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
           background: semantic.colorBgContainer,
         }}
         rowClassName={(record: IProject) =>
-          hoveredRowId === record.id ? "project-list-row-hover" : ""
+          `project-list-row${hoveredRowId === record.id ? " project-list-row-hover" : ""}`
         }
         onRow={(record) => ({
+          // Mouse users click anywhere on the row; keyboard users reach the name link, so the row keeps table semantics.
           onClick: () => onClickProject(record.id),
           style: { cursor: "pointer" },
           onMouseEnter: () => setHoveredRowId(record.id),
@@ -114,7 +115,7 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
               >
                 <FolderOpenOutlined
                   style={{
-                    color: semantic.colorPrimary,
+                    color: semantic.colorTextSecondary,
                     fontSize: isMobile ? 16 : 20,
                     marginTop: isMobile ? 1 : 2,
                   }}
@@ -138,7 +139,18 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                         maxWidth: "100%",
                       }}
                     >
+                      <a
+                      href={`/page/project/${record.id}`}
+                      className="project-list-name"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onClickProject(record.id);
+                      }}
+                      style={{ color: "inherit" }}
+                    >
                       {text}
+                    </a>
                     </span>
                     {record.status === "deleted" ? (
                       <span
@@ -164,18 +176,20 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                       ></span>
                     )}
                   </div>
-                  <div
-                    style={{
-                      color: semantic.colorTextSecondary,
-                      fontSize: isMobile ? 11 : 13,
-                      marginTop: 2,
-                      lineHeight: 1.2,
-                      whiteSpace: "normal",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {record.description || "No description provided"}
-                  </div>
+                  {record.description ? (
+                    <div
+                      style={{
+                        color: semantic.colorTextSecondary,
+                        fontSize: isMobile ? 11 : 13,
+                        marginTop: 2,
+                        lineHeight: 1.4,
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {record.description}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ),
@@ -212,8 +226,10 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
             align: "center",
             render: (_: any, record: IProject) => {
               const creditUsed = record.usedCreditAllowance ?? 0;
-              console.log("creditUsed", creditUsed);
               const creditTotal = record.limitCreditAllowance ?? 0;
+              const creditLeft = Math.max(0, creditTotal - creditUsed);
+              // Below 10% left the line turns warning and says so in words, not colour alone.
+              const lowCredit = creditTotal > 0 && creditLeft / creditTotal < 0.1;
               return (
                 <div
                   style={{
@@ -223,13 +239,43 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                     flexDirection: "column",
                   }}
                 >
-                  <Quata
-                    creditUsed={creditUsed}
-                    creditTotal={creditTotal}
-                    semantic={semantic}
-                    size={"small"}
-                    cerrentUsedCredit={0}
-                  />
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      fontVariantNumeric: "tabular-nums",
+                      whiteSpace: "nowrap",
+                      color: lowCredit ? semantic.colorWarningText : semantic.colorTextBase,
+                    }}
+                  >
+                    {creditTotal > 0 ? (
+                      <>
+                        {lowCredit ? "Low · " : ""}
+                        {formatNumber(creditLeft)}
+                        <span style={{ fontWeight: 400, color: semantic.colorTextSecondary }}>
+                          {" "}left of {formatNumber(creditTotal)}
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ fontWeight: 400, color: semantic.colorTextSecondary }}>No credit assigned</span>
+                    )}
+                  </span>
+                  {/* Same bar as the grid: used fills from the left (green, yellow when nearly spent); what is left stays grey. */}
+                  <span
+                    className="project-credit-bar"
+                    role="img"
+                    aria-label={`${formatNumber(creditLeft)} of ${formatNumber(creditTotal)} credits left`}
+                    style={{ display: "flex", height: 6, marginTop: 4, borderRadius: 999, overflow: "hidden", background: semantic.colorFillSecondary }}
+                  >
+                    {creditTotal > 0 && creditUsed > 0 ? (
+                      <span
+                        style={{
+                          width: `${Math.max(2, Math.min(100, (creditUsed / creditTotal) * 100))}%`,
+                          background: lowCredit ? semantic.gold : semantic.colorSuccess,
+                        }}
+                      />
+                    ) : null}
+                  </span>
                 </div>
               );
             },
@@ -239,8 +285,11 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
             title: "Updated",
             key: "updated",
             align: "center",
-            render: (_: any, record: IProject) =>
-              formatDate(record.updatedAt || record.createdAt),
+            render: (_: any, record: IProject) => (
+              <span style={{ whiteSpace: "nowrap" }}>
+                {formatDate(record.updatedAt || record.createdAt)}
+              </span>
+            ),
             width: 140,
             responsive: ["sm"],
           },
@@ -265,17 +314,12 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                   placement="bottomRight"
                 >
                   <Button
-                    className="!h-auto flex items-center text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)] hover:bg-[var(--legacy-hover-gray-700)] !px-2 !py-2 sm:!px-3 sm:!py-2"
+                    className="project-list-action-btn !h-auto flex items-center text-[var(--legacy-gray-400)] hover:text-[var(--legacy-ink)] hover:bg-[var(--legacy-hover-gray-700)] !px-2 !py-2 sm:!px-3 sm:!py-2"
                     type="text"
+                    aria-label={`Actions for ${record.name}`}
                     icon={<MoreOutlined style={{ fontSize: 18 }} />}
                     onClick={(e) => e.stopPropagation()}
                     style={{
-                      opacity: isMobile || hoveredRowId === record.id ? 1 : 0,
-                      pointerEvents:
-                        isMobile || hoveredRowId === record.id
-                          ? "auto"
-                          : "none",
-                      transition: "opacity 0.15s ease",
                       borderRadius: 10,
                       color: semantic.colorTextSecondary,
                     }}
@@ -289,6 +333,37 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
               .project-list-row-hover > td {
                 background: ${semantic.colorFillAlter} !important;
                 transition: background-color 180ms ease;
+              }
+              .project-list-name:focus-visible {
+                outline: 2px solid ${semantic.colorPrimary};
+                outline-offset: 2px;
+                border-radius: 4px;
+              }
+              /* Actions stay reachable on touch screens and by keyboard, not only on hover. */
+              .project-list-action-btn {
+                opacity: 0;
+                transition: opacity 150ms ease;
+              }
+              .project-list-row:hover .project-list-action-btn,
+              .project-list-row:focus-within .project-list-action-btn {
+                opacity: 1;
+              }
+              .project-list-row .project-credit-bar {
+                animation: projectListCreditReveal 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+              }
+              @keyframes projectListCreditReveal {
+                from { clip-path: inset(0 100% 0 0); }
+                to { clip-path: inset(0 0 0 0); }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                .project-list-row .project-credit-bar { animation: none; }
+              }
+              @media (hover: none) {
+                .project-list-action-btn {
+                  opacity: 1;
+                  min-width: 44px;
+                  min-height: 44px;
+                }
               }
             `}</style>
     </Row>

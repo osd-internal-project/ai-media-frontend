@@ -10,9 +10,10 @@ import {
   Select,
   List,
   Skeleton,
+  theme,
 } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
-import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { aiCaveColors } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
 import {
@@ -67,7 +68,7 @@ export default function TransactionHistory({
 }: TransactionHistoryProps) {
   const { mode } = useThemeMode();
   const { isMobile } = useResponsive();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const isCompact = size === "compact";
   const [filterType, setFilterType] = useState("allType");
   const pageSize = isCompact ? 4 : 8;
@@ -249,6 +250,7 @@ export default function TransactionHistory({
           <Button
             type="text"
             shape="circle"
+            aria-label="Export coupon usage to Excel"
             icon={<DownloadOutlined />}
             disabled={couponCodeUsage.total === 0}
             onClick={exportToExcel}

@@ -586,9 +586,7 @@ const DashboardClient: FC = () => {
       // Same array the Projects tab badge counts, so the two can never disagree.
       value: filteredProjects.length,
       sub: `${activeProjectCount} active`,
-      icon: <FolderOpen size={16} color={token.colorPrimary} />,
-      iconBg: token.colorPrimaryBg,
-      iconColor: token.colorPrimary,
+      icon: <FolderOpen size={16} />,
       trend: `+${countInRange(filteredProjects.map((project) => project.createdAt))} in range`,
     },
     {
@@ -596,29 +594,23 @@ const DashboardClient: FC = () => {
       // Same array the Users tab badge counts.
       value: filteredUsers.length,
       sub: `${adminCount} admins`,
-      icon: <Users size={16} color={token.colorInfo} />,
-      iconBg: token.colorInfoBg,
-      iconColor: token.colorInfo,
+      icon: <Users size={16} />,
       trend: `+${countInRange(filteredUsers.map((user) => user.joinedAt))} in range`,
     },
     {
       label: "Generations",
       value: formatCompactNumber(overviewSummary?.generationCount ?? 0),
       sub: `${formatCompactNumber(overviewSummary?.rangeUsedCredit ?? 0)} credits used in range`,
-      icon: <Sparkles size={16} color={token.colorSuccess} />,
-      iconBg: token.colorSuccessBg,
-      iconColor: token.colorSuccess,
+      icon: <Sparkles size={16} />,
     },
     {
       label: "Credit Usage",
       value: `${formatCompactNumber(quotaUsed)} / ${formatCompactNumber(quotaTotal)}`,
       sub:
         quotaTotal > 0
-          ? `${formatNumber(overviewSummary?.quotaRemaining ?? 0)} left this cycle`
+          ? `${formatCompactNumber(overviewSummary?.quotaRemaining ?? 0)} left this cycle`
           : "No active package",
-      icon: <CreditCard size={16} color={token.colorWarning} />,
-      iconBg: token.colorWarningBg,
-      iconColor: token.colorWarning,
+      icon: <CreditCard size={16} />,
       progress: quotaPercent,
       progressColor: quotaColor,
       footer:
@@ -728,7 +720,7 @@ const DashboardClient: FC = () => {
           rightSlot={
             showBilling ? (
               <Button
-                type="primary"
+                type="default"
                 onClick={showRedeemCouponModal}
                 icon={<Ticket size={14} />}
               >

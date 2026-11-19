@@ -83,7 +83,19 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
         </div>
       )}
       <div
+        role="button"
+        tabIndex={0}
+        aria-pressed={activeIndex === index}
+        aria-label={`Open brand kit ${kit.name ?? ""}`.trim()}
+        className="brandkit-item"
         onClick={() => onChangeIndex(index)}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onChangeIndex(index);
+          }
+        }}
         onMouseEnter={() => setHoveredIndex(index)}
         onMouseLeave={() => setHoveredIndex(null)}
         style={{
@@ -164,7 +176,8 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
                   height: 16 ,
                   borderRadius: "50%",
                   background: c && c.hex ? c.hex : "transparent",
-                  border: `1px solid ${semantic.colorBorder}`,
+                  // Empty slots keep the column width for alignment but draw nothing.
+                  border: c && c.hex ? `1px solid ${semantic.colorBorder}` : "none",
                   boxSizing: "border-box",
                 }}
               />
@@ -259,7 +272,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               gap: isMobile ? 16 : 10,
               alignItems: "flex-end",
               borderRadius: 8,
-              boxShadow: isMobile ? "0 2px 8px rgba(0,0,0,0.10)" : "none",
+              boxShadow: "none",
               padding: isMobile ? "6px 8px" : "4px 0",
               background: "transparent",
             }}
@@ -319,7 +332,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
                 deleteTriggeredRef.current = false;
               }}
             >
-              Are you sure you want to delete "{kit.name}"? This action cannot be undone.
+              Are you sure you want to delete &ldquo;{kit.name}&rdquo;? This action cannot be undone.
             </Modal>
         </>
       </div>

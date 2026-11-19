@@ -1,4 +1,4 @@
-import { Card, Typography, Input, Button, Space, Tag } from "antd";
+import { Card, Typography, Input, Button, Space, Tag, theme } from "antd";
 import {
   ThunderboltOutlined,
   EditOutlined,
@@ -6,8 +6,6 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import { getThemeConfig } from "@/app/theme/themeConfig";
-import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
 
 const { Text } = Typography;
@@ -36,8 +34,7 @@ export default function CIPromptTab({
 
   const [isEditingCI, setIsEditingCI] = useState(false);
   const [isEditingNeg, setIsEditingNeg] = useState(false);
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const { isMobile, isTablet } = useResponsive();
 
   useEffect(() => {
@@ -157,6 +154,7 @@ export default function CIPromptTab({
                 className="ci-tab-action"
                 type="primary"
                 icon={<CheckOutlined />}
+                aria-label="Save CI prompt"
                 onClick={handleSaveCI}
                 size={isMobile ? "small" : "middle"}
               />
@@ -164,6 +162,7 @@ export default function CIPromptTab({
                 className="ci-tab-action"
                 danger
                 icon={<CloseOutlined />}
+                aria-label="Cancel CI prompt edit"
                 onClick={handleCancelCI}
                 size={isMobile ? "small" : "middle"}
               />
@@ -219,6 +218,7 @@ export default function CIPromptTab({
                 className="ci-tab-action"
                 type="primary"
                 icon={<CheckOutlined />}
+                aria-label="Save negative prompt"
                 onClick={handleSaveNeg}
                 size={isMobile ? "small" : "middle"}
               />
@@ -226,6 +226,7 @@ export default function CIPromptTab({
                 className="ci-tab-action"
                 danger
                 icon={<CloseOutlined />}
+                aria-label="Cancel negative prompt edit"
                 onClick={handleCancelNeg}
                 size={isMobile ? "small" : "middle"}
               />
@@ -251,21 +252,21 @@ export default function CIPromptTab({
       </div>
       {/* ...existing code... */}
       <div className="ci-tab-section">
-        <Text style={{ color: "#64748b", fontSize: isMobile ? 12 : 13 }}>Combined Prompt Preview</Text>
+        <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>Combined Prompt Preview</Text>
         <Card
           className="ci-tab-preview-card"
           style={{
             marginTop: 8,
             background: semantic.colorBgContainer,
             border: `1px solid ${semantic.colorBorder}`,
-            borderRadius: 12,
+            borderRadius: 14,
           }}
-          bodyStyle={{ padding: isMobile ? 12 : 16 }}
+          styles={{ body: { padding: isMobile ? 12 : 16 } }}
         >
           <div style={{ marginBottom: 12 }}>
             <Text style={{ color: semantic.colorTextSecondary }}>Your prompt</Text>
             <div style={{ color: semantic.colorTextSecondary }}>
-              "A hero image for our new product launch"
+              &ldquo;A hero image for our new product launch&rdquo;
             </div>
           </div>
           <div
@@ -288,26 +289,13 @@ export default function CIPromptTab({
           animation: ciTabFadeIn 300ms ease;
         }
 
-        .ci-tab-action {
-          transition: transform 160ms ease, box-shadow 160ms ease;
-        }
 
-        .ci-tab-action:hover {
-          transform: translateY(-1px);
-        }
 
         .ci-tab-textarea {
           transition: border-color 180ms ease, box-shadow 180ms ease;
         }
 
-        .ci-tab-preview-card {
-          transition: transform 180ms ease, box-shadow 180ms ease;
-        }
 
-        .ci-tab-preview-card:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
 
         @keyframes ciTabFadeIn {
           from { opacity: 0; transform: translateY(6px); }

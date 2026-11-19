@@ -106,3 +106,19 @@
   max-width: 320px;
   line-height: 1.6;
 }
+
+/* Brand mark: the one element in the shell with an effect — a soft offset shadow in the
+   brand colour, and a small lift on hover. */
+img.private-sider-logo-mark {
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--sider-accent) 35%, transparent));
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), filter 200ms ease;
+}
+.private-sider-logo:hover img.private-sider-logo-mark {
+  transform: translateY(-1px) scale(1.06);
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--sider-accent) 50%, transparent));
+}
+@media (prefers-reduced-motion: reduce) {
+  .private-sider-logo:hover img.private-sider-logo-mark {
+    transform: none;
+  }
+}

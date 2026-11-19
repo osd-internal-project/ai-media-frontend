@@ -1,8 +1,7 @@
-.og-page { padding: 24px 28px 96px; color: var(--og-text); }
-.og-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-.og-title { font-size: 22px; font-weight: 600; margin: 0; line-height: 1.3; }
-.og-subtitle { font-size: 13px; color: var(--og-muted); margin: 4px 0 0; }
-.og-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 20px 0 16px; }
+.og-root { height: 100%; display: flex; flex-direction: column; color: var(--og-text); }
+.og-page { flex: 1; overflow-y: auto; padding: 16px 24px 96px; }
+/* Wider gap than inside a control, so the type and status groups read as two. */
+.og-filters { display: flex; gap: 12px 24px; flex-wrap: wrap; align-items: center; margin: 0 0 16px; }
 .og-count { margin-left: 6px; color: var(--og-muted); font-variant-numeric: tabular-nums; }
 .og-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--og-success); vertical-align: middle; }
 
@@ -15,7 +14,8 @@
   box-shadow: 0 0 0 1px var(--og-border);
 }
 .og-tile.is-selected { box-shadow: 0 0 0 2px var(--og-primary); }
-.og-tile:focus-visible { box-shadow: 0 0 0 2px var(--og-primary), 0 0 0 5px color-mix(in srgb, var(--og-primary) 35%, transparent); }
+.og-tile:has(:focus-visible) { box-shadow: 0 0 0 2px var(--og-primary), 0 0 0 5px color-mix(in srgb, var(--og-primary) 35%, transparent); }
+.og-tile-open { position: absolute; inset: 0; padding: 0; border: 0; background: none; cursor: pointer; outline: none; }
 .og-tile-placeholder { position: absolute; inset: 0; display: grid; place-items: center; color: var(--og-muted); }
 
 /* scrim บางๆ ให้ chip อ่านออกบนภาพสว่าง */
@@ -25,8 +25,8 @@
 }
 .og-tile > span { position: absolute; z-index: 1; }
 .og-tile-check { top: 10px; left: 10px; opacity: 0; transition: opacity .12s; }
-.og-tile:hover .og-tile-check, .og-tile:focus-visible .og-tile-check, .og-tile.is-selected .og-tile-check,
-.og-grid:has(.is-selected) .og-tile-check { opacity: 1; }
+.og-tile:hover .og-tile-check, .og-tile:focus-within .og-tile-check, .og-tile.is-selected .og-tile-check,
+.og-grid:has(.is-selected) .og-tile-check, .og-grid.is-selecting .og-tile-check { opacity: 1; }
 
 .og-chip { font-size: 12px; font-weight: 500; line-height: 1; padding: 5px 8px; border-radius: 6px; font-variant-numeric: tabular-nums; }
 .og-tile-type { top: 10px; right: 10px; background: rgba(0,0,0,.55); color: #fff; }
@@ -39,7 +39,7 @@
   bottom: 10px; right: 10px; max-width: 45%; font-size: 12px; color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .12s;
 }
-.og-tile:hover .og-tile-creator, .og-tile:focus-visible .og-tile-creator { opacity: .9; }
+.og-tile:hover .og-tile-creator, .og-tile:focus-within .og-tile-creator { opacity: .9; }
 
 .og-empty { padding: 72px 16px; text-align: center; color: var(--og-muted); display: grid; gap: 12px; justify-items: center; }
 .og-empty p { margin: 0; }
@@ -54,10 +54,23 @@
 .og-clear { margin-left: auto; }
 
 @media (max-width: 640px) {
-  .og-page { padding: 16px 12px 88px; }
+  .og-page { padding: 12px 12px 88px; }
   .og-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-  .og-tile-check { opacity: 1; }
 }
+/* The select button is for screens without a hover checkbox. */
+@media (hover: hover) and (min-width: 641px) {
+  .og-select-toggle { display: none; }
+}
+.og-preview-caption {
+  max-width: min(720px, 90vw); margin: 0 auto 12px; padding: 8px 12px; border-radius: 8px;
+  /* Sits on antd's always-dark preview mask, so it stays white in both themes. */
+  background: rgba(0, 0, 0, .6); color: #fff; font-size: 13px; line-height: 1.5; text-align: center;
+}
+/* Clamp the inner span: clamping the padded box lets a 4th line show in its padding. */
+.og-preview-caption > span {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.og-preview-media { max-width: 90vw; max-height: 75vh; }
 @media (prefers-reduced-motion: reduce) {
   .og-tile-check, .og-tile-creator { transition: none; }
 }

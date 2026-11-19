@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Spin } from "antd";
+import { Spin, theme } from "antd";
 import BrandKitItem from "./brand-kit-item";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Row, Col, Typography, Button, Space, Divider } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { PlusOutlined } from "@ant-design/icons";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import useResponsive from "@/app/hooks/useResponsive";
 
 const { Text } = Typography;
@@ -45,8 +43,7 @@ export default function BrandKitSidebar({
   onClose,
 }: BrandKitSidebarProps & { style?: React.CSSProperties; onClose?: () => void }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const { isMobile, isTablet } = useResponsive();
 
   // Merge style prop for mobile overlay, fallback to default for desktop
@@ -92,6 +89,7 @@ export default function BrandKitSidebar({
             <Button
               className="brandkit-sidebar-action"
               type="text"
+              aria-label="New brand kit"
               icon={<PlusOutlined />}
               onClick={onCreateKit}
               style={{ color: semantic.colorTextSecondary, fontSize: "16px" , padding: isMobile ? 2 : 6 }}

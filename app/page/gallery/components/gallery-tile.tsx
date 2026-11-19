@@ -29,10 +29,13 @@ export const formatDuration = (sec: number) =>
 type Props = {
   item: OrgGalleryItem;
   selected: boolean;
+  /** In select mode a tap selects instead of opening the preview (touch screens have no hover checkbox). */
+  selectMode: boolean;
   onToggle: (item: OrgGalleryItem) => void;
+  onOpen: (item: OrgGalleryItem) => void;
 };
 
-const GalleryTile: React.FC<Props> = ({ item, selected, onToggle }) => {
+const GalleryTile: React.FC<Props> = ({ item, selected, selectMode, onToggle, onOpen }) => {
   const typeLabel = (item.type && TYPE_LABEL[item.type]) ?? "ผลงาน";
   const duration = item.type !== "image" ? item.durationSec : null;
   const pill = item.publication && STATUS_PILL[item.publication.status];
@@ -42,35 +45,41 @@ const GalleryTile: React.FC<Props> = ({ item, selected, onToggle }) => {
       : pill?.label;
   const poster = item.thumbnailUrl ?? (item.type === "image" ? item.mediaUrl : null);
 
-  const toggle = () => onToggle(item);
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      toggle();
-    }
-  };
+  const label = `${typeLabel} โดย ${item.creator.fullname}`;
 
+  // Opening and selecting are separate controls, so neither is nested inside the other.
   return (
-    <div
-      role="checkbox"
-      aria-checked={selected}
-      aria-label={`${typeLabel} โดย ${item.creator.fullname}`}
-      tabIndex={0}
-      className={`og-tile${selected ? " is-selected" : ""}`}
-      onClick={toggle}
-      onKeyDown={onKeyDown}
-      title={item.prompt ?? undefined}
-    >
-      {poster ? (
-        <SmartImage src={poster} alt="" draggable={false} wrapperStyle={{ position: "absolute", inset: 0 }} />
-      ) : (
-        <div className="og-tile-placeholder">
-          {item.type === "audio" ? <AudioLines size={32} /> : <Play size={32} />}
-        </div>
-      )}
+    <div className={`og-tile${selected ? " is-selected" : ""}`}>
+      <button
+        type="button"
+        className="og-tile-open"
+        aria-label={selectMode ? `เลือก ${label}` : `ดู ${label}`}
+        aria-pressed={selectMode ? selected : undefined}
+        onClick={() => (selectMode ? onToggle(item) : onOpen(item))}
+        title={item.prompt ?? undefined}
+      >
+        {poster ? (
+          <SmartImage
+            src={poster}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            wrapperStyle={{ position: "absolute", inset: 0 }}
+          />
+        ) : (
+          <span className="og-tile-placeholder">
+            {item.type === "audio" ? <AudioLines size={32} /> : <Play size={32} />}
+          </span>
+        )}
+      </button>
 
       <span className="og-tile-check">
-        <Checkbox checked={selected} tabIndex={-1} />
+        <Checkbox
+          checked={selected}
+          aria-label={`เลือก ${label}`}
+          onChange={() => onToggle(item)}
+        />
       </span>
       <span className="og-chip og-tile-type">
         {duration ? `${typeLabel} ${formatDuration(duration)}` : typeLabel}

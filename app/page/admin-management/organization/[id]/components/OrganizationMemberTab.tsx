@@ -166,7 +166,7 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
         selectedIds,
       );
       const failed = r.failed.length
-        ? `, failed ${r.failed.length} (${r.failed.map((f) => f.email).join(", ")})`
+        ? `, failed ${r.failed.length} (${r.failed.map((f) => `${f.email}: ${f.reason}`).join(", ")})`
         : "";
       return `Sent ${r.sent}${failed}`;
     });

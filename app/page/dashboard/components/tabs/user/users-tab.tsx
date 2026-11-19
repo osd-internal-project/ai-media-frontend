@@ -16,7 +16,7 @@ export default function UsersTab({
     <Card
       bordered={false}
       style={{ background: "transparent", boxShadow: "none" }}
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
     >
       <Space direction="vertical" style={{ width: "100%" }} size={12}>
         <Input

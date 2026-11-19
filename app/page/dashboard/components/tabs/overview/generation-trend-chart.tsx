@@ -60,14 +60,20 @@ const smoothLinePath = (points: Point[]) => {
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
 
+    // Clamping control points between p1 and p2 stops the spline overshooting,
+    // which drew dips below zero after a spike.
+    const lo = Math.min(p1.y, p2.y);
+    const hi = Math.max(p1.y, p2.y);
+    const clampY = (y: number) => Math.min(hi, Math.max(lo, y));
+
     const cp1 = {
       x: p1.x + (p2.x - p0.x) / 6,
-      y: p1.y + (p2.y - p0.y) / 6,
+      y: clampY(p1.y + (p2.y - p0.y) / 6),
     };
 
     const cp2 = {
       x: p2.x - (p3.x - p1.x) / 6,
-      y: p2.y - (p3.y - p1.y) / 6,
+      y: clampY(p2.y - (p3.y - p1.y) / 6),
     };
 
     path += ` C${svgPoint(cp1)} ${svgPoint(cp2)} ${svgPoint(p2)}`;
@@ -320,7 +326,6 @@ export default function GenerationTrendChart({
                 strokeLinejoin="round"
                 fill="none"
                 strokeDasharray={item.strokeDasharray}
-                filter="url(#softShadow)"
               />
             );
           })}
@@ -408,6 +413,9 @@ export default function GenerationTrendChart({
       {series.map((item) =>
         item.points.map((point, index) => {
           const isActive = hoveredIndex === index;
+          // Daily dots crowded a 30-day line; show them only for the hovered day,
+          // except a one-point series, which has no line to show otherwise.
+          if (!isActive && item.points.length > 1) return null;
 
           return (
             <g key={`${item.key}-${index}`}>
@@ -425,7 +433,7 @@ export default function GenerationTrendChart({
                 cx={point.x}
                 cy={point.y}
                 r={isActive ? 5 : 3.5}
-                fill="#fff"
+                fill={colors.tooltipBg}
                 stroke={item.color}
                 strokeWidth={isActive ? 3 : 2}
                 onMouseEnter={() => setHoveredIndex(index)}

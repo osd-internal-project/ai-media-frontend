@@ -76,26 +76,28 @@ export default function OverviewTab({
 
       <Row gutter={[16, 16]}>
         {statCards.map((card) => (
-          <Col xs={24} sm={12} lg={6} key={card.label}>
-            <Card loading={loading} style={{ height: "100%" }}>
+          // The credit card (the one with a bar) is the page's main reading, so it gets more width.
+          <Col
+            xs={24}
+            sm={12}
+            lg={typeof card.progress === "number" ? 9 : 5}
+            key={card.label}
+          >
+            <Card
+              loading={loading}
+              style={{
+                height: "100%",
+                borderColor:
+                  typeof card.progress === "number" ? token.colorPrimaryBorder : undefined,
+              }}
+            >
               <div className="flex items-center justify-between mb-2">
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {card.label}
                 </Typography.Text>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 8,
-                    background: card.iconBg,
-                    color: card.iconColor,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <span style={{ color: token.colorTextSecondary, display: "flex" }}>
                   {card.icon}
-                </div>
+                </span>
               </div>
 
               <Typography.Title level={3} style={{ margin: 0 }}>

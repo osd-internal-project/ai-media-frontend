@@ -22,7 +22,7 @@ export default function PendingApprovalCard({
 
 	return (
 		<Card
-			bodyStyle={{ padding: 16 }}
+			styles={{ body: { padding: 16 } }}
 			style={{ height: "100%", width: "100%" }}
 			title={
 				<div className="flex items-center justify-between w-full">

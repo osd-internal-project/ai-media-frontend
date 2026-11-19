@@ -1,7 +1,6 @@
-import { Button } from "antd";
+import { Button, theme } from "antd";
 import { useTransition, type CSSProperties, type FC } from "react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 
 type DashboardTabKey = "overview" | "users" | "projects" | "analytics" | "approvals";
 
@@ -21,7 +20,7 @@ const DashboardCustomTab: FC<DashboardCustomTabProps> = ({
   approvalsTotal,
 }) => {
   const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
+  const semantic = theme.useToken().token;
   const isLightMode = mode === "light";
   const [, startTransition] = useTransition();
 
@@ -59,9 +58,9 @@ const DashboardCustomTab: FC<DashboardCustomTabProps> = ({
           ? semantic.colorBgTextActive
           : "transparent",
       color: isLightMode
-        ? "#000000"
+        ? semantic.colorTextBase
         : isActive
-          ? "#ffffff"
+          ? semantic.colorTextLightSolid
           : semantic.colorTextSecondary,
       fontWeight: 500,
       boxShadow: "none",

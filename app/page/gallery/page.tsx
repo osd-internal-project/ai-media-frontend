@@ -3,18 +3,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Button, Pagination, Segmented, Select, Skeleton } from "antd";
+import { Button, Image, Pagination, Segmented, Select, Skeleton, theme } from "antd";
 import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
 import GalleryServices from "@/app/services/gellory.service";
 import OrganizationMembersServices from "@/app/services/organization-members.service";
 import { useOrganization } from "@/app/context/OrganizationContext";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import type {
   GalleryType,
   OrgGalleryItem,
   OrgGalleryPage,
 } from "@/app/common/org-gallery.type";
+import PageSubHeader from "@/app/components/layout/PageSubHeader";
 import GalleryTile from "./components/gallery-tile";
 import PublishDrawer from "./components/publish-drawer";
 import "./styles/gallery.css";
@@ -40,8 +39,7 @@ export default function OrgGalleryPage() {
   // SUPER_ADMIN ที่เป็น MEMBER ใน org ก็ยังเห็นทั้ง org ตาม backend
   const orgWide =
     ORG_WIDE_ROLES.includes(organizationRole ?? "") || session?.user?.systemRole === "SUPER_ADMIN";
-  const { mode } = useThemeMode();
-  const token = useMemo(() => getThemeConfig(mode).token ?? {}, [mode]);
+  const token = theme.useToken().token;
 
   const galleryService = useMemo(() => GalleryServices(axiosCore), []);
   const memberService = useMemo(() => OrganizationMembersServices(axiosUser), []);
@@ -57,6 +55,8 @@ export default function OrgGalleryPage() {
   // เก็บทั้ง item ไว้ เพื่อให้ตัวนับยังถูกเมื่อเปลี่ยนหน้าหรือเปลี่ยนตัวกรอง
   const [selected, setSelected] = useState<Map<string, OrgGalleryItem>>(new Map());
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [previewItem, setPreviewItem] = useState<OrgGalleryItem | null>(null);
   // สถานะของชิ้นที่เลือกไว้เก่าแล้วหลังเผยแพร่/ถอด — ล้างตอนปิด drawer
   const [selectionStale, setSelectionStale] = useState(false);
 
@@ -144,27 +144,30 @@ export default function OrgGalleryPage() {
   } as React.CSSProperties; // CSS custom properties ไม่อยู่ใน type ของ CSSProperties
 
   return (
-    <div className="og-page" style={cssVars}>
-      <header className="og-header">
-        <div>
-          <h1 className="og-title">Gallery ขององค์กร</h1>
-          <p className="og-subtitle">
-            {orgWide ? "ผลงานที่สมาชิกสร้างใน AI Cave ทุก project" : "ผลงานของคุณจากทุก project ในองค์กรนี้"}
-          </p>
-        </div>
-        {orgWide && (
-          <Select
-            allowClear
-            showSearch
-            optionFilterProp="label"
-            placeholder="สมาชิกทุกคน"
-            options={members}
-            value={memberId}
-            onChange={resetPage(setMemberId)}
-            style={{ minWidth: 200 }}
-          />
-        )}
-      </header>
+    <div className="og-root" style={cssVars}>
+      <PageSubHeader
+        title="Gallery ขององค์กร"
+        subtitle={
+          orgWide ? "ผลงานที่สมาชิกสร้างใน AI Cave ทุก project" : "ผลงานของคุณจากทุก project ในองค์กรนี้"
+        }
+        count={counts?.all}
+        background={token.colorBgContainer}
+        borderColor={token.colorBorder}
+        titleColor={token.colorTextBase}
+        subtitleColor={token.colorTextSecondary}
+        chipBg={token.colorBgTextActive}
+        chipText={token.colorTextSecondary}
+        rightSlot={
+          <Button
+            className="og-select-toggle"
+            aria-pressed={selectMode}
+            onClick={() => setSelectMode((on) => !on)}
+          >
+            {selectMode ? "เสร็จ" : "เลือก"}
+          </Button>
+        }
+      />
+      <div className="og-page">
 
       <div className="og-filters">
         <Segmented options={TYPE_OPTIONS} value={type} onChange={resetPage(setType)} />
@@ -174,6 +177,20 @@ export default function OrgGalleryPage() {
           value={status}
           onChange={resetPage(setStatus)}
         />
+        {/* In the filter row, not the header, so the title keeps its width on phones. */}
+        {orgWide && (
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="สมาชิกทุกคน"
+            aria-label="กรองตามสมาชิก"
+            options={members}
+            value={memberId}
+            onChange={resetPage(setMemberId)}
+            style={{ minWidth: 180 }}
+          />
+        )}
       </div>
 
       {failed ? (
@@ -202,9 +219,16 @@ export default function OrgGalleryPage() {
         </div>
       ) : (
         <>
-          <div className="og-grid" aria-busy={loading}>
+          <div className={`og-grid${selectMode ? " is-selecting" : ""}`} aria-busy={loading}>
             {result?.data.map((item) => (
-              <GalleryTile key={item.id} item={item} selected={selected.has(item.id)} onToggle={toggle} />
+              <GalleryTile
+                key={item.id}
+                item={item}
+                selected={selected.has(item.id)}
+                selectMode={selectMode}
+                onToggle={toggle}
+                onOpen={setPreviewItem}
+              />
             ))}
           </div>
           {result && result.total > PAGE_SIZE && (
@@ -230,10 +254,46 @@ export default function OrgGalleryPage() {
           <Button type="text" onClick={() => setSelected(new Map())} className="og-clear">
             ล้างที่เลือก
           </Button>
-          <Button type="primary" onClick={() => setDrawerOpen(true)}>
-            เผยแพร่ไป Community
+          <Button type="primary" disabled={publishable === 0} onClick={() => setDrawerOpen(true)}>
+            เผยแพร่ {publishable} ชิ้นไป Community
           </Button>
         </div>
+      )}
+      </div>
+
+      {previewItem?.mediaUrl && (
+        <Image
+          style={{ display: "none" }}
+          src={previewItem.thumbnailUrl ?? previewItem.mediaUrl}
+          alt=""
+          preview={{
+            visible: true,
+            src: previewItem.mediaUrl,
+            onVisibleChange: (visible) => {
+              if (!visible) setPreviewItem(null);
+            },
+            // Video and audio results get a player; antd's preview only renders images.
+            imageRender: (original) =>
+              previewItem.type === "audio" ? (
+                <audio controls autoPlay src={previewItem.mediaUrl ?? undefined} />
+              ) : previewItem.type && previewItem.type !== "image" ? (
+                <video
+                  className="og-preview-media"
+                  controls
+                  autoPlay
+                  src={previewItem.mediaUrl ?? undefined}
+                />
+              ) : (
+                original
+              ),
+            toolbarRender: (original) => (
+              <div>
+                {previewItem.prompt && <p className="og-preview-caption"><span>{previewItem.prompt}</span></p>}
+                {original}
+              </div>
+            ),
+          }}
+        />
       )}
 
       {organizationId && (
