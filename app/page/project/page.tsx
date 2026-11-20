@@ -38,19 +38,13 @@ import { canCreateProjects } from "../../utils/permissions";
 import GuideTourButton from "@/app/components/guide-tour/GuideTourButton";
 import { PROJECT_LIST_GUIDE } from "@/app/components/guide-tour/tour-steps";
 import OrganizationServices from "@/app/services/organization.service";
-import {
-  ICreditBalance,
-  IOrganization,
-  IOrganizationSubscription,
-} from "@/app/common/organization.type";
+import { IOrganization } from "@/app/common/organization.type";
 import { formatNumber } from "@/app/utils/format";
 import ProjectGridView from "./component/project-grid-view";
 import ProjectListView from "./component/project-list-view";
 import useResponsive from "@/app/hooks/useResponsive";
 import { JsonObject } from "next-auth/adapters";
 import PageSubHeader from "@/app/components/layout/PageSubHeader";
-import OrganizationSubscriptionServices from "@/app/services/organization-subscription.service";
-import CreditBalanceServices from "@/app/services/credit-balance.service";
 
 const MAX_MEMBERS = 5;
 
@@ -86,14 +80,6 @@ const ProjectsPage = () => {
     () => OrganizationServices(axiosUser),
     [],
   );
-  const organizationSubscriptionService = useMemo(
-    () => OrganizationSubscriptionServices(axiosUser),
-    [],
-  );
-  const creditBalanceService = useMemo(
-    () => CreditBalanceServices(axiosUser),
-    [],
-  );
 
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -105,7 +91,9 @@ const ProjectsPage = () => {
   );
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [organizationMembers, setOrganizationMembers] = useState<any[]>([]);
-  const [assignedCredit, setAssignedCredit] = useState<number>(0);
+  const [creditCapacity, setCreditCapacity] = useState<
+    { unallocated: number; projectUsed: number } | undefined
+  >();
   const [searchValue, setSearchValue] = useState<JsonObject>({
     name: undefined,
     status: undefined,
@@ -114,12 +102,6 @@ const ProjectsPage = () => {
   const [organization, setOrganization] = useState<IOrganization | undefined>(
     undefined,
   );
-  const [organizationSubscription, setOrganizationSubscription] = useState<
-    IOrganizationSubscription | undefined
-  >(undefined);
-  const [creditBalance, setCreditBalance] = useState<
-    ICreditBalance | undefined
-  >(undefined);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
@@ -178,9 +160,6 @@ const ProjectsPage = () => {
       );
       setProjects(response || []);
       loadPreviews(response || []);
-      setAssignedCredit(
-        response?.reduce((acc, p) => acc + p.limitCreditAllowance, 0) ?? 0,
-      );
     } catch {
       messageApi.error("Failed to load projects");
     } finally {
@@ -188,19 +167,15 @@ const ProjectsPage = () => {
     }
   };
 
-  // Fetches org metadata, subscription, credit balance, and members in parallel
+  // Fetches org metadata and members in parallel
   const fetchOrgData = async () => {
     if (!organizationId) return;
     try {
-      const [org, subscription, credit, members] = await Promise.all([
+      const [org, members] = await Promise.all([
         organizationService.findById(organizationId),
-        organizationSubscriptionService.findByOrganizationId(organizationId),
-        creditBalanceService.findByOrganizationId(organizationId),
         userServices.findOrganizationUserDetails(organizationId),
       ]);
       setOrganization(org);
-      setOrganizationSubscription(subscription);
-      setCreditBalance(credit);
       setOrganizationMembers(members || []);
     } catch (error) {
       console.error("Failed to fetch org data:", error);
@@ -238,6 +213,17 @@ const ProjectsPage = () => {
     fetchProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue.name]);
+
+  // Credit the org can still hand out, loaded fresh each time the create/edit modal opens
+  const editingProjectId = openEdit ? selectedProject?.id : undefined;
+  useEffect(() => {
+    if (!organizationId || !(open || openEdit)) return;
+    setCreditCapacity(undefined);
+    projectService
+      .getCreditCapacity(organizationId, editingProjectId)
+      .then(setCreditCapacity)
+      .catch(() => messageApi.error("Couldn't load available credit"));
+  }, [open, openEdit, organizationId, editingProjectId, projectService, messageApi]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -358,8 +344,12 @@ const ProjectsPage = () => {
           form.resetFields();
           await Promise.all([fetchProjects(), fetchOrgData()]);
         }
-      } catch {
-        messageApi.error("Failed to create project");
+      } catch (error: any) {
+        const message = error?.response?.data?.message;
+        messageApi.error(
+          (Array.isArray(message) ? message[0] : message) ||
+            "Failed to create project",
+        );
       } finally {
         setLoading(false);
       }
@@ -740,9 +730,7 @@ const ProjectsPage = () => {
             maxMembers={MAX_MEMBERS}
             mode={openEdit ? "edit" : "create"}
             formatNumber={formatNumber}
-            organizationSubscription={organizationSubscription}
-            creditBalance={creditBalance}
-            assignedCredit={assignedCredit}
+            creditCapacity={creditCapacity}
           />
         )}
         {contextHolder}

@@ -33,16 +33,21 @@ const ProjectService = (axiosInstance: AxiosInstance) => {
           return [];
         });
     },
+    // throws so the caller can show the server's reason (e.g. credit limit above what the org has left)
     create: async (value: IProject) => {
-      return await axiosInstance
-        .post(`${baseUrl}`, { body: value })
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+      const res = await axiosInstance.post(`${baseUrl}`, { body: value });
+      return res.data;
+    },
+    /** Credit the org can still hand out; projectUsed is the edited project's own used credit */
+    getCreditCapacity: async (
+      organizationId: string,
+      excludeProjectId?: string,
+    ): Promise<{ unallocated: number; projectUsed: number }> => {
+      const res = await axiosInstance.get(
+        `${baseUrl}/organization/${organizationId}/credit-capacity`,
+        { params: { excludeProjectId } },
+      );
+      return res.data;
     },
     // rethrows so callers can show the backend's validation message
     update: async (

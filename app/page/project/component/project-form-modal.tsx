@@ -25,10 +25,6 @@ import {
 } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import useResponsive from "@/app/hooks/useResponsive";
-import {
-  ICreditBalance,
-  IOrganizationSubscription,
-} from "@/app/common/organization.type";
 import { IProject } from "@/app/common/project.type";
 
 type ProjectMember = {
@@ -52,9 +48,8 @@ interface ProjectFormProps {
   maxMembers: number;
   mode: "create" | "edit";
   formatNumber: (num: string | number | undefined) => React.ReactNode;
-  organizationSubscription: IOrganizationSubscription | undefined;
-  creditBalance: ICreditBalance | undefined;
-  assignedCredit: number;
+  /** undefined while loading; from GET project/organization/:id/credit-capacity */
+  creditCapacity: { unallocated: number; projectUsed: number } | undefined;
 }
 
 const ProjectFormModal: React.FC<ProjectFormProps> = ({
@@ -72,9 +67,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   maxMembers,
   mode,
   formatNumber,
-  organizationSubscription,
-  creditBalance,
-  assignedCredit,
+  creditCapacity,
 }) => {
   const { mode: themeMode } = useThemeMode();
   const { isMobile } = useResponsive();
@@ -90,18 +83,16 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
   );
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
   const [creditAllowance, setCreditAllowance] = useState<number>(0);
-  // event orgs get credit outside the plan: creditAllowance is 0, the credit sits in currentCycleBalance
-  const orgPool = Math.max(
-    organizationSubscription?.creditAllowance || 0,
-    creditBalance?.currentCycleBalance || 0,
-  );
+  const unallocated = creditCapacity?.unallocated ?? 0;
+  // editing: the project's own used credit is already spent, so its cap is unallocated + used;
+  // never below the current limit so an over-allocated org can still save other fields
   const maxCredit =
     mode === "edit"
-      ? orgPool +
-        (selectedProject?.limitCreditAllowance || 0) +
-        (creditBalance?.onTopBalance || 0) -
-        assignedCredit
-      : orgPool + (creditBalance?.onTopBalance || 0);
+      ? Math.max(
+          unallocated + (creditCapacity?.projectUsed ?? 0),
+          selectedProject?.limitCreditAllowance || 0,
+        )
+      : Math.max(unallocated, 0);
   // const maxImage =
   //   mode === "edit"
   //     ? (organization?.remainImageAmount || 0) +
@@ -231,11 +222,20 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
             <Form.Item
               label={
                 <span>
-                  Credit Generataions{" "}
+                  Credit generations{" "}
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     Max: {formatNumber(maxCredit)}
                   </Typography.Text>
                 </span>
+              }
+              extra={
+                unallocated < 0 ? (
+                  <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                    Credit already assigned is {formatNumber(-unallocated)} more
+                    than the organization has left. Lower a project limit or add
+                    on-top credit.
+                  </Typography.Text>
+                ) : undefined
               }
               name="limitCreditAllowance"
               style={{ marginBottom: 12 }}
@@ -244,7 +244,7 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
                 {
                   type: "number",
                   max: maxCredit,
-                  message: `Cannot exceed available credit (${formatNumber(maxCredit)})`,
+                  message: `Cannot exceed available credit (${maxCredit.toLocaleString()})`,
                 },
               ]}
             >

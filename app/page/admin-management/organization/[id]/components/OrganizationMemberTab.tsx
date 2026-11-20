@@ -182,9 +182,15 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       setIsExtraCoinModalOpen(false);
       showMessage("success", "Extra coin added successfully");
       onRefresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showMessage("error", "Failed to add extra coin");
+      // backend explains limits, e.g. "Can remove at most 99964 on-top credit"
+      const message = error?.response?.data?.message;
+      showMessage(
+        "error",
+        (Array.isArray(message) ? message[0] : message) ||
+          "Failed to add extra coin",
+      );
     }
   };
 
