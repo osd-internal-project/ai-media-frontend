@@ -172,6 +172,8 @@ export interface IGenerationLog extends IRecentGeneration {
   galleryId: string | null;
   resolution: string | null;
   ratio: string | null;
+  /** Stored model id (`generate_config.modelName`); null when none was recorded. */
+  modelName: string | null;
 }
 
 export interface IGenerationLogPage {

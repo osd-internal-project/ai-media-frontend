@@ -33,6 +33,7 @@ import {
 } from "@/app/page/project/[id]/components/shared/smart-media";
 import AudioPlayer from "@/app/page/project/[id]/components/shared/audio-player";
 import LogStatusTag from "./log-status-tag";
+import useModelNames from "@/app/hooks/useModelNames";
 
 type MediaKind = "image" | "video" | "audio";
 
@@ -53,6 +54,46 @@ const mediaKindOf = (type: GenerationTypeKey | null, url: string): MediaKind => 
   if (AUDIO_EXT.test(path)) return "audio";
   if (VIDEO_EXT.test(path)) return "video";
   return "image";
+};
+
+type GenerationSettings = {
+  modelName: string | null;
+  durationSec: number | null;
+  seed: number | null;
+  flags: { label: string; value: boolean }[];
+  referenceVideoSec: number | null;
+};
+
+/** Reads the settings the core service stored in `generate_config`; absent keys stay null. */
+const settingsOf = (raw: unknown): GenerationSettings => {
+  const config: Record<string, unknown> =
+    raw && typeof raw === "object" && !Array.isArray(raw) ? { ...raw } : {};
+  const positive = (value: unknown) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const files = Array.isArray(config.files) ? config.files : [];
+  const referenceVideoSec = files.reduce<number>((sum, file: unknown) => {
+    if (!file || typeof file !== "object") return sum;
+    const { type, duration } = file as { type?: unknown; duration?: unknown }; // shape written by buildGenerateConfig
+    return type === "video" ? sum + (positive(duration) ?? 0) : sum;
+  }, 0);
+  const flags = (
+    [
+      ["Fast mode", config.fastMode],
+      ["Draft", config.draft],
+      ["Watermark", config.watermark],
+    ] as const
+  ).flatMap(([label, value]) => (typeof value === "boolean" ? [{ label, value }] : []));
+
+  return {
+    modelName:
+      typeof config.modelName === "string" && config.modelName ? config.modelName : null,
+    durationSec: positive(config.duration),
+    seed: typeof config.seed === "number" ? config.seed : null,
+    flags,
+    referenceVideoSec: referenceVideoSec > 0 ? referenceVideoSec : null,
+  };
 };
 
 type LogDetailDrawerProps = {
@@ -107,6 +148,8 @@ export default function LogDetailDrawer({
     ? generationTypeColors(token)[typeKey]
     : token.colorTextQuaternary;
   const isPending = (detail?.status || "").toLowerCase() === "pending";
+  const { nameOf } = useModelNames();
+  const settings = settingsOf(detail?.generateConfig);
 
   const renderMedia = (item: IGenerationLogDetail) => {
     if (item.resultUrl.length === 0) {
@@ -240,6 +283,11 @@ export default function LogDetailDrawer({
           </div>
 
           <Descriptions column={1} size="small" bordered>
+            {settings.modelName && (
+              <Descriptions.Item label="Model">
+                <Typography.Text strong>{nameOf(settings.modelName)}</Typography.Text>
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label="Created by">
               {detail.userFullname || "Unknown user"}
             </Descriptions.Item>
@@ -267,6 +315,24 @@ export default function LogDetailDrawer({
                 {detail.generateAudio ? "Yes" : "No"}
               </Descriptions.Item>
             )}
+            {settings.durationSec !== null && (
+              <Descriptions.Item label="Duration">{settings.durationSec} s</Descriptions.Item>
+            )}
+            {settings.referenceVideoSec !== null && (
+              <Descriptions.Item label="Reference video">
+                {settings.referenceVideoSec} s
+              </Descriptions.Item>
+            )}
+            {settings.seed !== null && (
+              <Descriptions.Item label="Seed">
+                {settings.seed === -1 ? "Random" : settings.seed}
+              </Descriptions.Item>
+            )}
+            {settings.flags.map((flag) => (
+              <Descriptions.Item key={flag.label} label={flag.label}>
+                {flag.value ? "Yes" : "No"}
+              </Descriptions.Item>
+            ))}
             {detail.taskId && (
               <Descriptions.Item label="Task ID">
                 <Typography.Text copyable style={{ fontSize: 12 }}>

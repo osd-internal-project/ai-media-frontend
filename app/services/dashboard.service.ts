@@ -70,6 +70,7 @@ const DashboardServices = (axiosInstance: AxiosInstance) => {
       params: IDashboardFilterParams & {
         userId?: string;
         type?: string;
+        model?: string;
         status?: GenerationLogStatus;
         page?: number;
         pageSize?: number;

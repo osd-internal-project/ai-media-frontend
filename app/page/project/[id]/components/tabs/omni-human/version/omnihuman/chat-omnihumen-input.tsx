@@ -427,6 +427,7 @@ export default function ChatOmnihumenInput({
 
         <div data-tour="quota">
             <Quata
+              projectId={projectId}
                         creditUsed={usedCredit.used || 0}
             creditTotal={usedCredit.total || 0}
             size="small"

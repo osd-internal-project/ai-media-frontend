@@ -18,6 +18,7 @@ import OverviewEmptyState from "../tabs/overview/overview-empty-state";
 import LogDetailDrawer from "./log-detail-drawer";
 import LogStatusTag from "./log-status-tag";
 import useGenerationLogs, { type GenerationLogScope } from "./use-generation-logs";
+import useModelNames from "@/app/hooks/useModelNames";
 
 dayjs.extend(relativeTime);
 
@@ -60,6 +61,10 @@ export default function GenerationLogsPanel({
   const typeColors = generationSeriesColors(token);
   const logs = useGenerationLogs(organizationId, scope);
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const { models, nameOf } = useModelNames();
+  const modelOptions = models.flatMap((model) =>
+    model.modelType ? [{ value: model.modelType, label: model.name }] : [],
+  );
 
   const columns: ColumnsType<IGenerationLog> = [
     {
@@ -109,6 +114,22 @@ export default function GenerationLogsPanel({
         );
       },
     },
+    {
+      title: "Model",
+      key: "model",
+      width: 170,
+      responsive: ["md"],
+      render: (_, item) =>
+        item.modelName ? (
+          <Typography.Text style={{ fontSize: 13 }} ellipsis={{ tooltip: item.modelName }}>
+            {nameOf(item.modelName)}
+          </Typography.Text>
+        ) : (
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            —
+          </Typography.Text>
+        ),
+    },
     ...(hideUser
       ? []
       : [
@@ -151,7 +172,7 @@ export default function GenerationLogsPanel({
     },
   ];
 
-  const filtered = logs.status !== "success" || Boolean(logs.type);
+  const filtered = logs.status !== "success" || Boolean(logs.type) || Boolean(logs.model);
 
   const body = (
     <Space direction="vertical" style={{ width: "100%" }} size={12}>
@@ -171,6 +192,17 @@ export default function GenerationLogsPanel({
           placeholder="All types"
           style={{ width: 150 }}
           aria-label="Filter by type"
+        />
+        <Select
+          value={logs.model}
+          onChange={logs.setModel}
+          options={modelOptions}
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="All models"
+          style={{ width: 190 }}
+          aria-label="Filter by model"
         />
       </div>
 
@@ -204,7 +236,7 @@ export default function GenerationLogsPanel({
               title="No generations match"
               description={
                 filtered
-                  ? "Clear the status or type filter, or widen the date range."
+                  ? "Clear the status, type or model filter, or widen the date range."
                   : "Nothing was generated in this range. Widen the date range to see older work."
               }
               size="compact"
@@ -220,7 +252,7 @@ export default function GenerationLogsPanel({
           showTotal: (total, [start, end]) => `${start}–${end} of ${formatNumber(total)}`,
           onChange: logs.setPagination,
         }}
-        scroll={{ x: 640 }}
+        scroll={{ x: 800 }}
       />
     </Space>
   );

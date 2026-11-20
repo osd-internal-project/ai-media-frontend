@@ -31,6 +31,7 @@ export default function useGenerationLogs(
   const dashboardServices = useMemo(() => DashboardServices(axiosReport), []);
   const [status, setStatus] = useState<GenerationLogStatus>("success");
   const [type, setType] = useState<string | undefined>();
+  const [model, setModel] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [result, setResult] = useState<IGenerationLogPage>(EMPTY_PAGE);
@@ -43,7 +44,7 @@ export default function useGenerationLogs(
   // A new scope or filter starts again from the first page.
   useEffect(() => {
     setPage(1);
-  }, [from, to, projectId, userId, status, type]);
+  }, [from, to, projectId, userId, status, type, model]);
 
   useEffect(() => {
     if (!organizationId) return;
@@ -59,6 +60,7 @@ export default function useGenerationLogs(
         userId,
         status,
         type,
+        model,
         page,
         pageSize,
       })
@@ -86,6 +88,7 @@ export default function useGenerationLogs(
     userId,
     status,
     type,
+    model,
     page,
     pageSize,
     reloadKey,
@@ -99,6 +102,8 @@ export default function useGenerationLogs(
     setStatus,
     type,
     setType,
+    model,
+    setModel,
     page,
     pageSize,
     setPagination: (nextPage: number, nextPageSize: number) => {

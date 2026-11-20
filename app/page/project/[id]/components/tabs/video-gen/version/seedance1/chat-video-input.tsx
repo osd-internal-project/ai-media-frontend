@@ -588,6 +588,7 @@ export default function ChatVideoInput(props: Props) {
         >
           <div data-tour="quota" style={{ flex: 1, minWidth: 0 }}>
             <Quata
+              projectId={projectId}
                             creditUsed={usedCredit.used || 0}
               creditTotal={usedCredit.total || 0}
               size="small"

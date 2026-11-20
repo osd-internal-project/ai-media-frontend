@@ -1,7 +1,11 @@
-import React from "react";
-import { Typography, theme } from "antd";
-import { FileImageOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Empty, Popover, Skeleton, Typography, theme } from "antd";
+import { DownOutlined, FileImageOutlined, VideoCameraOutlined } from "@ant-design/icons";
+import { useSession } from "next-auth/react";
 import { formatNumber } from "@/app/utils/format";
+import { axiosCore } from "@/app/lib/axios/axios";
+import LogsServices from "@/app/services/logs.service";
+import useModelNames from "@/app/hooks/useModelNames";
 
 type QuataSize = "small" | "middle" | "large";
 
@@ -9,6 +13,8 @@ interface QuataProps {
   creditUsed: number;
   creditTotal: number;
   cerrentUsedCredit: number | 0;
+  /** When set, the figure opens a per-model breakdown of this member's credit in the project. */
+  projectId?: string;
 
   // tokenUsed?: number;
   // tokenTotal?: number;
@@ -39,6 +45,7 @@ const Quata: React.FC<QuataProps> = ({
   showToken = true,
   showProgress = true,
   title,
+  projectId,
 }) => {
   const ui = SIZE_MAP[size];
   const { token } = theme.useToken();
@@ -92,6 +99,7 @@ const Quata: React.FC<QuataProps> = ({
             <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Credit</span>
           </Typography.Text>
         </span>
+        <CreditFigure projectId={projectId}>
         <Typography.Text
           strong
           style={{ color: colorTextBase, fontSize: ui.value, whiteSpace: "nowrap" }}
@@ -108,6 +116,7 @@ const Quata: React.FC<QuataProps> = ({
           )}
           /{formatNumber(safeImageTotal)}
         </Typography.Text>
+        </CreditFigure>
       </div>
       {showProgress ? (
         <CreditBar
@@ -151,6 +160,140 @@ const Quata: React.FC<QuataProps> = ({
     </div>
   );
 };
+
+/** Wraps the credit figure in a click-to-open breakdown when a project is known. */
+function CreditFigure({ projectId, children }: { projectId?: string; children: React.ReactNode }) {
+  const { token } = theme.useToken();
+  if (!projectId) return <>{children}</>;
+  return (
+    <Popover
+      trigger="click"
+      placement="topRight"
+      title="Credits by model"
+      destroyTooltipOnHide
+      content={<CreditByModel projectId={projectId} />}
+    >
+      <Button
+        type="text"
+        size="small"
+        aria-label="Show credits by model"
+        style={{ height: "auto", paddingInline: 4, marginInlineEnd: -4 }}
+      >
+        {children}
+        <DownOutlined style={{ fontSize: 10, color: token.colorTextSecondary }} />
+      </Button>
+    </Popover>
+  );
+}
+
+type ModelCredit = { modelName: string | null; credit: number };
+
+/** Mounted only while the popover is open, so the fetch runs on open, not on every tab. */
+function CreditByModel({ projectId }: { projectId: string }) {
+  const { token } = theme.useToken();
+  const { data: session } = useSession();
+  const { nameOf } = useModelNames();
+  const logsServices = useMemo(() => LogsServices(axiosCore), []);
+  const [rows, setRows] = useState<ModelCredit[] | null>(null);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const organizationId = session?.user?.organizationId;
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    if (!organizationId || !userId) return;
+    let cancelled = false;
+    setError(false);
+    setRows(null);
+    logsServices
+      .findUsedCreditByModel(projectId, organizationId, userId)
+      .then((next) => {
+        if (!cancelled) setRows(next ?? []);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        console.error("Failed to load credits by model", err);
+        setError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, organizationId, userId, logsServices, reloadKey]);
+
+  const body = (() => {
+    if (error) {
+      return (
+        <Alert
+          type="error"
+          showIcon
+          message="Couldn't load credits by model."
+          action={
+            <Button size="small" onClick={() => setReloadKey((key) => key + 1)}>
+              Retry
+            </Button>
+          }
+        />
+      );
+    }
+    if (!rows) return <Skeleton active title={false} paragraph={{ rows: 3 }} />;
+    if (rows.length === 0) {
+      return (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No credits spent in this project yet."
+        />
+      );
+    }
+    const max = Math.max(...rows.map((row) => row.credit), 1);
+    const total = rows.reduce((sum, row) => sum + row.credit, 0);
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {rows.map((row) => (
+          <div key={row.modelName ?? "unknown"} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <Typography.Text ellipsis style={{ fontSize: 13 }}>
+                {nameOf(row.modelName)}
+              </Typography.Text>
+              <Typography.Text strong style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+                {formatNumber(row.credit)}
+              </Typography.Text>
+            </div>
+            <div style={{ height: 4, borderRadius: 999, background: token.colorFillSecondary }}>
+              <div
+                style={{
+                  width: `${(row.credit / max) * 100}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background: token.colorPrimary,
+                }}
+              />
+            </div>
+          </div>
+        ))}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            borderTop: `1px solid ${token.colorSplit}`,
+            paddingTop: 8,
+          }}
+        >
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            Total
+          </Typography.Text>
+          <Typography.Text strong style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+            {formatNumber(total)}
+          </Typography.Text>
+        </div>
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+          Your finished and in-progress jobs in this project.
+        </Typography.Text>
+      </div>
+    );
+  })();
+
+  return <div style={{ width: 280 }}>{body}</div>;
+}
 
 type CreditBarProps = {
   used: number;

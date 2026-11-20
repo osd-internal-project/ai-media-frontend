@@ -15,6 +15,17 @@ const LogsServices = (axiosInstance: AxiosInstance) => {
       );
       return res.data;
     },
+    findUsedCreditByModel: async (
+      projectId: string,
+      organizationId: string,
+      userId: string,
+    ): Promise<{ modelName: string | null; credit: number }[]> => {
+      const res = await axiosInstance.get<{ modelName: string | null; credit: number }[]>(
+        `${baseUrl}/used-credit-by-model/${projectId}`,
+        { params: { organizationId, userId } },
+      );
+      return res.data;
+    },
     findAll: async () => {
       return await axiosInstance
         .get(`${baseUrl}`)
