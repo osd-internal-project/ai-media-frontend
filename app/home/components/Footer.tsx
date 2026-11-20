@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useCopy } from "../i18n/LocaleProvider";
 
-const LINE_URL = "https://line.me/R/ti/p/@osdofficial";
+const LINE_URL = "https://lin.ee/6rMwqnA";
 
 export default function Footer() {
   const { t } = useCopy();
@@ -10,9 +10,8 @@ export default function Footer() {
 
   const contacts = [
     { label: f.website, value: "www.aicave.ai", href: "https://www.aicave.ai" },
-    { label: f.line, value: "@osdofficial", href: LINE_URL },
-    { label: f.email, value: "AiCave@osd.co.th", href: "mailto:AiCave@osd.co.th" },
-    { label: f.email, value: "osd_support@osd.co.th", href: "mailto:osd_support@osd.co.th" },
+    { label: f.line, value: "OSD official", href: LINE_URL },
+    { label: f.email, value: "aicavesupport@osd.co.th", href: "mailto:aicavesupport@osd.co.th" },
     { label: f.phone, value: "+66 2 080 1111", href: "tel:+6620801111" },
   ];
 

@@ -207,7 +207,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
                       {creditTotal > 0 ? (
                         <>
-                          {/* Left label sits over the coloured (used) part, right label over the grey (left) part. */}
+                          {/* Left label sits over the grey (used) part, right label over the coloured (left) part. */}
                           <span style={{ fontSize: 16, fontWeight: 600, color: semantic.colorTextBase, whiteSpace: "nowrap" }}>
                             {formatNumber(creditUsed ?? 0)}
                             <span style={{ fontSize: 12, fontWeight: 400, color: semantic.colorTextSecondary }}>
@@ -230,7 +230,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                         <span style={{ fontSize: 13, color: semantic.colorTextSecondary }}>No credit assigned</span>
                       )}
                     </div>
-                    {/* Used fills from the left (green, yellow when nearly spent); what is left stays grey. */}
+                    {/* Same order as the generate-panel quota: used is grey on the left, what is left is coloured on the right (gold when low). */}
                     <div
                       className="project-credit-bar"
                       role="img"
@@ -239,15 +239,19 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           ? `${formatNumber(creditLeft)} of ${formatNumber(creditTotal)} credits left`
                           : "No credit assigned"
                       }
-                      style={{ display: "flex", height: 6, borderRadius: 999, overflow: "hidden", background: semantic.colorFillSecondary }}
+                      style={{ display: "flex", gap: 1, height: 6, borderRadius: 999, overflow: "hidden", background: semantic.colorFillSecondary }}
                     >
                       {creditTotal > 0 && (creditUsed ?? 0) > 0 ? (
                         <span
                           style={{
                             width: `${Math.max(2, Math.min(100, ((creditUsed ?? 0) / creditTotal) * 100))}%`,
-                            background: lowCredit ? semantic.gold : semantic.colorSuccess,
+                            background: semantic.colorTextSecondary,
+                            opacity: 0.55,
                           }}
                         />
+                      ) : null}
+                      {creditTotal > 0 && creditLeft > 0 ? (
+                        <span style={{ flex: 1, background: lowCredit ? semantic.gold : semantic.colorInfoText, opacity: 0.85 }} />
                       ) : null}
                     </div>
                   </div>

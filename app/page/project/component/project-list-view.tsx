@@ -260,20 +260,24 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                       <span style={{ fontWeight: 400, color: semantic.colorTextSecondary }}>No credit assigned</span>
                     )}
                   </span>
-                  {/* Same bar as the grid: used fills from the left (green, yellow when nearly spent); what is left stays grey. */}
+                  {/* Same bar as the grid: used is grey on the left, what is left is coloured on the right (gold when low). */}
                   <span
                     className="project-credit-bar"
                     role="img"
                     aria-label={`${formatNumber(creditLeft)} of ${formatNumber(creditTotal)} credits left`}
-                    style={{ display: "flex", height: 6, marginTop: 4, borderRadius: 999, overflow: "hidden", background: semantic.colorFillSecondary }}
+                    style={{ display: "flex", gap: 1, height: 6, marginTop: 4, borderRadius: 999, overflow: "hidden", background: semantic.colorFillSecondary }}
                   >
                     {creditTotal > 0 && creditUsed > 0 ? (
                       <span
                         style={{
                           width: `${Math.max(2, Math.min(100, (creditUsed / creditTotal) * 100))}%`,
-                          background: lowCredit ? semantic.gold : semantic.colorSuccess,
+                          background: semantic.colorTextSecondary,
+                          opacity: 0.55,
                         }}
                       />
+                    ) : null}
+                    {creditTotal > 0 && creditLeft > 0 ? (
+                      <span style={{ flex: 1, background: lowCredit ? semantic.gold : semantic.colorInfoText, opacity: 0.85 }} />
                     ) : null}
                   </span>
                 </div>

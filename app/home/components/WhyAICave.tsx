@@ -486,14 +486,14 @@ export default function WhyAICave() {
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
                   <a
-                    href="mailto:AiCave@osd.co.th"
+                    href="mailto:aicavesupport@osd.co.th"
                     style={{
                       color: "#cbd5e1",
                       fontSize: "14px",
                       textDecoration: "none",
                     }}
                   >
-                    AiCave@osd.co.th
+                    aicavesupport@osd.co.th
                   </a>
                 </div>
               </div>

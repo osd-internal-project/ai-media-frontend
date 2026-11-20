@@ -31,6 +31,7 @@ Public pages: home, features, pricing, community feed, Photo Event share page, s
 - Brand and team: Brand Kit (Logo, Color, Typography, Brand voice, CI prompt + negative prompt), Projects, three-level credit, roles, group permissions, invites and bulk add, usage Dashboard.
 - Store, share, events: Library, All Activity, Public Social (post to Facebook, Instagram, TikTok, YouTube after approval), Photo Event.
 - Model list lives in the database; admins add or disable models without a deploy.
+- Photo Event kiosk has per-event settings for orientation, screen size and UI scale; UI changes elsewhere must leave them working.
 - Billing exists but is infrastructure, not a selling point; do not feature it on marketing pages.
 - Public Social is presented as available, never "coming soon".
 - AI Cave Community is a separate website; it is the only thing marketed as "coming soon" until its link exists.

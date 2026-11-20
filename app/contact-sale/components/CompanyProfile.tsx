@@ -109,7 +109,7 @@ export default function CompanyProfile() {
                 <div className="shrink-0">
                   <MailFilled className="text-white text-xl" />
                 </div>
-                <p className="break-all text-sm font-light tracking-wide text-[#D1D5DB] sm:text-[15px] sm:break-normal">osd_support@osd.co.th</p>
+                <p className="break-all text-sm font-light tracking-wide text-[#D1D5DB] sm:text-[15px] sm:break-normal">aicavesupport@osd.co.th</p>
               </div>
             </div>
 
