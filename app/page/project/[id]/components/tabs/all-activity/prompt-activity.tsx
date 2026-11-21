@@ -11,7 +11,6 @@ import {
   Button,
   Empty,
   Flex,
-  Image,
   Pagination,
   Table,
   Tag,
@@ -33,7 +32,9 @@ import {
   Copy,
   Paintbrush,
   Megaphone,
+  Info,
 } from "lucide-react";
+import LogDetailDrawer from "@/app/page/dashboard/components/logs/log-detail-drawer";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { axiosCore } from "@/app/lib/axios/axios";
@@ -49,6 +50,7 @@ import {
 import { ConfigProvider, Modal } from "antd";
 import PreviewImage from "../../chat-components/preview-image";
 import ImageEditor from "../../chat-components/image-editor";
+import { SmartImage } from "../../shared/smart-media";
 import ShareModal from "./share-modal";
 import { FEATURES } from "@/app/config/features";
 import type { SocialShareItem } from "./useSocialShare";
@@ -87,6 +89,7 @@ const PromptActivity: FC<props> = ({
   const [loadingButton, setLoadingButton] = useState<string | null>(null);
   const [api, contextHolders] = notification.useNotification();
   const [previewItem, setPreviewItem] = useState<any>(null);
+  const [detailLogId, setDetailLogId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [imageEditorUrl, setImageEditorUrl] = useState<string | null>(null);
   const [shareItem, setShareItem] = useState<SocialShareItem | null>(null);
@@ -193,6 +196,7 @@ const PromptActivity: FC<props> = ({
                 <>
                   <video
                     src={record.imageUrl || undefined}
+                    poster={record.thumbnailUrl || undefined}
                     muted
                     style={{
                       maxWidth: "100%",
@@ -242,24 +246,17 @@ const PromptActivity: FC<props> = ({
               ) : null
             ) : record.imageUrl ? (
               <>
-                <Image
+                <SmartImage
                   src={record.imageUrl || undefined}
                   alt={record.prompt || "preview"}
-                  preview={false}
-                  width={112}
-                  height={64}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    width: "auto",
-                    height: "auto",
-                    objectFit: "contain",
+                  loading="lazy"
+                  decoding="async"
+                  // Hover dimming sits on the wrapper: SmartImage owns the img opacity for its fade-in.
+                  wrapperStyle={{
                     opacity: hoveredId === record.id ? 1 : 0.85,
                     transition: "opacity 0.2s",
-                    display: "block",
-                    margin: "auto",
-                    background: "transparent",
                   }}
+                  style={{ objectFit: "contain", background: "transparent" }}
                 />
                 <div
                   style={{
@@ -310,19 +307,17 @@ const PromptActivity: FC<props> = ({
         >
           {/* One row carries what used to be four columns: prompt, then type · model · creator. */}
           <div style={{ display: "flex", flexDirection: "column", minWidth: 0, gap: 2 }}>
-          <Tooltip title={value}>
-            <Typography.Text
-              style={{
-                maxWidth: "100%",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                display: "inline-block",
-              }}
-            >
-              {value || "-"}
-            </Typography.Text>
-          </Tooltip>
+          <Typography.Text
+            style={{
+              maxWidth: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              display: "inline-block",
+            }}
+          >
+            {value || "-"}
+          </Typography.Text>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: semantic.colorTextSecondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, flexShrink: 0, background: typeColor(record.typeGenerate, mode).mark }} />
             <span style={{ color: typeColor(record.typeGenerate, mode).text, textTransform: "capitalize" }}>{record.typeGenerate || "image"}</span>
@@ -359,7 +354,7 @@ const PromptActivity: FC<props> = ({
       title: "Actions",
       key: "actions",
       align: "center",
-      width: 180,
+      width: 212,
       render: (_, record) => {
         const isLiked = Boolean(record?.status);
         const isVideo =
@@ -389,6 +384,17 @@ const PromptActivity: FC<props> = ({
                 disabled={!record.imageUrl}
               />
             )} */}
+            <Tooltip title="Details">
+              <Button
+                icon={<Info size={16} style={{ color: "#d9d9d9" }} />}
+                aria-label="Details"
+                type="text"
+                shape="circle"
+                className="activity-star-button"
+                // Logs are keyed by task; rows without one fall back to the gallery id.
+                onClick={() => setDetailLogId(record.taskId || record.id)}
+              />
+            </Tooltip>
             {/* Like/Unlike */}
             <Button
               icon={
@@ -667,6 +673,11 @@ const PromptActivity: FC<props> = ({
             )}
           </div>
         ))}
+      <LogDetailDrawer
+        organizationId={organizationId || undefined}
+        logId={detailLogId}
+        onClose={() => setDetailLogId(null)}
+      />
       {/* Share Modal */}
       <ShareModal
         open={!!shareItem}

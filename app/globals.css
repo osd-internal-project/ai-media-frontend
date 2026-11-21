@@ -177,6 +177,42 @@ html {
   animation: skeletonShimmer 1.4s ease-in-out infinite;
 }
 
+/* App-shell loading: a 2px bar at the top, so it never stacks with a page's own loader. */
+.app-top-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  z-index: 2000;
+  pointer-events: none;
+}
+.app-top-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: currentColor;
+  animation: appTopProgress 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes appTopProgress {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(340%); }
+}
+/* First paint before the session exists: the brand mark, centred. */
+.app-boot-mark {
+  animation: appBootPulse 1.4s ease-in-out infinite;
+}
+@keyframes appBootPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-top-progress::before { animation: none; width: 100%; opacity: 0.6; }
+  .app-boot-mark { animation: none; }
+}
+
 /* Payment page animations */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }

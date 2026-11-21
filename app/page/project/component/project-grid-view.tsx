@@ -11,11 +11,12 @@ import {
   Avatar,
 } from "antd";
 import { CalendarOutlined, MoreOutlined } from "@ant-design/icons";
+import { AudioLines } from "lucide-react";
 import { IProject } from "@/app/common/project.type";
 import { formatNumber } from "@/app/utils/format";
 import useResponsive from "@/app/hooks/useResponsive";
 
-export type ProjectPreview = { id: string; url: string; isVideo: boolean };
+export type ProjectPreview = { id: string; url: string; isVideo: boolean; isAudio: boolean; poster?: string };
 
 interface ProjectGridViewProps {
   projects: IProject[];
@@ -32,6 +33,11 @@ interface ProjectGridViewProps {
 /** The card's colour comes from the project's own work: one large tile plus two, or a quiet placeholder. */
 const ProjectPreviewStrip: React.FC<{ items?: ProjectPreview[]; semantic: any }> = ({ items, semantic }) => {
   const shown = (items ?? []).slice(0, 3);
+  // Tiles that finished (loaded or failed); the strip reveals once every tile has, so they appear together.
+  const [settled, setSettled] = useState(0);
+  const settle = () => setSettled((n) => n + 1);
+  // Audio tiles draw an icon, so only image/video tiles are waited on.
+  const ready = !!items && settled >= shown.filter((p) => !p.isAudio).length;
   // Loaded and empty: the brand mark on a tinted plate, so the card reads as new, not broken.
   if (items && shown.length === 0) {
     return (
@@ -51,25 +57,42 @@ const ProjectPreviewStrip: React.FC<{ items?: ProjectPreview[]; semantic: any }>
     );
   }
   const media = (p: ProjectPreview) =>
-    p.isVideo ? (
-      <video src={p.url} muted playsInline preload="metadata" style={tileMediaStyle} />
+    p.isAudio ? (
+      <div style={{ ...tileMediaStyle, display: "grid", placeItems: "center", color: semantic.colorTextSecondary }}>
+        <AudioLines size={24} aria-hidden />
+      </div>
+    ) : p.isVideo && !p.poster ? (
+      // Older videos have no thumbnail; #t=0.1 makes the browser fetch and paint a frame.
+      // loadedmetadata, not loadeddata: Safari never fires loadeddata under preload="metadata".
+      <video
+        src={`${p.url}#t=0.1`}
+        muted
+        playsInline
+        preload="metadata"
+        style={tileMediaStyle}
+        onLoadedMetadata={settle}
+        onError={settle}
+      />
     ) : (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={p.url}
+        src={p.poster ?? p.url}
         alt=""
         loading="lazy"
         decoding="async"
         style={tileMediaStyle}
+        onLoad={settle}
         // An expired link leaves the grey tile instead of a broken-image icon.
         onError={(e) => {
           e.currentTarget.style.visibility = "hidden";
+          settle();
         }}
       />
     );
   return (
     <div
       aria-hidden
+      className={`project-preview-strip${ready ? " is-ready" : ""}`}
       style={{
         height: 132,
         display: "grid",
@@ -152,7 +175,12 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                   }
                 }}
               >
-                <ProjectPreviewStrip items={previews[project.id]} semantic={semantic} />
+                <ProjectPreviewStrip
+                  // New works remount the strip so the settled count starts over.
+                  key={(previews[project.id] ?? []).map((p) => p.id).join() || "none"}
+                  items={previews[project.id]}
+                  semantic={semantic}
+                />
                 <div style={{ padding: isMobile ? 12 : 16, display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -329,10 +357,42 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
           }
         }
 
+        /* Cover tiles wait under one shimmer, then fade in together. */
+        .project-preview-strip {
+          position: relative;
+          overflow: hidden;
+        }
+        .project-preview-strip > div {
+          opacity: 0;
+          transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .project-preview-strip.is-ready > div {
+          opacity: 1;
+        }
+        .project-preview-strip:not(.is-ready)::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
+          animation: projectPreviewShimmer 1.4s ease-in-out infinite;
+        }
+        @keyframes projectPreviewShimmer {
+          from {
+            transform: translateX(-100%);
+          }
+          to {
+            transform: translateX(100%);
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .project-grid-card,
-          .project-grid-card .project-credit-bar {
+          .project-grid-card .project-credit-bar,
+          .project-preview-strip::after {
             animation: none !important;
+          }
+          .project-preview-strip > div {
+            transition: none;
           }
         }
 

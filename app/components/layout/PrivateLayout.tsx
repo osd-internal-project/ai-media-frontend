@@ -10,7 +10,6 @@ import {
   Input,
   Select,
   theme,
-  Spin,
   InputNumber,
   Row,
   Col,
@@ -276,9 +275,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
       // >
       <Layout
         className="h-screen overflow-hidden"
-        style={{ position: "relative" }}
+        style={{ display: "grid", placeItems: "center" }}
       >
-        <Spin spinning={true}></Spin>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/logo-mark.png" alt="Loading" className="app-boot-mark" style={{ height: 44, width: 44 }} />
       </Layout>
       // </ConfigProvider>
     );
@@ -408,7 +408,11 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     //     },
     //   }}
     // >
-    <Spin spinning={loading || reload}>
+    <>
+      {/* A thin bar, not an overlay: pages draw their own loader, and two overlays stacked. */}
+      {(loading || reload) && (
+        <div className="app-top-progress" role="progressbar" aria-label="Loading" style={{ color: semantic.colorPrimary }} />
+      )}
       {contextHolder}
       {openCreateOrg ? (
         <Modal
@@ -632,7 +636,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
         </Layout>
         </PageHeaderProvider>
       </Layout>
-    </Spin>
+    </>
     //   <style>{`
     //     /* Dark Select Styling */
     //     .dark-select .ant-select-selector {

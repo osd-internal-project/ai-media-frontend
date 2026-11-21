@@ -138,10 +138,13 @@ const ProjectsPage = () => {
         const res = await galleryService.findById(p.id, organizationId, 1, 3, undefined, { hideFailed: true });
         const items: ProjectPreview[] = (res?.data ?? [])
           .filter((it: { imageUrl?: string }) => !!it.imageUrl)
-          .map((it: { id: string; imageUrl: string; typeGenerate?: string }) => ({
+          .map((it: { id: string; imageUrl: string; typeGenerate?: string; thumbnailUrl?: string }) => ({
             id: it.id,
             url: it.imageUrl,
             isVideo: (it.typeGenerate ?? "").toLowerCase().includes("video"),
+            isAudio: (it.typeGenerate ?? "").toLowerCase().includes("audio"),
+            // Backend sends "" when a row has no thumbnail.
+            poster: it.thumbnailUrl || undefined,
           }));
         return [p.id, items] as const;
       }),

@@ -7,7 +7,6 @@ import React, {
   type ReactElement,
 } from "react";
 import {
-  Image,
   Card,
   Col,
   Flex,
@@ -41,6 +40,7 @@ import { useSession } from "next-auth/react";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import ImageEditor from "../../chat-components/image-editor";
+import { SmartImage } from "../../shared/smart-media";
 import SwatchTag, { jobCode } from "../../shared/swatch-tag";
 import { ModelName } from "../../tab-layout/model-select-card";
 
@@ -278,11 +278,7 @@ const PromptLibrary: FC<props> = ({
 
     if (!isVideo) {
       return (
-        <Image
-          src={record.imageUrl}
-          preview={false}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+        <SmartImage src={record.imageUrl} alt={record.prompt ?? ""} loading="lazy" decoding="async" />
       );
     }
 
@@ -293,10 +289,12 @@ const PromptLibrary: FC<props> = ({
           videoRefs.current[record.id] = el;
         }}
         src={record.imageUrl}
+        poster={record.thumbnailUrl || undefined}
         muted
         loop
         playsInline
-        preload="auto"
+        // With a poster the tile needs no video bytes until hover calls play().
+        preload={record.thumbnailUrl ? "none" : "auto"}
         className="w-full h-full object-cover"
       />
     );
