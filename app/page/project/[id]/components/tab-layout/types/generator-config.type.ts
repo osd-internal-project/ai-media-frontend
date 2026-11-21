@@ -60,6 +60,8 @@ export interface VideoGeneratePayload {
   duration: number;
   generateAudio: boolean;
   draft: boolean;
+  /** Provider task id of a draft to render at `resolution` (Seedance 2.5) */
+  draftTaskId?: string;
   organizationId: string | undefined;
 }
 

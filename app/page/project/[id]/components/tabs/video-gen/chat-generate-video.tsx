@@ -41,7 +41,9 @@ import type {
   VideoFormState,
   RefImage,
   ComputedFileRef,
+  VideoGeneratePayload,
 } from "../../tab-layout/types/generator-config.type";
+import { finalSize } from "./version/seedance2/sizes";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import { readImageSize } from "@/app/page/project/[id]/components/tab-layout/utils/file-preview.util";
 import { getVideoDuration } from "@/app/page/project/[id]/components/tab-layout/utils/file-type.util";
@@ -1280,6 +1282,7 @@ const ChatGenerateVideo: FC<Props> = ({
         imageCount: 0,
         resolution: selectedResolution,
         generateAudio: selectedAudio,
+        draft: draftMode && selectedAIModel.sendConfig?.supportDraft === true,
       },
       users: {
         fullname: username ?? "",
@@ -1297,6 +1300,10 @@ const ChatGenerateVideo: FC<Props> = ({
       organizationId: session?.user?.organizationId ?? undefined,
     };
 
+    emitVideoTask(tempMessage, socketPayload);
+  };
+
+  const emitVideoTask = (tempMessage: Message, socketPayload: VideoGeneratePayload) => {
     setMessages((prev) => [...prev, tempMessage]);
     shouldAutoScrollRef.current = true;
     setTimeout(() => {
@@ -1306,10 +1313,50 @@ const ChatGenerateVideo: FC<Props> = ({
     if (!socket || !isConnected) {
       const errorText = "WebSocket is not connected. Please refresh the page.";
       messageApi.error(errorText);
-      markTaskFailed(tempTask, errorText);
+      markTaskFailed(tempMessage.taskId, errorText);
       return;
     }
     socket.emit("generate:video", socketPayload);
+  };
+
+  /** Render a Seedance 2.5 draft at full resolution; the provider reuses its prompt and media. */
+  const handleCreateFinal = (draft: Message, resolution: "1080p" | "4k") => {
+    if (!selectedAIModel || !draft.providerTaskId) return;
+    const cfg = draft.generateConfig;
+    const tempTask = `temp-${Date.now()}`;
+    const { width, height } = finalSize(resolution, cfg.ratio, cfg);
+    // url left empty: files only tell the credit formula about reference video; the worker never sends them
+    const files = (cfg.referenceFiles ?? []).map((f) => ({ ...f, url: "" }));
+    const state: VideoFormState = {
+      ...buildCurrentState(files),
+      selectedResolution: resolution,
+      selectedRatio: cfg.ratio,
+      selectedWidth: width,
+      selectedHeight: height,
+      selectedDuration: Number(cfg.duration),
+      selectedAudio: Boolean(cfg.generateAudio),
+      draftMode: false,
+    };
+    const socketPayload: VideoGeneratePayload = {
+      ...modelConfig.buildSubmitPayload({ prompt: draft.prompt }, state, tempTask),
+      draftTaskId: draft.providerTaskId,
+    };
+    emitVideoTask(
+      {
+        ...draft,
+        id: tempTask,
+        taskId: tempTask,
+        providerTaskId: null,
+        createdAt: new Date().toISOString(),
+        status: false,
+        genneratedStatus: "PROCESSING",
+        errorMessage: undefined,
+        imageUrls: [],
+        generateConfig: { ...cfg, draft: false, resolution, width, height },
+        resolution,
+      },
+      socketPayload,
+    );
   };
 
   return (
@@ -1383,6 +1430,7 @@ const ChatGenerateVideo: FC<Props> = ({
                 onDownloadVideo={onDownloadVideo}
                 setMessages={setMessages}
                 selectedAIModel={selectedAIModel}
+                onCreateFinal={handleCreateFinal}
               />
             ))}
           </>

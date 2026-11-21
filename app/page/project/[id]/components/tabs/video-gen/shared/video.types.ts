@@ -50,7 +50,11 @@ export interface Message {
     imageCount: number;
     resolution: string;
     generateAudio: boolean;
+    draft?: boolean;
+    referenceFiles?: { type: string; duration?: number }[];
   };
+  /** Provider task id (cgt-…); a draft's id renders its final video */
+  providerTaskId?: string | null;
   percentage?: number;
   stage?: GenerationStage;
   current?: number;

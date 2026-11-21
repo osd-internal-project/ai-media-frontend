@@ -195,11 +195,8 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   const supportAudio = videoConfig?.features?.supportAudio ?? true;
   const showDraftMode =
     (videoConfig?.features?.showDraftMode ?? false) &&
-    model?.sendConfig?.supportDraft !== false;
+    model?.sendConfig?.supportDraft === true;
   const showDraw = !isFirstLast; // image + multi-file video
-  const resolutionOptions =
-    capability?.resolutions ??
-    (type === "image" ? IMAGE_RESOLUTION_OPTIONS : VIDEO_RESOLUTION_OPTIONS);
   const maxImages = capability?.maxImages ?? 1;
 
   const [selectedRatio, setSelectedRatio] = useState("1:1");
@@ -210,6 +207,17 @@ const WorkflowEditForm: React.FC<WorkflowEditFormProps> = ({
   const [duration, setDuration] = useState(6);
   const [generateAudio, setGenerateAudio] = useState(false);
   const [draftMode, setDraftMode] = useState(false);
+  // Provider renders drafts at 480p only; any other resolution is rejected.
+  const resolutionOptions =
+    showDraftMode && draftMode
+      ? ["480p"]
+      : capability?.resolutions ??
+        (type === "image" ? IMAGE_RESOLUTION_OPTIONS : VIDEO_RESOLUTION_OPTIONS);
+
+  useEffect(() => {
+    if (draftMode && selectedResolution !== "480p") setSelectedResolution("480p");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftMode]);
 
   // Switching model can leave values the new model rejects — snap them back into range.
   useEffect(() => {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, type CSSProperties } from "react";
 import { formPanel } from "@/app/theme/surface";
+import { RATIO_SIZE_MAP } from "./sizes";
 import {
   Button,
   Flex,
@@ -8,6 +9,7 @@ import {
   Modal,
   Slider,
   Space,
+  Tooltip,
   Typography,
   Upload,
   type FormInstance,
@@ -163,38 +165,6 @@ export default function ChatVideoInput(props: Props) {
   //   "21:9": { width: 3024, height: 1296 },
   // };
 
-  const RATIO_SIZE_MAP: Record<
-    string,
-    Record<string, { width: number; height: number }>
-  > = {
-    "480p": {
-      "1:1": { width: 640, height: 640 },
-      "4:3": { width: 752, height: 564 },
-      "3:4": { width: 564, height: 752 },
-      "16:9": { width: 864, height: 496 },
-      "9:16": { width: 496, height: 864 },
-      "21:9": { width: 992, height: 432 },
-      "9:21": { width: 432, height: 992 },
-    },
-    "720p": {
-      "1:1": { width: 960, height: 960 },
-      "4:3": { width: 1112, height: 834 },
-      "3:4": { width: 834, height: 1112 },
-      "16:9": { width: 1280, height: 720 },
-      "9:16": { width: 720, height: 1280 },
-      "21:9": { width: 1470, height: 630 },
-      "9:21": { width: 630, height: 1470 },
-    },
-    "1080p": {
-      "1:1": { width: 1440, height: 1440 },
-      "4:3": { width: 1664, height: 1248 },
-      "3:4": { width: 1248, height: 1664 },
-      "16:9": { width: 1920, height: 1080 },
-      "9:16": { width: 1080, height: 1920 },
-      "21:9": { width: 2205, height: 945 },
-      "9:21": { width: 945, height: 2205 },
-    },
-  };
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -240,8 +210,21 @@ export default function ChatVideoInput(props: Props) {
   };
 
   const capability = getCapability(selectedModel);
-  const resolutionOptions = capability?.resolutions ?? ["480p", "720p", "1080p"];
+  const supportsDraft = selectedModel?.sendConfig?.supportDraft === true;
+  // Provider renders drafts at 480p only; any other resolution is rejected.
+  const resolutionOptions =
+    supportsDraft && draftMode
+      ? ["480p"]
+      : capability?.resolutions ?? ["480p", "720p", "1080p"];
   const durationRange = capability?.duration ?? { min: 4, max: 15 };
+
+  useEffect(() => {
+    if (draftMode && !supportsDraft) setDraftMode(false);
+    if (draftMode && supportsDraft && selectedResolution !== "480p") {
+      handleResolutionChange("480p");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftMode, supportsDraft]);
 
   // Switching model can leave values the new model rejects — snap them back into range.
   useEffect(() => {
@@ -578,24 +561,35 @@ export default function ChatVideoInput(props: Props) {
                     Enable Audio
                   </Button>
 
-                  {/* <Button
-                    onClick={() => setDraftMode(!draftMode)}
-                    icon={draftMode ? <Check size={14} /> : undefined}
-                    style={{
-                      borderRadius: 8,
-                      borderColor: draftMode
-                        ? semantic.colorPrimary
-                        : semantic.colorBorder,
-                      background: draftMode
-                        ? `${semantic.colorPrimary}1A`
-                        : "transparent",
-                      color: draftMode
-                        ? semantic.colorPrimary
-                        : semantic.colorTextSecondary,
-                    }}
-                  >
-                    Draft mode
-                  </Button> */}
+                  {supportsDraft && (
+                    <Tooltip
+                      title={
+                        selectedModel?.sendConfig?.supportDraftFinal === true
+                          ? "ร่าง 480p ราคาถูกเพื่อดูภาพรวมก่อน แล้วค่อยสร้างตัวจริง 1080p/4K จากผลลัพธ์"
+                          : "ร่าง 480p ราคาถูกเพื่อดูภาพรวมก่อนสร้างจริง"
+                      }
+                    >
+                      <Button
+                        aria-pressed={draftMode}
+                        onClick={() => setDraftMode(!draftMode)}
+                        icon={draftMode ? <Check size={14} /> : undefined}
+                        style={{
+                          borderRadius: 8,
+                          borderColor: draftMode
+                            ? semantic.colorPrimary
+                            : semantic.colorBorder,
+                          background: draftMode
+                            ? `${semantic.colorPrimary}1A`
+                            : "transparent",
+                          color: draftMode
+                            ? semantic.colorPrimary
+                            : semantic.colorTextSecondary,
+                        }}
+                      >
+                        Draft 480p
+                      </Button>
+                    </Tooltip>
+                  )}
                 </Flex>
               </>
             }

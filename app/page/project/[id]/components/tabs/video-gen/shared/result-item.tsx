@@ -1,7 +1,7 @@
 import React, { FC, useState, useRef, useEffect } from "react";
 import { ModelName } from "../../../tab-layout/model-select-card";
 import useResponsive from "@/app/hooks/useResponsive";
-import { Card, Space, Typography, Button, Divider, Row, Col } from "antd";
+import { Card, Space, Typography, Button, Divider, Row, Col, Flex } from "antd";
 import GenerationProgress, {
   mediaRowStyle,
   parseRatio,
@@ -27,6 +27,7 @@ interface Props {
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 
   selectedAIModel: (TMasterModelType & { capabilities?: string[] }) | undefined;
+  onCreateFinal?: (draft: Message, resolution: "1080p" | "4k") => void;
 }
 
 const VideoResultItem: FC<Props> = ({
@@ -38,8 +39,27 @@ const VideoResultItem: FC<Props> = ({
   onDownloadVideo,
   setMessages,
   selectedAIModel,
+  onCreateFinal,
 }) => {
   const [messageApi, contextHolder] = antdMessage.useMessage();
+
+  // BytePlus keeps a draft task id for 14 days
+  const DRAFT_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+  const isDraft = message.generateConfig?.draft === true;
+  const draftExpiresAt = new Date(new Date(message.createdAt).getTime() + DRAFT_TTL_MS);
+  const draftExpired = draftExpiresAt.getTime() <= Date.now();
+  // shortcut: a draft finished in this session has no providerTaskId until history reloads,
+  // so the button appears after a refresh; refetch the row on worker:video-complete if users miss it.
+  const canCreateFinal =
+    isDraft &&
+    !draftExpired &&
+    !!message.providerTaskId &&
+    !!onCreateFinal &&
+    selectedAIModel?.sendConfig?.supportDraftFinal === true &&
+    // history rows carry modelType; cards made in this session carry the display name
+    [selectedAIModel.modelType, selectedAIModel.name].includes(
+      message.generateConfig?.modelName,
+    );
 
   const isLoading = isVideoLoading(message.genneratedStatus);
 
@@ -378,6 +398,36 @@ const VideoResultItem: FC<Props> = ({
             ))}
           </div>
         )}
+
+      {/* DRAFT → FINAL */}
+      {isDraft && message.genneratedStatus === "SUCCESS" && (
+        <Flex wrap align="center" gap={8} style={{ marginTop: 10 }}>
+          <Typography.Text
+            style={{
+              fontSize: metaFontSize,
+              color: semantic.colorTextSecondary,
+              background: semantic.colorBgTextActive,
+              borderRadius: 6,
+              padding: "2px 8px",
+            }}
+          >
+            Draft 480p ·{" "}
+            {draftExpired
+              ? "หมดอายุแล้ว"
+              : `ใช้ได้ถึง ${draftExpiresAt.toLocaleDateString([], { month: "short", day: "numeric" })}`}
+          </Typography.Text>
+          {canCreateFinal && (
+            <>
+              <Button size="small" onClick={() => onCreateFinal(message, "1080p")}>
+                สร้างตัวจริง 1080p
+              </Button>
+              <Button size="small" onClick={() => onCreateFinal(message, "4k")}>
+                4K
+              </Button>
+            </>
+          )}
+        </Flex>
+      )}
     </Card>
   );
 };

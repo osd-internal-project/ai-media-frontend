@@ -15,6 +15,8 @@ export interface TMasterModelType {
     resolutions?: string[];
     duration?: { min: number; max: number };
     supportDraft?: boolean;
+    /** Final video from a draft; off until the gateway accepts `draft_task` */
+    supportDraftFinal?: boolean;
   };
   provider?: string | null;
   iconUrl?: string | null;
