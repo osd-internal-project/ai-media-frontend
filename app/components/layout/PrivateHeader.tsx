@@ -23,8 +23,11 @@ import {
   SunOutlined,
   MenuOutlined,
   SettingOutlined,
+  TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import config from "@/app/config";
+import CommunityPill from "../CommunityPill";
 import { useRouter } from "next/navigation";
 import { logout } from "@/app/lib/logout";
 import { getThemeConfig } from "@/app/theme/themeConfig";
@@ -141,6 +144,17 @@ export function PrivateHeader({
     // },
 
     // Phones: the bar has no room, so these live in the avatar menu.
+    ...(isMobile
+      ? [{
+          key: "community",
+          icon: <TeamOutlined />,
+          label: (
+            <a href={config.communityUrl} target="_blank" rel="noopener noreferrer">
+              Community
+            </a>
+          ),
+        }]
+      : []),
     ...(isMobile && showBilling
       ? [{ key: "plans", icon: <CreditCardOutlined />, label: "Change Package", onClick: () => router.push("/page/plans") }]
       : []),
@@ -330,6 +344,7 @@ export function PrivateHeader({
       </Space>
 
       <Space size={isMobile ? 6 : isTablet ? 10 : 14} align="center">
+        {isMobile ? null : <CommunityPill label="Community" newTabLabel="(opens in a new tab)" size="xs" quiet />}
         {showBilling && !isMobile ? (
           <Link href="/page/plans">
             <Button style={{ height: 32, paddingInline: isMobile ? 8 : 12, fontSize: isMobile ? 12 : 13 }}>

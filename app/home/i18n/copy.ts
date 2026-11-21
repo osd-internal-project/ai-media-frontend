@@ -21,6 +21,8 @@ const en = {
     toLight: "Switch to light mode",
     toDark: "Switch to dark mode",
     language: "Language",
+    community: "Community",
+    newTab: "(opens in a new tab)",
   },
   actions: {
     demo: "Request a demo",
@@ -169,7 +171,6 @@ const en = {
   community: {
     headline: "Creative work doesn't have to stop at one file",
     body: "AI Cave goes beyond a production tool. Creators post work, trade techniques and browse each other's ideas in the Social Showcase and Inspiration Feed. Organizations that need high-quality work can find and hire professional creators in the Creator Marketplace, and buy or sell prompt templates and finished pieces openly.",
-    comingSoon: "Coming soon",
     forOrgs: { title: "For organizations", body: "Find and hire professional creators, or buy the templates and finished pieces you need, inside the same system your team already works in." },
     forCreators: { title: "For creators", body: "Share your work, sell templates or prompts, take jobs from clients and organizations, and earn from your craft." },
     card: { title: "AI Cave Community", body: "A place to show your work, find creators and sell what you make.", visit: "Visit Community" },
@@ -216,7 +217,7 @@ const en = {
       { q: "How do we keep spending under control?", a: "Set a Credit quota per project and watch the Credit used against each project's budget at any time. Admins see the whole picture on the Dashboard." },
       { q: "Can a team that's weak at prompts still use it?", a: "Yes. The AI Assistant guides how to structure instructions, and Templates are ready to pick up." },
       { q: "Is it only for images?", a: "No. You can make images, video and voice in one place, including virtual presenters whose lips match the speech." },
-      { q: "Can creators sell work on AI Cave?", a: "That's what the Creator Marketplace is for: buying and selling prompt templates and finished pieces, and taking jobs from clients and organizations. It opens with the AI Cave Community, coming soon." },
+      { q: "Can creators sell work on AI Cave?", a: "That's what the Creator Marketplace is for: buying and selling prompt templates and finished pieces, and taking jobs from clients and organizations. You'll find it in the AI Cave Community." },
       { q: "How much does it cost?", a: "Pricing depends on the package and the Credit you use. Credit is split across projects or teams by actual use, and an admin can change the package from the Dashboard. Contact the team to find a package that fits your team size and workload." },
     ],
   },
@@ -281,6 +282,8 @@ const th: Copy = {
     toLight: "เปลี่ยนเป็นโหมดสว่าง",
     toDark: "เปลี่ยนเป็นโหมดมืด",
     language: "ภาษา",
+    community: "Community",
+    newTab: "(เปิดในแท็บใหม่)",
   },
   actions: {
     demo: "ขอ Demo",
@@ -429,7 +432,6 @@ const th: Copy = {
   community: {
     headline: "งานสร้างสรรค์ไม่ต้องจบที่ไฟล์เดียว",
     body: "AI Cave ไปไกลกว่าเครื่องมือผลิตสื่อ ครีเอเตอร์โพสต์ผลงาน แลกเทคนิค และดูไอเดียของคนอื่นได้ที่ Social Showcase และ Inspiration Feed ส่วนองค์กรที่ต้องการงานคุณภาพสูงก็ค้นหาและว่าจ้างครีเอเตอร์มืออาชีพใน Creator Marketplace ได้ รวมถึงซื้อขายเทมเพลต Prompt และชิ้นงานสำเร็จรูปอย่างโปร่งใส",
-    comingSoon: "เร็ว ๆ นี้",
     forOrgs: { title: "สำหรับองค์กร", body: "ค้นหาและว่าจ้างครีเอเตอร์มืออาชีพ หรือซื้อเทมเพลตและชิ้นงานสำเร็จรูปที่ต้องการได้ในระบบเดียวกับที่ใช้ทำงานอยู่" },
     forCreators: { title: "สำหรับครีเอเตอร์", body: "แชร์ผลงาน ขายเทมเพลตหรือ Prompt รับงานจากลูกค้าและองค์กร และมีรายได้จากฝีมือของตัวเอง" },
     card: { title: "AI Cave Community", body: "ที่โชว์ผลงาน หาครีเอเตอร์ และขายงานที่คุณสร้าง", visit: "เข้าสู่ Community" },
@@ -476,7 +478,7 @@ const th: Copy = {
       { q: "คุมงบยังไงไม่ให้บานปลาย", a: "ตั้งโควตา Credit ต่อโปรเจกต์ แล้วดูแถบ Credit ที่ใช้ไปเทียบกับงบของแต่ละโปรเจกต์ได้ตลอด ผู้ดูแลระบบเห็นภาพรวมทั้งหมดที่ Dashboard" },
       { q: "ทีมเราไม่เก่ง Prompt ใช้ได้ไหม", a: "ได้ มี AI Assistant ช่วยแนะโครงสร้างคำสั่ง และมี Templates ให้หยิบไปใช้เลย" },
       { q: "สร้างได้แค่ภาพหรือเปล่า", a: "ได้ทั้งภาพ วิดีโอ และเสียงในที่เดียว รวมถึงพรีเซนเตอร์เสมือนจริงที่ขยับปากตรงกับเสียงพูด" },
-      { q: "ครีเอเตอร์ขายงานบน AI Cave ได้ไหม", a: "Creator Marketplace มีไว้สำหรับซื้อขายเทมเพลต Prompt และชิ้นงานสำเร็จรูป และรับงานจ้างจากลูกค้าและองค์กร เปิดพร้อม AI Cave Community เร็ว ๆ นี้" },
+      { q: "ครีเอเตอร์ขายงานบน AI Cave ได้ไหม", a: "Creator Marketplace มีไว้สำหรับซื้อขายเทมเพลต Prompt และชิ้นงานสำเร็จรูป และรับงานจ้างจากลูกค้าและองค์กร อยู่ใน AI Cave Community" },
       { q: "ราคาเท่าไร", a: "ราคาขึ้นกับแพ็กเกจและ Credit ที่ใช้ แบ่ง Credit ให้แต่ละโปรเจกต์หรือทีมได้ตามที่ใช้จริง และผู้ดูแลระบบเปลี่ยนแพ็กเกจจาก Dashboard ได้เอง ติดต่อทีมงานเพื่อดูแพ็กเกจที่เหมาะกับจำนวนทีมและปริมาณงาน" },
     ],
   },

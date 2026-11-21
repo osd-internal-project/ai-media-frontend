@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import CommunityPill from "@/app/components/CommunityPill";
 import { useCopy } from "../../i18n/LocaleProvider";
 
 export type DemoTopic = "demo" | "packages" | "community";
@@ -21,6 +22,14 @@ export function DemoButton({ topic = "demo", size = "md", className = "", onClic
       {label}
     </Link>
   );
+}
+
+type CommunityLinkProps = { label?: string; size?: "sm" | "md"; className?: string; onClick?: () => void };
+
+/** The Community pill with landing copy. */
+export function CommunityLink({ label, ...rest }: CommunityLinkProps) {
+  const { t } = useCopy();
+  return <CommunityPill label={label ?? t.nav.community} newTabLabel={t.nav.newTab} {...rest} />;
 }
 
 /** Quiet companion to DemoButton: an outlined link for the second choice in a group. */

@@ -6,7 +6,7 @@ import { FEATURES } from "@/app/config/features";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { useCopy } from "../i18n/LocaleProvider";
 import type { Locale } from "../i18n/copy";
-import { DemoButton } from "./sections/Actions";
+import { CommunityLink, DemoButton } from "./sections/Actions";
 
 function ModeToggle() {
   const { mode, toggleMode } = useThemeMode();
@@ -74,6 +74,7 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          <CommunityLink size="sm" className="ml-1" />
           <span className="mx-2 h-5 w-px bg-(--l-line)" aria-hidden />
           <LocaleSwitch />
           <ModeToggle />
@@ -101,11 +102,15 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-(--l-line) bg-(--l-bg) md:hidden">
           <div className="landing-container flex flex-col gap-1 py-4">
-            {[...links, { href: "/login", label: t.nav.login }].map((l) => (
+            {links.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-2 py-3 text-base font-medium text-(--l-ink)">
                 {l.label}
               </Link>
             ))}
+            <CommunityLink className="my-2 w-full" onClick={() => setOpen(false)} />
+            <Link href="/login" onClick={() => setOpen(false)} className="rounded-lg px-2 py-3 text-base font-medium text-(--l-ink)">
+              {t.nav.login}
+            </Link>
             <DemoButton className="mt-2 w-full" onClick={() => setOpen(false)} />
           </div>
         </div>

@@ -1,0 +1,124 @@
+/* Plain CSS on purpose: antd's global `a` rule is unlayered, so it beat Tailwind's layered utilities
+   and stripped the fill in the signed-in header. Effects are the owner's reference button, unchanged. */
+.community-pill {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  background-size: 200% 200%;
+  box-shadow:
+    0 4px 16px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+  user-select: none;
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s ease,
+    background-position 0.4s ease,
+    color 0.25s ease;
+}
+
+/* Shimmer glow sweep across the pill on hover. */
+.community-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.38) 50%, transparent 80%);
+  transform: translateX(-130%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.community-pill:hover,
+.community-pill:focus-visible {
+  color: #ffffff;
+  background-position: 100% 50%;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 6px 24px rgba(236, 72, 153, 0.45),
+    0 0 18px rgba(139, 92, 246, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.community-pill:hover::after,
+.community-pill:focus-visible::after {
+  transform: translateX(130%);
+}
+
+.community-pill:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.4);
+}
+
+.community-pill svg {
+  transition: transform 0.25s ease;
+}
+
+.community-pill:hover svg,
+.community-pill:focus-visible svg {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.community-pill:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* Signed-in header: it is an ad beside work tools, so only a gradient hairline until hover (owner's pick). */
+.community-pill--quiet {
+  border-width: 0;
+  background: transparent;
+  color: #1e1b3a;
+  box-shadow: none;
+}
+
+.theme-dark .community-pill--quiet {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Masked ring sits inside the box: overflow:hidden would clip a ring drawn on the border edge. */
+.community-pill--quiet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.community-pill--quiet:hover,
+.community-pill--quiet:focus-visible {
+  background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  background-size: 200% 200%;
+  background-position: 100% 50%;
+  color: #ffffff;
+}
+
+/* Reduced motion: drop the movement (lift, scale, tilt, sweep); keep colour and glow as hover feedback. */
+@media (prefers-reduced-motion: reduce) {
+  .community-pill,
+  .community-pill::after,
+  .community-pill svg {
+    transition:
+      box-shadow 0.25s ease,
+      background-position 0.4s ease,
+      color 0.25s ease;
+  }
+  .community-pill:hover,
+  .community-pill:focus-visible,
+  .community-pill:active,
+  .community-pill:hover svg,
+  .community-pill:focus-visible svg {
+    transform: none;
+  }
+  .community-pill::after {
+    display: none;
+  }
+}

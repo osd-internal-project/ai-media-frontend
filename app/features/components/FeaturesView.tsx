@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { BandHeading, BrandKitPanel, FinalCta, Phrases } from "@/app/home/components/HomeBands";
 import { HowItWorks } from "@/app/home/components/sections/Story";
-import { DemoButton } from "@/app/home/components/sections/Actions";
+import { CommunityLink } from "@/app/home/components/sections/Actions";
 import DualPlayer from "@/app/home/components/motion/DualPlayer";
 import VoiceWave from "@/app/home/components/motion/VoiceWave";
 import { useCopy } from "@/app/home/i18n/LocaleProvider";
@@ -168,10 +168,9 @@ function CommunityGroup() {
       <div className="grid gap-12 md:grid-cols-12">
         <div className="md:col-span-6">
           <BandHeading title={c.headline} />
-          <span className="mt-4 inline-block rounded-full bg-[#0FEAB6] px-3 py-1 text-[13px] font-semibold text-[#191C20]">{c.comingSoon}</span>
           <p className="mt-5 max-w-[60ch] text-[17px] leading-relaxed text-(--l-ink-2)">{c.body}</p>
           <div className="mt-8">
-            <DemoButton topic="community" />
+            <CommunityLink label={c.card.visit} />
           </div>
         </div>
         <div className="md:col-span-5 md:col-start-8">
