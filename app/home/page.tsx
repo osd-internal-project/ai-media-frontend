@@ -5,12 +5,14 @@ import LandingHero from "./components/LandingHero";
 import HomeBands from "./components/HomeBands";
 import AnnouncementModal from "./components/AnnouncementModal";
 import Footer from "./components/Footer";
+import SilentSignIn from "./components/SilentSignIn";
 import { useLandingMeta } from "./i18n/useLandingMeta";
 
 function HomeContent() {
   useLandingMeta("home");
   return (
     <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>
+      <SilentSignIn />
       <Navbar />
       <AnnouncementModal />
       <LandingHero />

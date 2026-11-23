@@ -126,7 +126,9 @@ export const authOptions = {
       httpOptions: { timeout: AUTH_FETCH_TIMEOUT_MS },
       authorization: {
         params: {
-          scope: "openid email profile roles offline_access",
+          // No offline_access: the refresh token must end with the Keycloak SSO session, so a
+          // logout in another AICave app signs this one out at the next refresh.
+          scope: "openid email profile roles",
         },
       },
     }),
@@ -187,7 +189,8 @@ export const authOptions = {
           const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
+            // The backend matches on the token's sub; email is for backends deployed before that.
+            body: JSON.stringify({ accessToken: account.access_token, email }),
             signal: AbortSignal.timeout(AUTH_FETCH_TIMEOUT_MS),
           });
 
@@ -209,6 +212,8 @@ export const authOptions = {
             if (!provision.ok) return "/error?error=403";
             data = await provision.json();
           }
+          // Banned / inactive / deleted: the API would answer 401 to every call of this session.
+          if (data.blocked) return "/error?error=AccessDenied";
 
           // The Keycloak token carries no local identity, so /auth/check is the only
           // place these reach the session. The jwt callback reads them off `user`.

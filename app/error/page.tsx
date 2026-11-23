@@ -3,6 +3,7 @@ import React, { useEffect, useState, type FC } from "react";
 import { Button, ConfigProvider, Typography, theme } from "antd";
 import Link from "next/link";
 import Image from "next/image";
+import { getSession } from "next-auth/react";
 
 const DEFAULT_CALLBACK_URL = "/page/project";
 
@@ -14,6 +15,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   sso_session_expired:
     "Your session has expired due to inactivity or timeout. Please log in again.",
   validation_failed: "Session validation failed. Please log in again.",
+  SessionLoop:
+    "We signed you in, but this account could not be used here. Please contact support.",
   // next-auth error codes (pages.error)
   OAuthSignin: "We could not reach the sign in service. Please try again.",
   OAuthCallback: "Sign in was interrupted. Please try again.",
@@ -30,8 +33,20 @@ const Page: FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setCallbackUrl(params.get("callbackUrl") || DEFAULT_CALLBACK_URL);
-    setError(params.get("error") || "Default");
+    const target = params.get("callbackUrl") || DEFAULT_CALLBACK_URL;
+    const code = params.get("error") || "Default";
+    setCallbackUrl(target);
+    setError(code);
+
+    // Two tabs signing in at once overwrite each other's state cookie: this one fails while
+    // the other succeeds, so a usable session may already exist. Same-site paths only.
+    if (code === "OAuthCallback" && target.startsWith("/") && !target.startsWith("//")) {
+      getSession()
+        .then((session) => {
+          if (session && !session.error) window.location.replace(target);
+        })
+        .catch((sessionError) => console.error("Session check failed:", sessionError));
+    }
   }, []);
 
   return (

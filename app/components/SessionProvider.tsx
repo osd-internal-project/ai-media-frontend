@@ -124,8 +124,9 @@ function AccessTokenSync() {
 export default function SessionProvider({ children }: { children: ReactNode }) {
   return (
     <NextAuthSessionProvider
-      // refetchInterval={4 * 60} // 4 minutes - triggers jwt callback to check/refresh tokens
-      // refetchOnWindowFocus={true}
+      // An open tab must refresh on its own: without offline_access the session dies after
+      // Keycloak's SSO idle time. 4 min lands inside the 90s refresh window of a 5 min token.
+      refetchInterval={4 * 60}
     >
       {/* <SessionExpirationMonitor /> */}
       <AccessTokenSync />

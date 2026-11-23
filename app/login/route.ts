@@ -50,7 +50,10 @@ export async function GET(request: NextRequest) {
     }
     const csrfCookies = csrfRes.headers.getSetCookie();
 
-    const signinRes = await fetch(`${internalUrl}/api/auth/signin/keycloak`, {
+    // ?silent=1: Keycloak shows no page and answers login_required when there is no SSO
+    // session; next-auth copies this query into the authorization request.
+    const silent = params.get("silent") === "1" ? "?prompt=none" : "";
+    const signinRes = await fetch(`${internalUrl}/api/auth/signin/keycloak${silent}`, {
       method: "POST",
       cache: "no-store",
       redirect: "manual",

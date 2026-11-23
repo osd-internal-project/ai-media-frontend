@@ -73,29 +73,36 @@ const UserProfilePage: React.FC = () => {
     }
   };
 
+  // Primitives, not the session object: it is a new object on every session refetch
+  // (every 4 min), and refetching the profile then would overwrite the form being edited.
+  const userId = session?.user?.id;
+  const sessionName = session?.user?.name;
+  const sessionEmail = session?.user?.email;
+  const sessionImage = session?.user?.image;
+
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (session?.user?.id) {
+      if (userId) {
         try {
           setLoading(true);
           const userService = UserServices(axiosUser);
 
-          let userData = await userService.findDetailByToken(session.user.id);
+          let userData = await userService.findDetailByToken(userId);
 
           if (!userData) {
-            userData = await userService.findById(session.user.id);
+            userData = await userService.findById(userId);
           }
 
           if (userData) {
             setUserProfile({
               id: userData.id?.toString() || "",
-              userId: userData.userId || session.user.id || "",
+              userId: userData.userId || userId || "",
               username: userData.username || "",
-              fullname: userData.fullname || session.user.name || "User",
-              email: userData.email || session.user.email || "",
+              fullname: userData.fullname || sessionName || "User",
+              email: userData.email || sessionEmail || "",
               phone: userData.phoneNumber || "",
               bio: userData.description || "",
-              avatar: userData.avatar || session.user.image || "",
+              avatar: userData.avatar || sessionImage || "",
               joinedDate: userData.createdAt
                 ? new Date(userData.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -107,13 +114,13 @@ const UserProfilePage: React.FC = () => {
           } else {
             setUserProfile({
               id: "",
-              userId: session.user.id,
+              userId: userId,
               username: "",
-              fullname: session.user.name || "User",
-              email: session.user.email || "",
+              fullname: sessionName || "User",
+              email: sessionEmail || "",
               phone: "",
               bio: "",
-              avatar: session.user.image || "",
+              avatar: sessionImage || "",
               joinedDate: "Recent",
               tier: "",
             });
@@ -122,13 +129,13 @@ const UserProfilePage: React.FC = () => {
           console.error("Error fetching user profile:", error);
           setUserProfile({
             id: "",
-            userId: session.user.id,
+            userId: userId,
             username: "",
-            fullname: session.user.name || "User",
-            email: session.user.email || "",
+            fullname: sessionName || "User",
+            email: sessionEmail || "",
             phone: "",
             bio: "",
-            avatar: session.user.image || "",
+            avatar: sessionImage || "",
             joinedDate: "Recent",
             tier: "",
           });
@@ -139,7 +146,7 @@ const UserProfilePage: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [session]);
+  }, [userId, sessionName, sessionEmail, sessionImage]);
 
   const handleEdit = () => {
     setIsEditing(true);

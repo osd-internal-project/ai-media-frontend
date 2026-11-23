@@ -7,10 +7,12 @@ import { Spin } from "antd";
 
 export default function Callback() {
     useEffect(() => {
+        // Without this the page kept its spinner forever on a missing code or a failed exchange.
+        const fail = () => window.location.replace("/error?error=OAuthCallback");
         const run = async () => {
             const params = new URLSearchParams(window.location.search);
             const code = params.get("code");
-            if (!code) return;
+            if (!code) return fail();
 
             // Provider-agnostic: Keycloak redirects every brokered IdP back here with only
             // ?code, and the backend's token exchange is identical for all of them.
@@ -28,7 +30,7 @@ export default function Callback() {
             const data = await res.json();
             if (!data.access_token) {
                 console.error("No token");
-                return;
+                return fail();
             }
             // ⭐ Login เข้า NextAuth
             await signIn("credentials", {
@@ -44,7 +46,10 @@ export default function Callback() {
 
             window.location.href = "/page/project";
         }
-        run();
+        run().catch((error) => {
+            console.error("IdP callback failed:", error);
+            fail();
+        });
     }, []);
 
     return (
