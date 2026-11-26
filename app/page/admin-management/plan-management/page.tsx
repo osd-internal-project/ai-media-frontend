@@ -1,209 +1,118 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Tag,
-  Input,
-  Space,
-  message,
-  Typography,
-  Popconfirm,
-  Radio,
-} from "antd";
-import {
-  SearchOutlined,
-  ReloadOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  TrophyOutlined,
-  UnorderedListOutlined,
-  AppstoreOutlined,
-} from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import { TPlan } from "@/app/common/plan.type";
-import PlanServices from "@/app/services/plan.service";
-import { axiosCore } from "@/app/lib/axios/axios";
+import React, { useCallback, useEffect, useState } from "react";
+import { Button, Input, Segmented, Skeleton, message, theme } from "antd";
+import { LayoutGrid, List, Plus, RotateCw, Search, Table2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TPlan } from "@/app/common/plan.type";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
+import PlanServices from "@/app/services/plan.service";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
+import { axiosCore } from "@/app/lib/axios/axios";
 import { PlanFormModal } from "./components/PlanFormModal";
-import { Dice1 } from "lucide-react";
-import useResponsive from "@/app/hooks/useResponsive";
-import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
 import PlanListView from "./components/plan-list-view";
 import PlanGridView from "./components/plan-grid-view";
+import PlanMatrixView from "./components/plan-matrix-view";
+import { copyPayload } from "./plan-utils";
 
-const { Text } = Typography;
+type ViewType = "grid" | "list" | "matrix";
+
+const planServices = PlanServices(axiosCore);
+const modelService = MasterModelTypeServices(axiosCore);
+
+const errorText = (error: unknown, fallback: string) =>
+  (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? fallback;
 
 export default function PlanManagementPage() {
   const router = useRouter();
+  const { token } = theme.useToken();
   const [data, setData] = useState<TPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  const [cloningId, setCloningId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const [viewType, setViewType] = useState<"grid" | "list">("grid");
-  const { mode } = useThemeMode();
-  const semantic = getThemeConfig(mode).token ?? {};
-  
-  const { isMobile,isTablet } = useResponsive();
+  const [viewType, setViewType] = useState<ViewType>("grid");
+  const [models, setModels] = useState<TMasterModelType[] | null>(null);
 
-  const planServices = PlanServices(axiosCore);
-
-  const fetchData = React.useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await planServices.findAllFormatted();
-      setData(response || []);
-    } catch (error: any) {
+      setData((await planServices.findAllFormatted()) || []);
+    } catch (error) {
       console.error(error);
-      messageApi.error("Failed to fetch plans");
+      messageApi.error("Could not load plans");
     } finally {
       setLoading(false);
     }
-  }, [messageApi, planServices]);
+  }, [messageApi]);
 
   useEffect(() => {
-    if (loading) fetchData();
-  }, [loading, fetchData]);
+    fetchData();
+  }, [fetchData]);
+
+  // ตารางต้องใช้รายการ model — โหลดเมื่อเปิด view นี้ครั้งแรก
+  useEffect(() => {
+    if (viewType !== "matrix" || models !== null) return;
+    modelService
+      .findAll()
+      .then(setModels)
+      .catch(() => {
+        setModels([]);
+        messageApi.error("Could not load AI models");
+      });
+  }, [viewType, models, messageApi]);
 
   const handleCreatePlan = async (values: TPlan) => {
     setModalLoading(true);
     try {
       const newPlan = await planServices.create(values);
       if (newPlan) {
-        messageApi.success("Plan created successfully");
+        messageApi.success("Plan created");
         setIsModalOpen(false);
-        // Redirect to detail page to add features
         router.push(`/page/admin-management/plan-management/${newPlan.id}`);
       }
-    } catch (error: any) {
-      console.error(error);
-      messageApi.error("Failed to create plan");
+    } catch (error) {
+      messageApi.error(errorText(error, "Could not create the plan"));
     } finally {
       setModalLoading(false);
     }
   };
 
   const handleDeletePlan = async (id: string) => {
-    try {
-      const success = await planServices.delete(id);
-      if (success) {
-        messageApi.success("Plan deleted successfully");
-        fetchData();
-      } else {
-        messageApi.error("Failed to delete plan");
-      }
-    } catch (error: any) {
-      console.error(error);
-      messageApi.error("Error deleting plan");
+    const success = await planServices.delete(id);
+    if (success) {
+      messageApi.success("Plan deleted");
+      fetchData();
+    } else {
+      messageApi.error("Could not delete the plan");
     }
   };
 
+  /** สำเนาเป็น draft (status=false, ไม่ใช่ค่าเริ่มต้น) แล้วเปิดหน้าแก้ */
+  const handleClone = async (plan: TPlan) => {
+    setCloningId(plan.id);
+    try {
+      const full = await planServices.findById(plan.id);
+      if (!full) throw new Error("Plan not found");
+      const created = await planServices.create(copyPayload(full, data.map((item) => item.name)));
+      if (!created?.id) throw new Error("No id returned");
+      messageApi.success(`Created ${created.name} as a draft`);
+      router.push(`/page/admin-management/plan-management/${created.id}`);
+    } catch (error) {
+      messageApi.error(errorText(error, `Could not duplicate ${plan.name}`));
+    } finally {
+      setCloningId(null);
+    }
+  };
+
+  const search = searchText.toLowerCase();
   const filteredData = data.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchText.toLowerCase()),
+    (item) => item.name.toLowerCase().includes(search) || item.description?.toLowerCase().includes(search),
   );
 
-  // const columns: ColumnsType<TPlan> = [
-  //   {
-  //     title: "Plan Name",
-  //     dataIndex: "name",
-  //     key: "name",
-  //     width: 250,
-  //     render: (text, record) => (
-  //       <Space direction="vertical" size={0}>
-  //         <div className="flex items-center gap-2">
-  //           <Text className="text-white font-medium">{text}</Text>
-  //         </div>
-  //         <Text type="secondary" className="text-xs">
-  //           {record.id}
-  //         </Text>
-  //       </Space>
-  //     ),
-  //   },
-  //   {
-  //     title: "Monthly Price",
-  //     dataIndex: ["price", "monthly"],
-  //     key: "monthlyPrice",
-  //     width: 150,
-  //     render: (price) => (
-  //       <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
-  //     ),
-  //   },
-  //   {
-  //     title: "Annual Price",
-  //     dataIndex: ["price", "annually"],
-  //     key: "annualPrice",
-  //     width: 150,
-  //     render: (price) => (
-  //       <Text className="text-white">${price?.toLocaleString() || "0.00"}</Text>
-  //     ),
-  //   },
-  //   {
-  //     title: "Features",
-  //     key: "features",
-  //     width: 120,
-  //     render: (_, record) => (
-  //       <Tag color="cyan">{record.features?.length || 0} Features</Tag>
-  //     ),
-  //   },
-  //   {
-  //     title: "Tags",
-  //     dataIndex: "tags",
-  //     key: "tags",
-  //     render: (tags, record) => (
-  //       <Space size={"small"}>
-  //         {record.popular && (
-  //           <Tag color="gold" icon={<TrophyOutlined />}>
-  //             Popular
-  //           </Tag>
-  //         )}
-  //         {record.badge && <Tag color="blue">{record.badge}</Tag>}
-  //         {record.isDefault && <Tag color="green">Default</Tag>}
-  //       </Space>
-  //     ),
-  //   },
-  //   {
-  //     title: "Action",
-  //     key: "action",
-  //     width: 120,
-  //     fixed: "right",
-  //     render: (_, record) => (
-  //       <Space>
-  //         <Button
-  //           type="text"
-  //           icon={<EditOutlined />}
-  //           onClick={() =>
-  //             router.push(`/page/admin-management/plan-management/${record.id}`)
-  //           }
-  //           className="text-blue-400! hover:text-blue-300!"
-  //         />
-  //         <Popconfirm
-  //           title="Delete Plan"
-  //           description="Are you sure you want to delete this plan?"
-  //           onConfirm={() => handleDeletePlan(record.id)}
-  //           okText="Yes"
-  //           cancelText="No"
-  //         >
-  //           <Button
-  //             type="text"
-  //             icon={<DeleteOutlined />}
-  //             className="text-red-400! hover:text-red-300!"
-  //             danger
-  //           />
-  //         </Popconfirm>
-  //       </Space>
-  //     ),
-  //   },
-  // ];
-
-  
   return (
-    <div className="w-full h-full ">
+    <div className="flex w-full flex-col gap-3">
       {contextHolder}
 
       <PlanFormModal
@@ -213,130 +122,60 @@ export default function PlanManagementPage() {
         loading={modalLoading}
       />
 
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-end">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">
-            Pricing Plan Management
-          </h1>
-          <p className="text-[var(--legacy-gray-400)]">
-            Manage subscription plans and features
-          </p>
-        </div>
-        <Space>
-          <Button
-            icon={<ReloadOutlined />}
-            className=" border-[var(--legacy-line-gray-700)]! hover:bg-[var(--legacy-hover-gray-700)]!"
-            onClick={fetchData}
-            loading={loading}
+      <header className="flex flex-wrap items-center gap-2">
+        <h1 className="mr-auto text-xl font-semibold" style={{ color: token.colorTextBase }}>Plans</h1>
+        {viewType !== "matrix" && (
+          <Input
+            allowClear
+            className="!w-full sm:!w-64"
+            placeholder="Search plans"
+            prefix={<Search size={14} style={{ color: token.colorTextSecondary }} />}
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            aria-label="Search plans"
           />
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setIsModalOpen(true)}
-          >
-            Create Plan
-          </Button>
-           <Radio.Group
-              className="project-view-toggle"
-              value={viewType}
-              onChange={(e) => setViewType(e.target.value)}
-              style={{
-                background: "transparent",
-                borderRadius: 8,
-                padding: isMobile ? "1px" : isTablet ? "2px" : "3px",
-                border: `1px solid ${semantic.colorBorder}`,
-                display: "flex",
-                gap: isMobile ? 2 : isTablet ? 3 : 4,
-              }}
-            >
-              <Radio.Button
-                value="list"
-                style={{
-                  background:
-                    viewType === "list" ? semantic.colorPrimary : "transparent",
-                  color: viewType === "list" ? "#fff" : semantic.colorTextBase,
-                  borderRadius: isMobile || isTablet ? 4 : "6px 0px 0px 6px",
-                  
-                  width: isMobile ? 20 : isTablet ? 22 : 24,
-                  height: isMobile ? 20 : isTablet ? 22 : 24,
-                  padding: 0,
-                  border: "none",
-                  transition: "background 0.2s",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <UnorderedListOutlined
-                  style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }}
-                />
-              </Radio.Button>
-              <Radio.Button
-                value="grid"
-                style={{
-                  background:
-                    viewType === "grid" ? semantic.colorPrimary : "transparent",
-                  color: viewType === "grid" ? "#fff" : semantic.colorTextBase,
-                  borderRadius: isMobile || isTablet ? 4 : "0px 6px 6px 0px",
-                  width: isMobile ? 20 : isTablet ? 22 : 24,
-                  height: isMobile ? 20 : isTablet ? 22 : 24,
-                  padding: 0,
-                  border: "none",
-                  transition: "background 0.2s",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <AppstoreOutlined style={{ fontSize: isMobile ? 12 : isTablet ? 13 : 14 }} />
-              </Radio.Button>
-            </Radio.Group>
-        </Space>
-      </div>
-
-      {/* Filters */}
-      <div className=" p-4 rounded-lg mb-4">
-        <Input
-          placeholder="Search plans by name or description..."
-          prefix={<SearchOutlined className="text-[var(--legacy-gray-500)]" />}
-          className="w-full "
-     
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+        )}
+        <Segmented<ViewType>
+          value={viewType}
+          onChange={setViewType}
+          options={[
+            { value: "grid", icon: <LayoutGrid size={14} />, title: "Cards" },
+            { value: "list", icon: <List size={14} />, title: "List" },
+            { value: "matrix", label: "Access & models", icon: <Table2 size={14} /> },
+          ]}
         />
-      </div>
+        <Button icon={<RotateCw size={14} />} aria-label="Reload plans" onClick={fetchData} loading={loading} />
+        <Button type="primary" icon={<Plus size={14} />} onClick={() => setIsModalOpen(true)}>
+          Create plan
+        </Button>
+      </header>
 
-      {/* Table */}
-      {/* <div className=" rounded-lg overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="id"
+      {viewType === "grid" && (
+        <PlanGridView
           loading={loading}
-          pagination={{
-            pageSize: 10,
-            showTotal: (total) => `Total ${total} plans`,
-          }}
-          size="small"
-          className="custom-table"
-          locale={{ emptyText: "No plans found" }}
+          filteredData={filteredData}
+          handleDeletePlan={handleDeletePlan}
+          onRefresh={fetchData}
+          onClone={handleClone}
+          cloningId={cloningId}
         />
-      </div> */}
-      {viewType === "grid" ?
-     <PlanGridView
-  loading={loading}
-  filteredData={filteredData}
-  handleDeletePlan={handleDeletePlan}
-  onRefresh={fetchData} // เพิ่ม prop นี้
-/>
-        :
-         <PlanListView
-         loading={loading}
-         filteredData={filteredData}
-         handleDeletePlan={handleDeletePlan}
+      )}
+      {viewType === "list" && (
+        <PlanListView
+          loading={loading}
+          filteredData={filteredData}
+          handleDeletePlan={handleDeletePlan}
+          onClone={handleClone}
+          cloningId={cloningId}
         />
-      }
+      )}
+      {/* ตารางรับ data ทั้งหมด (ไม่กรอง) เพื่อให้ draft ไม่ถูกรีเซ็ตตอนพิมพ์ค้นหา */}
+      {viewType === "matrix" &&
+        (loading && data.length === 0 ? (
+          <Skeleton active />
+        ) : (
+          <PlanMatrixView plans={data} models={models} onSaved={fetchData} />
+        ))}
     </div>
   );
 }

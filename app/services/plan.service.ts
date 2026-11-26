@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
 
-import { TPlan, TPlanPrice } from "../common/plan.type";
+import { TPlan, TPlanImpact, TPlanPrice } from "../common/plan.type";
 
 const PlanServices = (axiosInstance: AxiosInstance) => {
   const basePlansUrl = "/plans";
@@ -70,7 +70,17 @@ const PlanServices = (axiosInstance: AxiosInstance) => {
         .then((res) => res.data);
     },
 
-    update: async (id: string, data: any): Promise<TPlan | null> => {
+    /** org ที่ใช้ plan นี้: matching = ค่ายังเท่ากับ plan, customized = กำหนดเอง */
+    organizationsImpact: async (id: string): Promise<TPlanImpact> => {
+      return await axiosInstance
+        .get(`${basePlansUrl}/${id}/organizations-impact`)
+        .then((res) => res.data);
+    },
+
+    update: async (
+      id: string,
+      data: any,
+    ): Promise<(TPlan & { appliedOrganizations?: number }) | null> => {
       return await axiosInstance
         .patch(`${basePlansUrl}/${id}`, data)
         .then((res) => res.data);

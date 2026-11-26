@@ -103,6 +103,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
   const [organizationId, setOrganizationId] = useState<string>("");
   const [organizationRole, setOrganizationRole] = useState<string>("");
   const [accessCodes, setAccessCodes] = useState<string[] | undefined>();
+  const [allowedModelIds, setAllowedModelIds] = useState<number[] | undefined>();
   const [pageHeader, setPageHeader] = useState<PageHeaderInfo>(null);
   const pageHeaderValue = useMemo(() => ({ pageHeader, setPageHeader }), [pageHeader]);
 
@@ -142,6 +143,10 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
     organizationService
       .findAccessCodeByOrganizationId(organizationId)
       .then((codes) => setAccessCodes(codes ?? []));
+    setAllowedModelIds(undefined);
+    organizationService
+      .findAllowedModelIds(organizationId)
+      .then(setAllowedModelIds);
     const organizationDetail =
       await organizationMemberService.findUserMemberByOrganization(
         organizationId,
@@ -616,6 +621,7 @@ export default function PrivateLayout({ children }: ClientLayoutProps) {
                 value={{
                   organizationRole,
                   accessCodes,
+                  allowedModelIds,
                 }}
               >
                 {isOrgClosed ? (

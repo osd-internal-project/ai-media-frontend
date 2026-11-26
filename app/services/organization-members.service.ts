@@ -74,27 +74,14 @@ const OrganizationMembersServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    // reject เมื่อพลาด — ทุกหน้าที่เรียกมี try/catch และต้องแสดงสาเหตุ
     update: async (id: number, value: any) => {
-      return await axiosInstance
-        .patch(`${baseUrl}/${id}`, value)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+      const res = await axiosInstance.patch(`${baseUrl}/${id}`, value);
+      return res.data;
     },
     delete: async (id: number) => {
-      return await axiosInstance
-        .delete(`${baseUrl}/${id}`)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+      const res = await axiosInstance.delete(`${baseUrl}/${id}`);
+      return res.data;
     },
   };
 };

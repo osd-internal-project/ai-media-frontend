@@ -1,387 +1,264 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  Button,
-  Space,
-  Divider,
-  Card,
-  Typography,
-  message,
-  Spin,
-  Breadcrumb,
-  Select,
-  Checkbox,
-} from "antd";
-import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
+import Link from "next/link";
+import { Button, Card, Form, Input, InputNumber, Result, Skeleton, Switch, message, theme } from "antd";
+import { ArrowLeft } from "lucide-react";
 import PlanServices from "@/app/services/plan.service";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { PlanFeaturesEditor } from "./components/PlanFeaturesEditor";
 import { PlanPricesEditor } from "./components/PlanPricesEditor";
-import { TPlan, TPlanFeature, TPlanPrice } from "@/app/common/plan.type";
+import { TApplyScope, TPlan, TPlanFeature, TPlanPrice } from "@/app/common/plan.type";
+import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { sameSet } from "@/app/common/access-codes";
+import { StatusTag } from "../../components/admin-ui";
+import ApplyImpactModal from "../../components/apply-impact-modal";
+import {
+  AccessPicker,
+  ModelPicker,
+  ModelSelection,
+  selectionIds,
+  selectionOf,
+} from "../../components/entitlement-pickers";
 
-const { Title, Text } = Typography;
+const planService = PlanServices(axiosCore);
+const modelService = MasterModelTypeServices(axiosCore);
+const LIST_URL = "/page/admin-management/plan-management";
+
+const errorText = (error: unknown) =>
+  (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+  "Could not save the plan. Check the connection and try again.";
 
 export default function PlanDetailPage() {
   const { id } = useParams();
+  const planId = String(id);
+  const isCreate = planId === "create";
   const router = useRouter();
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
-  const [loading, setLoading] = useState(true);
+  const [original, setOriginal] = useState<TPlan | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loading, setLoading] = useState(!isCreate);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [impactOpen, setImpactOpen] = useState(false);
   const [features, setFeatures] = useState<TPlanFeature[]>([]);
   const [prices, setPrices] = useState<TPlanPrice[]>([]);
-  const planService = PlanServices(axiosCore);
-  const ACCESS_CODE: { label: string; value: string; className: string }[] = [
-    { label: "Image", value: "image", className: "label-1" },
-    { label: "Video", value: "video", className: "label-2" },
-    { label: "Omnihuman", value: "omni", className: "label-3" },
-    { label: "Dream Actor", value: "dream", className: "label-4" },
-    { label: "Workflow", value: "workflow", className: "label-5" },
-    { label: "Editor", value: "editor", className: "label-6" },
-    { label: "Social Media", value: "social", className: "label-7" },
-    { label: "Photo Event", value: "photo_event", className: "label-8" },
-    { label: "Audio", value: "audio", className: "label-9" },
-  ];
-  useEffect(() => {
-    if (id && id !== "create") {
-      fetchPlan();
-    } else {
-      setLoading(false);
-    }
-  }, [id]);
+  const [models, setModels] = useState<TMasterModelType[] | null>(null);
+  const [modelSelection, setModelSelection] = useState<ModelSelection>(selectionOf([]));
+  const name = Form.useWatch("name", form);
+  const status = Form.useWatch("status", form);
 
-  const fetchPlan = async () => {
-    try {
-      const data = await planService.findById(id as string);
-      if (data) {
-        form.setFieldsValue({
-          ...data,
-        });
-        setFeatures(data.features || []);
-        setPrices(data.prices || []);
-      }
-    } catch (error) {
-      messageApi.error("Failed to fetch plan details");
-    } finally {
-      setLoading(false);
+  const fetchPlan = useCallback(async () => {
+    setLoading(true);
+    setLoadFailed(false);
+    const data = await planService.findById(planId);
+    if (data) {
+      form.setFieldsValue(data);
+      setOriginal(data);
+      setFeatures(data.features || []);
+      setPrices(data.prices || []);
+      setModelSelection(selectionOf(data.allowedModelIds));
+      setDirty(false);
+    } else {
+      setLoadFailed(true);
     }
+    setLoading(false);
+  }, [form, planId]);
+
+  useEffect(() => {
+    if (!isCreate) fetchPlan();
+    modelService
+      .findAll()
+      .then(setModels)
+      .catch(() => {
+        setModels([]);
+        messageApi.error("Could not load AI models.");
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId]);
+
+  const change = <T,>(setter: (value: T) => void) => (value: T) => {
+    setter(value);
+    setDirty(true);
   };
 
-  const onFinish = async (values: any) => {
-    console.log(values);
+  const save = async (scope?: TApplyScope) => {
+    const values = await form.validateFields();
     setSaving(true);
     try {
       const payload = {
         ...values,
-        // name: values.name,
-        // description: values.description,
-        // badge: values.badge,
-        // borderColor: values.borderColor,
-        // isDefault: values.isDefault,
-        // popular: values.popular || false,
-        // status: values.status ?? false,
-        prices: prices,
-        // detailJson: {
-        //   creditAllowance: +values.creditAllowance,
-        //   imageAllowance: +values.imageAllowance,
-        //   maxUserAccess: +values.maxUserAccess,
-        // },
-        features: features,
+        prices,
+        features,
+        allowedModelIds: selectionIds(modelSelection),
+        ...(scope && { applyToOrganizations: scope }),
       };
-
-      if (id === "create") {
-        await planService.create(payload);
-        messageApi.success("Plan created successfully");
-      } else {
-        await planService.update(id as string, payload);
-        messageApi.success("Plan updated successfully");
+      if (isCreate) {
+        const created = await planService.create(payload);
+        messageApi.success("Plan created");
+        if (created?.id) router.replace(`${LIST_URL}/${created.id}`);
+        return;
       }
+      const updated = await planService.update(planId, payload);
+      const applied = updated?.appliedOrganizations ?? 0;
+      messageApi.success(applied > 0 ? `Plan saved and copied to ${applied} organizations` : "Plan saved");
+      setImpactOpen(false);
+      fetchPlan();
     } catch (error) {
-      console.log(error);
-      messageApi.error("Failed to save plan");
+      messageApi.error(errorText(error));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
+  // ถ้า Access หรือ model เปลี่ยน ต้องถามก่อนว่าจะคัดลอกไป org ไหน (ไม่มี org เปลี่ยนแบบเงียบ ๆ)
+  const onSaveClick = async () => {
+    try {
+      await form.validateFields();
+    } catch {
+      messageApi.error("Fill in the required fields first.");
+      return;
+    }
+    const entitlementsChanged =
+      !!original &&
+      (!sameSet(form.getFieldValue("accessCodes"), original.accessCodes) ||
+        !sameSet(selectionIds(modelSelection), original.allowedModelIds));
+    if (entitlementsChanged) setImpactOpen(true);
+    else save();
+  };
+
+  if (loadFailed) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <Spin size="large" />
-      </div>
+      <Result
+        status="warning"
+        title="Could not load this plan"
+        extra={[
+          <Button key="retry" onClick={fetchPlan}>Try again</Button>,
+          <Link key="back" href={LIST_URL}>Back to plans</Link>,
+        ]}
+      />
     );
   }
+  if (loading) return <Skeleton active className="p-4" />;
+
+  const muted = { color: token.colorTextSecondary };
 
   return (
-    <div className="w-full h-full  p-6 text-[var(--legacy-ink)] pb-20">
+    <div className="flex w-full flex-col gap-3">
       {contextHolder}
-      <div className="mb-6">
-        <Breadcrumb
-          items={[
-            { title: "Admin Management" },
-            {
-              title: (
-                // eslint-disable-next-line @next/next/no-html-link-for-pages
-                <a href="/page/admin-management/plan-management">
-                  Plan Management
-                </a>
-              ),
-            },
-            { title: id === "create" ? "Create Plan" : "Edit Plan" },
-          ]}
-          className="mb-4"
-        />
-        <div className="flex justify-between items-center">
-          <Space size="middle">
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() =>
-                router.push("/page/admin-management/plan-management")
-              }
-              className="bg-[var(--legacy-surface-gray-800)]! border-[var(--legacy-line-gray-700)]! text-[var(--legacy-ink)]!"
-            />
-            <Title level={2} className="text-[var(--legacy-ink)]! m-0!">
-              {id === "create"
-                ? "Create New Plan"
-                : `Edit Plan: ${form.getFieldValue("name") || ""}`}
-            </Title>
-          </Space>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={saving}
-            onClick={() => form.submit()}
-            className="bg-indigo-600! hover:bg-indigo-700!"
-          >
-            Save Changes
-          </Button>
-        </div>
-      </div>
+
+      <header className="flex flex-wrap items-center gap-2">
+        <Link
+          href={LIST_URL}
+          aria-label="Back to plans"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full"
+          style={muted}
+        >
+          <ArrowLeft size={16} />
+        </Link>
+        <h1 className="text-xl font-semibold" style={{ color: token.colorTextBase }}>
+          {isCreate ? "New plan" : name || original?.name}
+        </h1>
+        {!isCreate && <StatusTag tone={status ? "success" : "neutral"}>{status ? "Active" : "Draft"}</StatusTag>}
+        {original?.isDefault && <StatusTag tone="primary">Default for new users</StatusTag>}
+      </header>
+
       <Form
         form={form}
         layout="vertical"
-        onFinish={onFinish}
-        initialValues={{ popular: false, isDefault: false, status: false }}
-        className="max-w-6xl space-y-2"
+        onValuesChange={() => setDirty(true)}
+        initialValues={{ popular: false, isDefault: false, status: false, accessCodes: [] }}
+        className="flex max-w-6xl flex-col gap-3"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
-          <Card title="Basic Information" className="">
-            <Form.Item
-              name="name"
-              label="Plan Name"
-              rules={[{ required: true, message: "Required" }]}
-            >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Card title="Basic information">
+            <Form.Item name="name" label="Plan name" rules={[{ required: true, message: "Enter a plan name" }]}>
               <Input placeholder="Professional" />
             </Form.Item>
-
             <Form.Item name="description" label="Description">
               <Input.TextArea rows={3} placeholder="Best for power users" />
             </Form.Item>
-
             <div className="grid grid-cols-2 gap-4">
               <Form.Item name="badge" label="Badge">
-                <Input placeholder="Best Value" />
+                <Input placeholder="Best value" />
               </Form.Item>
-              <Form.Item name="borderColor" label="Border Color">
-                <Input placeholder="#3b82f6" />
+              <Form.Item name="borderColor" label="Border color">
+                <Input placeholder="#6D5DF5" />
               </Form.Item>
             </div>
-
-            <Space size="large">
-              <Form.Item
-                name="status"
-                label="Active Status"
-                valuePropName="checked"
-                className="mb-0"
-              >
+            <div className="flex flex-wrap gap-x-8">
+              <Form.Item name="status" label="Active" valuePropName="checked" className="mb-0">
                 <Switch />
               </Form.Item>
-              <Form.Item
-                name="popular"
-                label="Is Popular"
-                valuePropName="checked"
-                className="mb-0"
-              >
+              <Form.Item name="popular" label="Popular" valuePropName="checked" className="mb-0">
                 <Switch />
               </Form.Item>
               <Form.Item
                 name="isDefault"
-                label="Is Default"
+                label="Default plan"
                 valuePropName="checked"
                 className="mb-0"
+                tooltip="Personal organizations compare their access and models with this plan"
               >
                 <Switch />
               </Form.Item>
-            </Space>
+            </div>
           </Card>
 
-          <Card title="Global Quotas" className="bg-[var(--legacy-surface-1a1a1a)] border-[var(--legacy-line-303030)]">
-            {/* <Text type="secondary" className="block mb-4">
-              These quotas apply to the entire organization regardless of
-              specific price period.
-            </Text> */}
-            <div className="grid grid-cols-1 ">
-              {/* <Form.Item name="packageTokenAmount" label="Organization Tokens">
-                <InputNumber className="w-full" />
-              </Form.Item> */}
-              {/* <div className="flex gap-4 items-center">
-                <Form.Item>Used in</Form.Item>{" "}
-                <Form.Item
-                  name={["detailJson", "duration"]}
-                  // label="Duration "
-                >
-                  <InputNumber className="w-full" min={0} />
-                </Form.Item>
-                <Form.Item className=" w-[100px]"
-                  name={["detailJson", "unit"]}
-                  // label="Unit "
-                  // layout="inline"
-                  // labelCol={{ span: 10 }}
-                >
-                  <Select
-                    className="dark-select "
-                    options={[
-                      { value: "day", label: "Day" },
-                      { value: "month", label: "Month" },
-                      { value: "year", label: "Year" },
-                    ]}
-                  />
-                </Form.Item>
-              </div> */}
-              <Form.Item
-                name={["detailJson", "maxUserAccess"]}
-                label="Max User Access"
-                layout="horizontal"
-                labelCol={{ span: 10 }}
-              >
-                <InputNumber className="w-full" />
-              </Form.Item>
-              <Form.Item
-                name={["detailJson", "creditAllowance"]}
-                label="Credit Allowance "
-                layout="horizontal"
-                labelCol={{ span: 10 }}
-              >
+          <Card title="Quotas">
+            <Form.Item name={["detailJson", "maxUserAccess"]} label="User limit" extra="Copied to an organization when it starts this plan.">
+              <InputNumber className="w-full" min={0} addonAfter="seats" />
+            </Form.Item>
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item name={["detailJson", "creditAllowance"]} label="Credit allowance">
                 <InputNumber className="w-full" min={0} />
               </Form.Item>
-              <Form.Item
-                name={["detailJson", "imageAllowance"]}
-                label="Image Allowance "
-                layout="horizontal"
-                labelCol={{ span: 10 }}
-              >
+              <Form.Item name={["detailJson", "imageAllowance"]} label="Image allowance">
                 <InputNumber className="w-full" min={0} />
-              </Form.Item>
-              <Form.Item name="accessCodes" label="Access">
-                <Checkbox.Group options={ACCESS_CODE} />
               </Form.Item>
             </div>
           </Card>
         </div>
-        <div>
-          <PlanPricesEditor prices={prices} onChange={setPrices} />
-        </div>
 
-        <div>
-          <PlanFeaturesEditor features={features} onChange={setFeatures} />
-        </div>
-        {/* <div className="mt-8 flex justify-end">
-          <Button
-            type="primary"
-            size="large"
-            icon={<SaveOutlined />}
-            loading={saving}
-            onClick={() => form.submit()}
-            className="bg-indigo-600! hover:bg-indigo-700! w-48"
-          >
-            Save Changes
+        <Card title="Access">
+          <Form.Item name="accessCodes" className="mb-0">
+            <AccessPicker />
+          </Form.Item>
+        </Card>
+
+        <Card title="AI models">
+          <ModelPicker models={models} value={modelSelection} onChange={change(setModelSelection)} />
+        </Card>
+
+        <PlanPricesEditor prices={prices} onChange={change(setPrices)} />
+        <PlanFeaturesEditor features={features} onChange={change(setFeatures)} />
+      </Form>
+
+      <div
+        className="sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-2 py-3"
+        style={{ background: token.colorBgLayout, borderTop: `1px solid ${token.colorBorderSecondary}` }}
+      >
+        {dirty && <span className="mr-auto text-xs" style={muted}>มีการแก้ที่ยังไม่บันทึก</span>}
+        {!isCreate && (
+          <Button onClick={fetchPlan} disabled={!dirty || saving}>
+            ยกเลิก
           </Button>
-        </div> */}
-      </Form>{" "}
-      <style>{`
-        /* Dark Select Styling */
-        .dark-select .ant-select-selector {
-          background-color: #27272a !important;
-          border: 1px solid #3f3f46 !important;
-          color: #d1d5db !important;
-        }
+        )}
+        <Button type="primary" onClick={onSaveClick} loading={saving && !impactOpen} disabled={!isCreate && !dirty}>
+          {isCreate ? "สร้าง plan" : "บันทึก"}
+        </Button>
+      </div>
 
-        .dark-select .ant-select-selection-item {
-          color: #d1d5db !important;
-        }
-
-        .dark-select .ant-select-selection-placeholder {
-          color: #6b7280 !important;
-        }
-
-        .dark-select:hover .ant-select-selector {
-          border-color: #52525b !important;
-        }
-
-        .dark-select.ant-select-focused .ant-select-selector {
-          border-color: #3b82f6 !important;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
-        }
-
-        .dark-select .ant-select-arrow {
-          color: #9ca3af !important;
-        }
-
-        /* Custom Sidebar Menu Styling */
-        .ant-menu-item-selected .menu-icon-container {
-          background-color: #1677ff; 
-          border-radius: 8px; 
-          padding: 8px;
-          min-width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .menu-text-label {
-          color:gray !important;
-        }
-        .ant-menu-item-selected .menu-text-label {
-          font-weight: bold !important;
-          color: white !important; 
-        }
-  
-        /* Remove ALL sidebar borders and lines */
-        .ant-layout-sider,
-        .ant-layout-sider *,
-        .ant-layout-sider::before,
-        .ant-layout-sider::after {
-          border: none !important;
-          border-right: none !important;
-          border-left: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        
-        /* Force transparent borders on layout */
-        .ant-layout {
-          border: none !important;
-        }
-        
-        /* Ensure icon container is centered and has spacing */
-        .menu-icon-container {
-          padding: 8px;
-          border-radius: 8px;
-          min-width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-     
-
-      `}</style>
+      <ApplyImpactModal
+        open={impactOpen}
+        plans={[{ id: planId, name: name || original?.name || "plan" }]}
+        saving={saving}
+        onCancel={() => setImpactOpen(false)}
+        onConfirm={(scope) => save(scope)}
+      />
     </div>
   );
 }

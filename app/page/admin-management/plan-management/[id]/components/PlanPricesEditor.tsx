@@ -216,7 +216,6 @@ export const PlanPricesEditor: React.FC<PlanPricesEditorProps> = ({
           Add Pricing Option
         </Button>
       }
-      className="mt-6 bg-[var(--legacy-surface-1a1a1a)] border-[var(--legacy-line-303030)]"
     >
       <Table
         dataSource={prices}

@@ -41,6 +41,9 @@ export interface TPlan {
   isDefault: boolean;
   status: boolean;
   orderIndex?: number;
+  accessCodes?: string[];
+  /** master_model_type.id ที่ plan ให้ใช้ — ว่าง = ทุก model ที่ active */
+  allowedModelIds?: number[];
   prices: TPlanPrice[];
   // Backwards compatibility
   features: TPlanFeature[];
@@ -58,4 +61,14 @@ export interface TPlan {
   createdAt?: string;
   updatedAt?: string;
 }
+/** GET /plans/:id/organizations-impact */
+export interface TPlanImpact {
+  total: number;
+  matching: number;
+  customized: number;
+}
+
+/** PATCH /plans/:id `applyToOrganizations` — ไม่ส่ง = none */
+export type TApplyScope = "matching" | "all" | "none";
+
 export type TPlanInterval = "MONTH" | "YEAR" | "DAY";

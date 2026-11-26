@@ -5,6 +5,8 @@ export interface TMasterModelType {
   type: string | null;
   description: string | null;
   isDefault: boolean;
+  /** false = ปิดทั้งระบบ (เห็นเฉพาะหน้า AI Models ของ admin ผ่าน includeInactive) */
+  isActive?: boolean;
   allowPublish: boolean;
   modelDetails: any | null;
   createdAt: string;

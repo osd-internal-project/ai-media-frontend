@@ -115,7 +115,7 @@ const GenerateImagePage: FC = () => {
   const [activeKey, setActiveKey] = useState<GenerateTabKey>("image");
   const [teamView, setTeamView] = useState<boolean>(true);
   // Loaded once by PrivateLayout; undefined while loading, [] means "no restriction".
-  const { accessCodes } = useOrganization();
+  const { accessCodes, allowedModelIds } = useOrganization();
   const [disableTab, setDisableTab] = useState<boolean>(false);
   const [promptGuideOpenStatus, setPromptGuideOpenStatus] =
     useState<boolean>(false);
@@ -244,16 +244,30 @@ const GenerateImagePage: FC = () => {
     fetchRole();
   }, [session?.user?.id, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync filteredAIModels and selectedAIModel whenever aiModels or tab changes
+  // model ที่ org ได้สิทธิ์ — list ว่าง (หรือยังโหลดไม่เสร็จ) = ไม่กรอง; backend ปฏิเสธ model นอก list อยู่แล้ว
+  const permittedModels = useMemo(
+    () =>
+      allowedModelIds?.length
+        ? aiModels.filter((m) => allowedModelIds.includes(m.id))
+        : aiModels,
+    [aiModels, allowedModelIds],
+  );
+
+  // Sync filteredAIModels and selectedAIModel whenever the permitted models or tab changes
   useEffect(() => {
-    if (aiModels.length === 0) return;
-    const models = aiModels.filter((m) => m.type === activeKey);
-    setFilteredAIModels(models);
-    if (!selectedAIModel) {
-      const model = resolveModel(aiModels, activeKey, id);
-      if (model) setSelectedAIModel(model);
+    if (permittedModels.length === 0) {
+      setFilteredAIModels([]);
+      return;
     }
-  }, [aiModels, activeKey, id]); // eslint-disable-line react-hooks/exhaustive-deps
+    const models = permittedModels.filter((m) => m.type === activeKey);
+    setFilteredAIModels(models);
+    const stillAllowed =
+      selectedAIModel && permittedModels.some((m) => m.id === selectedAIModel.id);
+    if (!stillAllowed) {
+      const model = resolveModel(permittedModels, activeKey, id);
+      setSelectedAIModel(model);
+    }
+  }, [permittedModels, activeKey, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 

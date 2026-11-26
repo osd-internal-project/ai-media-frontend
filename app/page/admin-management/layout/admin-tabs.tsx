@@ -1,6 +1,11 @@
 "use client";
 
 import { useThemeMode } from "@/app/components/ThemeProvider";
+import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
+import CouponService from "@/app/services/coupon.service";
+import MasterModelTypeServices from "@/app/services/master-model-type.service";
+import OrganizationServices from "@/app/services/organization.service";
+import PlanServices from "@/app/services/plan.service";
 import { getThemeConfig } from "@/app/theme/themeConfig";
 import { Button } from "antd";
 import {
@@ -18,7 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { FC, useState, useTransition, type CSSProperties } from "react";
+import { FC, useEffect, useState, useTransition, type CSSProperties } from "react";
 
 type AdminTabItem = {
   key: string;
@@ -108,6 +113,39 @@ const adminTabs: AdminTabItem[] = [
   },
 ];
 
+type TabCounts = Partial<Record<AdminTabItem["key"], number>>;
+
+/** จำนวนต่อท้ายชื่อ tab (แทนแถว stat card เดิม) — โหลดไม่สำเร็จ = ไม่แสดง ไม่ใช่ 0 */
+const useTabCounts = (): TabCounts => {
+  const [counts, setCounts] = useState<TabCounts>({});
+
+  useEffect(() => {
+    let isMounted = true;
+    const sources: [AdminTabItem["key"], () => Promise<number>][] = [
+      ["plan-management", async () => (await PlanServices(axiosCore).findAllFormatted()).length],
+      ["model-pricing", async () => (await MasterModelTypeServices(axiosCore).findAll()).length],
+      ["coupon-management", async () => {
+        const result = await CouponService(axiosUser).findAll();
+        return result?.total ?? result?.data?.length ?? 0;
+      }],
+      ["organization", async () => (await OrganizationServices(axiosUser).findAll({})).length],
+    ];
+    Promise.allSettled(sources.map(([, load]) => load())).then((results) => {
+      if (!isMounted) return;
+      const next: TabCounts = {};
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") next[sources[index][0]] = result.value;
+      });
+      setCounts(next);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return counts;
+};
+
 const AdminTabs: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -116,6 +154,7 @@ const AdminTabs: FC = () => {
   const isLightMode = mode === "light";
   const [, startTransition] = useTransition();
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const counts = useTabCounts();
 
   const containerStyle: CSSProperties = {
     background: isLightMode
@@ -184,6 +223,14 @@ const AdminTabs: FC = () => {
           className="shrink-0 !px-4"
         >
           {tab.label}
+          {counts[tab.key] !== undefined && (
+            <span
+              className="tabular-nums"
+              style={{ color: semantic.colorTextSecondary, fontWeight: 400 }}
+            >
+              {counts[tab.key]!.toLocaleString()}
+            </span>
+          )}
         </Button>
       ))}
     </div>

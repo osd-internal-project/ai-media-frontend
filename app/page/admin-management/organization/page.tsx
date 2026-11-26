@@ -1,135 +1,117 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Button,
-  Tag,
-  Input,
-  Space,
-  Modal,
-  Form,
-  Switch,
-  Select,
-  message,
-} from "antd";
-import {
-  SearchOutlined,
-  ReloadOutlined,
-  DownloadOutlined,
-  SettingOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { Table, Button, Input, Select, Checkbox, message, theme } from "antd";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 import { IOrganization } from "@/app/common/organization.type";
 import OrganizationServices from "@/app/services/organization.service";
-import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
+import { axiosUser } from "@/app/lib/axios/axios";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
+import {
+  CustomizedBadge,
+  SeatBar,
+  StatusTag,
+  seatLevel,
+} from "../components/admin-ui";
 
-const { Option } = Select;
+type SeatFilter = "all" | "near" | "full";
+
+const organizationService = OrganizationServices(axiosUser);
+const seatUsed = (org: IOrganization) => (org.seatUsed ?? 0) + (org.seatPending ?? 0);
 
 export default function OrganizationPage() {
   const router = useRouter();
+  const { token } = theme.useToken();
   const [data, setData] = useState<IOrganization[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchObject, setSearchObject] = useState<{
-    searchText?: string;
-    type?: string;
-  }>({
-    searchText: "",
-    type: undefined,
-  });
-  const [open, setOpen] = useState<{ status: boolean; type: string }>({
-    status: false,
-    type: "create",
-  });
-  const [form] = Form.useForm();
+  const [searchText, setSearchText] = useState("");
+  const [type, setType] = useState<string | undefined>();
+  const [seatFilter, setSeatFilter] = useState<SeatFilter>("all");
+  const [customizedOnly, setCustomizedOnly] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
-
-  const organizationService = OrganizationServices(axiosUser);
-
-  useEffect(() => {
-    fetchData();
-  }, [searchObject]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await organizationService.findAll(searchObject);
-      setData(response || []);
+      setData((await organizationService.findAll({})) || []);
     } catch (error) {
-      messageApi.error("Failed to fetch organizations");
+      messageApi.error("Could not load organizations. Check the connection and press reload.");
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  // const handleDelete = (organizationId: string) => {
-  //   Modal.confirm({
-  //     title: "Are you sure you want to delete this organization?",
-  //     content: "This action cannot be undone.",
-  //     okText: "Delete",
-  //     okType: "danger",
-  //     cancelText: "Cancel",
-  //     onOk: async () => {
-  //       try {
-  //         await organizationService.del(organizationId);
-  //         messageApi.success("Organization deleted successfully");
-  //         fetchData();
-  //       } catch (error) {
-  //         messageApi.error("Failed to delete organization");
-  //         console.error(error);
-  //       }
-  //     },
-  //   });
-  // };
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // const filteredData = data.filter(
-  //   (item) =>
-  //     item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-  //     item.organizationId.toLowerCase().includes(searchText.toLowerCase()) ||
-  //     item.description?.toLowerCase().includes(searchText.toLowerCase()),
-  // );
+  // shortcut: กรองฝั่ง client เพราะ list โหลดทั้งหมดอยู่แล้ว ถ้าเกินราว 2k org ให้ย้ายไปกรองที่ backend
+  const rows = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    return data.filter((org) => {
+      if (query && !`${org.name} ${org.organizationId}`.toLowerCase().includes(query)) return false;
+      if (type && org.type?.toLowerCase() !== type) return false;
+      if (customizedOnly && !org.isCustomized) return false;
+      if (seatFilter === "all") return true;
+      const level = seatLevel(seatUsed(org), org.maxUserAccess);
+      return seatFilter === "full" ? level === "full" : level === "near" || level === "full";
+    });
+  }, [data, searchText, type, customizedOnly, seatFilter]);
+
+  const openOrg = (org: IOrganization) =>
+    router.push(`/page/admin-management/organization/${org.organizationId}`);
 
   const columns: ColumnsType<IOrganization> = [
     {
-      title: "Organization Name",
+      title: "Organization",
       dataIndex: "name",
       key: "name",
-      width: 250,
+      width: 260,
       ellipsis: true,
+      sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text, record) => (
-        <div className="flex items-center">
-          <div>
-            <div className="text-[var(--legacy-ink)] font-medium">{text}</div>
-            <div className="text-[var(--legacy-gray-400)] text-xs">{record.organizationId}</div>
-          </div>
+        <div className="min-w-0">
+          <div className="truncate font-medium" style={{ color: token.colorTextBase }}>{text}</div>
+          <div className="truncate text-xs" style={{ color: token.colorTextSecondary }}>{record.organizationId}</div>
         </div>
       ),
     },
-    // {
-    //   title: "Description",
-    //   dataIndex: "description",
-    //   key: "description",
-    //   ellipsis: true,
-    //   render: (text) => text || "-",
-    // },
+    {
+      title: "Plan",
+      key: "plan",
+      width: 200,
+      render: (_, record) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span style={{ color: record.planName ? token.colorTextBase : token.colorTextSecondary }}>
+            {record.planName ?? "No plan"}
+          </span>
+          {record.isCustomized && <CustomizedBadge />}
+        </div>
+      ),
+    },
+    {
+      title: "Seats",
+      key: "seats",
+      width: 180,
+      sorter: (a, b) => seatUsed(a) - seatUsed(b),
+      render: (_, record) => (
+        <SeatBar active={record.seatUsed ?? 0} pending={record.seatPending ?? 0} max={record.maxUserAccess} />
+      ),
+    },
     {
       title: "Type",
       dataIndex: "type",
       key: "type",
-      width: 120,
-      render: (type: string) => (
-        <Tag
-          className="rounded-full px-3"
-          color={type === "personal" ? "blue" : "green"}
-        >
-          {type === "personal" ? "Personal" : "Team"}
-        </Tag>
-      ),
+      width: 100,
+      render: (value: string) =>
+        value?.toLowerCase() === "personal" ? (
+          <StatusTag tone="neutral">Personal</StatusTag>
+        ) : (
+          <StatusTag tone="primary">Team</StatusTag>
+        ),
     },
     {
       title: "Status",
@@ -137,163 +119,97 @@ export default function OrganizationPage() {
       key: "status",
       width: 100,
       render: (status: boolean) => (
-        <Tag className="rounded-full px-3" color={status ? "success" : "error"}>
-          {status ? "Active" : "Inactive"}
-        </Tag>
+        <StatusTag tone={status ? "success" : "error"}>{status ? "Active" : "Inactive"}</StatusTag>
       ),
     },
-    // {
-    //   title: "Tokens",
-    //   dataIndex: "packageTokenAmount",
-    //   key: "packageTokenAmount",
-    //   width: 120,
-    //   render: (value, record) => (
-    //     <div>
-    //       <div className="text-white text-sm">
-    //         {record.remainTokenAmount?.toLocaleString() || 0} /{" "}
-    //         {value?.toLocaleString() || 0}
-    //       </div>
-    //       <div className="text-gray-400 text-xs">Remaining / Total</div>
-    //     </div>
-    //   ),
-    // },
-    // {
-    //   title: "Images",
-    //   dataIndex: "packageImageAmount",
-    //   key: "packageImageAmount",
-    //   width: 120,
-    //   render: (value, record) => (
-    //     <div>
-    //       <div className="text-white text-sm">
-    //         {record.remainImageAmount?.toLocaleString() || 0} /{" "}
-    //         {value?.toLocaleString() || 0}
-    //       </div>
-    //       <div className="text-gray-400 text-xs">Remaining / Total</div>
-    //     </div>
-    //   ),
-    // },
     {
-      title: "Max Users",
-      dataIndex: "maxUserAccess",
-      key: "maxUserAccess",
-      width: 100,
-      render: (value) => value || "-",
-    },
-    {
-      title: "Created At",
+      title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 150,
-      render: (date) => dayjs(date).format("YYYY-MM-DD HH:mm"),
-    },
-    {
-      title: "Action",
-      key: "action",
-      width: 80,
-      fixed: "right",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            // onClick={() => handleManage("edit", record)}
-            onClick={() =>
-              router.push(
-                `/page/admin-management/organization/${record.organizationId}`,
-              )
-            }
-            className="!text-blue-400 hover:!text-blue-300"
-          />
-          {/* <Button
-            type="text"
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.organizationId)}
-            className="!text-red-400 hover:!text-red-300"
-            danger
-          /> */}
-        </Space>
-      ),
+      width: 130,
+      sorter: (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf(),
+      render: (date) => <span className="tabular-nums">{dayjs(date).format("D MMM YYYY")}</span>,
     },
   ];
 
   return (
-    <div className="w-full h-full ">
+    <div className="flex w-full flex-col gap-3">
       {contextHolder}
 
-      {/* Header */}
-      <div className="">
-        <h1 className="text-2xl font-bold mb-2">
-          Organization Management
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="mr-auto text-xl font-semibold" style={{ color: token.colorTextBase }}>
+          Organizations
         </h1>
-        <p className="text-[var(--legacy-gray-400)]">Manage all organizations in the system</p>
-      </div>
-
-      {/* Filters */}
-      <div className=" p-4 rounded-lg mb-4">
-        <div className="flex items-center justify-between gap-2">
-          <Input
-            placeholder="Search organizations..."
-            prefix={<SearchOutlined className="" />}
-            className="w-96"
-         
-            value={searchObject.searchText}
-            onChange={(e) =>
-              setSearchObject({ ...searchObject, searchText: e.target.value })
-            }
-          />
-          <Select
-            allowClear
-            placeholder="Search organizations..."
-            prefix={<SearchOutlined />}
-            className="w-96 "
-            value={searchObject.type}
-            onChange={(value) =>
-              setSearchObject({ ...searchObject, type: value })
-            }
-        
-            options={[
-              { value: "team", label: "Team" },
-              { value: "personal", label: "Personal" },
-            ]}
-          />
-          <Space>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={fetchData}
-              loading={loading}
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                router.push(
-                  "/page/admin-management/organization/create/package",
-                )
-              }
-            >
-              Create
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className=" rounded-lg overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={data}
-          rowKey="organizationId"
-          loading={loading}
-          scroll={{ x: 1400 }}
-          size="small"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} organizations`,
-          }}
-          className="custom-table"
+        <Input
+          allowClear
+          placeholder="Search name or ID"
+          prefix={<Search size={14} aria-hidden />}
+          className="!w-64"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
+        <Select
+          allowClear
+          placeholder="Type"
+          className="!w-32"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: "team", label: "Team" },
+            { value: "personal", label: "Personal" },
+          ]}
+        />
+        <Select<SeatFilter>
+          className="!w-40"
+          value={seatFilter}
+          onChange={setSeatFilter}
+          aria-label="Filter by seats"
+          options={[
+            { value: "all", label: "All seats" },
+            { value: "near", label: "80% full or more" },
+            { value: "full", label: "Full" },
+          ]}
+        />
+        <Checkbox checked={customizedOnly} onChange={(e) => setCustomizedOnly(e.target.checked)}>
+          กำหนดเองเท่านั้น
+        </Checkbox>
+        <Button
+          icon={<RefreshCw size={14} />}
+          onClick={fetchData}
+          loading={loading}
+          aria-label="Reload organizations"
+        />
+        <Button
+          type="primary"
+          icon={<Plus size={14} />}
+          onClick={() => router.push("/page/admin-management/organization/create/package")}
+        >
+          Create
+        </Button>
       </div>
+
+      <Table
+        columns={columns}
+        dataSource={rows}
+        rowKey="organizationId"
+        loading={loading}
+        scroll={{ x: 1000 }}
+        size="small"
+        onRow={(record) => ({
+          onClick: () => openOrg(record),
+          onKeyDown: (event) => {
+            if (event.key === "Enter") openOrg(record);
+          },
+          tabIndex: 0,
+          className: "cursor-pointer",
+        })}
+        pagination={{
+          pageSize: 20,
+          showSizeChanger: true,
+          showTotal: (total) => `${total} organizations`,
+        }}
+        className="custom-table"
+      />
     </div>
   );
 }

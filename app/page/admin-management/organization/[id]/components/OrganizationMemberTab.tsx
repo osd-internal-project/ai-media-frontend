@@ -81,9 +81,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
     try {
       await organizationMemberService.update(currentMemberId, values);
       setIsEditMemberModalOpen(false);
+      showMessage("success", "Member saved");
       onRefresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      showMessage("error", error?.response?.data?.message || "Could not save the member");
     }
   };
 
@@ -92,8 +93,11 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
       showMessage("error", "Fail to load data");
       return;
     }
-    if (members.length >= (organization?.maxUserAccess || 0)) {
-      showMessage("error", "Max user access reached");
+    // นับแบบเดียวกับ backend: สมาชิก active + คำเชิญค้าง; null = ไม่จำกัด, 0 = เต็ม
+    const max = organization.maxUserAccess;
+    const used = (organization.seatUsed ?? 0) + (organization.seatPending ?? 0);
+    if (max !== null && max !== undefined && used >= max) {
+      showMessage("error", `Seats full: ${used} of ${max} used (members + pending invites). Raise the limit on the สิทธิ์การใช้งาน tab.`);
       return;
     }
     inviteForm.resetFields();
@@ -119,9 +123,10 @@ const OrganizationMemberTab: React.FC<OrganizationMemberTabProps> = ({
   const handleRemoveMember = async (memberId: number) => {
     try {
       await organizationMemberService.delete(memberId);
+      showMessage("success", "Member removed");
       onRefresh();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      showMessage("error", error?.response?.data?.message || "Could not remove the member");
     }
   };
 

@@ -21,7 +21,8 @@ import { useRouter } from "next/navigation";
 import { FC, useMemo } from "react";
 import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { Boxes } from "lucide-react";
+import { Boxes, Coins, Copy, ImageIcon, Users } from "lucide-react";
+import { priceLabel } from "../plan-utils";
 import PlanServices from "@/app/services/plan.service";
 import { axiosCore } from "@/app/lib/axios/axios";
 
@@ -29,7 +30,9 @@ interface PlanGridViewProps {
   loading: boolean;
   filteredData: TPlan[];
   handleDeletePlan: (planId: string) => void;
-  onRefresh?: () => void; 
+  onRefresh?: () => void;
+  onClone: (plan: TPlan) => void;
+  cloningId?: string | null;
 }
 
 const { Text, Title } = Typography;
@@ -38,7 +41,9 @@ const PlanGridView: FC<PlanGridViewProps> = ({
   loading,
   filteredData,
   handleDeletePlan,
-  onRefresh
+  onRefresh,
+  onClone,
+  cloningId,
 }) => {
   const router = useRouter();
     const { mode } = useThemeMode();
@@ -140,12 +145,12 @@ const handleStatusChange = async (planId: string, checked: boolean) => {
                       {record.prices.map((price) => (
                         <div key={price.id} className="flex items-baseline gap-1">
                        <Title level={4} className="!mb-0">
-                         {price.price}{price.currency} / {price.interval}
+                         <span className="tabular-nums">{priceLabel(price)}</span>
                       </Title>
                         </div>  
                       ))}
                         <Text color="primary" style={{color: semantic.colorPrimary, fontSize: "12px"}} >
-                           💳 {record.detailJson?.creditAllowance} Credits / {record.detailJson?.duration} {record.detailJson?.unit}
+                           <Coins size={12} className="mr-1 inline" aria-hidden /> {record.detailJson?.creditAllowance} Credits / {record.detailJson?.duration} {record.detailJson?.unit}
                         </Text>
                       </div>
                      
@@ -174,7 +179,7 @@ const handleStatusChange = async (planId: string, checked: boolean) => {
   
    <div className="flex justify-between w-full">
   <Text color="white" style={{  fontSize: "12px" }}>
-      🖼️ Image:
+      <ImageIcon size={12} className="mr-1 inline" aria-hidden /> Image:
   </Text>
   <Text color="primary" style={{ color: semantic.colorPrimary, fontSize: "12px" }}>
     {record.detailJson?.imageAllowance} Image
@@ -197,7 +202,7 @@ const handleStatusChange = async (planId: string, checked: boolean) => {
   >
    <div className="flex justify-between w-full">
   <Text color="white" style={{  fontSize: "12px" }}>
-    👥 Max User:
+    <Users size={12} className="mr-1 inline" aria-hidden /> Max User:
   </Text>
   <Text color="primary" style={{ color: semantic.colorPrimary, fontSize: "12px" }}>
     {record.detailJson?.maxUserAccess} Person
@@ -256,6 +261,14 @@ const handleStatusChange = async (planId: string, checked: boolean) => {
                       >
                         Edit
                         </Button>
+                      <Button
+                        size="small"
+                        icon={<Copy size={13} />}
+                        aria-label={`Duplicate ${record.name}`}
+                        title="Duplicate (saved as draft)"
+                        loading={cloningId === record.id}
+                        onClick={() => onClone(record)}
+                      />
                       <Popconfirm
                         title="Delete Plan"
                         description="Are you sure you want to delete this plan?"

@@ -1,10 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button, Form, Input, InputNumber, message, Space, Table, Modal, Tag, Switch, Select } from "antd";
+import { Button, Form, Input, InputNumber, message, Popconfirm, Space, Table, Modal, Tag, Switch, Select } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { axiosCore } from "@/app/lib/axios/axios";
 import MasterModelTypeServices from "@/app/services/master-model-type.service";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
+import { TPlan } from "@/app/common/plan.type";
+import PlanServices from "@/app/services/plan.service";
+import { StatusTag } from "../components/admin-ui";
 import { CopyOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 const ModelPricingManagementPage = () => {
@@ -15,18 +18,25 @@ const ModelPricingManagementPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [plans, setPlans] = useState<TPlan[] | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Watch calculation type to change input fields dynamically
   const calculationType = Form.useWatch("calculationType", form);
 
   useEffect(() => {
     fetchModels();
+    // ใช้นับว่า plan ไหนเลือก model นี้ไว้ ตอนยืนยันเปิด/ปิด
+    PlanServices(axiosCore)
+      .findAllFormatted()
+      .then(setPlans)
+      .catch(() => setPlans(null));
   }, []);
 
   const fetchModels = async () => {
     try {
       setLoading(true);
-      const data = await masterModelTypeServices.findAll();
+      const data = await masterModelTypeServices.findAll({ includeInactive: true });
       setModels(data);
     } catch (error) {
       console.error(error);
@@ -142,6 +152,40 @@ const ModelPricingManagementPage = () => {
     }
   };
 
+  /** plan ที่เลือก model นี้ไว้เอง และ plan ที่ใช้ "ทุก model" (ได้ model นี้ด้วยเมื่อเปิด) */
+  const planUsage = (modelId: number) => {
+    if (!plans) return null;
+    return {
+      picked: plans.filter((plan) => plan.allowedModelIds?.includes(modelId)).length,
+      viaAll: plans.filter((plan) => !plan.allowedModelIds?.length).length,
+    };
+  };
+
+  const activeDescription = (model: TMasterModelType) => {
+    const usage = planUsage(model.id);
+    const counts = usage
+      ? ` ${usage.picked} plan เลือก model นี้ไว้, ${usage.viaAll} plan ใช้ "ทุก model".`
+      : " นับ plan ที่ใช้ไม่ได้.";
+    return model.isActive === false
+      ? `กลับมาแสดงใน workspace ของ org ที่ได้สิทธิ์.${counts}`
+      : `ซ่อนจากทุก workspace และ generate ด้วย model นี้ไม่ได้ทันที งานที่อยู่ในคิวแล้วไม่ถูกยกเลิก.${counts}`;
+  };
+
+  const handleToggleActive = async (model: TMasterModelType) => {
+    const isActive = model.isActive === false;
+    setTogglingId(model.id);
+    try {
+      await masterModelTypeServices.update(model.id, { isActive });
+      message.success(`${model.name ?? model.modelType} ${isActive ? "enabled" : "disabled"}`);
+      fetchModels();
+    } catch (error) {
+      const text = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      message.error(text ?? "Could not change the model status");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     try {
       await masterModelTypeServices.delete(id);
@@ -158,6 +202,31 @@ const ModelPricingManagementPage = () => {
       dataIndex: "id",
       key: "id",
       width: 60,
+    },
+    {
+      title: "Enabled",
+      key: "isActive",
+      width: 110,
+      render: (_, record) => (
+        <Popconfirm
+          title={record.isActive === false ? "Enable this model?" : "Disable this model everywhere?"}
+          description={<div className="max-w-xs">{activeDescription(record)}</div>}
+          okText={record.isActive === false ? "Enable" : "Disable"}
+          okButtonProps={{ danger: record.isActive !== false }}
+          cancelText="Cancel"
+          onConfirm={() => handleToggleActive(record)}
+        >
+          <Space size={6}>
+            <Switch
+              size="small"
+              checked={record.isActive !== false}
+              loading={togglingId === record.id}
+              aria-label={`${record.name ?? record.modelType} enabled`}
+            />
+            {record.isActive === false && <StatusTag tone="neutral">Off</StatusTag>}
+          </Space>
+        </Popconfirm>
+      ),
     },
     {
       title: "Model Tag",

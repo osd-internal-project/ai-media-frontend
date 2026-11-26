@@ -1,9 +1,30 @@
 import { AxiosInstance } from "axios";
 import type { IGenerationLogDetail } from "../common/dashbaord";
 
+export type AdminAuditEntity = "organization" | "plan" | "master_model_type";
+
+export interface IAdminAuditEntry {
+  id: string;
+  action: string;
+  oldValues: Record<string, unknown> | null;
+  newValues: Record<string, unknown> | null;
+  createdAt: string;
+  user: { userId: string; fullname: string | null; email: string | null };
+}
+
 const LogsServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/logs";
   return {
+    /** ประวัติการแก้ของ admin (org / plan / model) — reject เมื่อพลาด ให้ tab แสดง error ได้ */
+    listAudit: async (
+      entityName: AdminAuditEntity,
+      entityId: string,
+    ): Promise<IAdminAuditEntry[]> => {
+      const res = await axiosInstance.get<IAdminAuditEntry[]>(`${baseUrl}/audit`, {
+        params: { entityName, entityId },
+      });
+      return res.data;
+    },
     // Rejects on failure so the log drawer can show a retry instead of an empty result.
     findDetail: async (
       logId: string,

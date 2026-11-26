@@ -58,10 +58,11 @@ export interface IOrganizationInvitation {
   organizationId: string;
   email: string;
   role: string;
-  status: "pending" | "accepted" | "expired" | "cancelled";
+  /** backend เก็บตัวพิมพ์ใหญ่: PENDING | ACCEPTED | EXPIRED | CANCELLED */
+  status: string;
   token: string;
   createdAt: string;
-  expiredAt: string;
+  expiresAt: string;
 }
 
 /** คำเชิญที่ยังรอตอบของ user ที่ login อยู่ — ใช้แสดงในกระดิ่ง noti */
@@ -94,8 +95,15 @@ export interface IOrganization {
   packageImageAmount?: number;
   remainTokenAmount?: number;
   remainImageAmount?: number;
-  maxUserAccess?: number;
+  maxUserAccess?: number | null;
   accessCodes: string[];
+  /** master_model_type.id ที่ใช้ได้ — ว่าง = ทุก model ที่ active */
+  allowedModelIds?: number[];
+  /** มาจาก GET /organization (admin list) */
+  seatUsed?: number;
+  seatPending?: number;
+  planName?: string | null;
+  isCustomized?: boolean;
   //Relateion
   subscription?: IOrganizationSubscription;
   creditBalance?: ICreditBalance;

@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Button, Popconfirm, Space, Table, Tag, message } from "antd";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, Popconfirm, Segmented, Space, Table, message, theme } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { IOrganizationInvitation } from "@/app/common/organization.type";
 import OrganizationService from "@/app/services/organization.service";
 import { axiosUser } from "@/app/lib/axios/axios";
 import SectionEmptyState from "./SectionEmptyState";
 import dayjs from "dayjs";
+import { StatusTag, StatusTone } from "../../../components/admin-ui";
 
 interface OrganizationInvitationTabProps {
   organizationId: string;
@@ -13,193 +14,245 @@ interface OrganizationInvitationTabProps {
   canManage?: boolean;
 }
 
-const STATUS_COLOR: Record<IOrganizationInvitation["status"], string> = {
-  pending: "orange",
-  accepted: "green",
-  expired: "default",
-  cancelled: "red",
+type InvitationState = "pending" | "expired" | "accepted" | "cancelled";
+
+const STATE_TONE: Record<InvitationState, StatusTone> = {
+  pending: "warning",
+  expired: "neutral",
+  accepted: "success",
+  cancelled: "error",
 };
+
+const STATE_LABEL: Record<InvitationState, string> = {
+  pending: "Pending",
+  expired: "Expired",
+  accepted: "Accepted",
+  cancelled: "Cancelled",
+};
+
+/** PENDING ที่เลยวันหมดอายุ = หมดอายุ (backend ไม่ได้เปลี่ยนสถานะให้เอง และไม่นับ seat แล้ว) */
+const stateOf = (invitation: IOrganizationInvitation): InvitationState => {
+  const status = invitation.status?.toLowerCase();
+  if (status === "pending") {
+    return dayjs(invitation.expiresAt).isBefore(dayjs()) ? "expired" : "pending";
+  }
+  return (["accepted", "cancelled", "expired"] as const).find((value) => value === status) ?? "expired";
+};
+
+const expiryText = (invitation: IOrganizationInvitation) => {
+  const expiresAt = dayjs(invitation.expiresAt);
+  if (!expiresAt.isValid()) return "—";
+  const hours = expiresAt.diff(dayjs(), "hour");
+  if (hours < 0) return `หมดอายุ ${expiresAt.format("D MMM HH:mm")}`;
+  return hours < 24 ? `อีก ${Math.max(hours, 1)} ชม.` : `อีก ${Math.ceil(hours / 24)} วัน`;
+};
+
+const errorText = (error: unknown, fallback: string) =>
+  (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? fallback;
+
+const organizationService = OrganizationService(axiosUser);
 
 const OrganizationInvitationTab: React.FC<OrganizationInvitationTabProps> = ({
   organizationId,
   canManage = true,
 }) => {
+  const { token } = theme.useToken();
   const [messageApi, contextHolder] = message.useMessage();
   const [invitations, setInvitations] = useState<IOrganizationInvitation[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const organizationService = OrganizationService(axiosUser);
+  const [filter, setFilter] = useState<"open" | "all">("open");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const fetchInvitations = useCallback(async () => {
     setLoading(true);
     try {
-      const data =
-        await organizationService.findInvitationsByOrganization(organizationId);
-      setInvitations(data);
+      setInvitations(await organizationService.findInvitationsByOrganization(organizationId));
     } catch {
-      messageApi.error("Failed to load invitations");
+      messageApi.error("Could not load invitations");
     } finally {
       setLoading(false);
     }
-  }, [organizationId]);
+  }, [organizationId, messageApi]);
 
   useEffect(() => {
     fetchInvitations();
   }, [fetchInvitations]);
 
-  const handleCancel = async (id: string) => {
+  const run = async (id: string, action: () => Promise<unknown>, done: string, failed: string) => {
+    setBusyId(id);
     try {
-      await organizationService.cancelInvitation(id);
-      messageApi.success("Invitation cancelled");
+      await action();
+      messageApi.success(done);
       fetchInvitations();
-    } catch {
-      messageApi.error("Failed to cancel invitation");
+    } catch (error) {
+      messageApi.error(errorText(error, failed));
+    } finally {
+      setBusyId(null);
     }
   };
 
+  const counts = useMemo(() => {
+    const states = invitations.map(stateOf);
+    return {
+      pending: states.filter((state) => state === "pending").length,
+      expired: states.filter((state) => state === "expired").length,
+    };
+  }, [invitations]);
+
+  const rows = useMemo(
+    () =>
+      [...invitations]
+        .filter((invitation) => filter === "all" || ["pending", "expired"].includes(stateOf(invitation)))
+        .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()),
+    [invitations, filter],
+  );
+
+  const actions = (invitation: IOrganizationInvitation) => {
+    const state = stateOf(invitation);
+    // ส่งซ้ำ/ยกเลิกได้เฉพาะที่ backend ยังเป็น PENDING (รวมที่เลยวันหมดอายุ)
+    if (invitation.status?.toUpperCase() !== "PENDING") return <span style={{ color: token.colorTextSecondary }}>—</span>;
+    return (
+      <Space size={4}>
+        <Button
+          size="small"
+          loading={busyId === invitation.id}
+          onClick={() =>
+            run(
+              invitation.id,
+              () => organizationService.resendInvitation(invitation.id),
+              `Invitation resent to ${invitation.email}`,
+              "Could not resend the invitation",
+            )
+          }
+        >
+          {state === "expired" ? "Renew & resend" : "Resend"}
+        </Button>
+        <Popconfirm
+          title="Cancel this invitation?"
+          description="The link in the email stops working and the seat is freed."
+          okText="Cancel invitation"
+          cancelText="Keep"
+          onConfirm={() =>
+            run(
+              invitation.id,
+              () => organizationService.cancelInvitation(invitation.id),
+              "Invitation cancelled",
+              "Could not cancel the invitation",
+            )
+          }
+        >
+          <Button size="small" type="text" danger>
+            Cancel
+          </Button>
+        </Popconfirm>
+      </Space>
+    );
+  };
+
   const columns: ColumnsType<IOrganizationInvitation> = [
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-    },
+    { title: "Email", dataIndex: "email", key: "email" },
     {
       title: "Role",
       dataIndex: "role",
       key: "role",
-      render: (role) => <Tag color="blue">{role}</Tag>,
+      render: (role: string) => <StatusTag tone="neutral">{role}</StatusTag>,
     },
     {
       title: "Status",
-      dataIndex: "status",
       key: "status",
-      render: (status: IOrganizationInvitation["status"]) => (
-        <Tag color={STATUS_COLOR[status]} className="capitalize">
-          {status}
-        </Tag>
-      ),
+      render: (_, invitation) => {
+        const state = stateOf(invitation);
+        return <StatusTag tone={STATE_TONE[state]}>{STATE_LABEL[state]}</StatusTag>;
+      },
     },
     {
-      title: "Invited At",
+      title: "Invited",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (v) => dayjs(v).format("YYYY-MM-DD HH:mm") || "",
+      render: (value) => <span className="tabular-nums">{dayjs(value).format("D MMM YYYY HH:mm")}</span>,
     },
     {
-      title: "Expires At",
-      dataIndex: "expiredAt",
-      key: "expiredAt",
-      render: (v) => dayjs(v).format("YYYY-MM-DD HH:mm") || "",
+      title: "Expires",
+      key: "expiresAt",
+      render: (_, invitation) =>
+        stateOf(invitation) === "pending" || stateOf(invitation) === "expired" ? (
+          <span className="tabular-nums">{expiryText(invitation)}</span>
+        ) : (
+          <span style={{ color: token.colorTextSecondary }}>—</span>
+        ),
     },
     ...(canManage
-      ? [
-          {
-            title: "Action",
-            key: "action",
-            render: (_: unknown, record: IOrganizationInvitation) =>
-              record.status === "pending" ? (
-                <Popconfirm
-                  title="Cancel this invitation?"
-                  onConfirm={() => handleCancel(record.id)}
-                >
-                  <Button type="link" danger size="small">
-                    Cancel
-                  </Button>
-                </Popconfirm>
-              ) : (
-                <span className="text-[var(--legacy-gray-400)] text-sm">-</span>
-              ),
-          },
-        ]
+      ? [{ title: "Action", key: "action", render: (_: unknown, invitation: IOrganizationInvitation) => actions(invitation) }]
       : []),
   ];
 
+  const empty = (
+    <SectionEmptyState
+      title={filter === "open" ? "No open invitations" : "No invitations yet"}
+      description="Invite users from the Members tab. Pending invitations count toward the seat limit."
+      className="border-0 bg-transparent px-0 py-6"
+    />
+  );
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {contextHolder}
 
-      {/* Desktop table */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Segmented
+          value={filter}
+          onChange={(value) => setFilter(value as "open" | "all")}
+          options={[
+            { value: "open", label: `Open ${counts.pending + counts.expired}` },
+            { value: "all", label: `All ${invitations.length}` },
+          ]}
+        />
+        <span className="text-xs" style={{ color: token.colorTextSecondary }}>
+          {counts.pending} pending use a seat{counts.expired ? `, ${counts.expired} expired don't` : ""}
+        </span>
+      </div>
+
       <div className="hidden md:block">
         <Table
-          dataSource={invitations}
+          dataSource={rows}
           columns={columns}
           rowKey="id"
           loading={loading}
+          size="small"
           pagination={{ pageSize: 10 }}
           scroll={{ x: "max-content" }}
-          locale={{
-            emptyText: (
-              <SectionEmptyState
-                title="No invitations found"
-                description="Invite users from the Members tab to see them here."
-                className="border-0 bg-transparent px-0 py-6"
-              />
-            ),
-          }}
+          locale={{ emptyText: empty }}
         />
       </div>
 
-      {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
-        {invitations.length === 0 && !loading ? (
-          <SectionEmptyState
-            title="No invitations found"
-            description="Invite users from the Members tab to see them here."
-          />
-        ) : (
-          invitations.map((inv) => (
-            <div
-              key={inv.id}
-              className="rounded-xl border border-[var(--legacy-line-white-10)] bg-[var(--legacy-panel-white-5)] p-4"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{inv.email}</div>
-                  <Space size={4} className="mt-1 flex-wrap">
-                    <Tag color="blue">{inv.role}</Tag>
-                    <Tag
-                      color={STATUS_COLOR[inv.status]}
-                      className="capitalize"
-                    >
-                      {inv.status}
-                    </Tag>
-                  </Space>
-                </div>
-                {canManage && inv.status === "pending" && (
-                  <Popconfirm
-                    title="Cancel this invitation?"
-                    onConfirm={() => handleCancel(inv.id)}
-                  >
-                    <Button
-                      type="link"
-                      danger
-                      size="small"
-                      className="shrink-0 px-0"
-                    >
-                      Cancel
-                    </Button>
-                  </Popconfirm>
-                )}
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-[var(--legacy-gray-400)]">
-                <div>
-                  <div>Invited At</div>
-                  <div className="text-[var(--legacy-ink)]">
-                    {dayjs(inv.createdAt).format("YYYY-MM-DD HH:mm") || "-"}
+        {rows.length === 0 && !loading
+          ? empty
+          : rows.map((invitation) => {
+              const state = stateOf(invitation);
+              return (
+                <div
+                  key={invitation.id}
+                  className="rounded-xl p-4"
+                  style={{ border: `1px solid ${token.colorBorderSecondary}` }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{invitation.email}</div>
+                      <Space size={4} className="mt-1 flex-wrap">
+                        <StatusTag tone="neutral">{invitation.role}</StatusTag>
+                        <StatusTag tone={STATE_TONE[state]}>{STATE_LABEL[state]}</StatusTag>
+                      </Space>
+                    </div>
+                    {canManage && actions(invitation)}
+                  </div>
+                  <div className="mt-2 text-sm tabular-nums" style={{ color: token.colorTextSecondary }}>
+                    Invited {dayjs(invitation.createdAt).format("D MMM YYYY HH:mm")}
+                    {(state === "pending" || state === "expired") && `, ${expiryText(invitation)}`}
                   </div>
                 </div>
-                <div>
-                  <div>Expires At</div>
-                  <div className="text-[var(--legacy-ink)]">
-                    {inv.expiredAt
-                      ? dayjs(inv.expiredAt).format("YYYY-MM-DD HH:mm")
-                      : "-"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+              );
+            })}
       </div>
     </div>
   );

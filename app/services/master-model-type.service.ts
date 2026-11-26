@@ -5,8 +5,10 @@ const MasterModelTypeServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/master-model-type";
 
   return {
-    findAll: async (): Promise<TMasterModelType[]> => {
-      const { data } = await axiosInstance.get(baseUrl);
+    findAll: async (options?: { includeInactive?: boolean }): Promise<TMasterModelType[]> => {
+      const { data } = await axiosInstance.get(baseUrl, {
+        params: options?.includeInactive ? { includeInactive: true } : undefined,
+      });
       return data;
     },
     findOne: async (id: number): Promise<TMasterModelType> => {

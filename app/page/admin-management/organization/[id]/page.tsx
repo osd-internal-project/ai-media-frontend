@@ -1,17 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Card,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  message,
-  Switch,
-  Tabs,
-  Checkbox,
-} from "antd";
+import { Button, Form, Input, Modal, Result, Skeleton, Switch, Tabs, message, theme } from "antd";
+import { ArrowLeft, Pencil } from "lucide-react";
+import Link from "next/link";
+import dayjs from "dayjs";
 import OrganizationService from "@/app/services/organization.service";
 import OrganizationMembersServices from "@/app/services/organization-members.service";
 import UserServices from "@/app/services/users.service";
@@ -23,72 +15,61 @@ import { useParams } from "next/navigation";
 import OrganizationMemberTab from "./components/OrganizationMemberTab";
 import OrganizationPackageTab from "./components/OrganizationPackageTab";
 import OrganizationInvitationTab from "./components/OrganizationInvitationTab";
+import OrganizationEntitlementsTab from "./components/OrganizationEntitlementsTab";
+import AuditHistory from "../../components/audit-history";
+import { SeatBar, StatusTag } from "../../components/admin-ui";
+
+const organizationService = OrganizationService(axiosUser);
+const organizationMemberService = OrganizationMembersServices(axiosUser);
+const userServices = UserServices(axiosUser);
+
+const errorText = (error: unknown) =>
+  (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+  "Could not save. Check the connection and try again.";
 
 export default function OrganizationDetailPage() {
-  const [, contextHolder] = message.useMessage();
+  const { token } = theme.useToken();
+  const [messageApi, contextHolder] = message.useMessage();
   const { id } = useParams();
   const organizationId = String(id);
-  const ACCESS_CODE: { label: string; value: string; className: string }[] = [
-    { label: "Image", value: "image", className: "label-1" },
-    { label: "Video", value: "video", className: "label-2" },
-    { label: "Omnihuman", value: "omni", className: "label-3" },
-    { label: "Dream Actor", value: "dream", className: "label-4" },
-    { label: "Workflow", value: "workflow", className: "label-5" },
-    { label: "Editor", value: "editor", className: "label-6" },
-    { label: "Social Media", value: "social", className: "label-7" },
-    { label: "Photo Event", value: "photo_event", className: "label-8" },
-    { label: "Audio", value: "audio", className: "label-9" },
-  ];
   const [organization, setOrganization] = useState<IOrganization>();
+  const [loadFailed, setLoadFailed] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Forms
+  const [saving, setSaving] = useState(false);
   const [editForm] = Form.useForm();
-
-  // Services
-  const organizationService = OrganizationService(axiosUser);
-  const organizationMemberService = OrganizationMembersServices(axiosUser);
-  const userServices = UserServices(axiosUser);
-
-  // Data
   const [availableUsers, setAvailableUsers] = useState<TUser[]>([]);
-
-  useEffect(() => {
-    if (organizationId) {
-      fetchOrganizationData();
-      fetchAvailableUsers();
-    }
-  }, [organizationId]);
 
   const fetchOrganizationData = async () => {
     if (!organizationId) return;
     setLoading(true);
     try {
-      const orgData = await organizationService.findById(organizationId);
+      const [orgData, membersData] = await Promise.all([
+        organizationService.findById(organizationId),
+        organizationMemberService.findByOrganization(organizationId),
+      ]);
       setOrganization(orgData);
-
-      const membersData =
-        await organizationMemberService.findByOrganization(organizationId);
       setMembers(membersData || []);
+      setLoadFailed(!orgData);
     } catch (error) {
       console.error(error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAvailableUsers = async () => {
-    try {
-      const users = await userServices.findAll();
-      setAvailableUsers(users || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  useEffect(() => {
+    if (!organizationId) return;
+    fetchOrganizationData();
+    userServices
+      .findAll()
+      .then((users) => setAvailableUsers(users || []))
+      .catch((error) => console.error(error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizationId]);
 
-  // Edit Organization
   const handleEdit = () => {
     editForm.setFieldsValue({
       name: organization?.name,
@@ -96,30 +77,47 @@ export default function OrganizationDetailPage() {
       status: organization?.status,
       isOpen: organization?.isOpen,
       closedMessage: organization?.closedMessage,
-      accessCodes: organization?.accessCodes,
     });
     setIsEditModalOpen(true);
   };
 
-  const onEditFinish = async (values: any) => {
-    if (!organizationId) return;
+  const onEditFinish = async (values: Record<string, unknown>) => {
+    setSaving(true);
     try {
       await organizationService.update(organizationId, values);
+      messageApi.success("Organization saved");
       setIsEditModalOpen(false);
       fetchOrganizationData();
     } catch (error) {
-      console.error(error);
+      messageApi.error(errorText(error));
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (!organizationId) {
-    return <div className="p-4">Please select an organization.</div>;
+  if (loadFailed) {
+    return (
+      <Result
+        status="warning"
+        title="Could not load this organization"
+        extra={[
+          <Button key="retry" onClick={fetchOrganizationData}>Try again</Button>,
+          <Link key="back" href="/page/admin-management/organization">Back to organizations</Link>,
+        ]}
+      />
+    );
   }
+  if (!organization) return <Skeleton active className="p-4" />;
+
+  const creditAllowance = organization.subscription?.creditAllowance || 0;
+  const cycleBalance = organization.creditBalance?.currentCycleBalance || 0;
+  const isPersonal = organization.type?.toLowerCase() === "personal";
+  const muted = { color: token.colorTextSecondary };
 
   const items = [
     {
       key: "members",
-      label: "Member",
+      label: "Members",
       children: (
         <OrganizationMemberTab
           organizationId={organizationId}
@@ -132,6 +130,11 @@ export default function OrganizationDetailPage() {
       ),
     },
     {
+      key: "entitlements",
+      label: "สิทธิ์การใช้งาน",
+      children: <OrganizationEntitlementsTab organization={organization} onSaved={fetchOrganizationData} />,
+    },
+    {
       key: "package",
       label: "Package",
       children: <OrganizationPackageTab organizationId={organizationId} />,
@@ -139,116 +142,101 @@ export default function OrganizationDetailPage() {
     {
       key: "invitations",
       label: "Invitations",
-      children: (
-        <OrganizationInvitationTab organizationId={organizationId} canManage />
-      ),
+      children: <OrganizationInvitationTab organizationId={organizationId} canManage />,
+    },
+    {
+      key: "history",
+      label: "ประวัติ",
+      children: <AuditHistory entityName="organization" entityId={organizationId} />,
     },
   ];
 
-  const creditAllowance = organization?.subscription?.creditAllowance || 0;
-  const cycleBalance = organization?.creditBalance?.currentCycleBalance || 0;
-
   return (
-    <div className="p-4 space-y-4">
+    <div className="flex flex-col gap-3">
       {contextHolder}
-      <div>
-        <Card>
-          <div className="flex justify-between">
-            <div className="flex space-x-2">
-              <div className="font-bold text-xl">{organization?.name}</div>
-              <div>
-                {organization?.type === "team" ? (
-                  <Tag color="orange">TEAM</Tag>
-                ) : (
-                  <Tag color="blue">PERSONAL</Tag>
-                )}
-              </div>
-              {organization?.isOpen === false ? (
-                <div>
-                  <Tag color="error">Closed</Tag>
-                </div>
-              ) : null}
-            </div>
-            <Button type="link" onClick={handleEdit}>
-              Edit
-            </Button>
-          </div>
-          <div>Created At: {organization?.createdAt}</div>
-          <div className="text-sm text-[var(--legacy-gray-500)] min-h-4">
-            {organization?.description}
-          </div>
-        </Card>
-      </div>
 
-      <div className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
-        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
-          {/* creditAllowance < balance when credit was granted outside the plan (e.g. event orgs, allowance 0 = expiry) */}
-          {creditAllowance >= cycleBalance ? (
-            <>
-              <div className="text-[var(--legacy-99a1af)]">Used Total Credit :</div>
-              <div className="text-xl">
-                {formatNumber(creditAllowance - cycleBalance)}/{" "}
-                {formatNumber(creditAllowance)}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-[var(--legacy-99a1af)]">Remaining Credit :</div>
-              <div className="text-xl">{formatNumber(cycleBalance)}</div>
-            </>
-          )}
-        </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
-          <div className="text-[var(--legacy-99a1af)]">On Top Credit :</div>
-          <div className="flex">
-            <div className="text-xl">
-              + {formatNumber(organization?.creditBalance?.onTopBalance || 0)}
-            </div>
+      <header className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/page/admin-management/organization"
+            aria-label="Back to organizations"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full"
+            style={muted}
+          >
+            <ArrowLeft size={16} />
+          </Link>
+          <h1 className="text-xl font-semibold" style={{ color: token.colorTextBase }}>{organization.name}</h1>
+          <StatusTag tone={isPersonal ? "neutral" : "primary"}>{isPersonal ? "Personal" : "Team"}</StatusTag>
+          {!organization.status && <StatusTag tone="error">Inactive</StatusTag>}
+          {organization.isOpen === false && <StatusTag tone="warning">Closed</StatusTag>}
+          <Button className="!ml-auto" icon={<Pencil size={14} />} onClick={handleEdit}>
+            Edit
+          </Button>
+        </div>
+        {organization.description && <p className="text-sm" style={muted}>{organization.description}</p>}
+        <dl className="flex flex-wrap items-start gap-x-8 gap-y-2 text-sm">
+          <div>
+            <dt className="text-xs" style={muted}>Plan</dt>
+            <dd style={{ color: token.colorTextBase }}>{organization.subscription?.planName ?? (isPersonal ? "Free (default)" : "No plan")}</dd>
           </div>
-        </Card>
-        <Card size="small" styles={{ body: { backgroundColor: "var(--legacy-surface-18181b)" } }}>
-          <div className="text-[var(--legacy-99a1af)]">Total Users :</div>
-          <div className="text-xl">
-            {members.length || 0}/{organization?.maxUserAccess || 0}
+          <div>
+            {/* creditAllowance < balance เมื่อให้ credit นอก plan (เช่น org ของ event, allowance 0 = หมดอายุ) */}
+            <dt className="text-xs" style={muted}>{creditAllowance >= cycleBalance ? "Credit used this cycle" : "Credit remaining"}</dt>
+            <dd className="tabular-nums" style={{ color: token.colorTextBase }}>
+              {creditAllowance >= cycleBalance
+                ? `${formatNumber(creditAllowance - cycleBalance)} / ${formatNumber(creditAllowance)}`
+                : formatNumber(cycleBalance)}
+            </dd>
           </div>
-        </Card>
-      </div>
+          <div>
+            <dt className="text-xs" style={muted}>On-top credit</dt>
+            <dd className="tabular-nums" style={{ color: token.colorTextBase }}>+ {formatNumber(organization.creditBalance?.onTopBalance || 0)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs" style={muted}>Seats</dt>
+            <dd>
+              <SeatBar active={organization.seatUsed ?? 0} pending={organization.seatPending ?? 0} max={organization.maxUserAccess} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs" style={muted}>Created</dt>
+            <dd className="tabular-nums" style={{ color: token.colorTextBase }}>{dayjs(organization.createdAt).format("D MMM YYYY")}</dd>
+          </div>
+        </dl>
+      </header>
 
-      <Card>
-        <Tabs defaultActiveKey="members" items={items} />
-      </Card>
+      <Tabs defaultActiveKey="members" items={items} />
 
-      {/* Edit Organization Modal */}
       <Modal
-        title="Edit Organization"
+        title="Edit organization"
         open={isEditModalOpen}
         onCancel={() => setIsEditModalOpen(false)}
         onOk={() => editForm.submit()}
+        okText="Save"
+        confirmLoading={saving}
       >
         <Form form={editForm} onFinish={onEditFinish} layout="vertical">
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Enter a name" }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="status" label="Status" valuePropName="checked">
+          <Form.Item name="status" label="Active" valuePropName="checked">
             <Switch />
           </Form.Item>
           <Form.Item
             name="isOpen"
-            label="System Open"
+            label="System open"
             valuePropName="checked"
             extra="When off, members (except super admin) see only the message below."
           >
             <Switch />
           </Form.Item>
-          <Form.Item name="closedMessage" label="Closed Message">
+          <Form.Item name="closedMessage" label="Closed message">
             <Input.TextArea rows={2} placeholder="ระบบไม่พร้อมใช้งาน" />
-          </Form.Item>
-          <Form.Item name="accessCodes" label="Access">
-            <Checkbox.Group options={ACCESS_CODE} />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} />
           </Form.Item>
+          <p className="text-xs" style={muted}>User limit, access and AI models are on the สิทธิ์การใช้งาน tab.</p>
         </Form>
       </Modal>
     </div>

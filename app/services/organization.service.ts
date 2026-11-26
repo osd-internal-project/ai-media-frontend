@@ -62,6 +62,16 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    /** ว่าง = ทุก model ที่ active; backend เก่าไม่มี endpoint นี้ → [] (ไม่กรอง) */
+    findAllowedModelIds: async (organizationId: string): Promise<number[]> => {
+      return await axiosInstance
+        .get(`${baseUrl}/allowed-models/${organizationId}`)
+        .then((res) => (Array.isArray(res.data) ? res.data : []))
+        .catch((err) => {
+          console.log(err);
+          return [];
+        });
+    },
     findAccessCodeByOrganizationId: async (organizationId: string): Promise<string[]> => {
       return await axiosInstance
         .get(`${baseUrl}/access-code/${organizationId}`)
@@ -93,16 +103,10 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           throw err;
         });
     },
+    // reject เมื่อพลาด — หน้าที่เรียกต้องแสดงสาเหตุ ไม่ใช่ปิด modal เงียบ ๆ
     update: async (id: string, value: any) => {
-      return await axiosInstance
-        .patch(`${baseUrl}/${id}`, value)
-        .then((res) => {
-          return res.data;
-        })
-        .catch((err) => {
-          console.log(err);
-          return;
-        });
+      const res = await axiosInstance.patch(`${baseUrl}/${id}`, value);
+      return res.data;
     },
     del: async (id: string) => {
       return await axiosInstance
@@ -242,6 +246,11 @@ const OrganizationServices = (axiosInstance: AxiosInstance) => {
           console.log(err);
           return [];
         });
+    },
+    /** token เดิม แค่ต่อวันหมดอายุ — ลิงก์ในอีเมลเก่ายังใช้ได้ */
+    resendInvitation: async (id: string): Promise<{ message: string; expiresAt: string }> => {
+      const res = await axiosInstance.post(`${baseUrl}/invitation/${id}/resend`);
+      return res.data;
     },
     cancelInvitation: async (id: string): Promise<void> => {
       return await axiosInstance
