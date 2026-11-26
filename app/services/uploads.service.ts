@@ -1,7 +1,11 @@
 import { AxiosInstance, isAxiosError } from "axios";
 import config from "@/app/config";
 
-type DirectUploadKind = "ref" | "prompt-guide" | "editor-export";
+type DirectUploadKind =
+  | "ref"
+  | "prompt-guide"
+  | "editor-export"
+  | "brand-kit";
 type UploadMediaType = "image" | "video" | "audio";
 
 // axiosWorker ตั้ง default เป็น multipart/form-data — ถ้าไม่ override axios จะแปลง object เป็น
@@ -190,6 +194,7 @@ const uploadViaPresign = async (
         generateType: field(formData, "generateType"),
         projectId: field(formData, "projectId") || undefined,
         promptGuideId: field(formData, "promptGuideId") || undefined,
+        brandKitId: field(formData, "brandKitId") || undefined,
         fileName,
         contentType: file.type,
         size: file.size,
@@ -210,7 +215,10 @@ const uploadViaPresign = async (
     if (!put.ok) throw new Error(await tosErrorMessage(put));
     const res = await axiosInstance.post<Partial<UploadedFile>>(
       "/upload/confirm",
-      { kind, uid: presign.uid },
+      // brand-kit keeps no pending row on the server, so the key it issued is sent back to be checked
+      kind === "brand-kit"
+        ? { kind, uid: presign.uid, imagePath: presign.imagePath }
+        : { kind, uid: presign.uid },
       JSON_HEADERS,
     );
     data = res.data;
@@ -280,6 +288,13 @@ const UploadsServices = (axiosInstance: AxiosInstance) => {
         })
         .then((result) => result.data)
         .catch((err) => err);
+    },
+    /**
+     * A brand kit logo or style image. Always presign: the policy-mode callback only knows ref / prompt-guide.
+     * FormData needs file, uid, userId, organizationId, brandKitId and generateType "image".
+     */
+    uploadBrandKitImage: async (formData: FormData) => {
+      return uploadViaPresign(axiosInstance, "brand-kit", formData);
     },
     //Prompt guide Images
     uploadPromptGuideImage: async (formData: any) => {

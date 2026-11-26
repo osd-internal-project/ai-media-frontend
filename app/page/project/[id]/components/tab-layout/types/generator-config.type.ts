@@ -108,6 +108,8 @@ export interface ImageFormState {
 export interface ImageGeneratePayload {
   /** kit the backend adds to the prompt; omitted = no brand kit */
   brandKitId?: string;
+  /** keys of the kit's images to add as style references; the backend keeps only the kit's own, at most 2 */
+  brandKitRefs?: string[];
   taskId: string;
   model: string | undefined;
   prompt: string;

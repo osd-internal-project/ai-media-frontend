@@ -212,7 +212,11 @@ export default function ChatImageInput({
   // Kit applied to this generation; the backend composes its text (null = switch off or no default kit)
   const [brandKit, setBrandKit] = React.useState<AppliedBrandKit | null>(null);
   const handleSendMessageWithCi = (values: Record<string, unknown>) => {
-    handleSendMessage({ ...values, brandKitId: brandKit?.id });
+    handleSendMessage({
+      ...values,
+      brandKitId: brandKit?.id,
+      brandKitRefs: brandKit?.refKeys,
+    });
   };
 
   return (
@@ -309,6 +313,7 @@ export default function ChatImageInput({
             semantic={semantic}
             generateType="image"
             onKitChange={setBrandKit}
+            imageSlots={Math.max(0, maxRefImages - files.length)}
             projectId={projectId}
           />
         </Flex>

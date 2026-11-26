@@ -61,3 +61,26 @@ export const fontsOf = (kit?: TBrandKit | null): BoardFont[] =>
       },
     ];
   });
+
+export type BoardImageKind = "style_ref" | "logo";
+
+export interface BoardImage {
+  id: string;
+  name: string;
+  kind: BoardImageKind;
+  /** stored file; absent on a logo saved before files existed (it carries a data URL instead) */
+  key?: string;
+  /** display URL; null when the stored file can no longer be found */
+  url: string | null;
+}
+
+/** A kit's logos and style images in saved order. */
+export const imagesOf = (kit?: TBrandKit | null): BoardImage[] =>
+  (kit?.brandKitDetails ?? []).flatMap((d) => {
+    if (d.type !== "logo" && d.type !== "style_ref") return [];
+    const detail = d.detail;
+    const key = detail && "key" in detail ? detail.key : undefined;
+    const url = detail && "url" in detail ? (detail.url ?? null) : null;
+    return [{ id: d.id, name: d.name, kind: d.type, key, url }];
+  });
+

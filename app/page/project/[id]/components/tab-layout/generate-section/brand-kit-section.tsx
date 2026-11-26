@@ -19,7 +19,12 @@ import {
 const { Text } = Typography;
 
 /** The kit a generation will use, and how many prompt characters it takes (separator included). */
-export type AppliedBrandKit = { id: string; usedChars: number };
+export type AppliedBrandKit = {
+  id: string;
+  usedChars: number;
+  /** the kit's images to send as style references, already limited to the room the form has */
+  refKeys: string[];
+};
 
 type Props = {
   semantic: Record<string, any>;
@@ -29,17 +34,22 @@ type Props = {
   generateType: string;
   /** the project being generated in; its own kit comes before the organization default */
   projectId?: string;
+  /** free reference-image places in this form; leave out on forms where an image is not a style reference */
+  imageSlots?: number;
   /** null when the switch is off or the organization has no default kit */
   onKitChange?: (kit: AppliedBrandKit | null) => void;
 };
 
 // "\n\n" the backend puts between the user's prompt and the kit's text
 const SEPARATOR_CHARS = 2;
+// mirrors MAX_KIT_REFS in the backend's brand-kit-prompt.service.ts
+const MAX_KIT_REFS = 2;
 
 export default function BrandKitSection({
   semantic,
   generateType,
   projectId,
+  imageSlots,
   onKitChange,
 }: Props) {
   const { data: session } = useSession();
@@ -96,17 +106,42 @@ export default function BrandKitSection({
     };
   }, [brandKit?.id, generateType]);
 
+  // Kit images this form can send: style images are on from the start, logos only when the user adds them
+  const kitImages = (brandKit?.brandKitDetails ?? []).flatMap((d) => {
+    const detail = d.detail;
+    if (d.type !== "logo" && d.type !== "style_ref") return [];
+    const key = detail && "key" in detail ? detail.key : undefined;
+    const url = detail && "url" in detail ? detail.url : undefined;
+    return key && url ? [{ key, url, name: d.name, isLogo: d.type === "logo" }] : [];
+  });
+  const styleKeys = kitImages.filter((i) => !i.isLogo).map((i) => i.key);
+  const defaultRefs = styleKeys.slice(0, MAX_KIT_REFS).join("|");
+  const [chosenRefs, setChosenRefs] = useState<string[]>([]);
+  useEffect(() => {
+    setChosenRefs(defaultRefs ? defaultRefs.split("|") : []);
+  }, [defaultRefs, brandKit?.id]);
+  const room = Math.min(MAX_KIT_REFS, imageSlots ?? 0);
+  const refKeys = kitImages
+    .map((i) => i.key)
+    .filter((key) => chosenRefs.includes(key))
+    .slice(0, room);
+  const refsKey = refKeys.join("|");
+
   const kitId = brandKit?.id;
   const usedChars = preview?.usedChars ?? 0;
   useEffect(() => {
     onKitChange?.(
       active && kitId
-        ? { id: kitId, usedChars: usedChars ? usedChars + SEPARATOR_CHARS : 0 }
+        ? {
+            id: kitId,
+            usedChars: usedChars ? usedChars + SEPARATOR_CHARS : 0,
+            refKeys: refsKey ? refsKey.split("|") : [],
+          }
         : null,
     );
     // onKitChange is a state setter in every form; listing it would re-fire on each parent render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, kitId, usedChars]);
+  }, [active, kitId, usedChars, refsKey]);
 
   const parsedColors = (brandKit?.brandKitDetails ?? [])
     .filter((d) => d.type === "colors")
@@ -291,6 +326,50 @@ export default function BrandKitSection({
                 ))}
               </Flex>
             </Flex>
+            {imageSlots !== undefined && kitImages.length > 0 && (
+              <Flex vertical gap={8}>
+                <Text style={{ color: c.text2, fontSize: 12, fontWeight: 500 }}>
+                  Kit images sent as style references
+                </Text>
+                <Flex align="center" gap={8} wrap="wrap">
+                  {kitImages.map((image) => {
+                    const sent = refKeys.includes(image.key);
+                    return (
+                      <button
+                        key={image.key}
+                        type="button"
+                        className="bk-form-ref"
+                        aria-pressed={sent}
+                        aria-label={`${sent ? "Stop sending" : "Send"} ${image.name}`}
+                        title={image.isLogo ? `Logo: ${image.name}` : image.name}
+                        disabled={!sent && refKeys.length >= room}
+                        style={
+                          // the theme's primary colour for the pressed and focus rings
+                          { "--bk-form-primary": semantic.colorPrimary } as React.CSSProperties
+                        }
+                        onClick={() =>
+                          setChosenRefs((keys) =>
+                            keys.includes(image.key)
+                              ? keys.filter((key) => key !== image.key)
+                              : [...keys, image.key],
+                          )
+                        }
+                      >
+                        {/* a presigned storage URL: next/image cannot optimize it */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={image.url} alt="" />
+                      </button>
+                    );
+                  })}
+                </Flex>
+                {room === 0 && (
+                  <Text style={{ color: c.text2, fontSize: 12 }}>
+                    No room left: remove one of your own reference images to
+                    send kit images.
+                  </Text>
+                )}
+              </Flex>
+            )}
             <div
               style={{
                 borderRadius: 12,

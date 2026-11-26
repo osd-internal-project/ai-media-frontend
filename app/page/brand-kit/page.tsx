@@ -9,7 +9,8 @@ import BrandKitServices, {
   type TBrandPromptPreview,
 } from "@/app/services/brand-kit.service";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
-import { axiosCore } from "@/app/lib/axios/axios";
+import UploadsServices from "@/app/services/uploads.service";
+import { axiosCore, axiosWorker } from "@/app/lib/axios/axios";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { overlayShadow } from "@/app/theme/surface";
 import type { TBrandKit } from "@/app/common/brand-kit";
@@ -23,13 +24,21 @@ import ColorSection, {
 } from "./board/color-section";
 import TypeSection, { type FontDraft } from "./board/type-section";
 import StyleSection from "./board/style-section";
+import ReferencesSection from "./board/references-section";
 import PromptCard from "./board/prompt-card";
-import { BoardColor, colorsOf, fontsOf } from "./board/model";
+import {
+  BoardColor,
+  BoardImageKind,
+  colorsOf,
+  fontsOf,
+  imagesOf,
+} from "./board/model";
 import { flyColor } from "./board/motion";
 import "./board/board.css";
 
 const brandKitService = BrandKitServices(axiosCore);
 const detailService = BrandKitDetailServices(axiosCore);
+const uploadsService = UploadsServices(axiosWorker);
 
 const formatUpdated = (iso?: string) =>
   iso
@@ -198,7 +207,44 @@ export default function BrandKitPage() {
     return failed === 0;
   };
 
-  const deleteDetail = async (id: string, what: "color" | "font") => {
+  const uploadImage = async (file: File, kind: BoardImageKind) => {
+    if (!kit || !organizationId) return false;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("uid", crypto.randomUUID());
+    formData.append("userId", session?.user?.id ?? "");
+    formData.append("organizationId", organizationId);
+    formData.append("brandKitId", kit.id);
+    formData.append("generateType", "image");
+    let key: string;
+    try {
+      key = (await uploadsService.uploadBrandKitImage(formData)).imagePath;
+    } catch (error) {
+      // the upload service already turns storage and API failures into a readable message
+      messageApi.error(
+        error instanceof Error ? error.message : "Couldn't upload this image.",
+      );
+      return false;
+    }
+    const saved = await detailService.create({
+      name: file.name.slice(0, 100),
+      type: kind,
+      detail: { key },
+      brandKitId: kit.id,
+      sortOrder: imagesOf(kit).filter((i) => i.kind === kind).length,
+    });
+    if (!saved) {
+      messageApi.error("The image uploaded but couldn't be added to the kit. Try again.");
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
+  const deleteDetail = async (
+    id: string,
+    what: "color" | "font" | "image",
+  ) => {
     const deleted = await detailService.del(id);
     if (!deleted) {
       messageApi.error(`Couldn't delete this ${what}. Try again.`);
@@ -462,6 +508,11 @@ export default function BrandKitPage() {
               onSave={(style) =>
                 updateKit({ style }, "Couldn't save the style. Try again.")
               }
+            />
+            <ReferencesSection
+              images={imagesOf(kit)}
+              onUpload={uploadImage}
+              onDelete={(id) => deleteDetail(id, "image")}
             />
           </div>
 

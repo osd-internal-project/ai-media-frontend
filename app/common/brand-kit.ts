@@ -29,7 +29,7 @@ export interface TBrandKit {
 export interface TBrandKitDetail {
   id: string;
   name: string;
-  type: "colors" | "typography" | "logo";
+  type: "colors" | "typography" | "logo" | "style_ref";
   detail?:
     | TBrandKitDetailColor
     | TBrandKitDetailTypography
@@ -50,7 +50,9 @@ export interface TBrandKitDetailTypography {
   type: "Heading" | "Body" | "Caption";
   preview: string;
 }
+/** A logo or a style image. `key` is the stored file; `url` is filled in by the API for display. */
 export interface TBrandKitDetailLogo {
-  url: string;
-  type: "primary" | "secondary" | "icon" | "light" | "dark";
+  key?: string;
+  url?: string | null;
+  type?: "primary" | "secondary" | "icon" | "light" | "dark";
 }

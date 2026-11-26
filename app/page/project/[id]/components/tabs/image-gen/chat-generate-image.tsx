@@ -1012,6 +1012,7 @@ const ChatGenerateImage: FC<
     const message = {
       ...modelConfig.buildSubmitPayload(values, state, currentTaskId),
       brandKitId: values.brandKitId as string | undefined,
+      brandKitRefs: values.brandKitRefs as string[] | undefined,
     };
     const tempMessage = {
       id: currentTaskId,

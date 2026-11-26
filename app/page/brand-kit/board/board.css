@@ -569,6 +569,69 @@
   }
 }
 
+/* Reference images share the swatch footprint */
+.bk-thumb {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  margin: 0;
+  border-radius: var(--bk-radius-lg);
+  border: 1px solid var(--bk-border);
+  overflow: hidden;
+  background: var(--bk-fill);
+  animation: bk-pop 300ms var(--bk-ease) both;
+}
+.bk-thumb > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bk-thumb-missing {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 8px;
+  font-size: 12px;
+  color: var(--bk-text-2);
+  text-align: center;
+}
+.bk-thumb-tag {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--bk-elevated);
+  font-size: 12px;
+}
+.bk-thumb:hover .bk-swatch-actions,
+.bk-thumb:focus-within .bk-swatch-actions {
+  opacity: 1;
+}
+.bk-thumb-add {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: var(--bk-radius-lg);
+  border: 1px dashed var(--bk-border);
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--bk-text-2);
+  transition:
+    border-color 150ms var(--bk-ease),
+    color 150ms var(--bk-ease);
+}
+.bk-thumb-add:hover:not(:disabled) {
+  border-color: var(--bk-primary);
+  color: var(--bk-text);
+}
+.bk-thumb-add:disabled {
+  cursor: progress;
+}
+
 /* The travelling colour chip is appended to <body>, outside .bk-page */
 .bk-fly {
   position: fixed;
@@ -649,7 +712,8 @@
   .bk-seg,
   .bk-seg[data-fresh="true"],
   .bk-swatch[data-fresh="true"] .bk-chip,
-  .bk-dot[data-fresh="true"] {
+  .bk-dot[data-fresh="true"],
+  .bk-thumb {
     animation: none;
   }
   .bk-meter > i,
