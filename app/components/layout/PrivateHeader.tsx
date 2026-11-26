@@ -7,6 +7,7 @@ import {
   Button,
   Divider,
   Dropdown,
+  Input,
   Layout,
   Menu,
   Progress,
@@ -22,6 +23,7 @@ import {
   MoonOutlined,
   SunOutlined,
   MenuOutlined,
+  SearchOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined,
@@ -84,6 +86,7 @@ export function PrivateHeader({
   const { pageHeader } = usePageHeader();
 
   const [orgOpen, setOrgOpen] = useState(false);
+  const [orgQuery, setOrgQuery] = useState("");
   const [userOpen, setUserOpen] = useState(false);
   const showBilling = canSeeBilling(systemRole);
 
@@ -99,12 +102,24 @@ export function PrivateHeader({
   const tokenLimit = currentOrganization?.packageTokenAmount ?? 0;
   const tokenPercentage = tokenLimit > 0 ? (tokenUsage / tokenLimit) * 100 : 0;
 
-  const orgListItems: MenuProps["items"] = teamOrganizations.map((org) => ({
+  const closeOrgMenu = () => {
+    setOrgOpen(false);
+    setOrgQuery("");
+  };
+
+  const selectOrg = (id: string) => {
+    handleOrganizationChange(id);
+    closeOrgMenu();
+  };
+
+  const orgNeedle = orgQuery.trim().toLowerCase();
+  const filteredOrgs = orgNeedle
+    ? teamOrganizations.filter((o) => o.name.toLowerCase().includes(orgNeedle))
+    : teamOrganizations;
+
+  const orgListItems: MenuProps["items"] = filteredOrgs.map((org) => ({
     key: org.organizationId,
-    onClick: () => {
-      handleOrganizationChange(org.organizationId);
-      setOrgOpen(false);
-    },
+    onClick: () => selectOrg(org.organizationId),
     label: (
       <Space style={{ width: "100%", justifyContent: "space-between" }}>
         <Text strong={org.organizationId === organizationId}>{org.name}</Text>
@@ -124,7 +139,7 @@ export function PrivateHeader({
       label: "Organization Settings",
       onClick: () => {
         handleManageOrg();
-        setOrgOpen(false);
+        closeOrgMenu();
       },
     },
   ];
@@ -224,19 +239,46 @@ export function PrivateHeader({
 
         <Dropdown
           open={orgOpen}
-          onOpenChange={setOrgOpen}
+          onOpenChange={(open) => (open ? setOrgOpen(true) : closeOrgMenu())}
           trigger={["click"]}
+          // Remount on open so the search field takes focus every time.
+          destroyOnHidden
           popupRender={() => (
             <div style={dropdownPanelStyle}>
+              <div style={{ flexShrink: 0, padding: 8 }}>
+                <Input
+                  // A focused field on a phone opens the keyboard over the list.
+                  autoFocus={!isMobile}
+                  allowClear
+                  value={orgQuery}
+                  onChange={(e) => setOrgQuery(e.target.value)}
+                  onPressEnter={() => {
+                    if (filteredOrgs.length === 1) selectOrg(filteredOrgs[0].organizationId);
+                  }}
+                  prefix={<SearchOutlined style={{ color: semantic.colorTextSecondary }} />}
+                  placeholder="Search organizations"
+                  aria-label="Search organizations"
+                />
+              </div>
               <div
                 className="private-header-dropdown-scroll"
                 style={{ overflowY: "auto", flex: 1 }}
               >
-                <Menu
-                  selectable={false}
-                  items={orgListItems}
-                  style={dropdownMenuStyle}
-                />
+                {orgNeedle && filteredOrgs.length === 0 ? (
+                  <Text
+                    type="secondary"
+                    role="status"
+                    style={{ display: "block", padding: "12px 16px", maxWidth: 320, overflowWrap: "anywhere" }}
+                  >
+                    No organization matches “{orgQuery.trim()}”
+                  </Text>
+                ) : (
+                  <Menu
+                    selectable={false}
+                    items={orgListItems}
+                    style={dropdownMenuStyle}
+                  />
+                )}
               </div>
               <Divider style={{ margin: 0 }} />
               <div style={{ flexShrink: 0 }}>
