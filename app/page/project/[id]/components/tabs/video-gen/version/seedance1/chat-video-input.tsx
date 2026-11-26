@@ -553,6 +553,7 @@ export default function ChatVideoInput(props: Props) {
             semantic={semantic}
             generateType="video"
             onKitChange={setBrandKit}
+            projectId={projectId}
           />
         </Flex>
 

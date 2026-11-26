@@ -17,8 +17,12 @@ import type { TBrandKit } from "@/app/common/brand-kit";
 import BrandKitForm from "./components/brand-kit-form";
 import KitList from "./board/kit-list";
 import PaletteStrip from "./board/palette-strip";
-import ColorSection, { type SaveColor } from "./board/color-section";
+import ColorSection, {
+  type ColorDraft,
+  type SaveColor,
+} from "./board/color-section";
 import TypeSection, { type FontDraft } from "./board/type-section";
+import StyleSection from "./board/style-section";
 import PromptCard from "./board/prompt-card";
 import { BoardColor, colorsOf, fontsOf } from "./board/model";
 import { flyColor } from "./board/motion";
@@ -154,6 +158,44 @@ export default function BrandKitPage() {
       ),
     );
     return true;
+  };
+
+  const importColors = async (drafts: ColorDraft[], origin: DOMRect) => {
+    if (!kit) return false;
+    const counts = new Map<string, number>();
+    let lastId: string | undefined;
+    let failed = 0;
+    // one at a time, so each colour takes the next place in its role
+    for (const draft of drafts) {
+      const offset = counts.get(draft.role) ?? 0;
+      counts.set(draft.role, offset + 1);
+      const saved = await detailService.create({
+        name: draft.name,
+        type: "colors",
+        detail: { hex: draft.hex, type: draft.role },
+        brandKitId: kit.id,
+        sortOrder: colors.filter((c) => c.role === draft.role).length + offset,
+      });
+      if (saved?.id) lastId = saved.id;
+      else failed += 1;
+    }
+    await refresh();
+    if (failed > 0) {
+      messageApi.error(
+        `${failed} of ${drafts.length} colors couldn't be saved. Add them again.`,
+      );
+    }
+    if (!lastId) return false;
+    const arrived = lastId;
+    markFresh(arrived);
+    requestAnimationFrame(() =>
+      flyColor(
+        origin,
+        document.querySelector(`[data-strip-id="${arrived}"]`),
+        drafts[drafts.length - 1].hex,
+      ),
+    );
+    return failed === 0;
   };
 
   const deleteDetail = async (id: string, what: "color" | "font") => {
@@ -306,6 +348,7 @@ export default function BrandKitPage() {
     "--bk-primary": token.colorPrimary,
     "--bk-primary-bg": token.colorPrimaryBg,
     "--bk-warning": token.colorWarning,
+    "--bk-error": token.colorError,
     "--bk-star": token.colorWarning,
     "--bk-radius": `${token.borderRadius}px`,
     "--bk-radius-lg": `${token.borderRadiusLG}px`,
@@ -405,12 +448,20 @@ export default function BrandKitPage() {
               onSave={saveColor}
               onDelete={(id) => deleteDetail(id, "color")}
               onReorder={reorderColors}
+              onImport={importColors}
             />
             <TypeSection
               fonts={fonts}
               onSave={saveFont}
               onToggleSend={toggleFontSend}
               onDelete={(id) => deleteDetail(id, "font")}
+            />
+            <StyleSection
+              style={kit.style}
+              notSentYet={kit.promptVersion !== 2}
+              onSave={(style) =>
+                updateKit({ style }, "Couldn't save the style. Try again.")
+              }
             />
           </div>
 

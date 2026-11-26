@@ -4,8 +4,9 @@ import BrandKitServices, {
   type TBrandPromptPreview,
 } from "@/app/services/brand-kit.service";
 import type { TBrandKit } from "@/app/common/brand-kit";
+import ProjectServices from "@/app/services/project.service";
 import { axiosCore } from "@/app/lib/axios/axios";
-import { Card, Flex, Typography, Switch } from "antd";
+import { Card, Flex, Select, Typography, Switch } from "antd";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { useSession } from "next-auth/react";
 import "./brand-kit-section.css";
@@ -26,6 +27,8 @@ type Props = {
   style?: React.CSSProperties;
   /** backend model type of this form: image | video | omnihumen | dreamactor */
   generateType: string;
+  /** the project being generated in; its own kit comes before the organization default */
+  projectId?: string;
   /** null when the switch is off or the organization has no default kit */
   onKitChange?: (kit: AppliedBrandKit | null) => void;
 };
@@ -36,37 +39,62 @@ const SEPARATOR_CHARS = 2;
 export default function BrandKitSection({
   semantic,
   generateType,
+  projectId,
   onKitChange,
 }: Props) {
   const { data: session } = useSession();
   const organizationId = session?.user?.organizationId;
   const [active, setActive] = useState(false);
-  const [brandKit, setBrandKit] = useState<TBrandKit | null>(null);
+  const [kits, setKits] = useState<TBrandKit[]>([]);
+  const [projectKitId, setProjectKitId] = useState<string | null>(null);
+  // a kit chosen for this generation only; null follows the project, then the organization default
+  const [pickedId, setPickedId] = useState<string | null>(null);
   const [preview, setPreview] = useState<TBrandPromptPreview | null>(null);
 
-  // The organization's default kit, loaded whether or not the switch is on so the row never shows a made-up name
+  // Loaded whether or not the switch is on, so the row never shows a made-up name
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       if (!organizationId) return;
-      const service = BrandKitServices(axiosCore);
-      const kits = await service.findByOrganizationId(organizationId);
-      const kit = kits?.find((k) => k.isDefault ?? k.default) ?? null;
-      const rows = kit ? await service.promptPreview(kit.id) : undefined;
+      const [loadedKits, project] = await Promise.all([
+        BrandKitServices(axiosCore).findByOrganizationId(organizationId),
+        projectId ? ProjectServices(axiosCore).findById(projectId) : undefined,
+      ]);
       if (cancelled) return;
-      setBrandKit(kit);
-      // shortcut: the longest text among this tab's models, so the counter never under-reports; pass the selected model when forms expose it
-      setPreview(
-        (rows ?? [])
-          .filter((row) => row.type === generateType)
-          .sort((a, b) => b.usedChars - a.usedChars)[0] ?? null,
-      );
+      setKits(loadedKits ?? []);
+      setProjectKitId(project?.brandKitId ?? null);
     };
     load();
     return () => {
       cancelled = true;
     };
-  }, [organizationId, generateType]);
+  }, [organizationId, projectId]);
+
+  const brandKit =
+    kits.find((k) => k.id === pickedId) ??
+    kits.find((k) => k.id === projectKitId) ??
+    kits.find((k) => k.isDefault ?? k.default) ??
+    null;
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreview(null);
+    if (!brandKit?.id) return;
+    BrandKitServices(axiosCore)
+      .promptPreview(brandKit.id)
+      .then((rows) => {
+        if (cancelled) return;
+        // shortcut: the longest text among this tab's models, so the counter never under-reports; pass the selected model when forms expose it
+        setPreview(
+          (rows ?? [])
+            .filter((row) => row.type === generateType)
+            .sort((a, b) => b.usedChars - a.usedChars)[0] ?? null,
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandKit?.id, generateType]);
 
   const kitId = brandKit?.id;
   const usedChars = preview?.usedChars ?? 0;
@@ -191,27 +219,44 @@ export default function BrandKitSection({
               ))}
             </Flex>
 
-            <Text
-              ellipsis
-              style={{
-                color: c.title,
-                fontSize: 14,
-                fontWeight: 600,
-                minWidth: 0,
-              }}
-            >
-              {brandKit?.name ?? "No brand kit"}
-            </Text>
+            {kits.length > 1 ? (
+              <Select
+                size="small"
+                variant="borderless"
+                value={brandKit?.id}
+                options={kits.map((k) => ({ value: k.id, label: k.name }))}
+                popupMatchSelectWidth={false}
+                aria-label="Brand kit for this generation"
+                style={{ minWidth: 0, flex: 1, fontWeight: 600 }}
+                onChange={setPickedId}
+              />
+            ) : (
+              <Text
+                ellipsis
+                style={{
+                  color: c.title,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  minWidth: 0,
+                }}
+              >
+                {brandKit?.name ?? "No brand kit"}
+              </Text>
+            )}
           </Flex>
 
           {brandKit ? (
-            <StarFilled
-              style={{
-                color: c.accent,
-                fontSize: 14,
-                flexShrink: 0,
-              }}
-            />
+            // the star marks the organization's default, not whichever kit is selected
+            (brandKit.isDefault ?? brandKit.default) && (
+              <StarFilled
+                aria-label="Organization default"
+                style={{
+                  color: c.accent,
+                  fontSize: 14,
+                  flexShrink: 0,
+                }}
+              />
+            )
           ) : (
             <Link href="/page/brand-kit" style={{ fontSize: 12, flexShrink: 0 }}>
               Set one up

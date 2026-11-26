@@ -26,6 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { BoardColor, COLOR_ROLES, ColorRole } from "./model";
+import ImportColors from "./import-colors";
 
 export type ColorDraft = { name: string; hex: string; role: ColorRole };
 
@@ -226,6 +227,8 @@ type Props = {
   onDelete: (id: string) => void;
   /** ids of one role's colours in their new order */
   onReorder: (orderedIds: string[]) => void;
+  /** several colours at once, from pasted codes or an image */
+  onImport: (drafts: ColorDraft[], origin: DOMRect) => Promise<boolean>;
 };
 
 /** The kit's colours grouped by role. Order inside a role is the user's, and it is the order the AI reads. */
@@ -237,6 +240,7 @@ export default function ColorSection({
   onSave,
   onDelete,
   onReorder,
+  onImport,
 }: Props) {
   const sensors = useSensors(
     // 6px of travel separates a drag from the click that copies
@@ -246,6 +250,7 @@ export default function ColorSection({
     }),
   );
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
   const dragged = useRef(false);
 
   const groups = COLOR_ROLES.map((role) => ({
@@ -283,6 +288,27 @@ export default function ColorSection({
             </p>
           )}
         </div>
+        <div className="bk-head-actions">
+        <Popover
+          open={importing}
+          onOpenChange={setImporting}
+          trigger="click"
+          placement="bottomRight"
+          destroyTooltipOnHide
+          content={
+            <ImportColors
+              existing={colors.map((c) => c.hex.toUpperCase())}
+              onCancel={() => setImporting(false)}
+              onAdd={async (drafts, origin) => {
+                const saved = await onImport(drafts, origin);
+                if (saved) setImporting(false);
+                return saved;
+              }}
+            />
+          }
+        >
+          <Button>Paste or pick from image</Button>
+        </Popover>
         <Popover
           open={adding}
           onOpenChange={setAdding}
@@ -304,12 +330,13 @@ export default function ColorSection({
         >
           <Button icon={<PlusOutlined />}>Add color</Button>
         </Popover>
+        </div>
       </div>
 
       {groups.length === 0 ? (
         <p className="bk-empty">
-          No colors yet. Add the first one and it becomes the start of your
-          palette.
+          No colors yet. Paste your brand’s color codes or pick them from a
+          logo, and the palette builds itself.
         </p>
       ) : (
         <div className="bk-groups">

@@ -1,3 +1,11 @@
+/** brand_kit.style: how the brand looks beyond its colours */
+export interface TBrandKitStyle {
+  mood?: string;
+  look?: string;
+  lighting?: string;
+  mustHave?: string[];
+}
+
 export interface TBrandKit {
   id: string;
   name: string;
@@ -11,6 +19,7 @@ export interface TBrandKit {
   negativePrompt: string;
   organizationId: string;
   customPrompt?: string | null;
+  style?: TBrandKitStyle | null;
   /** 1 = the saved brandCiPrompt is sent as written, 2 = the backend composes from this kit's records */
   promptVersion?: number;
   /** present on the by-organization and by-id responses */

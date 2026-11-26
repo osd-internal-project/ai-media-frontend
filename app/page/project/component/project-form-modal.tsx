@@ -16,6 +16,7 @@ import {
   Modal,
   theme,
 } from "antd";
+import ProjectBrandKitSelect from "./project-brand-kit-select";
 import {
   CloseOutlined,
   PlusOutlined,
@@ -197,6 +198,17 @@ const ProjectFormModal: React.FC<ProjectFormProps> = ({
       >
         <Input.TextArea rows={3} placeholder="Enter project description" />
       </Form.Item>
+
+      {mode === "edit" && (
+        <Form.Item
+          label="Brand kit"
+          name="brandKitId"
+          extra="Generations in this project use this kit when Brand kit is switched on."
+          style={{ marginBottom: 12 }}
+        >
+          <ProjectBrandKitSelect />
+        </Form.Item>
+      )}
 
       <Card
         size="small"

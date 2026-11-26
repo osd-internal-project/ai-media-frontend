@@ -309,6 +309,7 @@ export default function ChatImageInput({
             semantic={semantic}
             generateType="image"
             onKitChange={setBrandKit}
+            projectId={projectId}
           />
         </Flex>
 

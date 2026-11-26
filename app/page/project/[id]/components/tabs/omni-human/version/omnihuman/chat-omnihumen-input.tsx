@@ -406,6 +406,7 @@ export default function ChatOmnihumenInput({
             semantic={semantic}
             generateType="omnihumen"
             onKitChange={setBrandKit}
+            projectId={projectId}
           />
         </Flex>
 

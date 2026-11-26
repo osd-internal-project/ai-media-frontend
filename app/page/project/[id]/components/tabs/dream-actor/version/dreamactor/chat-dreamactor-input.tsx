@@ -404,6 +404,7 @@ export default function ChatDreamactorInput({
             semantic={semantic}
             generateType="dreamactor"
             onKitChange={setBrandKit}
+            projectId={projectId}
           />
         </Flex>
 

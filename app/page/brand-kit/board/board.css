@@ -523,6 +523,52 @@
   white-space: nowrap;
 }
 
+.bk-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.bk-import {
+  width: 304px;
+}
+.bk-cands {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 216px;
+  overflow: auto;
+}
+.bk-cand {
+  display: grid;
+  grid-template-columns: auto 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.bk-cand-chip {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--bk-border);
+}
+.bk-cand-hex {
+  font-size: 12px;
+  color: var(--bk-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.bk-style {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .bk-style {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* The travelling colour chip is appended to <body>, outside .bk-page */
 .bk-fly {
   position: fixed;
