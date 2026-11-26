@@ -1,0 +1,25 @@
+/* Turning the brand kit on: its colours unfold one by one and the budget line settles in. */
+.bk-form-dot {
+  animation: bk-form-pop 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.bk-form-budget {
+  animation: bk-form-fade 200ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both;
+}
+@keyframes bk-form-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes bk-form-fade {
+  from {
+    opacity: 0;
+  }
+}
+/* Reduced motion: the dots and the line simply appear. */
+@media (prefers-reduced-motion: reduce) {
+  .bk-form-dot,
+  .bk-form-budget {
+    animation: none;
+  }
+}

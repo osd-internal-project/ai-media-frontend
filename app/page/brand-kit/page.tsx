@@ -1,910 +1,444 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { isColorDetail } from "./helpers/isColorDetail";
-import { isTypographyDetail } from "./helpers/isTypographyDetail";
-import { autoGenerateCIPrompt } from "./helpers/autoGenerateCIPrompt";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Button, Form, Modal, Spin, Tag, message, theme } from "antd";
+import { PlusOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 
-import "./styles/style.css";
-import { Layout, Row, Typography, Button, Space, Tabs, message, Divider, Spin, Tooltip, Col, theme } from "antd";
-import {
-  PlusOutlined,
-  BgColorsOutlined,
-  FontSizeOutlined,
-  PictureOutlined,
-  BranchesOutlined,
-  MessageOutlined,
-  StarOutlined,
-} from "@ant-design/icons";
-
-import BrandKitServices from "@/app/services/brand-kit.service";
-import { axiosCore, axiosUser } from "@/app/lib/axios/axios";
-import type { TBrandKit } from "@/app/common/brand-kit";
-import BrandKitSidebar from "./components/brand-kit-side-bar";
-import useResponsive from "@/app/hooks/useResponsive";
-import { Drawer } from "antd";
-import { Modal, Form as AntForm } from "antd";
-import ColorTab from "./components/tabs/color/color-tab";
-import type { TBrandKitDetail } from "@/app/common/brand-kit";
-
-/** Sidebar row for a kit, counted from its saved records instead of parsed out of prompt text. */
-const toSidebarKit = (kit: TBrandKit) => {
-  const details = kit.brandKitDetails ?? [];
-  const colors = details
-    .filter((d) => d.type === "colors")
-    .map((d) => ({ hex: d.detail && "hex" in d.detail ? d.detail.hex : "" }))
-    .filter((c) => c.hex);
-  return {
-    id: kit.id,
-    name: kit.name,
-    industry: kit.industryType,
-    isDefault: Boolean(kit.isDefault ?? kit.default),
-    colors: colors.slice(0, 3),
-    colorCount: colors.length,
-    fonts: details.filter((d) => d.type === "typography").length,
-  };
-};
+import BrandKitServices, {
+  type TBrandPromptPreview,
+} from "@/app/services/brand-kit.service";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
+import { axiosCore } from "@/app/lib/axios/axios";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { getCanvasBg } from "@/app/theme/themeConfig";
-import { Divide, Palette } from "lucide-react";
-import TypographyTab from "./components/tabs/typography/typography-tab";
-import LogoTab from "./components/tabs/logo/logo-tab";
-import { type LogoModalValues } from "./components/tabs/logo/logo-modal";
+import { overlayShadow } from "@/app/theme/surface";
+import type { TBrandKit } from "@/app/common/brand-kit";
 
-import CIPromptTab from "./components/tabs/ci-prompt/ci-prompt";
 import BrandKitForm from "./components/brand-kit-form";
-import BrandKitHeader from "./components/BrandKitHeader";
+import KitList from "./board/kit-list";
+import PaletteStrip from "./board/palette-strip";
+import ColorSection, { type SaveColor } from "./board/color-section";
+import TypeSection, { type FontDraft } from "./board/type-section";
+import PromptCard from "./board/prompt-card";
+import { BoardColor, colorsOf, fontsOf } from "./board/model";
+import { flyColor } from "./board/motion";
+import "./board/board.css";
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const brandKitService = BrandKitServices(axiosCore);
+const detailService = BrandKitDetailServices(axiosCore);
 
-
-
-interface FontItem {
-  name: string;
-  type: "heading" | "body";
-  weight: number;
-  preview: string;
-}
-
-
+const formatUpdated = (iso?: string) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
 
 export default function BrandKitPage() {
-  const { isMobile, isTablet } = useResponsive();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isSidebarColumnVisible, setIsSidebarColumnVisible] = useState(true);
   const { data: session } = useSession();
   const organizationId = session?.user?.organizationId;
-  const [messageApi, contextHolder] = message.useMessage();
-  const [selectedTab, setSelectedTab] = useState<string>("colors");
-  // Unified modal state for create/edit
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [form] = AntForm.useForm();
-  const [formLoading, setFormLoading] = useState(false);
-  const [logoFormLoading, setLogoFormLoading] = useState(false);
-  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
-  const [logoFormMode, setLogoFormMode] = useState<"create" | "edit">("create");
-  const [editingLogoId, setEditingLogoId] = useState<string | null>(null);
-  const [logoInitialValues, setLogoInitialValues] = useState<Partial<LogoModalValues>>({
-    name: "",
-    url: "",
-    logoType: "primary",
-  });
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const { token } = theme.useToken();
   const { mode } = useThemeMode();
-  const semantic = theme.useToken().token;
+  const [messageApi, contextHolder] = message.useMessage();
+  const [form] = Form.useForm();
 
-  // ปรับ Layout ให้สูงเต็ม parent container (ไม่ fix 100vh)
-  // ให้แน่ใจว่า parent container (layout.tsx) มี height: 100% หรือ min-h-screen
+  const [kits, setKits] = useState<TBrandKit[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [rows, setRows] = useState<TBrandPromptPreview[]>([]);
+  const [freshId, setFreshId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [defaulting, setDefaulting] = useState(false);
+  const [kitForm, setKitForm] = useState<
+    { mode: "create" } | { mode: "edit"; kit: TBrandKit } | null
+  >(null);
+  const [kitFormSaving, setKitFormSaving] = useState(false);
+  const timers = useRef<{ fresh?: number; copied?: number }>({});
 
-const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
-  
- const brandKitService = BrandKitServices(axiosCore);
-      // Fetch all brand kits on mount
-  // Only the signed-in organization's kits; the backend refuses any other organization
-  const loadKits = async () =>
-    organizationId ? brandKitService.findByOrganizationId(organizationId) : [];
-            useEffect(() => {
-              const fetchBrandKits = async () => {
-                const kits = await loadKits();
-                if (kits) setBrandKits(kits);
-              };
-              fetchBrandKits();
-            }, [organizationId]);
-  
-  const [selectedKitIndex, setSelectedKitIndex] = useState(0);
-  const selectedKit = brandKits[selectedKitIndex] || {};
+  const kit = kits?.find((k) => k.id === selectedId) ?? null;
+  const colors = colorsOf(kit);
+  const fonts = fontsOf(kit);
+  const isDefault = Boolean(kit?.isDefault ?? kit?.default);
 
+  /** Reloads the organization's kits; keeps the current selection when it still exists. */
+  const loadKits = useCallback(async () => {
+    if (!organizationId) return null;
+    const loaded = await brandKitService.findByOrganizationId(organizationId);
+    if (!loaded) {
+      messageApi.error("Couldn't load brand kits. Check your connection and reload.");
+      return null;
+    }
+    const sorted = [...loaded].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    setKits(sorted);
+    setSelectedId((current) =>
+      sorted.some((k) => k.id === current)
+        ? current
+        : (sorted.find((k) => k.isDefault ?? k.default)?.id ?? sorted[0]?.id ?? null),
+    );
+    return sorted;
+  }, [organizationId, messageApi]);
 
-  // State for all details of selected kit
-  const [colors, setColors] = useState<TBrandKitDetail[]>([]);
-  const [typography, setTypography] = useState<TBrandKitDetail[]>([]);
-  const [logos, setLogos] = useState<TBrandKitDetail[]>([]);
-  // CI Prompt state (from brand kit, not detail)
-  const [ciPrompt, setCiPrompt] = useState<string>("");
-  const [negativePrompt, setNegativePrompt] = useState<string>("");
-  // Loading state for tab content
-  const [tabLoading, setTabLoading] = useState(false);
-  const [setDefaultLoading, setSetDefaultLoading] = useState(false);
-  const brandKitDetailService = BrandKitDetailServices(axiosCore);
+  const loadPreview = useCallback(async (kitId: string | null) => {
+    setRows(kitId ? ((await brandKitService.promptPreview(kitId)) ?? []) : []);
+  }, []);
 
-  const isDefaultKit = Boolean(
-    (selectedKit as any)?.isDefault ?? (selectedKit as any)?.default,
+  useEffect(() => {
+    loadKits();
+  }, [loadKits]);
+
+  useEffect(() => {
+    loadPreview(selectedId);
+  }, [selectedId, loadPreview]);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      window.clearTimeout(pending.fresh);
+      window.clearTimeout(pending.copied);
+    };
+  }, []);
+
+  /** After a change to the selected kit: reload it and what it sends. */
+  const refresh = async () => {
+    await loadKits();
+    await loadPreview(selectedId);
+  };
+
+  const markFresh = (id: string) => {
+    setFreshId(id);
+    window.clearTimeout(timers.current.fresh);
+    timers.current.fresh = window.setTimeout(() => setFreshId(null), 900);
+  };
+
+  const copyHex = async (color: BoardColor) => {
+    try {
+      await navigator.clipboard.writeText(color.hex.toUpperCase());
+    } catch {
+      messageApi.error("Couldn't copy. Select the code and copy it yourself.");
+      return;
+    }
+    setCopiedId(color.id);
+    window.clearTimeout(timers.current.copied);
+    timers.current.copied = window.setTimeout(() => setCopiedId(null), 1200);
+  };
+
+  const saveColor: SaveColor = async (draft, id, origin) => {
+    if (!kit) return false;
+    const payload = {
+      name: draft.name,
+      type: "colors" as const,
+      detail: { hex: draft.hex, type: draft.role },
+    };
+    const saved = id
+      ? await detailService.update(id, payload)
+      : await detailService.create({
+          ...payload,
+          brandKitId: kit.id,
+          sortOrder: colors.filter((c) => c.role === draft.role).length,
+        });
+    if (!saved?.id) {
+      messageApi.error("Couldn't save this color. Check the code and try again.");
+      return false;
+    }
+    await refresh();
+    markFresh(saved.id);
+    // the strip has re-rendered with the new segment by the next frame
+    requestAnimationFrame(() =>
+      flyColor(
+        origin,
+        document.querySelector(`[data-strip-id="${saved.id}"]`),
+        draft.hex,
+      ),
+    );
+    return true;
+  };
+
+  const deleteDetail = async (id: string, what: "color" | "font") => {
+    const deleted = await detailService.del(id);
+    if (!deleted) {
+      messageApi.error(`Couldn't delete this ${what}. Try again.`);
+      return;
+    }
+    await refresh();
+  };
+
+  const reorderColors = async (orderedIds: string[]) => {
+    if (!kit) return;
+    const position = new Map(orderedIds.map((id, index) => [id, index]));
+    // show the new order at once; the saved order follows
+    setKits(
+      (current) =>
+        current?.map((k) =>
+          k.id !== kit.id
+            ? k
+            : {
+                ...k,
+                brandKitDetails: [...(k.brandKitDetails ?? [])]
+                  .map((d) => ({
+                    ...d,
+                    sortOrder: position.get(d.id) ?? d.sortOrder ?? 0,
+                  }))
+                  .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+              },
+        ) ?? null,
+    );
+    const results = await Promise.all(
+      orderedIds.map((id, index) => detailService.update(id, { sortOrder: index })),
+    );
+    if (results.some((result) => !result)) {
+      messageApi.error("Couldn't save the new order. It has been reset.");
+    }
+    await refresh();
+  };
+
+  const saveFont = async (draft: FontDraft, id?: string) => {
+    if (!kit) return false;
+    const payload = {
+      name: draft.name,
+      type: "typography" as const,
+      detail: { weight: draft.weight, type: draft.role, preview: "" },
+    };
+    const saved = id
+      ? await detailService.update(id, payload)
+      : await detailService.create({
+          ...payload,
+          brandKitId: kit.id,
+          // a new font is a record first; the owner switches it on when lettering matters
+          includeInPrompt: false,
+        });
+    if (!saved) {
+      messageApi.error("Couldn't save this font. Try again.");
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
+  const toggleFontSend = async (id: string, send: boolean) => {
+    const saved = await detailService.update(id, { includeInPrompt: send });
+    if (!saved) messageApi.error("Couldn't change this font. Try again.");
+    await refresh();
+  };
+
+  const updateKit = async (data: Partial<TBrandKit>, failure: string) => {
+    if (!kit) return false;
+    const saved = await brandKitService.update(kit.id, data);
+    if (!saved) {
+      messageApi.error(failure);
+      return false;
+    }
+    await refresh();
+    return true;
+  };
+
+  const setDefault = async () => {
+    if (!kit) return;
+    setDefaulting(true);
+    const saved = await brandKitService.setDefault(kit.id);
+    setDefaulting(false);
+    if (!saved) {
+      messageApi.error("Couldn't set this kit as default. Try again.");
+      return;
+    }
+    await loadKits();
+  };
+
+  const deleteKit = async (target: TBrandKit) => {
+    const deleted = await brandKitService.del(target.id);
+    if (!deleted) {
+      messageApi.error(`Couldn't delete ${target.name}. Try again.`);
+      return;
+    }
+    await loadKits();
+  };
+
+  const openKitForm = (target?: TBrandKit) => {
+    form.resetFields();
+    if (target) {
+      form.setFieldsValue({
+        name: target.name,
+        description: target.description,
+        industry: target.industryType,
+      });
+    }
+    setKitForm(target ? { mode: "edit", kit: target } : { mode: "create" });
+  };
+
+  const submitKitForm = async () => {
+    if (!kitForm || !organizationId) return;
+    let values: { name: string; description?: string; industry: string };
+    try {
+      values = await form.validateFields();
+    } catch {
+      return; // the form shows which field is missing
+    }
+    const data = {
+      name: values.name,
+      description: values.description,
+      industryType: values.industry,
+    };
+    setKitFormSaving(true);
+    const saved =
+      kitForm.mode === "edit"
+        ? await brandKitService.update(kitForm.kit.id, data)
+        : await brandKitService.create({ ...data, organizationId });
+    setKitFormSaving(false);
+    if (!saved) {
+      messageApi.error("Couldn't save this brand kit. Try again.");
+      return;
+    }
+    setKitForm(null);
+    await loadKits();
+    if (kitForm.mode === "create" && saved.id) setSelectedId(saved.id);
+  };
+
+  // CSS custom properties are not part of CSSProperties
+  const vars = {
+    "--bk-text": token.colorText,
+    "--bk-text-2": token.colorTextSecondary,
+    "--bk-border": token.colorBorder,
+    "--bk-surface": token.colorBgContainer,
+    "--bk-elevated": token.colorBgElevated,
+    "--bk-fill": token.colorFillTertiary,
+    "--bk-primary": token.colorPrimary,
+    "--bk-primary-bg": token.colorPrimaryBg,
+    "--bk-warning": token.colorWarning,
+    "--bk-star": token.colorWarning,
+    "--bk-radius": `${token.borderRadius}px`,
+    "--bk-radius-lg": `${token.borderRadiusLG}px`,
+    "--bk-shadow": overlayShadow(mode),
+  } as React.CSSProperties;
+
+  const kitFormModal = (
+    <Modal
+      open={kitForm !== null}
+      title={kitForm?.mode === "edit" ? "Rename brand kit" : "New brand kit"}
+      okText={kitForm?.mode === "edit" ? "Save kit" : "Create kit"}
+      confirmLoading={kitFormSaving}
+      onOk={submitKitForm}
+      onCancel={() => setKitForm(null)}
+      destroyOnHidden
+    >
+      <BrandKitForm form={form} mode={kitForm?.mode ?? "create"} />
+    </Modal>
   );
 
-
-  // Fetch data only for the selected tab and kit
-  useEffect(() => {
-    if (!selectedKit.id) {
-      setTypography([]);
-      setLogos([]);
-      setColors([]);
-      setTabLoading(false);
-      setCiPrompt("");
-      setNegativePrompt("");
-      return;
-    }
-    const fetchData = async () => {
-      setTabLoading(true);
-      try {
-        if (selectedTab === "colors") {
-          const colorRes = await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id);
-          setColors(colorRes || []);
-        } else if (selectedTab === "typography") {
-          const typoRes = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id);
-          setTypography(typoRes || []);
-        } else if (selectedTab === "logos") {
-          const logoRes = await brandKitDetailService.findByTypeAndBrandKitId("logo", selectedKit.id);
-          setLogos(logoRes || []);
-        } else if (selectedTab === "ci") {
-          // fetch brand kit for CI Prompt
-          const kit = await brandKitService.findById(selectedKit.id);
-          setCiPrompt(kit?.brandCiPrompt || "");
-          setNegativePrompt(kit?.negativePrompt || "");
-        }
-      } finally {
-        setTabLoading(false);
-      }
-    };
-    fetchData();
-  }, [selectedKit.id, selectedTab]);
-
-  // (removed: now handled in the unified effect above)
-
-
-  // Handler to refresh colors after add, and auto-update CI Prompt
-  const handleColorAdded = async () => {
-    if (!selectedKit.id) return;
-    const res = await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id);
-    setColors(res || []);
-    // auto-generate and PATCH CI Prompt
-    const savedFonts = (await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id)) || [];
-    const prompt = autoGenerateCIPrompt({
-      colors: (res || []).map(c => {
-        return isColorDetail(c.detail)
-          ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
-          : { name: c.name, hex: '', type: '' };
-      }),
-      fonts: savedFonts.map(t => {
-        const detail = t.detail && t.type === "typography" ? t.detail : undefined;
-        return isTypographyDetail(detail)
-          ? { name: t.name, weight: detail.weight ? Number(detail.weight) : 400, type: detail.type?.toLowerCase?.() || "body" }
-          : { name: t.name, weight: 400, type: "body" };
-      })
-    });
-    await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
-    setCiPrompt(prompt);
-    // Smoothly refresh all brand kits for sidebar
-    const kits = await loadKits();
-    if (kits) {
-      kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setBrandKits(kits);
-    }
-  };
-
-  // Handler to add or edit font (if editId is provided, update; else, create)
-  const handleFontAdded = async (payload: any, editId?: string | null) => {
-    if (!selectedKit.id) return;
-    let success = false;
-    if (editId) {
-      // Edit font
-      const updated = await brandKitDetailService.update(editId, payload);
-      if (updated) {
-        success = true;
-        messageApi.success("Font updated!");
-      } else {
-        messageApi.error("Failed to update font");
-      }
-    } else {
-      // Add font
-      const created = await brandKitDetailService.create({ ...payload, brandKitId: selectedKit.id });
-      if (created) {
-        success = true;
-        messageApi.success("Font added!");
-      } else {
-        messageApi.error("Failed to add font");
-      }
-    }
-    if (success) {
-      const typoRes = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id);
-      setTypography(typoRes || []);
-      // auto-generate and PATCH CI Prompt
-      const savedColors = (await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id)) || [];
-      const prompt = autoGenerateCIPrompt({
-        colors: savedColors.map(c => {
-          return isColorDetail(c.detail)
-            ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
-            : { name: c.name, hex: '', type: '' };
-        }),
-        fonts: (typoRes || []).map(t => {
-          const detail = t.detail && t.type === "typography" ? t.detail : undefined;
-          return isTypographyDetail(detail)
-            ? { name: t.name, weight: detail.weight ? Number(detail.weight) : 400, type: detail.type?.toLowerCase?.() || "body" }
-            : { name: t.name, weight: 400, type: "body" };
-        })
-      });
-      await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
-      setCiPrompt(prompt);
-      // Smoothly refresh all brand kits for sidebar
-      const kits = await loadKits();
-      if (kits) setBrandKits(kits);
-    }
-  };
-
-  // Handler to delete font
-  const handleDeleteFont = async (id: string) => {
-    if (!selectedKit.id) return;
-    const deleted = await brandKitDetailService.del(id);
-    if (deleted) {
-      const typoRes = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id);
-      setTypography(typoRes || []);
-      messageApi.success("Font deleted!");
-      // auto-generate and PATCH CI Prompt
-      const savedColors = (await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id)) || [];
-      const prompt = autoGenerateCIPrompt({
-        colors: savedColors.map(c => {
-          return isColorDetail(c.detail)
-            ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
-            : { name: c.name, hex: '', type: '' };
-        }),
-        fonts: (typoRes || []).map(t => {
-          const detail = t.detail && t.type === "typography" ? t.detail : undefined;
-          return isTypographyDetail(detail)
-            ? { name: t.name, weight: detail.weight ? Number(detail.weight) : 400, type: detail.type?.toLowerCase?.() || "body" }
-            : { name: t.name, weight: 400, type: "body" };
-        })
-      });
-      await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
-      setCiPrompt(prompt);
-      // Smoothly refresh all brand kits for sidebar
-      const kits = await loadKits();
-      if (kits) setBrandKits(kits);
-    } else {
-      messageApi.error("Failed to delete font");
-    }
-  };
-
-  const isLogoDetail = (
-    detail: unknown,
-  ): detail is import("@/app/common/brand-kit").TBrandKitDetailLogo => {
+  if (kits === null) {
     return (
-      !!detail &&
-      typeof detail === "object" &&
-      typeof (detail as { url?: unknown }).url === "string"
+      <div className="bk-blank">
+        {contextHolder}
+        <Spin size="large" />
+      </div>
     );
-  };
+  }
 
-  const refreshLogos = async () => {
-    if (!selectedKit.id) return;
-    const logoRes = await brandKitDetailService.findByTypeAndBrandKitId("logo", selectedKit.id);
-    setLogos(logoRes || []);
-  };
+  if (kits.length === 0) {
+    return (
+      <div className="bk-blank" style={vars}>
+        {contextHolder}
+        <h1 className="bk-title">Create your first brand kit</h1>
+        <p className="bk-note">
+          A kit holds your colors and style. Turn it on while generating and
+          every result is steered toward your brand.
+        </p>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openKitForm()}>
+          New brand kit
+        </Button>
+        {kitFormModal}
+      </div>
+    );
+  }
 
-  const openCreateLogoModal = () => {
-    if (!selectedKit.id) {
-      messageApi.warning("Please select a brand kit first");
-      return;
-    }
+  return (
+    <div className="bk-page" style={vars}>
+      {contextHolder}
+      <KitList
+        kits={kits}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onCreate={() => openKitForm()}
+        onEdit={openKitForm}
+        onDelete={deleteKit}
+      />
 
-    setLogoFormMode("create");
-    setEditingLogoId(null);
-    setLogoInitialValues({ name: "", url: "", logoType: "primary" });
-    setIsLogoModalOpen(true);
-  };
-
-  const openEditLogoModal = (logo: { id: string; name: string; type: string; image: string }) => {
-    const normalizedLogoType: LogoModalValues["logoType"] =
-      logo.type === "primary" ||
-      logo.type === "secondary" ||
-      logo.type === "icon" ||
-      logo.type === "light" ||
-      logo.type === "dark"
-        ? logo.type
-        : "primary";
-
-    setLogoFormMode("edit");
-    setEditingLogoId(logo.id);
-    setLogoInitialValues({
-      name: logo.name,
-      url: logo.image,
-      logoType: normalizedLogoType,
-    });
-    setIsLogoModalOpen(true);
-  };
-
-  const handleSubmitLogo = async (values: LogoModalValues) => {
-    if (!selectedKit.id) return;
-
-    try {
-      setLogoFormLoading(true);
-
-      const payload: Partial<TBrandKitDetail> = {
-        name: values.name,
-        type: "logo",
-        detail: {
-          url: values.url,
-          type: values.logoType,
-        } as import("@/app/common/brand-kit").TBrandKitDetailLogo,
-      };
-
-      if (logoFormMode === "create") {
-        const created = await brandKitDetailService.create({
-          ...payload,
-          brandKitId: selectedKit.id,
-        });
-        if (!created) {
-          messageApi.error("Failed to add logo");
-          return;
-        }
-        messageApi.success("Logo added!");
-      } else {
-        if (!editingLogoId) return;
-        const updated = await brandKitDetailService.update(editingLogoId, payload);
-        if (!updated) {
-          messageApi.error("Failed to update logo");
-          return;
-        }
-        messageApi.success("Logo updated!");
-      }
-
-      await refreshLogos();
-      setIsLogoModalOpen(false);
-      setEditingLogoId(null);
-      setLogoInitialValues({ name: "", url: "", logoType: "primary" });
-    } catch {
-      messageApi.error(logoFormMode === "create" ? "Failed to add logo" : "Failed to update logo");
-    } finally {
-      setLogoFormLoading(false);
-    }
-  };
-
-  const handleDeleteLogo = async (id: string) => {
-    const deleted = await brandKitDetailService.del(id);
-    if (!deleted) {
-      messageApi.error("Failed to delete logo");
-      return;
-    }
-    await refreshLogos();
-    messageApi.success("Logo deleted!");
-  };
-
-  // ...helpers moved to ./helpers/index.ts...
-
-  // Update CI Prompt/NegativePrompt from CI tab (manual edit)
-  const updateCI = async (ci: string, negative: string) => {
-    if (!selectedKit.id) return;
-    await brandKitService.update(selectedKit.id, { brandCiPrompt: ci, negativePrompt: negative });
-    setCiPrompt(ci);
-    setNegativePrompt(negative);
-
-    const kits = await loadKits();
-    if (kits) {
-      kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setBrandKits(kits);
-    }
-    messageApi.success("Brand Prompt saved");
-  };
-
-  const handleSetDefaultBrandKit = async () => {
-    if (!selectedKit?.id || isDefaultKit) return;
-
-    try {
-      setSetDefaultLoading(true);
-      const result = await brandKitService.setDefault(selectedKit.id);
-      if (!result) {
-        messageApi.error("Failed to set default brand kit");
-        return;
-      }
-
-      setBrandKits((prev) =>
-        prev.map((kit) => ({
-          ...kit,
-          isDefault: kit.id === selectedKit.id,
-          default: kit.id === selectedKit.id,
-        })),
-      );
-      messageApi.success("Default brand kit updated");
-    } catch (error) {
-      messageApi.error("Failed to set default brand kit");
-    } finally {
-      setSetDefaultLoading(false);
-    }
-  };
-
- return (
-  <>
-    {contextHolder}
-
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        minHeight: 0,
-        overflowX: "hidden",
-        overflowY: "hidden",
-        background: getCanvasBg(mode),
-      }}
-    >
-      {/* Mobile Sidebar Overlay */}
-      {isMobile && sidebarOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="brandkit-mobile-backdrop"
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.45)",
-              zIndex: 1000,
-            }}
-          />
-
-          {/* Sidebar Panel */}
-         
-           <BrandKitSidebar
-              style={{
-                position: "fixed",
-                left: 0,
-                top: 0,
-                width: '100vw',
-                height: '100vh',
-                zIndex: 1200,
-                boxShadow: "0 0 24px rgba(0,0,0,0.18)",
-                overflow: "hidden",
-                animation: "brandkitMobilePanelIn 260ms ease",
-              }}
-              onClose={() => setSidebarOpen(false)}
-              brandKits={brandKits.map(toSidebarKit)}
-              activeIndex={selectedKitIndex}
-              onChangeIndex={(idx) => {
-                setSelectedKitIndex(idx);
-                // Do not close sidebar automatically on select
-              }}
-              onCreateKit={() => {
-                setFormMode("create");
-                form.resetFields();
-                setIsFormModalOpen(true);
-                // Do not close sidebar automatically
-              }}
-              onEditKit={(index) => {
-                setFormMode("edit");
-                setEditIndex(index);
-
-                const kit = brandKits[index];
-
-                form.setFieldsValue({
-                  name: kit.name,
-                  description: kit.description,
-                  industry: kit.industryType,
-                });
-
-                setIsFormModalOpen(true);
-                // Do not close sidebar automatically
-              }}
-              onDeleteKit={async (index) => {
-                const kit = brandKits[index];
-                if (!kit.id) return;
-
-                try {
-                  const deleted = await brandKitService.del(kit.id);
-
-                  if (deleted) {
-                    const newKits = brandKits.filter((_, i) => i !== index);
-                    setBrandKits(newKits);
-
-                    if (selectedKitIndex === index) {
-                      setSelectedKitIndex(0);
-                    } else if (selectedKitIndex > index) {
-                      setSelectedKitIndex(selectedKitIndex - 1);
-                    }
-
-                    messageApi.success("Brand kit deleted!");
-                  } else {
-                    messageApi.error("Failed to delete brand kit");
-                  }
-                } catch {
-                  messageApi.error("Failed to delete brand kit");
-                }
-              }}
-            />
-        
-        </>
-      )}
-
-      {/* Floating Sidebar Button */}
-      {isMobile && (
-        <Tooltip title="Brand Kit ทั้งหมด" placement="left">
-          <Button
-            className="brandkit-fab"
-            type="primary"
-            shape="circle"
-            aria-label="All brand kits"
-            icon={<Palette size={20} color={semantic.colorWhite} />}
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              position: "fixed",
-              right: 20,
-              bottom: 24,
-              zIndex: 999,
-              width: 56,
-              height: 56,
-              boxShadow: "0 6px 24px rgba(0,0,0,0.16)",
-            }}
-          />
-        </Tooltip>
-      )}
-
-      <Row
-        gutter={0}
-        wrap={false}
-        style={{
-          width: "100%",
-          height: "100%",
-          minHeight: 0,
-          margin: 0,
-        }}
-      >
-        {/* Desktop/Tablet Sidebar */}
-        {!isMobile && isSidebarColumnVisible && (
-          <Col
-            flex={isTablet ? "240px" : "270px"}
-            style={{
-              height: "100%",
-              borderRight: `1px solid ${semantic.colorBorder}`,
-              background: semantic.colorBgContainer,
-              overflow: "hidden",
-            }}
-          >
-            <BrandKitSidebar
-              brandKits={brandKits.map(toSidebarKit)}
-              activeIndex={selectedKitIndex}
-              onChangeIndex={setSelectedKitIndex}
-              onCreateKit={() => {
-                setFormMode("create");
-                form.resetFields();
-                setIsFormModalOpen(true);
-              }}
-              onEditKit={(index) => {
-                setFormMode("edit");
-                setEditIndex(index);
-
-                const kit = brandKits[index];
-
-                form.setFieldsValue({
-                  name: kit.name,
-                  description: kit.description,
-                  industry: kit.industryType,
-                });
-
-                setIsFormModalOpen(true);
-              }}
-              onDeleteKit={async (index) => {
-                const kit = brandKits[index];
-                if (!kit.id) return;
-
-                try {
-                  const deleted = await brandKitService.del(kit.id);
-
-                  if (deleted) {
-                    const newKits = brandKits.filter((_, i) => i !== index);
-                    setBrandKits(newKits);
-
-                    if (selectedKitIndex === index) {
-                      setSelectedKitIndex(0);
-                    } else if (selectedKitIndex > index) {
-                      setSelectedKitIndex(selectedKitIndex - 1);
-                    }
-
-                    messageApi.success("Brand kit deleted!");
-                  } else {
-                    messageApi.error("Failed to delete brand kit");
-                  }
-                } catch {
-                  messageApi.error("Failed to delete brand kit");
-                }
-              }}
-            />
-          </Col>
-        )}
-
-        {/* Main Content */}
-        <Col
-          flex="auto"
-          style={{
-            minWidth: 0,
-            height: "100%",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            background: getCanvasBg(mode),
-          }}
-        >
-          {brandKits.length === 0 ? (
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 20,
-                padding: 24,
-              }}
-            >
-              <Palette size={48} color={semantic.colorTextSecondary} />
-              <Title level={3} style={{ margin: 0 }}>
-                No Brand Kits
-              </Title>
-              <Text style={{ color: semantic.colorTextSecondary }}>
-                Select or create a Brand Kit
-              </Text>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setFormMode("create");
-                  form.resetFields();
-                  setIsFormModalOpen(true);
-                }}
-              >
-                New Brand Kit
-              </Button>
+      {kit && (
+        <div className="bk-board">
+          <header className="bk-head">
+            <div>
+              <h2 className="bk-title">{kit.name}</h2>
+              <p className="bk-sub">
+                {[kit.industryType, kit.updatedAt && `Updated ${formatUpdated(kit.updatedAt)}`]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
             </div>
-          ) : (
-            <>
-              <BrandKitHeader
-                selectedKit={selectedKit}
-                selectedTab={selectedTab}
-                setSelectedTab={setSelectedTab}
-                isMobile={isMobile}
-                isTablet={isTablet}
-                isSidebarVisible={isMobile ? sidebarOpen : isSidebarColumnVisible}
-                semantic={semantic}
-                isDefaultKit={isDefaultKit}
-                setDefaultLoading={setDefaultLoading}
-                onSetDefault={handleSetDefaultBrandKit}
-                onToggleSidebar={() => {
-                  if (isMobile) {
-                    setSidebarOpen(true);
-                    return;
-                  }
-                  setIsSidebarColumnVisible((prev) => !prev);
-                }}
-              />
+            {isDefault ? (
+              <Tag color="warning" icon={<StarFilled />} style={{ marginInlineEnd: 0 }}>
+                Default
+              </Tag>
+            ) : (
+              <Button icon={<StarOutlined />} loading={defaulting} onClick={setDefault}>
+                Set as default
+              </Button>
+            )}
+          </header>
 
-              <div
-                className="brandkit-main-scroll"
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: "auto",
-                  overflowX: "hidden",
-                  touchAction: "pan-y",
-                  padding: isMobile ? 12 : isTablet ? 20 : 32,
-                  paddingBottom: isMobile ? 90 : isTablet ? 24 : 32,
-                  boxSizing: "border-box",
-                  overscrollBehavior: "contain",
-                  WebkitOverflowScrolling: "touch",
-                  scrollBehavior: "smooth",
-                }}
-              >
-            
-              {tabLoading ? (
-                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200 }}>
-                  <Spin size="large" />
-                </div>
-              ) : (() => {
-                const allEmpty =
-                  colors.length === 0 &&
-                  typography.length === 0 &&
-                  logos.length === 0 &&
-                  ciPrompt.length === 0;
-                if (selectedTab === "colors") {
-                  // Type guard for color detail
-                  function isColorDetail(detail: any): detail is { hex: string; type: string } {
-                    return detail && typeof detail.hex === 'string' && typeof detail.type === 'string';
-                  }
-                  return (
-                    <ColorTab
-                      colors={colors.map((c) => ({
-                        id: c.id,
-                        name: c.name,
-                        hex: isColorDetail(c.detail) ? c.detail.hex : '',
-                        type: isColorDetail(c.detail) ? c.detail.type : '',
-                      }))}
-                      brandKitId={selectedKit.id}
-                      axiosCore={axiosCore}
-                      onColorAdded={handleColorAdded}
-                      emptyState={allEmpty}
-                    />
-                  );
-                }
-                if (selectedTab === "typography") {
-                  return (
-                    <TypographyTab
-                      fonts={typography.map((t) => {
-                        const detail = t.detail && t.type === "typography" ? t.detail as import("@/app/common/brand-kit").TBrandKitDetailTypography : undefined;
-                        return {
-                          id: t.id,
-                          name: t.name,
-                          weight: (detail && isTypographyDetail(detail) && detail.weight) ? Number(detail.weight) : 400,
-                          type: detail && isTypographyDetail(detail) && detail.type ? detail.type : "body",
-                          preview: detail && isTypographyDetail(detail) && detail.preview ? detail.preview : "Creativity is intelligence having fun.",
-                        };
-                      })}
-                      emptyState={allEmpty}
-                      onAddFont={handleFontAdded}
-                      onDeleteFont={handleDeleteFont}
-                    />
-                  );
-                }
-                if (selectedTab === "logos") {
-                  return (
-                    <LogoTab
-                      logos={logos
-                        .filter((logo) => isLogoDetail(logo.detail))
-                        .map((logo) => ({
-                          id: logo.id,
-                          name: logo.name,
-                          type: isLogoDetail(logo.detail) ? logo.detail.type : "primary",
-                          image: isLogoDetail(logo.detail) ? logo.detail.url : "",
-                        }))}
-                      onAddLogo={openCreateLogoModal}
-                      onEditLogo={openEditLogoModal}
-                      onDeleteLogo={handleDeleteLogo}
-                      logoModalOpen={isLogoModalOpen}
-                      logoModalMode={logoFormMode}
-                      logoModalLoading={logoFormLoading}
-                      logoModalInitialValues={logoInitialValues}
-                      onSubmitLogoModal={handleSubmitLogo}
-                      onCloseLogoModal={() => {
-                        setIsLogoModalOpen(false);
-                        setEditingLogoId(null);
-                        setLogoInitialValues({ name: "", url: "", logoType: "primary" });
-                      }}
-                      emptyState={logos.length === 0}
-                    />
-                  );
-                }
-                if (selectedTab === "ci") {
-                  // Type guard for color detail
-                  function isColorDetail(detail: any): detail is { hex: string; type: string } {
-                    return detail && typeof detail.hex === 'string' && typeof detail.type === 'string';
-                  }
-                  // Parse colors/fonts from ciPrompt string for smooth editing
-                  const parsedColors = (() => {
-                    const arr: { name: string; hex: string; type: string }[] = [];
-                    if (typeof ciPrompt === 'string' && ciPrompt.includes('Brand colors:')) {
-                      const colorSection = ciPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
-                      const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
-                      hexMatches.forEach((m, i) => {
-                        arr.push({ name: '', hex: '#' + m[1], type: '' });
-                      });
-                    }
-                    return arr;
-                  })();
-                  const parsedFonts = (() => {
-                    const arr: { name: string; weight: number; type: string }[] = [];
-                    if (typeof ciPrompt === 'string' && ciPrompt.includes('Fonts:')) {
-                      const fontSection = ciPrompt.split('Fonts:')[1] || '';
-                      const fontMatches = [...fontSection.matchAll(/([^,\n]+)\s*\(([^)]*)\)/g)];
-                      fontMatches.forEach((m) => {
-                        // m[1]=name, m[2]=type, weight
-                        let type = 'body', weight = 400;
-                        if (m[2]) {
-                          const typeMatch = m[2].match(/(heading\d?|body|caption|paragraph)/i);
-                          if (typeMatch) type = typeMatch[1].toLowerCase();
-                          const weightMatch = m[2].match(/weight\s*(\d+)/i);
-                          if (weightMatch) weight = Number(weightMatch[1]);
-                        }
-                        arr.push({ name: m[1].trim(), type, weight });
-                      });
-                    }
-                    return arr;
-                  })();
-                  return (
-                    <CIPromptTab
-                      ciPrompt={ciPrompt}
-                      negativePrompt={negativePrompt}
-                      onChange={updateCI}
-                      colors={parsedColors}
-                      fonts={parsedFonts}
-                    />
-                  );
-                }
-                return null;
-              })()}
-         
-              </div>
-            </>
-          )}
-        </Col>
-      </Row>
+          <div className="bk-strip-wrap">
+            <PaletteStrip
+              kitId={kit.id}
+              colors={colors}
+              freshId={freshId}
+              copiedId={copiedId}
+              onCopy={copyHex}
+            />
+          </div>
 
-      <Modal
-        zIndex={1500}
-        title={formMode === 'edit' ? 'Edit Brand Kit' : 'New Brand Kit'}
-        open={isFormModalOpen}
-        confirmLoading={formLoading}
-        onOk={async () => {
-          if (formMode === 'edit' && editIndex === null) return;
-          try {
-            setFormLoading(true);
-            const values = await form.validateFields();
-            if (formMode === 'create') {
-              const created = await brandKitService.create({
-                name: values.name,
-                description: values.description,
-                industryType: values.industry,
-                organizationId: session?.user?.organizationId ?? undefined,
-              });
-              if (created) {
-                setBrandKits([created, ...brandKits]);
-                messageApi.success("Brand kit created!");
-                setIsFormModalOpen(false);
-                form.resetFields();
-              } else {
-                messageApi.error("Failed to create brand kit");
-              }
-            } else if (formMode === 'edit' && editIndex !== null) {
-              const kit = brandKits[editIndex];
-              const updated = await brandKitService.update(kit.id, {
-                name: values.name,
-                description: values.description,
-                industryType: values.industry,
-              });
-              if (updated) {
-                const newKits = [...brandKits];
-                newKits[editIndex] = { ...newKits[editIndex], ...updated };
-                setBrandKits(newKits);
-                messageApi.success('Brand kit updated!');
-                setIsFormModalOpen(false);
-                setEditIndex(null);
-              } else {
-                messageApi.error('Failed to update brand kit');
-              }
+          <div className="bk-main">
+            <ColorSection
+              colors={colors}
+              freshId={freshId}
+              copiedId={copiedId}
+              onCopy={copyHex}
+              onSave={saveColor}
+              onDelete={(id) => deleteDetail(id, "color")}
+              onReorder={reorderColors}
+            />
+            <TypeSection
+              fonts={fonts}
+              onSave={saveFont}
+              onToggleSend={toggleFontSend}
+              onDelete={(id) => deleteDetail(id, "font")}
+            />
+          </div>
+
+          <PromptCard
+            kit={kit}
+            rows={rows}
+            colors={colors}
+            freshId={freshId}
+            onSaveNegative={(negativePrompt) =>
+              updateKit({ negativePrompt }, "Couldn't save the Negative Prompt. Try again.")
             }
-          } catch (e) {
-            messageApi.error(formMode === 'create' ? 'Failed to create brand kit' : 'Failed to update brand kit');
-          } finally {
-            setFormLoading(false);
-          }
-        }}
-        onCancel={() => {
-          setIsFormModalOpen(false);
-          setEditIndex(null);
-        }}
-        okText={formMode === 'edit' ? 'Save' : 'Create Kit'}
-        cancelText="Cancel"
-      >
-        <BrandKitForm form={form} mode={formMode} />
-      </Modal>
+            onSaveCustom={(customPrompt) =>
+              updateKit({ customPrompt }, "Couldn't save the instructions. Try again.")
+            }
+            onLegacyChoice={(keep) =>
+              updateKit(
+                { promptVersion: 2, customPrompt: keep ? (kit.brandCiPrompt ?? "") : "" },
+                "Couldn't switch this kit. Try again.",
+              )
+            }
+          />
+        </div>
+      )}
+
+      <span className="bk-sr" role="status" aria-live="polite">
+        {copiedId ? "Color code copied" : ""}
+      </span>
+      {kitFormModal}
     </div>
-  </>
-);
+  );
 }

@@ -10,6 +10,9 @@ export interface TBrandKit {
   brandCiPrompt: string;
   negativePrompt: string;
   organizationId: string;
+  customPrompt?: string | null;
+  /** 1 = the saved brandCiPrompt is sent as written, 2 = the backend composes from this kit's records */
+  promptVersion?: number;
   /** present on the by-organization and by-id responses */
   brandKitDetails?: TBrandKitDetail[];
 }
@@ -25,6 +28,9 @@ export interface TBrandKitDetail {
   createdAt: string;
   updatedAt: string;
   brandKitId: string;
+  sortOrder?: number;
+  /** false = kept in the kit but not sent to the model */
+  includeInPrompt?: boolean;
 }
 export interface TBrandKitDetailColor {
   hex: string;

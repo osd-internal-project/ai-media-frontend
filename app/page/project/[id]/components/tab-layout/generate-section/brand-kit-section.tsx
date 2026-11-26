@@ -7,8 +7,8 @@ import type { TBrandKit } from "@/app/common/brand-kit";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Flex, Typography, Switch } from "antd";
 import { useThemeMode } from "@/app/components/ThemeProvider";
-import { aiCaveColors } from "@/app/theme/themeConfig";
 import { useSession } from "next-auth/react";
+import "./brand-kit-section.css";
 import {
   BgColorsOutlined,
   BulbOutlined,
@@ -101,7 +101,6 @@ export default function BrandKitSection({
           boxBorderIdle: "rgba(111, 106, 222, 0.18)",
           boxBg: "rgba(38, 45, 68, 0.72)",
           boxText: "#B6BED1",
-          prompt: "#7E7BFF",
           avoid: "#A1A1AA",
         }
       : {
@@ -116,7 +115,6 @@ export default function BrandKitSection({
           boxBorderIdle: semantic.colorBorder,
           boxBg: semantic.colorBgLayout,
           boxText: semantic.colorTextSecondary,
-          prompt: aiCaveColors.primaryDark,
           avoid: semantic.colorTextSecondary,
         };
 
@@ -236,7 +234,15 @@ export default function BrandKitSection({
 
               <Flex align="center" gap={8} wrap="wrap">
                 {parsedColors.map((color, index) => (
-                  <div key={`${color}-${index}`} style={colorDotStyle(color)} />
+                  <div
+                    key={`${color}-${index}`}
+                    className="bk-form-dot"
+                    style={{
+                      ...colorDotStyle(color),
+                      // the kit's colours unfold one by one when the switch turns on, within 260ms in total
+                      animationDelay: `${Math.min(index * 30, 230)}ms`,
+                    }}
+                  />
                 ))}
               </Flex>
             </Flex>
@@ -253,26 +259,37 @@ export default function BrandKitSection({
                   <BgColorsOutlined
                     style={{
                       color: c.text2,
-                      fontSize: 11,
+                      fontSize: 12,
                     }}
                   />
                   <Text
                     style={{
                       color: c.boxText,
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: 500,
                     }}
                   >
                     Brand Prompt
                   </Text>
+                  {preview && (
+                    <Text
+                      className="bk-form-budget"
+                      style={{
+                        color: c.boxText,
+                        fontSize: 12,
+                        marginInlineStart: "auto",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {preview.usedChars} of {preview.brandKitBudget} characters
+                    </Text>
+                  )}
                 </Flex>
                 <Text
                   style={{
-                    color: c.prompt,
-                    fontSize: 11,
+                    color: c.boxText,
+                    fontSize: 12,
                     lineHeight: 1.6,
-                    fontFamily:
-                      "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                     whiteSpace: "pre-line",
                   }}
                 >
