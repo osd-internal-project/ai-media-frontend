@@ -27,6 +27,8 @@ type Props = {
   projectId: string;
   /** แท็บ generate ที่เปิดอยู่ — กำหนดบทบาทของผู้ช่วยแชท */
   generateType?: ChatGenerateType;
+  /** characters the brand kit adds to this prompt; counted against the same limit */
+  kitChars?: number;
 };
 
 export default function PromptSection({
@@ -44,6 +46,7 @@ export default function PromptSection({
   required = true,
   projectId,
   generateType,
+  kitChars = 0,
 }: Props) {
   const { mode } = useThemeMode();
   const form = Form.useFormInstance();
@@ -71,9 +74,17 @@ export default function PromptSection({
         <Flex align="center" gap={8}>
         {/* Counter rides the label row instead of a row of its own. */}
         <Typography.Text
-          style={{ fontSize: 12, color: semantic.colorTextSecondary, fontVariantNumeric: "tabular-nums" }}
+          style={{
+            fontSize: 12,
+            color:
+              promptText.length + kitChars > maxLength
+                ? semantic.colorError
+                : semantic.colorTextSecondary,
+            fontVariantNumeric: "tabular-nums",
+          }}
         >
-          {promptText.length}/{maxLength}
+          {promptText.length}
+          {kitChars > 0 && ` + kit ${kitChars}`}/{maxLength}
         </Typography.Text>
         {assistantEnabled && showAiAssist && (
           <Button

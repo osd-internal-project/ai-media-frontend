@@ -6,6 +6,7 @@ import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import TypoModal from "./typo-modal";
 import useResponsive from "@/app/hooks/useResponsive";
+import { countLabel } from "../../../helpers/countLabel";
 
 const { Title, Text } = Typography;
 
@@ -142,7 +143,7 @@ const TypographyTab: React.FC<TypographyTabProps> = ({
   return (
     <div className="typo-tab-shell">
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>{fonts.length} fonts configured</Text>
+        <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>{countLabel(fonts.length, "font")} configured</Text>
         <Button className="typo-tab-action" type="default" size={isMobile ? "small" : "middle"} icon={<PlusOutlined />} onClick={handleAddFont}>
           {isMobile ? "Add" : "Add Font"}
         </Button>

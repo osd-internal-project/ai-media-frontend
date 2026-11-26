@@ -1164,7 +1164,10 @@ const ChatGenerateDreamactor: FC<
       organizationId: session?.user?.organizationId ?? undefined,
       username: username || "",
     };
-    const messageBody = modelConfig.buildSubmitPayload(values, state, tempTask);
+    const messageBody = {
+      ...modelConfig.buildSubmitPayload(values, state, tempTask),
+      brandKitId: values.brandKitId as string | undefined,
+    };
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,

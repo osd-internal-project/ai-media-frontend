@@ -1158,7 +1158,10 @@ const ChatGenerateOmnihumen: FC<
       organizationId: session?.user?.organizationId ?? undefined,
       username: username || "",
     };
-    const message = modelConfig.buildSubmitPayload(values, state, tempTask);
+    const message = {
+      ...modelConfig.buildSubmitPayload(values, state, tempTask),
+      brandKitId: values.brandKitId as string | undefined,
+    };
     const tempMessage = {
       id: tempTask,
       taskId: tempTask,

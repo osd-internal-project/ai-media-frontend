@@ -25,6 +25,8 @@ type Props = {
   projectId: string;
   /** แท็บ generate ที่เปิดอยู่ — กำหนดบทบาทของผู้ช่วยแชท */
   generateType?: ChatGenerateType;
+  /** characters the brand kit adds to this prompt; counted against the same limit */
+  kitChars?: number;
 };
 
 export default function PromptSection({
@@ -46,6 +48,7 @@ export default function PromptSection({
   mentionOptions = [],
   projectId,
   generateType,
+  kitChars = 0,
 }: Props) {
   const form = Form.useFormInstance();
   const promptText = (Form.useWatch(fieldName, form) as string) || "";
@@ -121,7 +124,8 @@ export default function PromptSection({
         <Typography.Text
           style={{ fontSize: 10, color: semantic.colorTextSecondary }}
         >
-          {promptText.length}/{maxLength}
+          {promptText.length}
+          {kitChars > 0 && ` + kit ${kitChars}`}/{maxLength}
         </Typography.Text>
       </Flex>
 

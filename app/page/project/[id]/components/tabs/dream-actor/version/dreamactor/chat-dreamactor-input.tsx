@@ -33,7 +33,9 @@ import { getThemeConfig } from "@/app/theme/themeConfig";
 import UploadSection from "../../../../tab-layout/generate-section/upload-section";
 import PromptSection from "../../../../tab-layout/generate-section/prompt-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
-import BrandKitSection from "../../../../tab-layout/generate-section/brand-kit-section";
+import BrandKitSection, {
+  type AppliedBrandKit,
+} from "../../../../tab-layout/generate-section/brand-kit-section";
 import Quata from "@/app/page/project/component/quata";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 
@@ -102,30 +104,11 @@ export default function ChatDreamactorInput({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
 
-  // Helper to join CI prompt and main prompt with connector
-  function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
-    if (!mainPrompt) return ciPrompt;
-    if (!ciPrompt) return mainPrompt;
-    // Main prompt first, then CI prompt with connector
-    return (
-      mainPrompt.trim() +
-      "\n\n---\n(BrandKit Prompt: " +
-      "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01 BrandKit)\n" +
-      ciPrompt.trim()
-    );
-  }
 
-  // State to get CI prompt and active from BrandKitSection
-  const [ciPrompt, setCiPrompt] = React.useState<string>("");
-  const [ciActive, setCiActive] = React.useState<boolean>(true);
-
-  // Custom handleSendMessage to combine CI prompt and main prompt
-  const handleSendMessageWithCi = (values: any) => {
-    let prompt = values.prompt || "";
-    if (ciActive && ciPrompt) {
-      prompt = joinCiPrompt(ciPrompt, prompt);
-    }
-    handleSendMessage({ ...values, prompt });
+  // Kit applied to this generation; the backend composes its text (null = switch off or no default kit)
+  const [brandKit, setBrandKit] = React.useState<AppliedBrandKit | null>(null);
+  const handleSendMessageWithCi = (values: Record<string, unknown>) => {
+    handleSendMessage({ ...values, brandKitId: brandKit?.id });
   };
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -306,7 +289,7 @@ export default function ChatDreamactorInput({
       <Form
         name="dreamactor-gen"
         form={form}
-        onFinish={handleSendMessage}
+        onFinish={handleSendMessageWithCi}
         autoComplete="off"
         style={{
           height: "100%",
@@ -354,6 +337,7 @@ export default function ChatDreamactorInput({
           />
 
           <PromptSection
+            kitChars={brandKit?.usedChars}
             generateType="dreamactor"
             semantic={semantic}
             placeholder={"Describe what you want to actor video...\n\nBe specific about style, lighting, mood, and details for best results."}
@@ -418,8 +402,8 @@ export default function ChatDreamactorInput({
           />
           <BrandKitSection
             semantic={semantic}
-            onCiPromptChange={setCiPrompt}
-            onActiveChange={setCiActive}
+            generateType="dreamactor"
+            onKitChange={setBrandKit}
           />
         </Flex>
 

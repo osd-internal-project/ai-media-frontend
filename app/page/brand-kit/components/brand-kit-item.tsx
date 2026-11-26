@@ -3,6 +3,7 @@ import useResponsive from "@/app/hooks/useResponsive";
 import { Modal, Tag } from "antd";
 import { BrandKitSidebarItem } from "./brand-kit-side-bar";
 import { EditOutlined, DeleteOutlined, StarFilled } from "@ant-design/icons";
+import { countLabel } from "../helpers/countLabel";
 
 interface BrandKitItemProps {
   kit: BrandKitSidebarItem & {
@@ -41,18 +42,6 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
   const dragThreshold = 60; // px to reveal delete
   const maxSwipe = -80;
   const showEditDelete = isMobile || hoveredIndex === index;
-  // Debug log for rendering
-  if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.debug('[BrandKitItem]', {
-      index,
-      kit,
-      activeIndex,
-      hoveredIndex,
-      isActive: activeIndex === index,
-      isHovered: hoveredIndex === index,
-    });
-  }
   return (
     <div style={{ position: "relative", minHeight: isMobile ? 82 : 94, marginBottom: isMobile ? 6 : 10 }}>
       {/* Swipe-to-delete background (mobile only, only show when swiped) */}
@@ -255,7 +244,7 @@ const BrandKitItem: React.FC<BrandKitItemProps> = ({
               marginTop: isMobile ? 2 : 4,
             }}
           >
-            {(kit.colorCount ?? 0)} colors · {(kit.fonts ?? 0)} fonts
+            {countLabel(kit.colorCount ?? 0, "color")}, {countLabel(kit.fonts ?? 0, "font")}
           </div>
         </div>
          

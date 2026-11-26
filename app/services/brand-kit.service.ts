@@ -1,6 +1,20 @@
 import { AxiosInstance } from "axios";
 import type { TBrandKit } from "../common/brand-kit";
 
+/** One row of GET /brand-kit/:id/prompt-preview: what the kit adds for one model. */
+export interface TBrandPromptPreview {
+  modelId: number;
+  modelType: string;
+  name: string | null;
+  type: string;
+  promptMaxChars: number;
+  brandKitBudget: number;
+  text: string;
+  avoid: string;
+  usedChars: number;
+  dropped: string[];
+}
+
 const BrandKitServices = (axiosInstance: AxiosInstance) => {
   const baseUrl = "/brand-kit";
   return {
@@ -42,6 +56,19 @@ const BrandKitServices = (axiosInstance: AxiosInstance) => {
     findById: async (id: string) => {
       return await axiosInstance
         .get(`${baseUrl}/${id}`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return;
+        });
+    },
+    promptPreview: async (
+      id: string,
+    ): Promise<TBrandPromptPreview[] | undefined> => {
+      return await axiosInstance
+        .get(`${baseUrl}/${id}/prompt-preview`)
         .then((res) => {
           return res.data;
         })

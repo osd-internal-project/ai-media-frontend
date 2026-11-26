@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import BrandKitServices from "@/app/services/brand-kit.service";
+import Link from "next/link";
+import BrandKitServices, {
+  type TBrandPromptPreview,
+} from "@/app/services/brand-kit.service";
+import type { TBrandKit } from "@/app/common/brand-kit";
 import { axiosCore } from "@/app/lib/axios/axios";
 import { Card, Flex, Typography, Switch } from "antd";
 import { useThemeMode } from "@/app/components/ThemeProvider";
@@ -13,125 +17,73 @@ import {
 
 const { Text } = Typography;
 
+/** The kit a generation will use, and how many prompt characters it takes (separator included). */
+export type AppliedBrandKit = { id: string; usedChars: number };
+
 type Props = {
   semantic: Record<string, any>;
   children?: React.ReactNode;
   style?: React.CSSProperties;
-  onCiPromptChange?: (ciPrompt: string) => void;
-  onActiveChange?: (active: boolean) => void;
+  /** backend model type of this form: image | video | omnihumen | dreamactor */
+  generateType: string;
+  /** null when the switch is off or the organization has no default kit */
+  onKitChange?: (kit: AppliedBrandKit | null) => void;
 };
+
+// "\n\n" the backend puts between the user's prompt and the kit's text
+const SEPARATOR_CHARS = 2;
 
 export default function BrandKitSection({
   semantic,
-  children,
-  style,
-  onCiPromptChange,
-  onActiveChange,
+  generateType,
+  onKitChange,
 }: Props) {
   const { data: session } = useSession();
-  const [active, setActive] = React.useState(false);
-  const [brandKit, setBrandKit] = useState<any>(null);
-  const [parsedColors, setParsedColors] = useState<string[]>([]);
-  const [parsedFonts, setParsedFonts] = useState<{ name: string; weight: number; type: string }[]>([]);
+  const organizationId = session?.user?.organizationId;
+  const [active, setActive] = useState(false);
+  const [brandKit, setBrandKit] = useState<TBrandKit | null>(null);
+  const [preview, setPreview] = useState<TBrandPromptPreview | null>(null);
 
+  // The organization's default kit, loaded whether or not the switch is on so the row never shows a made-up name
   useEffect(() => {
     let cancelled = false;
-
-    if (!active) {
-      setBrandKit(null);
-      setParsedColors([]);
-      setParsedFonts([]);
-      if (typeof onCiPromptChange === 'function') onCiPromptChange("");
-      return;
-    }
-
-    const brandKitService = BrandKitServices(axiosCore);
-    const organizationId = session?.user?.organizationId;
-
-    const loadBrandKit = async () => {
-      try {
-        let kit: any = null;
-
-        if (organizationId) {
-          kit = await brandKitService.getDefaultByOrganizationId(organizationId);
-        }
-
-        if (!kit) {
-          const data = await brandKitService.findAll();
-          if (Array.isArray(data) && data.length > 0) {
-            kit = data[0];
-          }
-        }
-
-        if (!kit) {
-          if (!cancelled) {
-            setBrandKit(null);
-            setParsedColors([]);
-            setParsedFonts([]);
-            if (typeof onCiPromptChange === 'function') onCiPromptChange("");
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setBrandKit(kit);
-        }
-
-        // Parse colors from brandCiPrompt
-        let colors: string[] = [];
-        let fonts: { name: string; weight: number; type: string }[] = [];
-        let ciPrompt = "";
-        if (typeof kit.brandCiPrompt === 'string') {
-          ciPrompt = kit.brandCiPrompt;
-          // Parse colors
-          if (kit.brandCiPrompt.includes('Brand colors:')) {
-            const colorSection = kit.brandCiPrompt.split('Brand colors:')[1]?.split('Fonts:')[0] || '';
-            const hexMatches = [...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g)];
-            colors = hexMatches.map(m => '#' + m[1]);
-          }
-          // Parse fonts
-          if (kit.brandCiPrompt.includes('Fonts:')) {
-            const fontSection = kit.brandCiPrompt.split('Fonts:')[1] || '';
-            const fontMatches = [...fontSection.matchAll(/([^,\n]+)\s*\(([^)]*)\)/g)];
-            fontMatches.forEach((m) => {
-              let type = 'body', weight = 400;
-              if (m[2]) {
-                const typeMatch = m[2].match(/(heading\d?|body|caption|paragraph)/i);
-                if (typeMatch) type = typeMatch[1].toLowerCase();
-                const weightMatch = m[2].match(/weight\s*(\d+)/i);
-                if (weightMatch) weight = Number(weightMatch[1]);
-              }
-              fonts.push({ name: m[1].trim(), type, weight });
-            });
-          }
-        }
-
-        if (!cancelled) {
-          setParsedColors(colors);
-          setParsedFonts(fonts);
-          if (active && typeof onCiPromptChange === 'function') onCiPromptChange(ciPrompt);
-        }
-      } catch {
-        if (!cancelled) {
-          setBrandKit(null);
-          setParsedColors([]);
-          setParsedFonts([]);
-          if (typeof onCiPromptChange === 'function') onCiPromptChange("");
-        }
-      }
+    const load = async () => {
+      if (!organizationId) return;
+      const service = BrandKitServices(axiosCore);
+      const kits = await service.findByOrganizationId(organizationId);
+      const kit = kits?.find((k) => k.isDefault ?? k.default) ?? null;
+      const rows = kit ? await service.promptPreview(kit.id) : undefined;
+      if (cancelled) return;
+      setBrandKit(kit);
+      // shortcut: the longest text among this tab's models, so the counter never under-reports; pass the selected model when forms expose it
+      setPreview(
+        (rows ?? [])
+          .filter((row) => row.type === generateType)
+          .sort((a, b) => b.usedChars - a.usedChars)[0] ?? null,
+      );
     };
-
-    loadBrandKit();
-
+    load();
     return () => {
       cancelled = true;
     };
-  }, [active, session?.user?.organizationId]);
+  }, [organizationId, generateType]);
 
-  // Notify parent when active changes
+  const kitId = brandKit?.id;
+  const usedChars = preview?.usedChars ?? 0;
   useEffect(() => {
-    if (typeof onActiveChange === 'function') onActiveChange(active);
-  }, [active]);
+    onKitChange?.(
+      active && kitId
+        ? { id: kitId, usedChars: usedChars ? usedChars + SEPARATOR_CHARS : 0 }
+        : null,
+    );
+    // onKitChange is a state setter in every form; listing it would re-fire on each parent render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, kitId, usedChars]);
+
+  const parsedColors = (brandKit?.brandKitDetails ?? [])
+    .filter((d) => d.type === "colors")
+    .map((d) => (d.detail && "hex" in d.detail ? d.detail.hex : ""))
+    .filter(Boolean);
 
   const { mode } = useThemeMode();
   // Dark keeps the original hand-tuned values; light reads theme tokens.
@@ -198,7 +150,13 @@ export default function BrandKitSection({
         >
           Brand kit
         </Text>
-        <Switch checked={active} onChange={setActive} size="small" />
+        <Switch
+          checked={active && Boolean(brandKit)}
+          disabled={!brandKit}
+          onChange={setActive}
+          size="small"
+          aria-label="Use brand kit"
+        />
       </Flex>
 
       <Card
@@ -230,8 +188,8 @@ export default function BrandKitSection({
             </Flex>
 
             <Flex align="center" gap={6}>
-              {parsedColors.slice(0, 3).map((color) => (
-                <div key={color} style={colorDotStyle(color)} />
+              {parsedColors.slice(0, 3).map((color, index) => (
+                <div key={`${color}-${index}`} style={colorDotStyle(color)} />
               ))}
             </Flex>
 
@@ -244,20 +202,26 @@ export default function BrandKitSection({
                 minWidth: 0,
               }}
             >
-              {brandKit?.name || 'AI Cave — Main Brand'}
+              {brandKit?.name ?? "No brand kit"}
             </Text>
           </Flex>
 
-          <StarFilled
-            style={{
-              color: c.accent,
-              fontSize: 14,
-              flexShrink: 0,
-            }}
-          />
+          {brandKit ? (
+            <StarFilled
+              style={{
+                color: c.accent,
+                fontSize: 14,
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <Link href="/page/brand-kit" style={{ fontSize: 12, flexShrink: 0 }}>
+              Set one up
+            </Link>
+          )}
         </Flex>
 
-        {active ? (
+        {!brandKit ? null : active ? (
           <Flex vertical gap={12} style={{ marginTop: 12 }}>
             <Flex vertical gap={8}>
               <Text
@@ -271,8 +235,8 @@ export default function BrandKitSection({
               </Text>
 
               <Flex align="center" gap={8} wrap="wrap">
-                {parsedColors.map((color) => (
-                  <div key={color} style={colorDotStyle(color)} />
+                {parsedColors.map((color, index) => (
+                  <div key={`${color}-${index}`} style={colorDotStyle(color)} />
                 ))}
               </Flex>
             </Flex>
@@ -299,7 +263,7 @@ export default function BrandKitSection({
                       fontWeight: 500,
                     }}
                   >
-                    CI Prompt (injected)
+                    Brand Prompt
                   </Text>
                 </Flex>
                 <Text
@@ -312,20 +276,16 @@ export default function BrandKitSection({
                     whiteSpace: "pre-line",
                   }}
                 >
-                  {brandKit?.brandCiPrompt || ''}
+                  {preview?.text || "This kit has nothing to add yet."}
                 </Text>
               </Flex>
             </div>
 
-            <Text
-              ellipsis
-              style={{
-                color: c.avoid,
-                fontSize: 11,
-              }}
-            >
-              × Avoid: {brandKit?.negativePrompt || 'cluttered, low quality, vintage, retro, oversaturated visuals'}
-            </Text>
+            {preview && preview.dropped.length > 0 && (
+              <Text style={{ color: c.avoid, fontSize: 12 }}>
+                Left out to fit this model: {preview.dropped.join(", ")}
+              </Text>
+            )}
           </Flex>
         ) : (
           <Flex
@@ -345,7 +305,7 @@ export default function BrandKitSection({
             }}
           >
             <Text style={{ color: c.boxText, fontSize: 13, fontWeight: 500 }}>
-              Enable to inject brand CI into every generation
+              Turn on to keep this generation on brand
             </Text>
           </Flex>
         )}

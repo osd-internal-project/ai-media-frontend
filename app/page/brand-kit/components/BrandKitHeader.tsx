@@ -1,4 +1,4 @@
-import { Row, Col, Divider, Tabs, Button, Typography, Space, Tooltip } from "antd";
+import { Row, Col, Divider, Tabs, Button, Typography, Space, Tag } from "antd";
 import { StarOutlined, BgColorsOutlined, FontSizeOutlined, BranchesOutlined, StarFilled, PictureOutlined, MessageOutlined } from "@ant-design/icons";
 import React from "react";
 
@@ -90,37 +90,32 @@ const BrandKitHeader: React.FC<BrandKitHeaderProps> = ({
         </div>
       </Col>
       <Col>
-        <Tooltip
-          title={
-            isDefaultKit
-              ? "This is already the default brand kit"
-              : "Set this brand kit as default"
-          }
-        >
+        {isDefaultKit ? (
+          <Tag
+            color="warning"
+            icon={<StarFilled />}
+            style={{ marginInlineEnd: 0, fontSize: 12 }}
+          >
+            Default
+          </Tag>
+        ) : (
           <Button
             className="brandkit-header-action"
             type="default"
-            icon={
-              isDefaultKit ? (
-                <StarFilled style={{ color: "#f59e0b" }} />
-              ) : (
-                <StarOutlined style={{ color: semantic.colorTextSecondary }} />
-              )
-            }
+            icon={<StarOutlined style={{ color: semantic.colorTextSecondary }} />}
             loading={setDefaultLoading}
-            disabled={isDefaultKit || !selectedKit?.id}
+            disabled={!selectedKit?.id}
             onClick={onSetDefault}
             style={{
-              fontSize: isMobile ? 11 : isTablet ? 12 : 14,
+              fontSize: isMobile ? 12 : 14,
               height: isMobile ? 24 : isTablet ? 28 : 32,
               padding: isMobile ? "0 8px" : isTablet ? "0 10px" : undefined,
-              minWidth: isMobile ? 92 : isTablet ? 112 : 126,
             }}
             size={isMobile || isTablet ? "small" : "middle"}
           >
-            {isMobile ? "Default" : "Default Kit"}
+            Set as default
           </Button>
-        </Tooltip>
+        )}
       </Col>
     </Row>
     <Divider style={{ margin: isMobile ? "6px 0 0 0" : isTablet ? "10px 0 0 0" : "12px 0 0 0", width: "100%", maxWidth: "100%", color: `${semantic.colorBorder}` }} />

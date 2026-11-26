@@ -41,6 +41,8 @@ export interface VideoFormState {
 
 /** The payload emitted to socket "generate:video" */
 export interface VideoGeneratePayload {
+  /** kit the backend adds to the prompt; omitted = no brand kit */
+  brandKitId?: string;
   taskId: string;
   model: string | undefined;
   prompt: string;
@@ -104,6 +106,8 @@ export interface ImageFormState {
 }
 
 export interface ImageGeneratePayload {
+  /** kit the backend adds to the prompt; omitted = no brand kit */
+  brandKitId?: string;
   taskId: string;
   model: string | undefined;
   prompt: string;
@@ -154,6 +158,8 @@ export interface OmniFormState {
 }
 
 export interface OmniGeneratePayload {
+  /** kit the backend adds to the prompt; omitted = no brand kit */
+  brandKitId?: string;
   taskId: string;
   model: string | undefined;
   prompt: string;
@@ -199,6 +205,8 @@ export interface DreamactorFormState {
 }
 
 export interface DreamactorGeneratePayload {
+  /** kit the backend adds to the prompt; omitted = no brand kit */
+  brandKitId?: string;
   taskId: string;
   model: string | undefined;
   prompt: string;

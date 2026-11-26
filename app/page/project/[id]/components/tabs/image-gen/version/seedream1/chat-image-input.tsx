@@ -22,19 +22,10 @@ import { PROMPT_MAX_LENGTH } from "@/app/config/prompt";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
 import Quata from "@/app/page/project/component/quata";
-import BrandKitSection from "../../../../tab-layout/generate-section/brand-kit-section";
+import BrandKitSection, {
+  type AppliedBrandKit,
+} from "../../../../tab-layout/generate-section/brand-kit-section";
 
-// Helper to join CI prompt and main prompt with connector
-function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
-  if (!mainPrompt) return ciPrompt;
-  if (!ciPrompt) return mainPrompt;
-  // Main prompt first, then CI prompt with connector
-  return (
-    mainPrompt.trim() +
-    "\n\n---\n(BrandKit Prompt: ส่วนเสริมจาก BrandKit)\n" +
-    ciPrompt.trim()
-  );
-}
 type Props = {
   setGroupMode: (groupMode: string | undefined) => void;
   groupMode: string;
@@ -218,18 +209,10 @@ export default function ChatImageInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolutionOptions]);
 
-  // State to get CI prompt and active from BrandKitSection
-  const [ciPrompt, setCiPrompt] = React.useState<string>("");
-  const [ciActive, setCiActive] = React.useState<boolean>(true);
-
-  // Custom handleSendMessage to combine CI prompt and main prompt
-  const handleSendMessageWithCi = (values: any) => {
-    let prompt = values.prompt || "";
-    if (ciActive && ciPrompt) {
-      prompt = joinCiPrompt(ciPrompt, prompt);
-    }
-    // Pass the combined prompt to the original handler
-    handleSendMessage({ ...values, prompt });
+  // Kit applied to this generation; the backend composes its text (null = switch off or no default kit)
+  const [brandKit, setBrandKit] = React.useState<AppliedBrandKit | null>(null);
+  const handleSendMessageWithCi = (values: Record<string, unknown>) => {
+    handleSendMessage({ ...values, brandKitId: brandKit?.id });
   };
 
   return (
@@ -285,6 +268,7 @@ export default function ChatImageInput({
           />
 
           <PromptSection
+            kitChars={brandKit?.usedChars}
             generateType="image"
             semantic={semantic}
             placeholder={"Describe what you want to create...\n\nBe specific about style, lighting, mood, and details for best results."}
@@ -323,8 +307,8 @@ export default function ChatImageInput({
           />
           <BrandKitSection
             semantic={semantic}
-            onCiPromptChange={setCiPrompt}
-            onActiveChange={setCiActive}
+            generateType="image"
+            onKitChange={setBrandKit}
           />
         </Flex>
 

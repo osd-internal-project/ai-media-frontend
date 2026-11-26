@@ -41,7 +41,9 @@ import PromptSection from "./prompt-section";
 import { TMasterModelType } from "@/app/common/master-model-type.type";
 import PromptTemplateSection from "../../../../tab-layout/generate-section/prompt-template-section";
 import SettingSection from "../../../../tab-layout/generate-section/setting-section";
-import BrandKitSection from "../../../../tab-layout/generate-section/brand-kit-section";
+import BrandKitSection, {
+  type AppliedBrandKit,
+} from "../../../../tab-layout/generate-section/brand-kit-section";
 
 type Props = {
   setSelectedRatio: (ratio: string) => void;
@@ -122,31 +124,11 @@ export default function ChatVideoInput(props: Props) {
     projectId,
   } = props;
 
-  // Helper to join CI prompt and main prompt with connector
-  function joinCiPrompt(ciPrompt: string, mainPrompt: string): string {
-    if (!mainPrompt) return ciPrompt;
-    if (!ciPrompt) return mainPrompt;
-    // Main prompt first, then CI prompt with connector
-    return (
-      mainPrompt.trim() +
-      "\n\n---\n(BrandKit Prompt: " +
-      "\u0e2b\u0e25\u0e31\u0e07\u0e08\u0e32\u0e01 BrandKit)\n" +
-      ciPrompt.trim()
-    );
-  }
 
-  // State to get CI prompt and active from BrandKitSection
-  const [ciPrompt, setCiPrompt] = React.useState<string>("");
-  const [ciActive, setCiActive] = React.useState<boolean>(true);
-
-  // Custom handleSendMessage to combine CI prompt and main prompt
-  const handleSendMessageWithCi = (values: any) => {
-    let prompt = values.prompt || "";
-    if (ciActive && ciPrompt) {
-      prompt = joinCiPrompt(ciPrompt, prompt);
-    }
-    // Pass the combined prompt to the original handler
-    handleSendMessage({ ...values, prompt });
+  // Kit applied to this generation; the backend composes its text (null = switch off or no default kit)
+  const [brandKit, setBrandKit] = React.useState<AppliedBrandKit | null>(null);
+  const handleSendMessageWithCi = (values: Record<string, unknown>) => {
+    handleSendMessage({ ...values, brandKitId: brandKit?.id });
   };
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
@@ -460,6 +442,7 @@ export default function ChatVideoInput(props: Props) {
             }
           />
           <PromptSection
+            kitChars={brandKit?.usedChars}
             generateType="video"
             semantic={semantic}
             placeholder="Describe what you want to create... Be specific about style, lighting, mood, and details for best results.  Use @ to reference upload files ,such as @image1, @image2, @video1, @audio1"
@@ -568,8 +551,8 @@ export default function ChatVideoInput(props: Props) {
           />
           <BrandKitSection
             semantic={semantic}
-            onCiPromptChange={setCiPrompt}
-            onActiveChange={setCiActive}
+            generateType="video"
+            onKitChange={setBrandKit}
           />
         </Flex>
 

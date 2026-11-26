@@ -4,8 +4,6 @@ import React, { useEffect, useState } from "react";
 import { isColorDetail } from "./helpers/isColorDetail";
 import { isTypographyDetail } from "./helpers/isTypographyDetail";
 import { autoGenerateCIPrompt } from "./helpers/autoGenerateCIPrompt";
-import { extractHexColors } from "./helpers/extractHexColors";
-import { extractFontNames } from "./helpers/extractFontNames";
 import { useSession } from "next-auth/react";
 
 import "./styles/style.css";
@@ -29,6 +27,24 @@ import { Drawer } from "antd";
 import { Modal, Form as AntForm } from "antd";
 import ColorTab from "./components/tabs/color/color-tab";
 import type { TBrandKitDetail } from "@/app/common/brand-kit";
+
+/** Sidebar row for a kit, counted from its saved records instead of parsed out of prompt text. */
+const toSidebarKit = (kit: TBrandKit) => {
+  const details = kit.brandKitDetails ?? [];
+  const colors = details
+    .filter((d) => d.type === "colors")
+    .map((d) => ({ hex: d.detail && "hex" in d.detail ? d.detail.hex : "" }))
+    .filter((c) => c.hex);
+  return {
+    id: kit.id,
+    name: kit.name,
+    industry: kit.industryType,
+    isDefault: Boolean(kit.isDefault ?? kit.default),
+    colors: colors.slice(0, 3),
+    colorCount: colors.length,
+    fonts: details.filter((d) => d.type === "typography").length,
+  };
+};
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import { useThemeMode } from "@/app/components/ThemeProvider";
 import { getCanvasBg } from "@/app/theme/themeConfig";
@@ -36,7 +52,6 @@ import { Divide, Palette } from "lucide-react";
 import TypographyTab from "./components/tabs/typography/typography-tab";
 import LogoTab from "./components/tabs/logo/logo-tab";
 import { type LogoModalValues } from "./components/tabs/logo/logo-modal";
-import BrandVoiceTab from "./components/tabs/brand-voice/brand-voice";
 
 import CIPromptTab from "./components/tabs/ci-prompt/ci-prompt";
 import BrandKitForm from "./components/brand-kit-form";
@@ -61,6 +76,7 @@ export default function BrandKitPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarColumnVisible, setIsSidebarColumnVisible] = useState(true);
   const { data: session } = useSession();
+  const organizationId = session?.user?.organizationId;
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedTab, setSelectedTab] = useState<string>("colors");
   // Unified modal state for create/edit
@@ -72,7 +88,6 @@ export default function BrandKitPage() {
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [logoFormMode, setLogoFormMode] = useState<"create" | "edit">("create");
   const [editingLogoId, setEditingLogoId] = useState<string | null>(null);
-  const [voiceFormLoading, setVoiceFormLoading] = useState(false);
   const [logoInitialValues, setLogoInitialValues] = useState<Partial<LogoModalValues>>({
     name: "",
     url: "",
@@ -89,13 +104,16 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
   
  const brandKitService = BrandKitServices(axiosCore);
       // Fetch all brand kits on mount
+  // Only the signed-in organization's kits; the backend refuses any other organization
+  const loadKits = async () =>
+    organizationId ? brandKitService.findByOrganizationId(organizationId) : [];
             useEffect(() => {
               const fetchBrandKits = async () => {
-                const kits = await brandKitService.findAll();
+                const kits = await loadKits();
                 if (kits) setBrandKits(kits);
               };
               fetchBrandKits();
-            }, []);
+            }, [organizationId]);
   
   const [selectedKitIndex, setSelectedKitIndex] = useState(0);
   const selectedKit = brandKits[selectedKitIndex] || {};
@@ -108,7 +126,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
   // CI Prompt state (from brand kit, not detail)
   const [ciPrompt, setCiPrompt] = useState<string>("");
   const [negativePrompt, setNegativePrompt] = useState<string>("");
-  const [voicePromptByKit, setVoicePromptByKit] = useState<Record<string, string>>({});
   // Loading state for tab content
   const [tabLoading, setTabLoading] = useState(false);
   const [setDefaultLoading, setSetDefaultLoading] = useState(false);
@@ -164,13 +181,14 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     const res = await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id);
     setColors(res || []);
     // auto-generate and PATCH CI Prompt
+    const savedFonts = (await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id)) || [];
     const prompt = autoGenerateCIPrompt({
       colors: (res || []).map(c => {
         return isColorDetail(c.detail)
           ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
           : { name: c.name, hex: '', type: '' };
       }),
-      fonts: typography.map(t => {
+      fonts: savedFonts.map(t => {
         const detail = t.detail && t.type === "typography" ? t.detail : undefined;
         return isTypographyDetail(detail)
           ? { name: t.name, weight: detail.weight ? Number(detail.weight) : 400, type: detail.type?.toLowerCase?.() || "body" }
@@ -180,7 +198,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
     setCiPrompt(prompt);
     // Smoothly refresh all brand kits for sidebar
-    const kits = await brandKitService.findAll();
+    const kits = await loadKits();
     if (kits) {
       kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setBrandKits(kits);
@@ -214,8 +232,9 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       const typoRes = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id);
       setTypography(typoRes || []);
       // auto-generate and PATCH CI Prompt
+      const savedColors = (await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id)) || [];
       const prompt = autoGenerateCIPrompt({
-        colors: colors.map(c => {
+        colors: savedColors.map(c => {
           return isColorDetail(c.detail)
             ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
             : { name: c.name, hex: '', type: '' };
@@ -230,7 +249,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
       setCiPrompt(prompt);
       // Smoothly refresh all brand kits for sidebar
-      const kits = await brandKitService.findAll();
+      const kits = await loadKits();
       if (kits) setBrandKits(kits);
     }
   };
@@ -244,8 +263,9 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       setTypography(typoRes || []);
       messageApi.success("Font deleted!");
       // auto-generate and PATCH CI Prompt
+      const savedColors = (await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id)) || [];
       const prompt = autoGenerateCIPrompt({
-        colors: colors.map(c => {
+        colors: savedColors.map(c => {
           return isColorDetail(c.detail)
             ? { name: c.name, hex: c.detail.hex, type: c.detail.type }
             : { name: c.name, hex: '', type: '' };
@@ -260,7 +280,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
       await brandKitService.update(selectedKit.id, { brandCiPrompt: prompt });
       setCiPrompt(prompt);
       // Smoothly refresh all brand kits for sidebar
-      const kits = await brandKitService.findAll();
+      const kits = await loadKits();
       if (kits) setBrandKits(kits);
     } else {
       messageApi.error("Failed to delete font");
@@ -371,34 +391,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     messageApi.success("Logo deleted!");
   };
 
-  const handleSaveVoice = async (values: {
-    prompt: string;
-    toneProfile: {
-      formalCasual: number;
-      professionalFriendly: number;
-      conservativeBold: number;
-      seriousPlayful: number;
-    };
-    keywords: string[];
-  }) => {
-    if (!selectedKit.id) return;
-
-    try {
-      setVoiceFormLoading(true);
-
-      setVoicePromptByKit((prev) => ({
-        ...prev,
-        [selectedKit.id]: values.prompt,
-      }));
-
-      messageApi.success("Brand voice saved!");
-    } catch {
-      messageApi.error("Failed to save brand voice settings");
-    } finally {
-      setVoiceFormLoading(false);
-    }
-  };
-
   // ...helpers moved to ./helpers/index.ts...
 
   // Update CI Prompt/NegativePrompt from CI tab (manual edit)
@@ -408,88 +400,12 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
     setCiPrompt(ci);
     setNegativePrompt(negative);
 
-    // Extract color/font from prompt and compare with current
-    const extractedColors = extractHexColors(ci);
-    const extractedFonts = extractFontNames(ci);
-    const currentColors = await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id) || [];
-    const currentFonts = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id) || [];
-    function isColorDetail(detail: any): detail is import("@/app/common/brand-kit").TBrandKitDetailColor {
-      return detail && typeof detail.hex === 'string';
+    const kits = await loadKits();
+    if (kits) {
+      kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setBrandKits(kits);
     }
-    const currentHexes = new Set(currentColors.map(c => isColorDetail(c.detail) ? c.detail.hex.toLowerCase() : ''));
-    const promptHexes = new Set(extractedColors.map(c => c.hex.toLowerCase()));
-    const currentFontNames = new Set(currentFonts.map(f => f.name.trim().toLowerCase()));
-    const promptFontNames = new Set(extractedFonts.map(f => f.name.trim().toLowerCase()));
-
-    // Check if color/font in prompt is different from current
-    const colorChanged =
-      extractedColors.length !== currentColors.length ||
-      [...promptHexes].some(hex => !currentHexes.has(hex)) ||
-      [...currentHexes].some(hex => !promptHexes.has(hex));
-    const fontChanged =
-      extractedFonts.length !== currentFonts.length ||
-      [...promptFontNames].some(name => !currentFontNames.has(name)) ||
-      [...currentFontNames].some(name => !promptFontNames.has(name));
-
-    if (colorChanged || fontChanged) {
-      // --- SYNC COLORS ---
-      // Add new colors from prompt
-      for (const hex of promptHexes) {
-        if (!currentHexes.has(hex)) {
-          await brandKitDetailService.create({
-            name: '',
-            type: 'colors',
-            detail: { hex, type: 'primary' },
-            brandKitId: selectedKit.id
-          });
-        }
-      }
-      // Delete colors not in prompt
-      for (const c of currentColors) {
-        const hex = isColorDetail(c.detail) ? c.detail.hex.toLowerCase() : '';
-        if (hex && !promptHexes.has(hex)) {
-          await brandKitDetailService.del(c.id);
-        }
-      }
-      // --- SYNC FONTS ---
-      for (const f of extractedFonts) {
-        const name = f.name.trim().toLowerCase();
-        if (!currentFontNames.has(name)) {
-          await brandKitDetailService.create({
-            name: f.name,
-            type: 'typography',
-            detail: { weight: '400', type: 'Body', preview: '' },
-            brandKitId: selectedKit.id
-          });
-        }
-      }
-      for (const f of currentFonts) {
-        const name = f.name.trim().toLowerCase();
-        if (!promptFontNames.has(name)) {
-          await brandKitDetailService.del(f.id);
-        }
-      }
-      // Refresh state from backend
-      const newColors = await brandKitDetailService.findByTypeAndBrandKitId("colors", selectedKit.id);
-      setColors(newColors || []);
-      const newFonts = await brandKitDetailService.findByTypeAndBrandKitId("typography", selectedKit.id);
-      setTypography(newFonts || []);
-      // Smoothly refresh all brand kits for sidebar
-      const kits = await brandKitService.findAll();
-      if (kits) {
-        kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setBrandKits(kits);
-      }
-      messageApi.success("CI updated and synced");
-    } else {
-      // Only update CI/negativePrompt and sidebar
-      const kits = await brandKitService.findAll();
-      if (kits) {
-        kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setBrandKits(kits);
-      }
-      messageApi.success("CI updated");
-    }
+    messageApi.success("Brand Prompt saved");
   };
 
   const handleSetDefaultBrandKit = async () => {
@@ -563,52 +479,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                 animation: "brandkitMobilePanelIn 260ms ease",
               }}
               onClose={() => setSidebarOpen(false)}
-              brandKits={brandKits.map((kit) => {
-                let colors: { hex: string }[] = [];
-                let colorCount = 0;
-                let fonts = 0;
-
-                if (
-                  typeof kit.brandCiPrompt === "string" &&
-                  kit.brandCiPrompt.includes("Brand colors:")
-                ) {
-                  const colorSection =
-                    kit.brandCiPrompt.split("Brand colors:")[1]?.split("Fonts:")[0] || "";
-
-                  const hexMatches = [
-                    ...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g),
-                  ];
-
-                  colors = hexMatches.map((m) => ({ hex: "#" + m[1] })).slice(0, 3);
-                  colorCount = hexMatches.length;
-                }
-
-                if (
-                  typeof kit.brandCiPrompt === "string" &&
-                  kit.brandCiPrompt.includes("Fonts:")
-                ) {
-                  const fontSection = kit.brandCiPrompt.split("Fonts:")[1] || "";
-                  const fontMatches = [
-                    ...fontSection.matchAll(/([^,\n]+\([^\)]*\))/g),
-                  ];
-                  fonts =
-                    fontMatches.length > 0
-                      ? fontMatches.length
-                      : fontSection.trim()
-                      ? 1
-                      : 0;
-                }
-
-                return {
-                  id: kit.id,
-                  name: kit.name,
-                  industry: kit.industryType,
-                  isDefault: Boolean((kit as any).isDefault ?? (kit as any).default),
-                  colors,
-                  fonts,
-                  colorCount,
-                };
-              })}
+              brandKits={brandKits.map(toSidebarKit)}
               activeIndex={selectedKitIndex}
               onChangeIndex={(idx) => {
                 setSelectedKitIndex(idx);
@@ -710,52 +581,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
             }}
           >
             <BrandKitSidebar
-              brandKits={brandKits.map((kit) => {
-                let colors: { hex: string }[] = [];
-                let colorCount = 0;
-                let fonts = 0;
-
-                if (
-                  typeof kit.brandCiPrompt === "string" &&
-                  kit.brandCiPrompt.includes("Brand colors:")
-                ) {
-                  const colorSection =
-                    kit.brandCiPrompt.split("Brand colors:")[1]?.split("Fonts:")[0] || "";
-
-                  const hexMatches = [
-                    ...colorSection.matchAll(/#([0-9a-fA-F]{3,8})/g),
-                  ];
-
-                  colors = hexMatches.map((m) => ({ hex: "#" + m[1] })).slice(0, 3);
-                  colorCount = hexMatches.length;
-                }
-
-                if (
-                  typeof kit.brandCiPrompt === "string" &&
-                  kit.brandCiPrompt.includes("Fonts:")
-                ) {
-                  const fontSection = kit.brandCiPrompt.split("Fonts:")[1] || "";
-                  const fontMatches = [
-                    ...fontSection.matchAll(/([^,\n]+\([^\)]*\))/g),
-                  ];
-                  fonts =
-                    fontMatches.length > 0
-                      ? fontMatches.length
-                      : fontSection.trim()
-                      ? 1
-                      : 0;
-                }
-
-                return {
-                  id: kit.id,
-                  name: kit.name,
-                  industry: kit.industryType,
-                  isDefault: Boolean((kit as any).isDefault ?? (kit as any).default),
-                  colors,
-                  fonts,
-                  colorCount,
-                };
-              })}
+              brandKits={brandKits.map(toSidebarKit)}
               activeIndex={selectedKitIndex}
               onChangeIndex={setSelectedKitIndex}
               onCreateKit={() => {
@@ -897,8 +723,7 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                   colors.length === 0 &&
                   typography.length === 0 &&
                   logos.length === 0 &&
-                  ciPrompt.length === 0 &&
-                  !(voicePromptByKit[selectedKit.id] || "").trim();
+                  ciPrompt.length === 0;
                 if (selectedTab === "colors") {
                   // Type guard for color detail
                   function isColorDetail(detail: any): detail is { hex: string; type: string } {
@@ -1009,15 +834,6 @@ const [brandKits, setBrandKits] = useState<TBrandKit[]>([]);
                       onChange={updateCI}
                       colors={parsedColors}
                       fonts={parsedFonts}
-                    />
-                  );
-                }
-                if (selectedTab === "voice") {
-                  return (
-                    <BrandVoiceTab
-                      initialPrompt={voicePromptByKit[selectedKit.id] || ""}
-                      saving={voiceFormLoading}
-                      onSaveVoice={handleSaveVoice}
                     />
                   );
                 }

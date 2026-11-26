@@ -1255,11 +1255,16 @@ const ChatGenerateVideo: FC<Props> = ({
     const computedFiles = await buildFileRefs(refImage);
 
     const state = buildCurrentState(computedFiles);
-    const socketPayload = modelConfig.buildSubmitPayload(
-      values as Record<string, unknown>,
-      state,
-      tempTask,
-    );
+    const socketPayload = {
+      ...modelConfig.buildSubmitPayload(
+        values as Record<string, unknown>,
+        state,
+        tempTask,
+      ),
+      brandKitId: (values as Record<string, unknown>).brandKitId as
+        | string
+        | undefined,
+    };
 
     const valuesTyped = values as Record<string, unknown>;
     const tempMessage: Message = {

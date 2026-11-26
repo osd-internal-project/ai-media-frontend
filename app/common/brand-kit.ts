@@ -10,6 +10,8 @@ export interface TBrandKit {
   brandCiPrompt: string;
   negativePrompt: string;
   organizationId: string;
+  /** present on the by-organization and by-id responses */
+  brandKitDetails?: TBrandKitDetail[];
 }
 
 export interface TBrandKitDetail {

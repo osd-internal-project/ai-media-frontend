@@ -5,6 +5,7 @@ import { Palette, PlusIcon } from "lucide-react";
 import ColorModal from "./color-modal";
 import BrandKitDetailServices from "@/app/services/brand-kit-detail.service";
 import useResponsive from "@/app/hooks/useResponsive";
+import { countLabel } from "../../../helpers/countLabel";
 
 const { Text } = Typography;
 
@@ -204,7 +205,7 @@ const ColorTab: React.FC<ColorTabProps> = ({ colors, brandKitId, axiosCore, onCo
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
         <Text style={{ color: semantic.colorTextSecondary, fontSize: isMobile ? 12 : 13 }}>
-          {colors.length} colors defined · click swatch to copy hex
+          {countLabel(colors.length, "color")} defined · click swatch to copy hex
         </Text>
         <Button className="color-tab-action" type="default" size={isMobile ? "small" : "middle"} icon={<PlusIcon size={isMobile ? 14 : 16} />} onClick={handleAddColor}>
           {isMobile ? "Add" : "Add Color"}

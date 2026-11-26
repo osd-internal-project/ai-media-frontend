@@ -1009,11 +1009,10 @@ const ChatGenerateImage: FC<
       organizationId: session?.user?.organizationId ?? undefined,
       username: username || "",
     };
-    const message = modelConfig.buildSubmitPayload(
-      values,
-      state,
-      currentTaskId,
-    );
+    const message = {
+      ...modelConfig.buildSubmitPayload(values, state, currentTaskId),
+      brandKitId: values.brandKitId as string | undefined,
+    };
     const tempMessage = {
       id: currentTaskId,
       taskId: currentTaskId,
