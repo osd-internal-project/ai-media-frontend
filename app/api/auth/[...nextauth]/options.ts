@@ -177,9 +177,11 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account, profile }: any) {
       // 1. Google/Keycloak Login Flow
       if (account?.provider === "keycloak") {
+        // Strict false: a token without the claim keeps signing in as before.
+        if (profile?.email_verified === false) return "/error?error=email_not_verified";
         try {
           // Keycloak usually returns email in 'user.email'
           const email = user.email;

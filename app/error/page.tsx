@@ -22,6 +22,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   OAuthCallback: "Sign in was interrupted. Please try again.",
   Callback: "Sign in was interrupted. Please try again.",
   AccessDenied: "You do not have access to this application.",
+  email_not_verified:
+    "Please verify your email first. Open the link we sent to your inbox, then sign in again.",
   Configuration: "Sign in is not configured correctly. Please contact support.",
   Default: "Something went wrong while signing you in. Please try again.",
 };
