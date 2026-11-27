@@ -67,7 +67,7 @@ const SharePhotoPage = () => {
       style={{
         minHeight: "100dvh",
         background:
-          "radial-gradient(600px 480px at 0% -10%, rgba(111,106,222,0.3), transparent 60%), radial-gradient(640px 520px at 110% 110%, rgba(94,207,216,0.16), transparent 60%), #191c20",
+          "radial-gradient(600px 480px at 0% -10%, rgba(111,106,222,0.3), transparent 60%), radial-gradient(640px 520px at 110% 110%, rgba(94,207,216,0.16), transparent 60%), #0C0D24",
         color: "#f2f4f5",
         display: "flex",
         flexDirection: "column",
@@ -90,13 +90,13 @@ const SharePhotoPage = () => {
         <Result
           status="404"
           title={<span style={{ color: "#f2f4f5" }}>ไม่พบรูปภาพ · Photo not found</span>}
-          subTitle={<span style={{ color: "#8c99a9" }}>ลิงก์อาจไม่ถูกต้อง · This link may be invalid.</span>}
+          subTitle={<span style={{ color: "#A9ACD6" }}>ลิงก์อาจไม่ถูกต้อง · This link may be invalid.</span>}
         />
       ) : failed ? (
         <Result
           status="error"
           title={<span style={{ color: "#f2f4f5" }}>สร้างภาพไม่สำเร็จ · Cannot create your photo</span>}
-          subTitle={<span style={{ color: "#8c99a9" }}>โหลดหน้านี้ใหม่อีกครั้ง · Reload this page to try again.</span>}
+          subTitle={<span style={{ color: "#A9ACD6" }}>โหลดหน้านี้ใหม่อีกครั้ง · Reload this page to try again.</span>}
           extra={
             <Button type="primary" onClick={() => window.location.reload()}>
               โหลดใหม่ · Reload
@@ -133,13 +133,13 @@ const SharePhotoPage = () => {
               fontWeight: 500,
               fontSize: 17,
               border: "none",
-              background: "linear-gradient(120deg, #7b78f2 0%, #6f6ade 45%, #5ecfd8 100%)",
+              background: "linear-gradient(120deg, #7b78f2 0%, #6A61EE 45%, #5ecfd8 100%)",
               boxShadow: "0 12px 34px rgba(111,106,222,0.42)",
             }}
           >
             ดาวน์โหลดรูป · Download
           </Button>
-          <div style={{ color: "#8c99a9", fontSize: 13, textAlign: "center", maxWidth: 480, lineHeight: 1.6 }}>
+          <div style={{ color: "#A9ACD6", fontSize: 13, textAlign: "center", maxWidth: 480, lineHeight: 1.6 }}>
             iPhone: กดค้างที่รูปแล้วเลือก “บันทึกลงรูปภาพ”
             <br />
             On iPhone, press and hold the photo, then tap “Save to Photos”.

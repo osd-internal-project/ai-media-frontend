@@ -408,10 +408,10 @@ const ProjectsPage = () => {
   );
 
   const contentViewportHeight = isMobile
-    ? "calc(100svh - 54px)"
+    ? "calc(100svh - 60px)"
     : isTablet
-      ? "calc(100svh - 58px)"
-      : "calc(100svh - 62px)";
+      ? "calc(100svh - 70px)"
+      : "calc(100svh - 74px)";
 
   // ≥1200px: search, filters and view toggle join the header row, so the list starts higher.
   const searchControls = (
@@ -444,12 +444,11 @@ const ProjectsPage = () => {
                   ) : (
                     <Form.Item name="name" style={{ marginBottom: 0 }}>
                       <Input
-                        size="small"
+                        className="project-search"
                         placeholder="Search project..."
                         style={{
-                          width: isWide ? 240 : isTablet ? 220 : 380,
+                          width: isWide ? 300 : isTablet ? 260 : 380,
                           maxWidth: "100%",
-                          borderRadius: 4,
                         }}
                         prefix={
                           <SearchOutlined
@@ -482,12 +481,12 @@ const ProjectsPage = () => {
                   value={viewType}
                   onChange={(e) => setViewType(e.target.value)}
                   style={{
-                    background: "transparent",
-                    borderRadius: 8,
-                    padding: isMobile ? "1px" : isTablet ? "2px" : "3px",
+                    background: semantic.colorBgContainer,
+                    borderRadius: 999,
+                    padding: isMobile ? 2 : 3,
                     border: `1px solid ${semantic.colorBorder}`,
                     display: "flex",
-                    gap: isMobile ? 2 : isTablet ? 3 : 4,
+                    gap: 2,
                   }}
                 >
                   <Radio.Button
@@ -502,9 +501,9 @@ const ProjectsPage = () => {
                       color:
                         viewType === "list" ? "#fff" : semantic.colorTextBase,
                       borderRadius:
-                        isMobile || isTablet ? 4 : "6px 0px 0px 6px",
-                      width: isMobile ? 20 : isTablet ? 22 : 24,
-                      height: isMobile ? 20 : isTablet ? 22 : 24,
+                        10,
+                      width: isMobile ? 28 : 32,
+                      height: isMobile ? 28 : 32,
                       padding: 0,
                       border: "none",
                       transition: "background 0.2s",
@@ -529,9 +528,9 @@ const ProjectsPage = () => {
                       color:
                         viewType === "grid" ? "#fff" : semantic.colorTextBase,
                       borderRadius:
-                        isMobile || isTablet ? 4 : "0px 6px 6px 0px",
-                      width: isMobile ? 20 : isTablet ? 22 : 24,
-                      height: isMobile ? 20 : isTablet ? 22 : 24,
+                        10,
+                      width: isMobile ? 28 : 32,
+                      height: isMobile ? 28 : 32,
                       padding: 0,
                       border: "none",
                       transition: "background 0.2s",
@@ -565,18 +564,17 @@ const ProjectsPage = () => {
           className="project-top-shell"
           style={{
             zIndex: 20,
-            backgroundColor: semantic.colorBgContainer,
+            // Toolbar tracks read these; the row itself sits on the page floor (DESIGN.md Shapes).
+            ["--proj-chip-bg" as string]: semantic.colorBgContainer,
+            ["--proj-chip-line" as string]: semantic.colorBorder,
+            ["--proj-primary" as string]: semantic.colorPrimary,
           }}
         >
           <PageSubHeader
             title="Projects"
             count={visibleProjects.length}
-            background={semantic.colorBgContainer as string}
-            borderColor={semantic.colorBorder as string}
             titleColor={semantic.colorTextBase as string}
             subtitleColor={semantic.colorTextSecondary as string}
-            chipBg={semantic.colorBgTextActive as string}
-            chipText={semantic.colorTextSecondary as string}
             rightSlot={
               <Space size={isWide ? 12 : 8} align="center" className="project-header-actions">
                 {isWide && searchControls}
@@ -585,6 +583,7 @@ const ProjectsPage = () => {
                 {canCreateProjects(organizationRole) ? (
                   <Button
                     type="primary"
+                    className="project-new-btn"
                     icon={<PlusOutlined />}
                     onClick={handleOpen}
                   >
@@ -613,8 +612,6 @@ const ProjectsPage = () => {
                 : isTablet
                   ? "4px 12px"
                   : "4px 14px",
-              backgroundColor: semantic.colorBgContainer,
-              borderBottom: `1px solid ${semantic.colorBorder}`,
             }}
           >
             <Col
@@ -748,17 +745,46 @@ const ProjectsPage = () => {
           transition: background-color 160ms ease;
         }
 
-        /* One control height (32px) across the header row; the shared buttons default to 24 or 40. */
+        /* One control height (40px) across the toolbar; tracks are pills on the card surface (DESIGN.md Shapes). */
         .project-header-actions .ant-btn,
-        .project-header-actions .ant-input-affix-wrapper {
-          height: 32px;
+        .project-search.ant-input-affix-wrapper {
+          height: 40px;
         }
         .project-header-actions .ant-btn-icon-only {
-          width: 32px;
+          width: 40px;
+        }
+        .project-search.ant-input-affix-wrapper {
+          border-radius: 999px;
+          padding-inline: 14px;
+          background: var(--proj-chip-bg);
+          border-color: var(--proj-chip-line);
+        }
+        .project-status-seg.ant-segmented {
+          border-radius: 999px;
+          padding: 3px;
+          background: var(--proj-chip-bg);
+          border: 1px solid var(--proj-chip-line);
+        }
+        .project-status-seg .ant-segmented-item,
+        .project-status-seg .ant-segmented-thumb {
+          border-radius: 999px;
         }
         .project-status-seg .ant-segmented-item-label {
-          min-height: 28px;
-          line-height: 28px;
+          min-height: 32px;
+          line-height: 32px;
+          padding-inline: 14px;
+          font-size: 14px;
+        }
+        .project-header-actions .guide-tour-help.ant-btn {
+          border-radius: 999px;
+          background: var(--proj-chip-bg);
+          border: 1px solid var(--proj-chip-line);
+        }
+        .project-new-btn.ant-btn {
+          border-radius: 12px;
+          padding-inline: 18px;
+          font-weight: 600;
+          box-shadow: 0 10px 24px -12px var(--proj-primary);
         }
 
         /* Touch screens get a 44px target; the inline 20–24px sizes suit a pointer only. */

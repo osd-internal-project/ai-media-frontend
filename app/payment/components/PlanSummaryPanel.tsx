@@ -20,8 +20,8 @@ export default function PlanSummaryPanel() {
         flexDirection: "column",
         gap: 32,
         padding: "48px 40px",
-        background: "linear-gradient(160deg, #21262B 0%, #1a1f26 100%)",
-        borderRight: "1px solid #2A3038",
+        background: "linear-gradient(160deg, #15163A 0%, #1D1F4E 100%)",
+        borderRight: "1px solid #1D1F4E",
         minHeight: "100%",
       }}
     >
@@ -42,20 +42,20 @@ export default function PlanSummaryPanel() {
           Pro Plan
         </h1>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 8 }}>
-          <span style={{ fontSize: 42, fontWeight: 800, color: "#6F6ADE" }}>฿990</span>
-          <span style={{ color: "#8C99A9", fontSize: 14 }}>/ month</span>
+          <span style={{ fontSize: 42, fontWeight: 800, color: "#6A61EE" }}>฿990</span>
+          <span style={{ color: "#A9ACD6", fontSize: 14 }}>/ month</span>
         </div>
-        <p style={{ margin: 0, color: "#8C99A9", fontSize: 13, lineHeight: 1.5 }}>
+        <p style={{ margin: 0, color: "#A9ACD6", fontSize: 13, lineHeight: 1.5 }}>
           Billed monthly. Cancel any time.
         </p>
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: "#2A3038" }} />
+      <div style={{ height: 1, background: "#1D1F4E" }} />
 
       {/* Feature list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#8C99A9", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#A9ACD6", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           What's included
         </h3>
         {FEATURES.map((feature) => (
@@ -76,19 +76,19 @@ export default function PlanSummaryPanel() {
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: "#2A3038" }} />
+      <div style={{ height: 1, background: "#1D1F4E" }} />
 
       {/* Trust badges */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#8C99A9", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#A9ACD6", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           Secure payment by
         </h3>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {/* Omise badge */}
           <div
             style={{
-              background: "#2A3038",
-              border: "1px solid #3A434F",
+              background: "#1D1F4E",
+              border: "1px solid #27295E",
               borderRadius: 8,
               padding: "6px 14px",
               display: "flex",
@@ -100,7 +100,7 @@ export default function PlanSummaryPanel() {
               <circle cx="8" cy="8" r="7" stroke="#0FEAB6" strokeWidth="1.5" />
               <path d="M5 8.5l2 2 4-4" stroke="#0FEAB6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ color: "#8C99A9", fontSize: 12, fontWeight: 600 }}>Omise</span>
+            <span style={{ color: "#A9ACD6", fontSize: 12, fontWeight: 600 }}>Omise</span>
           </div>
 
           {/* Card brand logos */}
@@ -109,8 +109,8 @@ export default function PlanSummaryPanel() {
               <div
                 key={brand}
                 style={{
-                  background: brand === "visa" ? "#fff" : "#2A3038",
-                  border: "1px solid #3A434F",
+                  background: brand === "visa" ? "#fff" : "#1D1F4E",
+                  border: "1px solid #27295E",
                   borderRadius: 6,
                   padding: "4px 8px",
                   display: "flex",
@@ -129,11 +129,11 @@ export default function PlanSummaryPanel() {
         {/* SSL note */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <rect x="2" y="5" width="9" height="7" rx="1.5" stroke="#3A434F" strokeWidth="1.2" />
-            <path d="M4 5V4a2.5 2.5 0 0 1 5 0v1" stroke="#3A434F" strokeWidth="1.2" strokeLinecap="round" />
-            <circle cx="6.5" cy="8.5" r="1" fill="#3A434F" />
+            <rect x="2" y="5" width="9" height="7" rx="1.5" stroke="#7D7FA4" strokeWidth="1.2" />
+            <path d="M4 5V4a2.5 2.5 0 0 1 5 0v1" stroke="#7D7FA4" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="6.5" cy="8.5" r="1" fill="#7D7FA4" />
           </svg>
-          <span style={{ color: "#3A434F", fontSize: 11 }}>
+          <span style={{ color: "#7D7FA4", fontSize: 11 }}>
             256-bit SSL encrypted. We never store your card details.
           </span>
         </div>

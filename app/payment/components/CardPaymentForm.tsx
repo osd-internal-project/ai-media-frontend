@@ -14,15 +14,15 @@ interface CardPaymentFormProps {
 }
 
 const inputStyle = {
-  background: "#2A3038",
-  border: "1px solid #3A434F",
+  background: "#1D1F4E",
+  border: "1px solid #27295E",
   color: "#F2F4F5",
   borderRadius: 8,
   fontSize: 15,
 };
 
 const labelStyle = {
-  color: "#8C99A9",
+  color: "#A9ACD6",
   fontSize: 13,
   fontWeight: 600 as const,
 };
@@ -93,7 +93,7 @@ export default function CardPaymentForm({
         >
           Card Details
         </h2>
-        <p style={{ margin: "4px 0 0", color: "#8C99A9", fontSize: 14 }}>
+        <p style={{ margin: "4px 0 0", color: "#A9ACD6", fontSize: 14 }}>
           Your payment is secured and encrypted.
         </p>
       </div>
@@ -257,7 +257,7 @@ export default function CardPaymentForm({
               height: 52,
               background: loading
                 ? "#4B49A1"
-                : "linear-gradient(135deg, #6F6ADE 0%, #4B49A1 100%)",
+                : "linear-gradient(135deg, #6A61EE 0%, #4B49A1 100%)",
               border: "none",
               borderRadius: 10,
               fontSize: 16,
@@ -274,7 +274,7 @@ export default function CardPaymentForm({
       <p
         style={{
           margin: 0,
-          color: "#3A434F",
+          color: "#7D7FA4",
           fontSize: 12,
           textAlign: "center",
         }}

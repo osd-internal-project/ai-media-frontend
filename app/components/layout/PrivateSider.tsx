@@ -3,7 +3,8 @@ import { ConfigProvider, Layout, Menu, Image as AntdImage, Button } from "antd";
 import { MenuFoldOutlined } from "@ant-design/icons";
 import { MenuSider, renderMenuItems } from "@/app/config/menu";
 import { useThemeMode } from "../ThemeProvider";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
+import { markFill } from "@/app/theme/surface";
 import useResponsive from "@/app/hooks/useResponsive";
 import "./LayoutStyle.css";
 import Link from "next/link";
@@ -32,6 +33,9 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
 }) => {
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
+  const isDark = mode === "dark";
+  // Bottom admin/close bars match the rail, not the card surface.
+  const siderBg = isDark ? aiCaveColors.darkSider : aiCaveColors.lightSider;
   const { isMobile, isTablet } = useResponsive();
   const isSuperAdmin = systemRole === "SUPER_ADMIN";
   const showMobileCloseButton = (isMobile || isTablet) && !!onClose;
@@ -79,6 +83,11 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           Menu: {
             itemColor: semantic.colorTextSecondary,
             itemHoverColor: semantic.colorTextBase,
+            // The icon tile carries hover/selected (LayoutStyle.css); rows stay unfilled.
+            itemSelectedBg: "transparent",
+            itemHoverBg: "transparent",
+            itemActiveBg: "transparent",
+            itemSelectedColor: semantic.colorTextBase,
           },
         },
       }}
@@ -90,7 +99,11 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
       collapsible
       collapsed={false}
       style={{
-        borderRight: `1px solid ${semantic.colorBorder}`,
+        borderRight: `1px solid ${isDark ? aiCaveColors.darkSiderLine : semantic.colorBorder}`,
+        ["--sider-tile-fill" as string]: markFill(mode),
+        ["--sider-tile-hover" as string]: isDark ? aiCaveColors.neutral700 : aiCaveColors.lightRaised,
+        ["--sider-ink" as string]: semantic.colorTextBase,
+        ["--sider-ink-2" as string]: semantic.colorTextSecondary,
         display: "flex",
         flexDirection: "column",
         height: "100vh",
@@ -108,8 +121,8 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          // Same 52px as the header, so the mark lines up with the organization switcher.
-          height: 52,
+          // Same 64px as the header, so the mark lines up with the organization switcher.
+          height: 64,
           flexShrink: 0,
         }}
       >
@@ -169,7 +182,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             flexDirection: "column",
             alignItems: "center",
             gap: 12,
-            background: semantic.colorBgContainer,
+            background: siderBg,
             borderTop: `1px solid ${semantic.colorBorder}`,
           }}
         >
@@ -214,7 +227,7 @@ const PrivateSider: React.FC<PrivateSiderProps> = ({
             padding: "8px",
             display: "flex",
             justifyContent: "center",
-            background: semantic.colorBgContainer,
+            background: siderBg,
           }}
         >
           <Button

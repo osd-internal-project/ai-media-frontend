@@ -8,6 +8,7 @@ import {
 import { IProject } from "@/app/common/project.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { formatNumber } from "@/app/utils/format";
+import { ProjectStatusPill } from "./project-grid-view";
 
 interface ProjectListViewProps {
   projects: IProject[];
@@ -152,29 +153,8 @@ const ProjectListView: React.FC<ProjectListViewProps> = ({
                       {text}
                     </a>
                     </span>
-                    {record.status === "deleted" ? (
-                      <span
-                        style={{
-                          width: isMobile ? 8 : 10,
-                          height: isMobile ? 8 : 10,
-                          background: semantic.colorError,
-                          borderRadius: "50%",
-                          display: "inline-block",
-                          marginLeft: 6,
-                        }}
-                      ></span>
-                    ) : (
-                      <span
-                        style={{
-                          width: isMobile ? 8 : 10,
-                          height: isMobile ? 8 : 10,
-                          background: semantic.colorSuccess,
-                          borderRadius: "50%",
-                          display: "inline-block",
-                          marginLeft: 6,
-                        }}
-                      ></span>
-                    )}
+                    {/* Same pill as the grid card, so status reads alike in both views. */}
+                    <ProjectStatusPill deleted={record.status === "deleted"} semantic={semantic} />
                   </div>
                   {record.description ? (
                     <div

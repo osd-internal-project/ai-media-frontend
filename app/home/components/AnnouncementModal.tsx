@@ -16,7 +16,7 @@ export const CATEGORY_META: Record<
   AnnouncementCategory,
   { label: string; color: string }
 > = {
-  PROMOTION: { label: "Promotion", color: "#6F6ADE" },
+  PROMOTION: { label: "Promotion", color: "#6A61EE" },
   SYSTEM_UPDATE: { label: "System update", color: "#0FEAB6" },
 };
 

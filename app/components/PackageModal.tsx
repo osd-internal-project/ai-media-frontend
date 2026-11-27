@@ -75,8 +75,8 @@ const PackageModal: React.FC<PackageModalProps> = ({
       centered
       styles={{
         content: {
-          backgroundColor: "#0f0f0f",
-          border: "1px solid #171717",
+          backgroundColor: "#0C0D24",
+          border: "1px solid #15163A",
         },
         mask: {
           backgroundColor: "rgba(0, 0, 0, 0.8)",

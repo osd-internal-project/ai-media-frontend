@@ -151,8 +151,8 @@ export default function ShareModal({ open, item, onClose }: ShareModalProps) {
                   gap: 14,
                   padding: "12px 16px",
                   borderRadius: 12,
-                  border: "1px solid #3A434F",
-                  background: isDisabled ? "rgba(255,255,255,0.03)" : "#2A3038",
+                  border: "1px solid #27295E",
+                  background: isDisabled ? "rgba(255,255,255,0.03)" : "#1D1F4E",
                   cursor: isDisabled ? "not-allowed" : "pointer",
                   opacity: isDisabled ? 0.5 : 1,
                   transition: "background 0.15s, opacity 0.15s",
@@ -161,12 +161,12 @@ export default function ShareModal({ open, item, onClose }: ShareModalProps) {
                 }}
                 onMouseEnter={(e) => {
                   if (!isDisabled) {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#3A434F";
+                    (e.currentTarget as HTMLButtonElement).style.background = "#27295E";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isDisabled) {
-                    (e.currentTarget as HTMLButtonElement).style.background = "#2A3038";
+                    (e.currentTarget as HTMLButtonElement).style.background = "#1D1F4E";
                   }
                 }}
               >
@@ -195,7 +195,7 @@ export default function ShareModal({ open, item, onClose }: ShareModalProps) {
                   <div style={{ color: "#F2F4F5", fontWeight: 600, fontSize: 14 }}>
                     {p.label}
                   </div>
-                  <div style={{ color: "#8C99A9", fontSize: 12, marginTop: 2 }}>
+                  <div style={{ color: "#A9ACD6", fontSize: 12, marginTop: 2 }}>
                     {p.subtitle}
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function ShareModal({ open, item, onClose }: ShareModalProps) {
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path
                       d="M6 3l5 5-5 5"
-                      stroke="#3A434F"
+                      stroke="#7D7FA4"
                       strokeWidth="1.8"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -230,17 +230,17 @@ export default function ShareModal({ open, item, onClose }: ShareModalProps) {
                 gap: 8,
                 padding: "10px 16px",
                 borderRadius: 10,
-                border: "1px solid #3A434F",
+                border: "1px solid #27295E",
                 background: "transparent",
                 cursor: copyLoading ? "not-allowed" : "pointer",
-                color: "#8C99A9",
+                color: "#A9ACD6",
                 fontSize: 14,
                 fontWeight: 500,
                 width: "100%",
                 transition: "background 0.15s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#2A3038";
+                (e.currentTarget as HTMLButtonElement).style.background = "#1D1F4E";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.background = "transparent";

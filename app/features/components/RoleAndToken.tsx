@@ -36,7 +36,7 @@ export default function RoleAndToken() {
 			className={`w-screen min-h-screen flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ${
 				inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
 			}`}
-			style={{ background: "#171717" }}
+			style={{ background: "#15163A" }}
 		>
 			{/* 🔥 KEY: column ใน mobile / row ใน desktop */}
 			<div className="w-screen flex flex-col md:flex-row items-stretch justify-start">

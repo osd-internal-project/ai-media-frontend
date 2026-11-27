@@ -158,12 +158,8 @@ const CommunicationPage: React.FC = () => {
       <PageSubHeader
         title="Communication"
         subtitle="Publish work from your projects to the public AI CAVE community page"
-        background={semantic.colorBgContainer as string}
-        borderColor={semantic.colorBorder as string}
         titleColor={semantic.colorText as string}
         subtitleColor={semantic.colorTextTertiary as string}
-        chipBg={semantic.colorFillSecondary as string}
-        chipText={semantic.colorText as string}
         rightSlot={
           <Button
             size="small"

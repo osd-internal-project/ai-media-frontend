@@ -711,12 +711,8 @@ const DashboardClient: FC = () => {
         <PageSubHeader
           title="Organization Dashboard"
           subtitle="Monitor usage and manage resources across all projects"
-          background={token.colorBgContainer}
-          borderColor={token.colorBorder}
           titleColor={token.colorTextBase}
           subtitleColor={token.colorTextSecondary}
-          chipBg={token.colorBgTextActive}
-          chipText={token.colorTextSecondary}
           rightSlot={
             showBilling ? (
               <Button

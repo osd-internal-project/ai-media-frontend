@@ -102,20 +102,20 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     const t = getThemeConfig(mode).token ?? {};
     const isDark = mode === "dark";
     return {
-      cardBg: isDark ? "#21262B" : "#FFFFFF",
-      headerBg: t.colorBgContainer ?? (isDark ? "#21262B" : "#FFFFFF"),
-      border: t.colorBorder ?? (isDark ? "#3A434F" : "#D3DAE3"),
+      cardBg: isDark ? "#15163A" : "#FFFFFF",
+      headerBg: t.colorBgContainer ?? (isDark ? "#15163A" : "#FFFFFF"),
+      border: t.colorBorder ?? (isDark ? "#27295E" : "#D3DAE3"),
       hairline: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-      primary: t.colorPrimary ?? "#6F6ADE",
-      text: t.colorTextBase ?? (isDark ? "#F2F4F5" : "#191C20"),
-      textDim: t.colorTextSecondary ?? "#8C99A9",
+      primary: t.colorPrimary ?? "#6A61EE",
+      text: t.colorTextBase ?? (isDark ? "#EEEFFB" : "#191C20"),
+      textDim: t.colorTextSecondary ?? "#A9ACD6",
       success: "#22C55E",
       warning: "#FF8F00",
       error: "#FF3C38",
-      canvasBg: isDark ? "#191C20" : "#F2F4F5",
-      dot: isDark ? "#3A434F" : "#D3DAE3",
+      canvasBg: isDark ? "#0C0D24" : "#F2F4F5",
+      dot: isDark ? "#27295E" : "#D3DAE3",
       // พื้นหลัง media/ช่องกรอก — เข้มกว่าการ์ดเล็กน้อยให้ภาพเด่น
-      surface: isDark ? "#191C20" : "#F2F4F5",
+      surface: isDark ? "#0C0D24" : "#F2F4F5",
     };
   }, [mode]);
 

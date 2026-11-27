@@ -11,7 +11,8 @@ import { theme } from "antd";
    1. BRAND TOKENS (Single Source)
 ================================ */
 export const aiCaveColors = {
-  primary: "#6F6ADE",
+  // White text on it reaches 4.61:1 (the reference's #6C63F0 is 4.49).
+  primary: "#6A61EE",
   primaryLight: "#E3E2FA", // สีจางของ primary
   primaryDark: "#4B49A1", // สีเข้มของ primary
   secondary: "#0FEAB6",
@@ -20,16 +21,34 @@ export const aiCaveColors = {
   success: "#22C55E",
   warning: "#FF8F00",
   error: "#FF3C38",
-  darkCard: "#21262B",
-  darkBg: "#191C20",
-  neutral900: "#191C20",
-  neutral800: "#21262B",
-  neutral700: "#2A3038",
-  neutral600: "#3A434F",
-  neutral500: "#8C99A9",
+  // Dark theme "Night Indigo" (DESIGN.md): navy levels measured from the reference screenshot.
+  darkCard: "#15163A",
+  darkBg: "#0C0D24",
+  neutral900: "#0C0D24",
+  neutral800: "#15163A",
+  neutral700: "#1D1F4E",
+  neutral600: "#27295E",
+  neutral500: "#A9ACD6",
   neutral350: "#D3DAE3",
   neutral300: "#DADEE2",
-  neutral200: "#F2F4F5",
+  neutral200: "#EEEFFB",
+  darkHeader: "#0A0B1E",
+  darkHeaderLine: "#1D1F4E",
+  darkSider: "#111230",
+  darkSiderLine: "#212357",
+  darkControlBorder: "#34377A",
+  darkMuted: "#7D7FA4",
+  darkRail: "#23255C",
+  // Readable dark text tones: the seeds read 3.48:1 (indigo) and 4.33:1 (red) on the card.
+  darkPrimaryText: "#A29EF2",
+  darkErrorText: "#F2848E",
+  darkMintText: "#4FD6C8",
+  darkWarningText: "#F5A524",
+  // Selected sider tile, org initial and user avatar; light uses lightPrimary solid.
+  tileGradient: "linear-gradient(135deg, #867DFF 0%, #6086FF 100%)",
+  // The reference's #4F7BF5 / #E8559B read 3.83 / 3.38:1 under white initials; one step deeper passes.
+  avatarBlue: "#3F6DEB",
+  avatarPink: "#C93A80",
   neutral150: "#FAFBFD",
   neutral100: "#FFFFFF",
   // Light theme "Lavender haze": white cards on a lavender canvas.
@@ -64,8 +83,8 @@ const getSemantic = (mode: "light" | "dark") => {
     bgElevated: isDark ? brand.neutral700 : brand.lightRaised,
     fieldBg: isDark ? brand.neutral700 : brand.lightField,
     bgOverlay: isDark ? brand.neutral800 : brand.lightSurface,
-    controlBorder: isDark ? brand.neutral600 : brand.lightControlBorder,
-    primaryText: isDark ? brand.primary : brand.lightPrimaryText,
+    controlBorder: isDark ? brand.darkControlBorder : brand.lightControlBorder,
+    primaryText: isDark ? brand.darkPrimaryText : brand.lightPrimaryText,
     primaryLight: isDark ? brand.primaryDark : brand.lightPrimaryBg,
     colorBgTextActive: isDark ? brand.neutral700 : brand.lightBorder,
     textBase: isDark ? brand.neutral200 : brand.lightInk,
@@ -108,9 +127,16 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
       colorTextBase: semantic.textBase,
       colorTextSecondary: semantic.textSecondary,
 
-      // Light-only: dark keeps antd's derived values.
+      // Dark text tones replace seeds that read under 4.5:1 on Night Wall.
       ...(isDark
-        ? {}
+        ? {
+            colorTextPlaceholder: brand.darkMuted,
+            colorLink: brand.darkPrimaryText,
+            colorPrimaryText: brand.darkPrimaryText,
+            colorErrorText: brand.darkErrorText,
+            colorWarningText: brand.darkWarningText,
+            colorFillSecondary: brand.darkRail,
+          }
         : {
             colorBgLayout: brand.lightCanvas,
             colorBgElevated: brand.lightSurface,
@@ -132,8 +158,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
           }),
 
       borderRadius: 10,
-      fontFamily:
-        "'Eudoxus Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     },
 
     components: {
@@ -146,7 +171,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
 
       Card: {
         colorBgContainer: semantic.bgContainer,
-        borderRadiusLG: 14,
+        borderRadiusLG: 16,
       },
 
       Input: {
@@ -177,12 +202,12 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
 
       Layout: {
         bodyBg: isDark ? semantic.bgBase : brand.lightCanvas,
-        headerBg: semantic.bgContainer,
-        siderBg: isDark ? semantic.bgContainer : brand.lightSider,
+        headerBg: isDark ? brand.darkHeader : semantic.bgContainer,
+        siderBg: isDark ? brand.darkSider : brand.lightSider,
       },
 
       Menu: {
-        itemBg: isDark ? semantic.bgContainer : brand.lightSider,
+        itemBg: isDark ? brand.darkSider : brand.lightSider,
         itemSelectedBg: semantic.primary,
         itemSelectedColor: brand.neutral100,
       },
@@ -212,7 +237,7 @@ export const getThemeConfig = (mode: "light" | "dark"): ThemeConfig => {
         dotActiveBorderColor: semantic.primary,
       },
 
-      ...(isDark ? {} : { Progress: { remainingColor: brand.lightField } }),
+      Progress: { remainingColor: isDark ? brand.darkRail : brand.lightField },
 
       Segmented: {
         trackBg: semantic.fieldBg,

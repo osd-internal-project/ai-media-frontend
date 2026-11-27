@@ -34,8 +34,8 @@ const CardNumberInput = forwardRef<InputRef, CardNumberInputProps>(
         autoComplete="cc-number"
         size="large"
         style={{
-          background: "#2A3038",
-          border: "1px solid #3A434F",
+          background: "#1D1F4E",
+          border: "1px solid #27295E",
           color: "#F2F4F5",
           borderRadius: 8,
           fontSize: 16,

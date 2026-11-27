@@ -265,12 +265,8 @@ const CreditPage: FC = () => {
       <PageSubHeader
         title="Credit Usage"
         subtitle="Real-time credit tracking & history"
-        background={semantic.colorBgContainer!!}
-        borderColor={semantic.colorBorder!!}
         titleColor={semantic.colorTextBase!!}
         subtitleColor={semantic.colorTextSecondary!!}
-        chipBg={semantic.colorBgTextActive!!}
-        chipText={semantic.colorTextSecondary!!}
         rightSlot={
           <Button type="primary" onClick={showModal} icon={<Ticket size={14} />} >
             Redeem Coupon

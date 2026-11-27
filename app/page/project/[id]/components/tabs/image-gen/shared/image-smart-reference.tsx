@@ -16,7 +16,7 @@ export default function ImageSmartReference({ referenceImages }: Props) {
   // Dark keeps the original hand-tuned values; light reads theme tokens.
   const c =
     mode === "dark"
-      ? { box: "#1e1e21", boxBorder: "rgba(255,255,255,0.05)", tile: "#374151", tileText: "#9CA3AF" }
+      ? { box: "#15163A", boxBorder: "rgba(255,255,255,0.05)", tile: "#1D1F4E", tileText: "#A9ACD6" }
       : {
           box: semantic.colorBgLayout,
           boxBorder: semantic.colorBorder,

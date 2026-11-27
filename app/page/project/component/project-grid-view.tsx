@@ -5,7 +5,6 @@ import {
   Card,
   Typography,
   Tooltip,
-  Badge,
   Dropdown,
   Button,
   Avatar,
@@ -15,8 +14,84 @@ import { AudioLines } from "lucide-react";
 import { IProject } from "@/app/common/project.type";
 import { formatNumber } from "@/app/utils/format";
 import useResponsive from "@/app/hooks/useResponsive";
+import { useThemeMode } from "@/app/components/ThemeProvider";
+import { aiCaveColors } from "@/app/theme/themeConfig";
+import { pickByName, projectInitials } from "./project-card-marks";
 
 export type ProjectPreview = { id: string; url: string; isVideo: boolean; isAudio: boolean; poster?: string };
+
+const PREVIEW_HEIGHT = 104;
+const AVATAR_COLORS = [aiCaveColors.primary, aiCaveColors.avatarBlue, aiCaveColors.avatarPink] as const;
+
+/** Status as a tinted pill (DESIGN.md Project card): mint for Active, red for Deleted, readable tone per mode. */
+export const ProjectStatusPill: React.FC<{ deleted: boolean; semantic: any }> = ({ deleted, semantic }) => {
+  const { mode } = useThemeMode();
+  const mintText = mode === "dark" ? aiCaveColors.darkMintText : semantic.colorInfoText;
+  const tone = deleted ? semantic.colorErrorText : mintText;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        height: 24,
+        padding: "0 10px",
+        borderRadius: 999,
+        fontSize: 13,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+        color: tone,
+        background: `color-mix(in srgb, ${tone} ${deleted ? 12 : 14}%, ${semantic.colorBgContainer})`,
+      }}
+    >
+      <span aria-hidden style={{ width: 6, height: 6, borderRadius: 999, background: "currentColor" }} />
+      {deleted ? "Deleted" : "Active"}
+    </span>
+  );
+};
+
+/** A project with no work yet: its initials on the brand gradient with faint rings (grey once deleted). */
+const ProjectInitialsPlate: React.FC<{ name: string; deleted: boolean; semantic: any }> = ({ name, deleted, semantic }) => {
+  const { mode } = useThemeMode();
+  const ink = deleted ? semantic.colorTextSecondary : aiCaveColors.neutral100;
+  const plate = deleted
+    ? mode === "dark"
+      ? aiCaveColors.neutral700
+      : aiCaveColors.lightRaised
+    : `linear-gradient(135deg, ${semantic.colorPrimary} 0%, ${aiCaveColors.primaryDark} 100%)`;
+  return (
+    <div
+      aria-hidden
+      style={{ position: "relative", height: PREVIEW_HEIGHT, overflow: "hidden", background: plate, color: ink }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          left: 24,
+          top: "50%",
+          transform: "translateY(-50%)",
+          fontSize: 56,
+          fontWeight: 600,
+          lineHeight: 1,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {projectInitials(name)}
+      </span>
+      <svg
+        width="220"
+        height="220"
+        viewBox="0 0 220 220"
+        style={{ position: "absolute", right: -40, top: "50%", transform: "translateY(-50%)", opacity: 0.22 }}
+      >
+        {[18, 46, 74, 102].map((r) => (
+          <circle key={r} cx="110" cy="110" r={r} fill="none" stroke="currentColor" strokeWidth="1.5" />
+        ))}
+        <circle cx="110" cy="110" r="3" fill="currentColor" />
+      </svg>
+    </div>
+  );
+};
 
 interface ProjectGridViewProps {
   projects: IProject[];
@@ -31,30 +106,21 @@ interface ProjectGridViewProps {
 }
 
 /** The card's colour comes from the project's own work: one large tile plus two, or a quiet placeholder. */
-const ProjectPreviewStrip: React.FC<{ items?: ProjectPreview[]; semantic: any }> = ({ items, semantic }) => {
+const ProjectPreviewStrip: React.FC<{ items?: ProjectPreview[]; semantic: any; name: string; deleted: boolean }> = ({
+  items,
+  semantic,
+  name,
+  deleted,
+}) => {
   const shown = (items ?? []).slice(0, 3);
   // Tiles that finished (loaded or failed); the strip reveals once every tile has, so they appear together.
   const [settled, setSettled] = useState(0);
   const settle = () => setSettled((n) => n + 1);
   // Audio tiles draw an icon, so only image/video tiles are waited on.
   const ready = !!items && settled >= shown.filter((p) => !p.isAudio).length;
-  // Loaded and empty: the brand mark on a tinted plate, so the card reads as new, not broken.
+  // Loaded and empty: the project's initials, so the card reads as new, not broken.
   if (items && shown.length === 0) {
-    return (
-      <div
-        aria-hidden
-        // A light primary tint over the panel: soft lavender in light, quiet indigo in dark (the raw primaryBg is loud in dark).
-        style={{
-          height: 132,
-          display: "grid",
-          placeItems: "center",
-          background: `color-mix(in srgb, ${semantic.colorPrimary} 14%, ${semantic.colorBgContainer})`,
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/logo-mark.png" alt="" style={{ height: 44, width: 44, opacity: 0.9 }} />
-      </div>
-    );
+    return <ProjectInitialsPlate name={name} deleted={deleted} semantic={semantic} />;
   }
   const media = (p: ProjectPreview) =>
     p.isAudio ? (
@@ -94,7 +160,7 @@ const ProjectPreviewStrip: React.FC<{ items?: ProjectPreview[]; semantic: any }>
       aria-hidden
       className={`project-preview-strip${ready ? " is-ready" : ""}`}
       style={{
-        height: 132,
+        height: PREVIEW_HEIGHT,
         display: "grid",
         gap: 2,
         gridTemplateColumns: shown.length > 1 ? "2fr 1fr" : "1fr",
@@ -126,12 +192,14 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
   onClickProjectAction,
 }) => {
   const { isMobile, isTablet } = useResponsive();
+  const { mode } = useThemeMode();
+  const mintText = mode === "dark" ? aiCaveColors.darkMintText : semantic.colorInfoText;
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   return (
     <>
       <Row
         className="project-grid-shell"
-        gutter={[isMobile ? 10 : 12, isMobile ? 10 : 12]}
+        gutter={[isMobile ? 12 : 20, isMobile ? 12 : 20]}
         style={{
           padding: isMobile ? "12px" : isTablet ? "16px" : "16px 24px 24px",
           margin: 0,
@@ -180,9 +248,11 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                   key={(previews[project.id] ?? []).map((p) => p.id).join() || "none"}
                   items={previews[project.id]}
                   semantic={semantic}
+                  name={project.name}
+                  deleted={project.status === "deleted"}
                 />
-                <div style={{ padding: isMobile ? 12 : 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <div style={{ padding: isMobile ? 14 : 18, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <Tooltip title={project.name} placement="top" mouseEnterDelay={0.5}>
                         <Typography.Title
@@ -190,23 +260,17 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           ellipsis
                           style={{
                             margin: 0,
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: 600,
-                            lineHeight: 1.4,
+                            lineHeight: 1.35,
                             color: semantic.colorTextBase,
                           }}
                         >
                           {project.name}
                         </Typography.Title>
                       </Tooltip>
-                      <span style={{ fontSize: 12, color: semantic.colorTextSecondary }}>
-                        <Badge
-                          color={project.status === "deleted" ? semantic.colorError : semantic.colorSuccess}
-                          style={{ marginRight: 6 }}
-                        />
-                        {project.status === "deleted" ? "Deleted" : "Active"}
-                      </span>
                     </div>
+                    <ProjectStatusPill deleted={project.status === "deleted"} semantic={semantic} />
                     {showActionMenu && projectActionItems.length > 0 && onClickProjectAction ? (
                       <Dropdown
                         disabled={project.status === "deleted"}
@@ -225,7 +289,8 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           aria-label={`Actions for ${project.name}`}
                           icon={<MoreOutlined style={{ fontSize: 18 }} />}
                           onClick={(e) => e.stopPropagation()}
-                          style={{ color: semantic.colorTextSecondary, borderRadius: 8 }}
+                          // Narrow and pulled to the edge so the status pill sits near the right edge, as in the reference.
+                          style={{ color: semantic.colorTextSecondary, borderRadius: 8, width: 28, minWidth: 28, height: 28, marginRight: -6 }}
                         />
                       </Dropdown>
                     ) : null}
@@ -236,18 +301,23 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                       {creditTotal > 0 ? (
                         <>
                           {/* Left label sits over the grey (used) part, right label over the coloured (left) part. */}
-                          <span style={{ fontSize: 16, fontWeight: 600, color: semantic.colorTextBase, whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: 26, fontWeight: 600, lineHeight: 1.1, color: semantic.colorTextBase, whiteSpace: "nowrap" }}>
                             {formatNumber(creditUsed ?? 0)}
-                            <span style={{ fontSize: 12, fontWeight: 400, color: semantic.colorTextSecondary }}>
+                            <span style={{ fontSize: 14, fontWeight: 400, color: semantic.colorTextSecondary }}>
                               {" "}/ {formatNumber(creditTotal)} used
                             </span>
                           </span>
                           <span
                             style={{
-                              fontSize: 12,
+                              fontSize: 14,
                               whiteSpace: "nowrap",
-                              fontWeight: lowCredit ? 600 : 400,
-                              color: lowCredit ? semantic.colorWarningText : semantic.colorTextSecondary,
+                              fontWeight: 600,
+                              // Untouched credit reads mint, as in the reference; low keeps the warning rule.
+                              color: lowCredit
+                                ? semantic.colorWarningText
+                                : (creditUsed ?? 0) === 0
+                                  ? mintText
+                                  : semantic.colorTextBase,
                             }}
                           >
                             {lowCredit ? "Low · " : ""}
@@ -255,7 +325,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           </span>
                         </>
                       ) : (
-                        <span style={{ fontSize: 13, color: semantic.colorTextSecondary }}>No credit assigned</span>
+                        <span style={{ fontSize: 15, color: semantic.colorTextSecondary, lineHeight: "29px" }}>No credit assigned</span>
                       )}
                     </div>
                     {/* Same order as the generate-panel quota: used is grey on the left, what is left is coloured on the right (gold when low). */}
@@ -287,7 +357,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     {/* Real people instead of a generic person icon. */}
                     <Avatar.Group
-                      size={24}
+                      size={26}
                       max={{
                         count: 3,
                         style: { background: semantic.colorFillSecondary, color: semantic.colorTextBase, fontSize: 11 },
@@ -299,8 +369,9 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                           <Tooltip key={m.id} title={name}>
                             <Avatar
                               style={{
-                                background: semantic.colorFillSecondary,
-                                color: semantic.colorTextBase,
+                                // One colour per person across cards (white initials ≥4.5:1 on each).
+                                background: pickByName(name, AVATAR_COLORS),
+                                color: aiCaveColors.neutral100,
                                 fontSize: 11,
                                 fontWeight: 600,
                               }}
@@ -311,7 +382,7 @@ const ProjectGridView: React.FC<ProjectGridViewProps> = ({
                         );
                       })}
                     </Avatar.Group>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: semantic.colorTextSecondary }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: semantic.colorTextSecondary }}>
                       <CalendarOutlined />
                       {formatDate(project.createdAt)}
                     </span>

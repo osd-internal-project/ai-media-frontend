@@ -79,7 +79,7 @@ const ImageList: React.FC<ImageListProps> = ({
                </div>
              ))}
              {images.length === 0 && (
-               <div className="text-slate-500 text-xs py-4 flex items-center justify-center w-full bg-white/5 rounded border border-dashed border-[#3c444d]">
+               <div className="text-slate-500 text-xs py-4 flex items-center justify-center w-full bg-white/5 rounded border border-dashed border-[#27295E]">
                  No images imported yet. Click the &quot;Import&quot; button above to add images.
                </div>
              )}

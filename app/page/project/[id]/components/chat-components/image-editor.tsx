@@ -47,7 +47,7 @@ const FILTERS = [
 ];
 
 // Theme colors constants for consistency where tailwind might not reach easily
-const BORDER_COLOR = "#3C444D";
+const BORDER_COLOR = "#27295E";
 
 interface Props {
   imageUrl: string | Blob | any;
@@ -458,12 +458,12 @@ const ImageEditor = ({ imageUrl }: Props) => {
   return (
     <div
       ref={wrapRef}
-      className="flex flex-col bg-[#21262b] rounded-xl overflow-hidden h-[80vh]"
+      className="flex flex-col bg-[#15163A] rounded-xl overflow-hidden h-[80vh]"
     >
       {/* ── TOOLBAR ── */}
-      <div className="flex items-center gap-1.5 py-2 px-3.5 bg-[#2a3036] border-b border-[#3c444d] flex-wrap min-h-[52px]">
+      <div className="flex items-center gap-1.5 py-2 px-3.5 bg-[#1D1F4E] border-b border-[#27295E] flex-wrap min-h-[52px]">
         {/* Tool group */}
-        <div className="flex gap-0.5 bg-[#21262b] p-1 rounded-lg border border-[#3c444d]">
+        <div className="flex gap-0.5 bg-[#15163A] p-1 rounded-lg border border-[#27295E]">
           <Btn
             active={tool === "select"}
             onClick={() => {
@@ -491,7 +491,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
 
         <Divider
           type="vertical"
-          className="border-[#3c444d] h-6.5 mx-0.5"
+          className="border-[#27295E] h-6.5 mx-0.5"
         />
 
         {/* Filters */}
@@ -511,7 +511,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
 
         <Divider
           type="vertical"
-          className="border-[#3c444d] h-6.5 mx-0.5"
+          className="border-[#27295E] h-6.5 mx-0.5"
         />
 
         {/* History */}
@@ -534,7 +534,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
           <>
             <Divider
               type="vertical"
-              className="border-[#3c444d] h-6.5 mx-0.5"
+              className="border-[#27295E] h-6.5 mx-0.5"
             />
             <Select
               size="small"
@@ -585,7 +585,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
               <button
                 key={b.key}
                 onClick={b.fn}
-                className={`w-[30px] h-[30px] rounded border border-[#3c444d] cursor-pointer flex items-center justify-center transition-colors
+                className={`w-[30px] h-[30px] rounded border border-[#27295E] cursor-pointer flex items-center justify-center transition-colors
                   ${b.active ? "bg-[#7c3aed] text-white" : "bg-transparent text-slate-300"}
                 `}
               >
@@ -595,7 +595,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
             <Tooltip title="Text Color">
               <label className="flex items-center gap-1 cursor-pointer text-[#94a3b8] text-xs">
                 <div
-                  className="w-6 h-6 rounded border-2 border-[#3c444d] relative overflow-hidden"
+                  className="w-6 h-6 rounded border-2 border-[#27295E] relative overflow-hidden"
                   style={{ backgroundColor: textColor }}
                 >
                   <input
@@ -630,7 +630,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
           <>
             <Divider
               type="vertical"
-              className="border-[#3c444d] h-6.5 mx-0.5"
+              className="border-[#27295E] h-6.5 mx-0.5"
             />
             <Button
               size="small"
@@ -669,7 +669,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
       </div>
 
       {/* ── STATUS ── */}
-      <div className="py-1 px-3.5 bg-[#2a3036] border-b border-[#2a3036] text-[11px] text-slate-500">
+      <div className="py-1 px-3.5 bg-[#1D1F4E] border-b border-[#1D1F4E] text-[11px] text-slate-500">
         {isCropping && (
           <span className="text-[#00d4ff]">
             🔲 Drag handles → Apply Crop (Note: Cropping will flatten the image)
@@ -692,7 +692,7 @@ const ImageEditor = ({ imageUrl }: Props) => {
       >
         {!isReady && (
           <div className="flex flex-col items-center justify-center gap-3 p-15 text-slate-500">
-            <div className="w-9 h-9 border-3 border-[#3c444d] border-t-[#7c3aed] rounded-full animate-spin" />
+            <div className="w-9 h-9 border-3 border-[#27295E] border-t-[#7c3aed] rounded-full animate-spin" />
             <span className="text-[13px]">Loading image…</span>
           </div>
         )}

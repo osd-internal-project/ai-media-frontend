@@ -151,12 +151,8 @@ export default function OrgGalleryPage() {
           orgWide ? "ผลงานที่สมาชิกสร้างใน AI Cave ทุก project" : "ผลงานของคุณจากทุก project ในองค์กรนี้"
         }
         count={counts?.all}
-        background={token.colorBgContainer}
-        borderColor={token.colorBorder}
         titleColor={token.colorTextBase}
         subtitleColor={token.colorTextSecondary}
-        chipBg={token.colorBgTextActive}
-        chipText={token.colorTextSecondary}
         rightSlot={
           <Button
             className="og-select-toggle"

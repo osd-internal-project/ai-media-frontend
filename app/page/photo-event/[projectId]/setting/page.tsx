@@ -62,12 +62,8 @@ const PhotoEventSettingPage = () => {
           </span>
         }
         count={photos.length}
-        background={semantic.colorBgContainer as string}
-        borderColor={semantic.colorBorder as string}
         titleColor={semantic.colorTextBase as string}
         subtitleColor={semantic.colorTextSecondary as string}
-        chipBg={semantic.colorBgTextActive as string}
-        chipText={semantic.colorTextSecondary as string}
         rightSlot={
           <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
             <Badge

@@ -58,12 +58,8 @@ const PhotoEventPage = () => {
         title="Photo Event"
         subtitle="Import guest photos and run the AI photo booth on a big screen"
         count={visibleProjects.length}
-        background={semantic.colorBgContainer as string}
-        borderColor={semantic.colorBorder as string}
         titleColor={semantic.colorTextBase as string}
         subtitleColor={semantic.colorTextSecondary as string}
-        chipBg={semantic.colorBgTextActive as string}
-        chipText={semantic.colorTextSecondary as string}
         rightSlot={
           <Input.Search
             allowClear

@@ -9,37 +9,28 @@ type PageSubHeaderProps = {
   subtitle?: React.ReactNode;
   count?: number;
   rightSlot?: React.ReactNode;
-  background: string;
-  borderColor: string;
   titleColor: string;
   subtitleColor: string;
-  chipBg: string;
-  chipText: string;
   compact?: boolean;
 };
 
+/** Page title row: sits on the page floor (no band) with the count chip in a primary tint (DESIGN.md Navigation). */
 export default function PageSubHeader({
   title,
   subtitle,
   count,
   rightSlot,
-  background,
-  borderColor,
   titleColor,
   subtitleColor,
-  chipBg,
-  chipText,
   compact = true,
 }: PageSubHeaderProps) {
   const { token } = theme.useToken();
   return (
     <div
       style={{
-        minHeight: 54 ,
+        minHeight: 54,
         height: "auto",
-        padding: compact ? "10px 18px" : "14px 24px",
-        backgroundColor: background,
-        borderBottom: `1px solid ${borderColor}`,
+        padding: compact ? "16px 24px 8px" : "20px 24px 12px",
       }}
     >
       <Row
@@ -50,14 +41,15 @@ export default function PageSubHeader({
         style={{ width: "100%" }}
       >
         <Col flex="1 1 auto" style={{ minWidth: 0 }}>
-          <Space size={8} align="center" wrap>
-            {/* The page's only h1, sized like the former h3 so layouts don't shift. */}
+          <Space size={12} align="center" wrap>
+            {/* The page's only h1. */}
             <Typography.Title
               level={1}
               style={{
                 margin: 0,
-                fontSize: compact ? 22 : token.fontSizeHeading3,
-                lineHeight: token.lineHeightHeading3,
+                fontSize: 30,
+                fontWeight: 600,
+                lineHeight: 1.2,
                 color: titleColor,
               }}
             >
@@ -69,12 +61,13 @@ export default function PageSubHeader({
                   marginInlineEnd: 0,
                   border: "none",
                   borderRadius: 999,
-                  backgroundColor: chipBg,
-                  color: chipText,
-                  fontWeight: 500,
+                  backgroundColor: `color-mix(in srgb, ${token.colorPrimary} 18%, ${token.colorBgContainer})`,
+                  color: token.colorPrimaryText,
+                  fontWeight: 600,
                   lineHeight: 1,
-                  padding: compact ? "3px 8px" : "4px 10px",
-                  fontSize: compact ? 12 : 14,
+                  padding: "6px 12px",
+                  fontSize: 14,
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {count}

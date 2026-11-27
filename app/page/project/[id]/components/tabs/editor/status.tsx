@@ -36,7 +36,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
   const { mode } = useThemeMode();
   const semantic = getThemeConfig(mode).token ?? {};
   return (
-    <div className="flex justify-between py-1 px-3.5 bg-[#2a3036] border-b border-[#3c444d] text-[11px] text-slate-500"
+    <div className="flex justify-between py-1 px-3.5 bg-[#1D1F4E] border-b border-[#27295E] text-[11px] text-slate-500"
       style={{
         backgroundColor: semantic.colorBgContainer,
         borderColor: semantic.colorBorder,

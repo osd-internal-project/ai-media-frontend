@@ -19,7 +19,8 @@ export default function PrivateContent({ children, user }: ClientLayoutProps) {
           margin: 0,
           padding: 0,
           overflow: "auto",
-          height: isMobile ? "calc(100dvh - 64px)" : "calc(100dvh - 80px)",
+          // Header grew 50→56 (mobile) / 52→64; the rest of each offset is unchanged.
+          height: isMobile ? "calc(100dvh - 70px)" : "calc(100dvh - 92px)",
           WebkitOverflowScrolling: "touch",
           scrollBehavior: "smooth",
         }}

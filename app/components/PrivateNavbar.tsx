@@ -450,7 +450,7 @@ const NavbarUser: React.FC<Props> = ({
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}
           styles={{
-            body: { padding: "0rem", backgroundColor: "#0f0f0f" },
+            body: { padding: "0rem", backgroundColor: "#0C0D24" },
             header: { display: "none" },
           }}
           width={90}

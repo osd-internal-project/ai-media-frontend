@@ -152,7 +152,7 @@ export default function PaymentClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#191C20]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0C0D24]">
         <Spin size="large" />
       </div>
     );
@@ -160,7 +160,7 @@ export default function PaymentClient() {
 
   if (!orderId || !order) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#191C20] p-6">
+      <div className="min-h-screen flex items-center justify-center bg-[#0C0D24] p-6">
         <Card>
           <p className="text-gray-300">No order found.</p>
           <Button
@@ -177,7 +177,7 @@ export default function PaymentClient() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#191C20] p-6">
+      <div className="min-h-screen flex items-center justify-center bg-[#0C0D24] p-6">
         <Result
           status="success"
           title="Payment Successful!"
@@ -197,7 +197,7 @@ export default function PaymentClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#191C20] p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#0C0D24] p-6">
       <div className="w-full max-w-xl space-y-4">
         <Card title={`Pay for ${order.planName}`} size="small">
           <div className="flex justify-between text-gray-300">

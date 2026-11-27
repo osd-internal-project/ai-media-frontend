@@ -226,7 +226,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <Tooltip title="Color">
               <label className="flex items-center gap-1 cursor-pointer text-[10px] text-[#94a3b8] sm:text-xs">
                 <div
-                  className="relative h-4 w-4 overflow-hidden rounded border-2 border-[#3c444d] sm:h-6 sm:w-6"
+                  className="relative h-4 w-4 overflow-hidden rounded border-2 border-[#27295E] sm:h-6 sm:w-6"
                   style={{ backgroundColor: textColor, borderColor: semantic.colorBorder }}
                 >
                   <input
@@ -260,7 +260,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         {/* Text Formatting */}
         {showTxtCtrl && !isCropping && (
           <>
-            <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-6.5 mx-0.5 sm:!block" />
+            <Divider type="vertical" className="!hidden self-center border-[#27295E] h-6.5 mx-0.5 sm:!block" />
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:gap-1.5">
             <Select
               size="small"
@@ -328,7 +328,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         {/* Contextual Object Controls */}
         {sel && !isCropping && (
            <>
-             <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-6.5 mx-0.5 sm:!block" />
+             <Divider type="vertical" className="!hidden self-center border-[#27295E] h-6.5 mx-0.5 sm:!block" />
           <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:gap-1.5">
           <Tooltip title="Opacity">
   <div
@@ -355,13 +355,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   </div>
 </Tooltip>
              
-             <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-4 mx-0.5 sm:!block" />
+             <Divider type="vertical" className="!hidden self-center border-[#27295E] h-4 mx-0.5 sm:!block" />
              <Btn icon={<ArrowUp size={14}/>} onClick={bringForward} label="Bring Forward" />
              <Btn icon={<ArrowDown size={14}/>} onClick={sendBackward} label="Send Backward" />
              
              {sel.type === "image" && (
                 <>
-                   <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-4 mx-0.5 sm:!block" />
+                   <Divider type="vertical" className="!hidden self-center border-[#27295E] h-4 mx-0.5 sm:!block" />
                    <Btn icon={<FlipHorizontal size={14}/>} onClick={() => flip('x')} label="Flip Horizontal" />
                    <Btn icon={<FlipVertical size={14}/>} onClick={() => flip('y')} label="Flip Vertical" />
                    
@@ -381,7 +381,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 </>
              )}
              
-             <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-6.5 mx-0.5 sm:!block" />
+             <Divider type="vertical" className="!hidden self-center border-[#27295E] h-6.5 mx-0.5 sm:!block" />
              <Btn
                danger
                onClick={deleteSelected}
@@ -395,7 +395,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         {/* Crop confirm/cancel */}
         {isCropping && (
           <>
-            <Divider type="vertical" className="!hidden self-center border-[#3c444d] h-6.5 mx-0.5 sm:!block" />
+            <Divider type="vertical" className="!hidden self-center border-[#27295E] h-6.5 mx-0.5 sm:!block" />
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:gap-1.5">
             <Button
               size="small"

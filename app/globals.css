@@ -1,6 +1,27 @@
 @import 'antd/dist/reset.css';
 @import 'tailwindcss';
 
+/* Night Indigo (DESIGN.md): the dark grey steps old screens use as surfaces and lines take the navy
+   hue (278) at Tailwind's own lightness, so bg-gray-800 & co. sit in the theme instead of slate. */
+@theme {
+  --color-gray-700: oklch(37% 0.07 278);
+  --color-gray-800: oklch(27.5% 0.07 278);
+  --color-gray-900: oklch(21% 0.065 278);
+  --color-gray-950: oklch(13.5% 0.05 278);
+  --color-zinc-700: oklch(37% 0.07 278);
+  --color-zinc-800: oklch(27.5% 0.07 278);
+  --color-zinc-900: oklch(21% 0.065 278);
+  --color-zinc-950: oklch(13.5% 0.05 278);
+  --color-neutral-700: oklch(37% 0.07 278);
+  --color-neutral-800: oklch(27.5% 0.07 278);
+  --color-neutral-900: oklch(21% 0.065 278);
+  --color-neutral-950: oklch(13.5% 0.05 278);
+  --color-slate-700: oklch(37% 0.07 278);
+  --color-slate-800: oklch(27.5% 0.07 278);
+  --color-slate-900: oklch(21% 0.065 278);
+  --color-slate-950: oklch(13.5% 0.05 278);
+}
+
 :root {
   --secondary: #0FEAB6;
 }
@@ -282,19 +303,19 @@ html {
 }
 
 .theme-dark ::-webkit-scrollbar-track {
-  background: #191C20; /* neutral900 */
+  background: #0C0D24; /* neutral900 */
   border-radius: 999px;
 }
 
 .theme-dark ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
-       #6F6ADE 0%,
-    #6F6ADE 50%,
+       #6A61EE 0%,
+    #6A61EE 50%,
     #0FEAB6 100%
   );
   border-radius: 999px;
-  border: 2px solid #191C20;
+  border: 2px solid #0C0D24;
 }
 
 .theme-dark ::-webkit-scrollbar-thumb:hover {
@@ -322,8 +343,8 @@ html {
 .theme-light ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     180deg,
-     #6F6ADE 0%,
-    #6F6ADE 50%,
+     #6A61EE 0%,
+    #6A61EE 50%,
     #0FEAB6 100%
   );
   border-radius: 999px;
@@ -333,54 +354,54 @@ html {
 .theme-light ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     180deg,
-    #6F6ADE 0%,
-    #6F6ADE 50%,
+    #6A61EE 0%,
+    #6A61EE 50%,
     #0DCFA0 100%
   );
 }
 /* =========================
    Legacy dark-only screens (admin / organization)
-   Dark keeps each screen's original literal; light maps to the
+   Dark maps to the Night tokens (DESIGN.md); light maps to the
    light tokens in app/theme/themeConfig.ts (lightInk, lightInkSecondary,
    lightBorder, lightCanvas, lightRaised) — keep them in sync.
 ========================= */
 :root {
-  --legacy-ink: --theme(--color-white);
-  --legacy-gray-300: --theme(--color-gray-300);
-  --legacy-gray-400: --theme(--color-gray-400);
-  --legacy-gray-500: --theme(--color-gray-500);
-  --legacy-9b9c9e: #9B9C9E;
-  --legacy-99a1af: #99a1af;
-  --legacy-666: #666;
+  --legacy-ink: #EEEFFB;
+  --legacy-gray-300: #C9CBEC;
+  --legacy-gray-400: #A9ACD6;
+  --legacy-gray-500: #A9ACD6;
+  --legacy-9b9c9e: #A9ACD6;
+  --legacy-99a1af: #A9ACD6;
+  --legacy-666: #7D7FA4;
 
-  --legacy-line-gray-600: --theme(--color-gray-600);
-  --legacy-line-gray-700: --theme(--color-gray-700);
-  --legacy-line-gray-800: --theme(--color-gray-800);
-  --legacy-line-4a4a4a: #4a4a4a;
-  --legacy-line-3a3a3a: #3a3a3a;
-  --legacy-line-3f3f46: #3f3f46;
-  --legacy-line-303030: #303030;
-  --legacy-line-374151: #374151;
-  --legacy-line-white-10: rgb(255 255 255 / 0.1);
+  --legacy-line-gray-600: #27295E;
+  --legacy-line-gray-700: #27295E;
+  --legacy-line-gray-800: #27295E;
+  --legacy-line-4a4a4a: #27295E;
+  --legacy-line-3a3a3a: #27295E;
+  --legacy-line-3f3f46: #27295E;
+  --legacy-line-303030: #27295E;
+  --legacy-line-374151: #27295E;
+  --legacy-line-white-10: #27295E;
 
-  --legacy-surface-black: --theme(--color-black);
-  --legacy-surface-0f0f0f: #0f0f0f;
-  --legacy-surface-18181b: #18181b;
-  --legacy-surface-1a1a1a: #1a1a1a;
-  --legacy-surface-1c1c1e: #1c1c1e;
-  --legacy-surface-1f1f1f: #1f1f1f;
-  --legacy-surface-1f2937: #1f2937;
-  --legacy-surface-16213e: #16213e;
-  --legacy-surface-gray-800: --theme(--color-gray-800);
+  --legacy-surface-black: #15163A;
+  --legacy-surface-0f0f0f: #15163A;
+  --legacy-surface-18181b: #15163A;
+  --legacy-surface-1a1a1a: #15163A;
+  --legacy-surface-1c1c1e: #15163A;
+  --legacy-surface-1f1f1f: #15163A;
+  --legacy-surface-1f2937: #15163A;
+  --legacy-surface-16213e: #15163A;
+  --legacy-surface-gray-800: #15163A;
 
-  --legacy-panel-27272a: #27272a;
-  --legacy-panel-2a2a2a: #2a2a2a;
-  --legacy-panel-2a2a2e: #2a2a2e;
-  --legacy-panel-gray-700: --theme(--color-gray-700);
-  --legacy-panel-white-5: rgb(255 255 255 / 0.05);
+  --legacy-panel-27272a: #1D1F4E;
+  --legacy-panel-2a2a2a: #1D1F4E;
+  --legacy-panel-2a2a2e: #1D1F4E;
+  --legacy-panel-gray-700: #1D1F4E;
+  --legacy-panel-white-5: #1D1F4E;
 
-  --legacy-hover-gray-700: --theme(--color-gray-700);
-  --legacy-hover-black: --theme(--color-black);
+  --legacy-hover-gray-700: #1D1F4E;
+  --legacy-hover-black: #1D1F4E;
 }
 
 .theme-light {

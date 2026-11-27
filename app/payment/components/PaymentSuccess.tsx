@@ -71,10 +71,10 @@ export default function PaymentSuccess({ chargeId }: PaymentSuccessProps) {
         >
           Payment Successful!
         </h2>
-        <p style={{ margin: 0, color: "#8C99A9", fontSize: 15 }}>
+        <p style={{ margin: 0, color: "#A9ACD6", fontSize: 15 }}>
           Your AI CAVE Pro subscription is now active.
         </p>
-        <p style={{ margin: 0, color: "#3A434F", fontSize: 12, fontFamily: "monospace" }}>
+        <p style={{ margin: 0, color: "#7D7FA4", fontSize: 12, fontFamily: "monospace" }}>
           Charge ID: {chargeId}
         </p>
       </div>
@@ -83,8 +83,8 @@ export default function PaymentSuccess({ chargeId }: PaymentSuccessProps) {
         style={{
           width: "100%",
           maxWidth: 320,
-          background: "#21262B",
-          border: "1px solid #3A434F",
+          background: "#15163A",
+          border: "1px solid #27295E",
           borderRadius: 12,
           padding: "16px 20px",
           display: "flex",
@@ -101,7 +101,7 @@ export default function PaymentSuccess({ chargeId }: PaymentSuccessProps) {
             key={label}
             style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}
           >
-            <span style={{ color: "#8C99A9" }}>{label}</span>
+            <span style={{ color: "#A9ACD6" }}>{label}</span>
             <span style={{ color: label === "Status" ? "#22C55E" : "#F2F4F5", fontWeight: 600 }}>
               {val}
             </span>
@@ -114,7 +114,7 @@ export default function PaymentSuccess({ chargeId }: PaymentSuccessProps) {
         size="large"
         onClick={() => router.push("/dashboard")}
         style={{
-          background: "linear-gradient(135deg, #6F6ADE 0%, #4B49A1 100%)",
+          background: "linear-gradient(135deg, #6A61EE 0%, #4B49A1 100%)",
           border: "none",
           borderRadius: 10,
           height: 48,

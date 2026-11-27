@@ -32,7 +32,7 @@ import config from "@/app/config";
 import CommunityPill from "../CommunityPill";
 import { useRouter } from "next/navigation";
 import { logout } from "@/app/lib/logout";
-import { getThemeConfig } from "@/app/theme/themeConfig";
+import { aiCaveColors, getThemeConfig } from "@/app/theme/themeConfig";
 import { ICreditBalance, IOrganization } from "@/app/common/organization.type";
 import useResponsive from "@/app/hooks/useResponsive";
 import { formatCompactNumber } from "@/app/utils/format";
@@ -40,7 +40,7 @@ import { canSeeBilling } from "@/app/utils/permissions";
 import ThemeToggleButton from "../ThemeToggleButton";
 import InvitationBell from "./InvitationBell";
 import { useThemeMode } from "../ThemeProvider";
-import { canvasBg, overlayShadow } from "@/app/theme/surface";
+import { canvasBg, chipStyle, markFill, overlayShadow } from "@/app/theme/surface";
 import { usePageHeader } from "@/app/context/PageHeaderContext";
 import "./LayoutStyle.css";
 import { User ,Users} from "lucide-react";
@@ -206,12 +206,12 @@ export function PrivateHeader({
     <Header
       className="private-header-shell"
       style={{
-        height: isMobile ? 50 : 52,
-        // antd's Header sets line-height 64px, which made every item taller than this 52px bar.
+        height: isMobile ? 56 : 64,
+        // antd's Header sets line-height 64px, which made every item taller than the bar.
         lineHeight: "normal",
         // Same as the page canvas so the work panels, not the chrome, read as the front layer.
         background: canvasBg(mode),
-        borderBottom: `1px solid ${semantic.colorBorderSecondary ?? semantic.colorBorder}`,
+        borderBottom: `1px solid ${mode === "dark" ? aiCaveColors.darkHeaderLine : (semantic.colorBorderSecondary ?? semantic.colorBorder)}`,
         padding: isMobile ? "0 8px" : isTablet ? "0 14px" : "0 20px",
         display: "flex",
         justifyContent: "space-between",
@@ -297,31 +297,29 @@ export function PrivateHeader({
             data-tour="org-switcher"
             aria-label={`Organization: ${activeOrg?.name ?? ""}`}
             style={{
-              padding: isMobile ? "0 4px" : "0 8px",
-              height: 32,
+              // Fill + border + chevron: the switcher reads as a button before hover; the project beside it is a plain label.
+              ...chipStyle(mode),
+              height: isMobile ? 36 : 40,
+              padding: isMobile ? "0 4px" : "0 12px 0 4px",
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              borderRadius: 8,
-              // Fill + border + chevron: the switcher reads as a button before hover; the project beside it is a plain label.
-              background: semantic.colorBgTextActive,
-              border: `1px solid ${semantic.colorBorder}`,
+              gap: 10,
             }}
           >
-            {/* Org initial as a quiet mark; the org is context, the open project is the focus. */}
+            {/* Org initial in the brand mark fill, as in the reference. */}
             <span
               aria-hidden
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
+                width: isMobile ? 28 : 32,
+                height: isMobile ? 28 : 32,
+                borderRadius: 999,
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 600,
-                background: semantic.colorBgTextActive,
-                color: semantic.colorTextBase,
+                background: markFill(mode),
+                color: aiCaveColors.neutral100,
               }}
             >
               {(activeOrg?.name ?? "?").trim().charAt(0).toUpperCase()}
@@ -335,8 +333,8 @@ export function PrivateHeader({
                     lineHeight: "20px",
                     verticalAlign: "middle",
                     maxWidth: 200,
-                    fontSize: 13,
-                    fontWeight: 500,
+                    fontSize: 15,
+                    fontWeight: 600,
                     color: semantic.colorTextBase,
                   }}
                 >
@@ -389,7 +387,7 @@ export function PrivateHeader({
         {isMobile ? null : <CommunityPill label="Community" newTabLabel="(opens in a new tab)" size="xs" quiet />}
         {showBilling && !isMobile ? (
           <Link href="/page/plans">
-            <Button style={{ height: 32, paddingInline: isMobile ? 8 : 12, fontSize: isMobile ? 12 : 13 }}>
+            <Button style={{ ...chipStyle(mode), paddingInline: 18, fontSize: 14, fontWeight: 600 }}>
               Change Package
             </Button>
           </Link>
@@ -397,21 +395,21 @@ export function PrivateHeader({
         {showBilling ? (
           <div
             style={{
-              height: 32,
+              ...chipStyle(mode),
+              height: isMobile ? 36 : 40,
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              paddingInline: isMobile ? 8 : 10,
-              borderRadius: 8,
-              border: `1px solid ${semantic.colorBorder}`,
+              gap: 10,
+              paddingInline: isMobile ? 10 : 16,
               whiteSpace: "nowrap",
             }}
           >
-            <CreditCardOutlined style={{ color: semantic.colorTextSecondary }} />
+            <CreditCardOutlined style={{ color: semantic.colorInfoText ?? semantic.colorInfo }} />
             <Text
               style={{
                 color: semantic.colorTextBase,
-                fontSize: isMobile ? 12 : 13,
+                fontSize: isMobile ? 13 : 16,
+                fontWeight: 600,
                 fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
               }}
@@ -428,7 +426,7 @@ export function PrivateHeader({
                 // Dark mode has no colorFillSecondary; a purple fallback made an empty bar look full.
                 trailColor={semantic.colorFillSecondary ?? semantic.colorBorder}
                 size="small"
-                style={{ width: 64, marginBottom: 0, lineHeight: 0 }}
+                style={{ width: 120, marginBottom: 0, lineHeight: 0 }}
               />
             ) : null}
           </div>
@@ -448,14 +446,14 @@ export function PrivateHeader({
             className="private-header-user-btn"
             style={{
               padding: isMobile ? "0 2px" : undefined,
-              borderRadius: 10,
-              height: isMobile ? 40 : 44,
+              borderRadius: 999,
+              height: isMobile ? 40 : 48,
             }}
           >
             <Space size={isMobile ? 6 : 8}>
               <Avatar
-                size={isMobile ? 30 : 32}
-                style={{ backgroundColor: semantic.colorPrimary, fontWeight: 500 }}
+                size={isMobile ? 32 : 40}
+                style={{ background: markFill(mode), fontWeight: 600 }}
               >
                 {user?.fullname
                   ? user.fullname
@@ -464,7 +462,9 @@ export function PrivateHeader({
                       .join("")
                   : ""}
               </Avatar>
-              {!(isMobile || isTablet) ? user?.fullname : null}
+              {!(isMobile || isTablet) ? (
+                <span style={{ fontSize: 16, fontWeight: 500, color: semantic.colorTextBase }}>{user?.fullname}</span>
+              ) : null}
             </Space>
           </Button>
         </Dropdown>

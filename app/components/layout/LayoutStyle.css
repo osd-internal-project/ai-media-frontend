@@ -9,7 +9,47 @@
 }
 
 .osd-menu-padding .ant-menu-item-selected .ant-menu-title-content span {
-	font-weight: 500 !important;
+	font-weight: 600 !important;
+}
+
+/* Sider items (DESIGN.md Navigation): no row fill; the icon sits in a tile that carries the state.
+   Colours come from PrivateSider as --sider-tile-* variables. */
+.osd-menu-padding .menu-icon-container {
+	width: 40px;
+	height: 34px;
+	border-radius: 10px;
+	color: var(--sider-ink-2);
+	transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms ease, color 180ms ease;
+}
+/* Overrides the 12px inline label size in app/config/menu.tsx. */
+.osd-menu-padding .menu-text-label span {
+	font-size: 13px !important;
+	color: var(--sider-ink-2);
+}
+.osd-menu-padding .ant-menu-item:hover .menu-icon-container {
+	background: var(--sider-tile-hover);
+	color: var(--sider-ink);
+}
+.osd-menu-padding .ant-menu-item:hover .menu-text-label span {
+	color: var(--sider-ink);
+}
+.osd-menu-padding .ant-menu-item-selected .menu-icon-container,
+.osd-menu-padding .ant-menu-item-selected:hover .menu-icon-container {
+	background: var(--sider-tile-fill);
+	box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--sider-accent) 45%, transparent);
+	color: #fff;
+}
+.osd-menu-padding .ant-menu-item-selected .menu-text-label span {
+	color: var(--sider-ink);
+}
+.osd-menu-padding .ant-menu-item:focus-visible .menu-icon-container {
+	outline: 2px solid var(--sider-accent);
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.osd-menu-padding .menu-icon-container {
+		transition: none;
+	}
 }
 
 /* Remove Antd Menu right border */

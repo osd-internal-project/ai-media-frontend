@@ -43,7 +43,7 @@ const PricingCards: React.FC<PricingCardsProps> = ({
         return (
           <div
             key={index}
-            className={`shrink-0 bg-[#171717] rounded-lg overflow-hidden border-t-4 ${borderClass} relative w-[80vw] sm:w-[40vw] md:w-[320px] lg:w-[calc(33.333%-1rem)] max-w-[320px]`}
+            className={`shrink-0 bg-[#15163A] rounded-lg overflow-hidden border-t-4 ${borderClass} relative w-[80vw] sm:w-[40vw] md:w-[320px] lg:w-[calc(33.333%-1rem)] max-w-[320px]`}
           >
             <div className="p-6 pb-4">
               <div className="flex items-center justify-between mb-4">

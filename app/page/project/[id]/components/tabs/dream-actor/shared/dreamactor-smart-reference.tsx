@@ -52,7 +52,7 @@ export default function DeamactorSmartReference({
   };
 
   return (
-    <div className="mt-1 p-2 bg-[#1e1e21] rounded-lg border border-white/5">
+    <div className="mt-1 p-2 bg-[#15163A] rounded-lg border border-white/5">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-3 flex-1 text-sm">
           {isMobile ? null : (

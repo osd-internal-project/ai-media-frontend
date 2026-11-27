@@ -65,7 +65,7 @@ const PackagePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#0C0D24] text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
           <p>Loading plans...</p>
@@ -75,7 +75,7 @@ const PackagePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen bg-[#0C0D24] text-white">
       <nav className="relative bg-gray-800/50 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10">
         <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">

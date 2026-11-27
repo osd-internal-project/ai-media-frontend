@@ -31,7 +31,7 @@ const MediaError: React.FC = () => (
       alignItems: "center",
       justifyContent: "center",
       background: "rgba(140,153,169,0.10)",
-      color: "var(--wf-text-dim, #8C99A9)",
+      color: "var(--wf-text-dim, #A9ACD6)",
     }}
   >
     <ImageOff size={18} />
