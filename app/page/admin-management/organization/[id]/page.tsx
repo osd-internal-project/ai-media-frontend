@@ -166,7 +166,7 @@ export default function OrganizationDetailPage() {
             <ArrowLeft size={16} />
           </Link>
           <h1 className="text-xl font-semibold" style={{ color: token.colorTextBase }}>{organization.name}</h1>
-          <StatusTag tone={isPersonal ? "neutral" : "primary"}>{isPersonal ? "Personal" : "Team"}</StatusTag>
+          <StatusTag tone={isPersonal ? "accent" : "primary"}>{isPersonal ? "Personal" : "Team"}</StatusTag>
           {!organization.status && <StatusTag tone="error">Inactive</StatusTag>}
           {organization.isOpen === false && <StatusTag tone="warning">Closed</StatusTag>}
           <Button className="!ml-auto" icon={<Pencil size={14} />} onClick={handleEdit}>

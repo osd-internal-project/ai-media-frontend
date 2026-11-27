@@ -2,26 +2,47 @@
 
 import { Tag, Tooltip, theme } from "antd";
 import type { FC, ReactNode } from "react";
+import { useThemeMode } from "@/app/components/ThemeProvider";
 import { seatLevel, type SeatLevel } from "./seat";
 
 export { seatLevel };
 
-export type StatusTone = "success" | "warning" | "error" | "primary" | "neutral";
+export type StatusTone = "success" | "warning" | "error" | "primary" | "accent" | "neutral";
 
-/** สี tag สถานะชุดเดียวของหน้า admin — ใช้ *Text token (light ≥4.5:1) แทน preset ของ antd */
+/** cyan ของ brand — ไม่มี token ของ antd ตรง ๆ (colorInfo ของ dark ถูกปรับเข้ม) */
+const BRAND_CYAN = "#0FEAB6";
+
+/**
+ * สี tag ของหน้า admin — ทุกคู่วัดแล้ว ≥4.5:1 ทั้ง dark / light (2026-11-26)
+ * dark ต้องต่างจาก light: colorPrimaryText บน colorPrimaryBg ของ dark ได้แค่ 1.39:1
+ */
 const useToneColors = (tone: StatusTone) => {
   const { token } = theme.useToken();
+  const isDark = useThemeMode().mode === "dark";
   switch (tone) {
     case "success":
       return { color: token.colorSuccessText, background: token.colorSuccessBg, border: token.colorSuccessBorder };
     case "warning":
       return { color: token.colorWarningText, background: token.colorWarningBg, border: token.colorWarningBorder };
     case "error":
-      return { color: token.colorErrorText, background: token.colorErrorBg, border: token.colorErrorBorder };
+      return {
+        color: isDark ? token.colorErrorTextHover : token.colorErrorText,
+        background: token.colorErrorBg,
+        border: token.colorErrorBorder,
+      };
     case "primary":
-      return { color: token.colorPrimaryText, background: token.colorPrimaryBg, border: token.colorPrimaryBorder };
+      // indigo ทึบ + ตัวขาว: dark 5.48:1, light 4.63:1
+      return { color: "#FFFFFF", background: token.colorPrimary, border: token.colorPrimary };
+    case "accent":
+      return isDark
+        ? { color: BRAND_CYAN, background: "rgba(15, 234, 182, 0.14)", border: "rgba(15, 234, 182, 0.4)" }
+        : { color: token.colorInfoText, background: "rgba(15, 234, 182, 0.12)", border: "rgba(8, 112, 92, 0.35)" };
     default:
-      return { color: token.colorTextSecondary, background: token.colorFillTertiary, border: token.colorBorderSecondary };
+      return {
+        color: isDark ? token.colorText : token.colorTextSecondary,
+        background: token.colorFillTertiary,
+        border: token.colorBorderSecondary,
+      };
   }
 };
 
@@ -37,12 +58,14 @@ export const StatusTag: FC<{ tone: StatusTone; children: ReactNode }> = ({ tone,
 /** org ที่ค่า Access / model ต่างจาก plan ปัจจุบัน — เส้นขอบ indigo ไม่ทึบ */
 export const CustomizedBadge: FC = () => {
   const { token } = theme.useToken();
+  // colorPrimaryText ของ dark บนพื้น card ได้ 2.79:1 → ใช้ TextHover (4.88:1)
+  const color = useThemeMode().mode === "dark" ? token.colorPrimaryTextHover : token.colorPrimaryText;
   return (
     <Tooltip title="Access หรือ model ของ org นี้ต่างจาก plan ปัจจุบัน">
       <Tag
         bordered
         className="!m-0 rounded-full px-2"
-        style={{ color: token.colorPrimaryText, background: "transparent", borderColor: token.colorPrimary }}
+        style={{ color, background: "transparent", borderColor: token.colorPrimary }}
       >
         กำหนดเอง
       </Tag>

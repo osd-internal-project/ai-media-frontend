@@ -20,7 +20,8 @@ const planServices = PlanServices(axiosCore);
 const modelService = MasterModelTypeServices(axiosCore);
 
 const errorText = (error: unknown, fallback: string) =>
-  (error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? fallback;
+  (error as { response?: { data?: { message?: string } } })?.response?.data
+    ?.message ?? fallback;
 
 export default function PlanManagementPage() {
   const router = useRouter();
@@ -95,7 +96,12 @@ export default function PlanManagementPage() {
     try {
       const full = await planServices.findById(plan.id);
       if (!full) throw new Error("Plan not found");
-      const created = await planServices.create(copyPayload(full, data.map((item) => item.name)));
+      const created = await planServices.create(
+        copyPayload(
+          full,
+          data.map((item) => item.name),
+        ),
+      );
       if (!created?.id) throw new Error("No id returned");
       messageApi.success(`Created ${created.name} as a draft`);
       router.push(`/page/admin-management/plan-management/${created.id}`);
@@ -108,7 +114,9 @@ export default function PlanManagementPage() {
 
   const search = searchText.toLowerCase();
   const filteredData = data.filter(
-    (item) => item.name.toLowerCase().includes(search) || item.description?.toLowerCase().includes(search),
+    (item) =>
+      item.name.toLowerCase().includes(search) ||
+      item.description?.toLowerCase().includes(search),
   );
 
   return (
@@ -123,13 +131,20 @@ export default function PlanManagementPage() {
       />
 
       <header className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-xl font-semibold" style={{ color: token.colorTextBase }}>Plans</h1>
+        <h1
+          className="mr-auto text-xl font-semibold"
+          style={{ color: token.colorTextBase }}
+        >
+          Plans
+        </h1>
         {viewType !== "matrix" && (
           <Input
             allowClear
             className="!w-full sm:!w-64"
             placeholder="Search plans"
-            prefix={<Search size={14} style={{ color: token.colorTextSecondary }} />}
+            prefix={
+              <Search size={14} style={{ color: token.colorTextSecondary }} />
+            }
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
             aria-label="Search plans"
@@ -141,11 +156,24 @@ export default function PlanManagementPage() {
           options={[
             { value: "grid", icon: <LayoutGrid size={14} />, title: "Cards" },
             { value: "list", icon: <List size={14} />, title: "List" },
-            { value: "matrix", label: "Access & models", icon: <Table2 size={14} /> },
+            {
+              value: "matrix",
+              title: "Access & models",
+              icon: <Table2 size={14} />,
+            },
           ]}
         />
-        <Button icon={<RotateCw size={14} />} aria-label="Reload plans" onClick={fetchData} loading={loading} />
-        <Button type="primary" icon={<Plus size={14} />} onClick={() => setIsModalOpen(true)}>
+        <Button
+          icon={<RotateCw size={14} />}
+          aria-label="Reload plans"
+          onClick={fetchData}
+          loading={loading}
+        />
+        <Button
+          type="primary"
+          icon={<Plus size={14} />}
+          onClick={() => setIsModalOpen(true)}
+        >
           Create plan
         </Button>
       </header>

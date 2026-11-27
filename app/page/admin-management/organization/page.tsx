@@ -108,7 +108,7 @@ export default function OrganizationPage() {
       width: 100,
       render: (value: string) =>
         value?.toLowerCase() === "personal" ? (
-          <StatusTag tone="neutral">Personal</StatusTag>
+          <StatusTag tone="accent">Personal</StatusTag>
         ) : (
           <StatusTag tone="primary">Team</StatusTag>
         ),
